@@ -62,6 +62,25 @@ def build_candidate_pool(session, base_url, season, seed_categories, group, pool
     return pool
 
 
+def get_injured_player_ids(session, base_url):
+    """Person ids currently on a Major League injured list (D7/D10/D15/D60
+    roster status codes), pulled from every team's 40-man roster. Fetched
+    once per run and reused across all categories."""
+    teams = _get(session, f"{base_url}/teams", params={"sportId": 1}).get("teams", [])
+    injured = set()
+    for team in teams:
+        roster = _get(
+            session,
+            f"{base_url}/teams/{team['id']}/roster",
+            params={"rosterType": "40Man"},
+        ).get("roster", [])
+        for entry in roster:
+            status_code = entry.get("status", {}).get("code", "")
+            if status_code.startswith("D"):
+                injured.add(entry["person"]["id"])
+    return injured
+
+
 def get_last_x_games_stat(session, base_url, person_id, season, group, window_games):
     """Rolling-window aggregate stats for one player, or None if they have no
     stats in the group this season (e.g. a position player with no pitching)."""
@@ -118,12 +137,14 @@ def compute_hit_streak(game_log):
     return streak, last_game_date
 
 
-def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size):
+def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size
     )
     records = []
     for person_id, player in pool.items():
+        if person_id in injured_ids:
+            continue
         stat = get_last_x_games_stat(session, base_url, person_id, season, cat_cfg["group"], window_games)
         if not stat:
             continue
@@ -142,12 +163,14 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
     return records
 
 
-def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size):
+def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size
     )
     records = []
     for person_id, player in pool.items():
+        if person_id in injured_ids:
+            continue
         game_log = get_game_log(session, base_url, person_id, season, "hitting")
         if not game_log:
             continue
@@ -176,14 +199,19 @@ def fetch(config):
     pool_size = mlb_cfg["candidate_pool_size"]
 
     session = requests.Session()
+    injured_ids = get_injured_player_ids(session, base_url)
     records = []
     for cat_cfg in mlb_cfg["stat_categories"]:
         if cat_cfg["mode"] == "rolling_sum":
             records.extend(
-                fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size)
+                fetch_rolling_sum_category(
+                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids
+                )
             )
         elif cat_cfg["mode"] == "hit_streak":
-            records.extend(fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size))
+            records.extend(
+                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids)
+            )
         else:
             raise ValueError(f"Unknown MLB stat category mode: {cat_cfg['mode']}")
     return records
