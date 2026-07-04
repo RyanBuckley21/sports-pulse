@@ -1,6 +1,7 @@
 """Entry point: fetch -> normalize -> rank -> write a dated Markdown report
 to ./output/ with a ranked "who's hot" table per stat category."""
 
+import base64
 import datetime
 import html
 import os
@@ -31,6 +32,13 @@ SPORT_LABELS = {
 CATEGORY_LABELS = {}
 CATEGORY_SHORT_LABELS = {}
 CATEGORY_ORDER_BY_SPORT = {}
+
+ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "icon-180.png")
+
+
+def load_icon_base64():
+    with open(ICON_PATH, "rb") as f:
+        return base64.b64encode(f.read()).decode("ascii")
 
 
 def load_config(path=CONFIG_PATH):
@@ -154,6 +162,7 @@ def render_html(ranked_records, generated_at):
 
     return HTML_TEMPLATE.format(
         generated_at=generated_at.strftime("%b %-d, %Y %-I:%M %p"),
+        icon_b64=load_icon_base64(),
         sport_tabs="".join(sport_tabs),
         cat_chip_groups="".join(cat_chip_groups),
         panels="".join(panels),
@@ -166,6 +175,12 @@ HTML_TEMPLATE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Who's Hot</title>
+<!-- iOS "Add to Home Screen": custom icon + full-screen (no Safari chrome) launch -->
+<link rel="apple-touch-icon" href="data:image/png;base64,{icon_b64}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Who's Hot">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#eb6834">
 <style>
   :root {{
     --page-plane: #f9f9f7;
