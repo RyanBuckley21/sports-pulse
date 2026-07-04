@@ -221,7 +221,8 @@ HTML_TEMPLATE = """<!doctype html>
     padding: 20px 16px 8px;
     border-bottom: 1px solid var(--border);
   }}
-  .topbar h1 {{ margin: 0; font-size: 22px; }}
+  .topbar h1 {{ margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }}
+  .topbar .logo {{ width: 32px; height: 32px; border-radius: 9px; display: block; }}
   .topbar .meta {{ margin-top: 4px; font-size: 13px; color: var(--text-muted); }}
   .sport-tabs {{
     display: flex; gap: 8px; padding: 12px 16px 0;
@@ -276,7 +277,7 @@ HTML_TEMPLATE = """<!doctype html>
 <body>
   <div class="dash">
     <header class="topbar">
-      <h1>&#128293; Who's Hot</h1>
+      <h1><img class="logo" src="data:image/png;base64,{icon_b64}" alt=""> Who's Hot</h1>
       <div class="meta">Generated {generated_at}</div>
     </header>
     <nav class="sport-tabs">{sport_tabs}</nav>
