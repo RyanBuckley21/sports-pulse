@@ -102,8 +102,12 @@ def format_value(value):
 def rank_badge_class(rank):
     if rank == 1:
         return "rank-1"
-    if rank <= 3:
-        return "rank-2-3"
+    if rank == 2:
+        return "rank-2"
+    if rank == 3:
+        return "rank-3"
+    if rank == 4:
+        return "rank-4"
     return "rank-rest"
 
 
@@ -134,23 +138,32 @@ def render_html(ranked_records, generated_at):
             )
         group_hidden = "" if s_idx == 0 else " hidden"
         cat_chip_groups.append(
-            f'<nav class="cat-chips" data-sport-group="{sport_key}"{group_hidden}>{"".join(chips)}</nav>'
+            f'<div class="cat-chips-wrap" data-sport-group="{sport_key}"{group_hidden}>'
+            f'<nav class="cat-chips">{"".join(chips)}</nav>'
+            f'<div class="scroll-fade" aria-hidden="true"></div></div>'
         )
 
         for c_idx, cat_key in enumerate(cat_keys):
             records = sorted(by_sport_category[sport_key][cat_key], key=lambda r: r["rank"])
             panel_hidden = "" if (s_idx == 0 and c_idx == 0) else " hidden"
+            max_value = records[0]["value"] if records else 0
             rows = []
             for r in records:
                 last_game = f"Last: {r['last_game_date']}" if r["last_game_date"] else "No recent game"
+                is_top = r["rank"] == 1
+                bar_pct = round((r["value"] / max_value) * 100, 1) if max_value else 0
+                row_class = "row row-hero" if is_top else "row"
+                val_class = "val val-hero" if is_top else "val"
+                flame = '<i class="flame-badge" aria-hidden="true">&#128293;</i>' if is_top else ""
                 rows.append(
-                    f'<li class="row">'
-                    f'<span class="rank-badge {rank_badge_class(r["rank"])}">{r["rank"]}</span>'
+                    f'<li class="{row_class}">'
+                    f'<div class="value-bar" style="width:{bar_pct}%" aria-hidden="true"></div>'
+                    f'<span class="rank-badge {rank_badge_class(r["rank"])}">{r["rank"]}{flame}</span>'
                     f'<div class="who">'
                     f'<div class="name">{html.escape(r["entity"])}</div>'
                     f'<div class="sub">{html.escape(r["team"] or "-")} &middot; {html.escape(last_game)}</div>'
                     f"</div>"
-                    f'<div class="val">{format_value(r["value"])}</div>'
+                    f'<div class="{val_class}">{format_value(r["value"])}</div>'
                     f"</li>"
                 )
             panels.append(
@@ -161,7 +174,8 @@ def render_html(ranked_records, generated_at):
             )
 
     return HTML_TEMPLATE.format(
-        generated_at=generated_at.strftime("%b %-d, %Y %-I:%M %p"),
+        generated_at=generated_at.strftime("%b %-d, %Y %-I:%M %p %Z"),
+        generated_at_iso=generated_at.isoformat(),
         icon_b64=load_icon_base64(),
         sport_tabs="".join(sport_tabs),
         cat_chip_groups="".join(cat_chip_groups),
@@ -192,6 +206,17 @@ HTML_TEMPLATE = """<!doctype html>
     --border: rgba(11,11,11,0.10);
     --accent: #2a78d6;
     --accent-wash: rgba(42,120,214,0.14);
+    --hot-1-a: #ff7a45;
+    --hot-1-b: #ffc93c;
+    --hot-1-c: #ff4d6d;
+    --hot-2: #ff6a3d;
+    --hot-3: #ffa366;
+    --hot-3-text: #4a1d00;
+    --hot-4-wash: rgba(255,122,69,0.16);
+    --hot-4-text: #c2410c;
+    --bar-fill: rgba(255,90,50,0.14);
+    --warning: #d98200;
+    --critical: #d03b3b;
   }}
   @media (prefers-color-scheme: dark) {{
     :root {{
@@ -204,6 +229,17 @@ HTML_TEMPLATE = """<!doctype html>
       --border: rgba(255,255,255,0.10);
       --accent: #3987e5;
       --accent-wash: rgba(57,135,229,0.18);
+      --hot-1-a: #ff8f5c;
+      --hot-1-b: #ffd35c;
+      --hot-1-c: #ff6683;
+      --hot-2: #ff7a45;
+      --hot-3: #c96a2e;
+      --hot-3-text: #ffe9d6;
+      --hot-4-wash: rgba(255,122,69,0.20);
+      --hot-4-text: #ff9d5c;
+      --bar-fill: rgba(255,122,90,0.22);
+      --warning: #fab219;
+      --critical: #e66767;
     }}
   }}
   * {{ box-sizing: border-box; }}
@@ -223,7 +259,13 @@ HTML_TEMPLATE = """<!doctype html>
   }}
   .topbar h1 {{ margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }}
   .topbar .logo {{ width: 32px; height: 32px; border-radius: 9px; display: block; }}
-  .topbar .meta {{ margin-top: 4px; font-size: 13px; color: var(--text-muted); }}
+  .topbar .meta {{ margin-top: 4px; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; }}
+  .freshness-dot {{
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 6px; background: var(--text-muted); flex: 0 0 auto;
+  }}
+  .freshness-dot.stale-1 {{ background: var(--warning); }}
+  .freshness-dot.stale-old {{ background: var(--critical); }}
   .sport-tabs {{
     display: flex; gap: 8px; padding: 12px 16px 0;
   }}
@@ -233,12 +275,18 @@ HTML_TEMPLATE = """<!doctype html>
     font-size: 15px; font-weight: 600; font-family: inherit;
   }}
   .sport-tab.active {{ background: var(--accent); color: #ffffff; border-color: var(--accent); }}
+  .cat-chips-wrap {{ position: relative; }}
   .cat-chips {{
     display: flex; gap: 8px; padding: 12px 16px 4px;
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }}
   .cat-chips::-webkit-scrollbar {{ display: none; }}
+  .scroll-fade {{
+    position: absolute; top: 0; right: 0; bottom: 4px; width: 32px;
+    background: linear-gradient(to right, transparent, var(--page-plane));
+    pointer-events: none; opacity: 1; transition: opacity 0.15s ease;
+  }}
   .chip {{
     flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
     background: var(--surface-1); color: var(--text-secondary);
@@ -252,25 +300,47 @@ HTML_TEMPLATE = """<!doctype html>
   }}
   .board {{ list-style: none; margin: 0; padding: 0; }}
   .row {{
+    position: relative; overflow: hidden;
     display: flex; align-items: center; gap: 12px;
     background: var(--surface-1); border: 1px solid var(--border);
     border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
   }}
+  .row-hero {{
+    border-color: var(--hot-1-c);
+    box-shadow: 0 0 0 1px rgba(255,77,109,0.18), 0 4px 16px rgba(255,122,69,0.35);
+  }}
+  .value-bar {{
+    position: absolute; top: 0; left: 0; bottom: 0; z-index: 0;
+    background: linear-gradient(90deg, var(--bar-fill), transparent);
+  }}
   .rank-badge {{
+    position: relative; z-index: 1;
     flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
     background: var(--gridline); color: var(--text-secondary);
   }}
-  .rank-badge.rank-1 {{ background: var(--accent); color: #ffffff; }}
-  .rank-badge.rank-2-3 {{ background: var(--accent-wash); color: var(--accent); }}
-  .who {{ flex: 1 1 auto; min-width: 0; }}
+  .rank-badge.rank-1 {{
+    background: linear-gradient(135deg, var(--hot-1-a), var(--hot-1-b) 55%, var(--hot-1-c));
+    color: #ffffff;
+    box-shadow: 0 0 0 2px var(--surface-1), 0 0 10px rgba(255,77,109,0.55);
+  }}
+  .rank-badge.rank-2 {{ background: var(--hot-2); color: #ffffff; }}
+  .rank-badge.rank-3 {{ background: var(--hot-3); color: var(--hot-3-text); }}
+  .rank-badge.rank-4 {{ background: var(--hot-4-wash); color: var(--hot-4-text); }}
+  .flame-badge {{
+    position: absolute; top: -7px; right: -8px; font-size: 12px; line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+  }}
+  .who {{ position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; }}
   .name {{ font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
   .sub {{ font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
   .val {{
+    position: relative; z-index: 1;
     flex: 0 0 auto; font-size: 18px; font-weight: 700;
     font-variant-numeric: tabular-nums;
   }}
+  .val-hero {{ font-size: 21px; }}
   [hidden] {{ display: none !important; }}
 </style>
 </head>
@@ -278,28 +348,46 @@ HTML_TEMPLATE = """<!doctype html>
   <div class="dash">
     <header class="topbar">
       <h1><img class="logo" src="data:image/png;base64,{icon_b64}" alt=""> Who's Hot</h1>
-      <div class="meta">Generated {generated_at}</div>
+      <div class="meta" id="meta" data-generated-iso="{generated_at_iso}">
+        <span class="freshness-dot" id="freshness-dot"></span>Generated {generated_at}
+      </div>
     </header>
     <nav class="sport-tabs">{sport_tabs}</nav>
     {cat_chip_groups}
     <main>{panels}</main>
   </div>
   <script>
+    function updateScrollFades() {{
+      document.querySelectorAll('.cat-chips-wrap').forEach(function (wrap) {{
+        var el = wrap.querySelector('.cat-chips');
+        var fade = wrap.querySelector('.scroll-fade');
+        if (!el || !fade || wrap.hidden) return;
+        var atEnd = el.scrollWidth - el.scrollLeft - el.clientWidth <= 2;
+        var scrollable = el.scrollWidth - el.clientWidth > 2;
+        fade.style.opacity = (atEnd || !scrollable) ? '0' : '1';
+      }});
+    }}
+    document.querySelectorAll('.cat-chips').forEach(function (el) {{
+      el.addEventListener('scroll', updateScrollFades, {{ passive: true }});
+    }});
+    window.addEventListener('resize', updateScrollFades);
+
     document.querySelectorAll('.sport-tab').forEach(function (tab) {{
       tab.addEventListener('click', function () {{
         var sport = tab.dataset.sport;
         document.querySelectorAll('.sport-tab').forEach(function (t) {{ t.classList.toggle('active', t === tab); }});
-        document.querySelectorAll('.cat-chips').forEach(function (group) {{
+        document.querySelectorAll('.cat-chips-wrap').forEach(function (group) {{
           group.hidden = group.dataset.sportGroup !== sport;
         }});
         var firstChip = document.querySelector('.chip[data-sport="' + sport + '"]');
         if (firstChip) firstChip.click();
+        updateScrollFades();
       }});
     }});
     document.querySelectorAll('.chip').forEach(function (chip) {{
       chip.addEventListener('click', function () {{
         var sport = chip.dataset.sport, cat = chip.dataset.cat;
-        document.querySelectorAll('.cat-chips[data-sport-group="' + sport + '"] .chip').forEach(function (c) {{
+        document.querySelectorAll('.cat-chips-wrap[data-sport-group="' + sport + '"] .chip').forEach(function (c) {{
           c.classList.toggle('active', c === chip);
         }});
         document.querySelectorAll('.cat-panel').forEach(function (panel) {{
@@ -307,6 +395,18 @@ HTML_TEMPLATE = """<!doctype html>
         }});
       }});
     }});
+    updateScrollFades();
+
+    (function () {{
+      var meta = document.getElementById('meta');
+      var dot = document.getElementById('freshness-dot');
+      if (!meta || !dot) return;
+      var generated = new Date(meta.dataset.generatedIso);
+      if (isNaN(generated.getTime())) return;
+      var hoursOld = (Date.now() - generated.getTime()) / 36e5;
+      if (hoursOld >= 48) dot.classList.add('stale-old');
+      else if (hoursOld >= 24) dot.classList.add('stale-1');
+    }})();
   </script>
 </body>
 </html>
@@ -326,7 +426,10 @@ def main():
 
     ranked = rank_records(all_normalized, top_n)
 
-    generated_at = datetime.datetime.now()
+    # Timezone-aware UTC: the freshness indicator compares this timestamp
+    # against the viewer's local clock in JS, which would misread a naive
+    # (no-offset) ISO string as the viewer's own local time instead of UTC.
+    generated_at = datetime.datetime.now(datetime.timezone.utc)
     markdown = render_markdown(ranked, generated_at)
     html_report = render_html(ranked, generated_at)
 
