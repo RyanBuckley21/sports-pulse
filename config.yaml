@@ -13,6 +13,7 @@ mlb:
   stat_categories:
     - key: home_runs
       label: Home Runs (last 10 G)
+      short_label: Home Runs
       group: hitting
       mode: rolling_sum
       fields: [homeRuns]
@@ -20,6 +21,7 @@ mlb:
 
     - key: total_bases
       label: Total Bases per Game (last 10 G, true avg)
+      short_label: Total Bases/G
       group: hitting
       mode: rolling_sum
       fields: [totalBases]
@@ -28,6 +30,7 @@ mlb:
 
     - key: hits_runs_rbi
       label: Hits + Runs + RBI per Game (last 10 G, true avg)
+      short_label: H+R+RBI/G
       group: hitting
       mode: rolling_sum
       fields: [hits, runs, rbi]
@@ -36,6 +39,7 @@ mlb:
 
     - key: strikeouts
       label: "Strikeouts per Game (last 10 G, today's starters only, true avg)"
+      short_label: K/G (Starters)
       group: pitching
       mode: rolling_sum
       fields: [strikeOuts]
@@ -45,6 +49,7 @@ mlb:
 
     - key: hit_streak
       label: Active Hit Streak
+      short_label: Hit Streak
       group: hitting
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
@@ -57,15 +62,18 @@ worldcup:
   stat_categories:
     - key: shots
       label: Shots (tournament)
+      short_label: Shots
       mode: tournament_total
       fields: [totalShots]
 
     - key: goals
       label: Goals (tournament)
+      short_label: Goals
       mode: tournament_total
       fields: [totalGoals]
 
     - key: goal_or_assist
       label: Goal Involvements (tournament)
+      short_label: Goal Involvements
       mode: tournament_total
       fields: [totalGoals, goalAssists]
