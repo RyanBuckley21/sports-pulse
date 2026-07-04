@@ -7,7 +7,7 @@ import os
 import yaml
 
 import normalizer
-from fetchers import mlb
+from fetchers import mlb, worldcup
 
 CONFIG_PATH = "config.yaml"
 
@@ -15,6 +15,10 @@ SPORT_FETCHERS = {
     "mlb": {
         "fetch": mlb.fetch,
         "competition": lambda cfg: f"MLB Regular Season {cfg['mlb']['season']}",
+    },
+    "worldcup": {
+        "fetch": worldcup.fetch,
+        "competition": lambda cfg: cfg["worldcup"]["competition"],
     },
 }
 

@@ -48,16 +48,20 @@ mlb:
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
+  summary_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary
 
   stat_categories:
     - key: shots
       label: Shots (tournament)
       mode: tournament_total
+      fields: [totalShots]
 
     - key: goals
       label: Goals (tournament)
       mode: tournament_total
+      fields: [totalGoals]
 
     - key: goal_or_assist
       label: Goal Involvements (tournament)
       mode: tournament_total
+      fields: [totalGoals, goalAssists]
