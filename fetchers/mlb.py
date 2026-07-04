@@ -10,6 +10,8 @@ This keeps the number of API calls bounded (~1 + pool_size calls per
 category) instead of pulling every boxscore in the window.
 """
 
+import datetime
+
 import requests
 
 REQUEST_TIMEOUT = 15
@@ -79,6 +81,32 @@ def get_injured_player_ids(session, base_url):
             if status_code.startswith("D"):
                 injured.add(entry["person"]["id"])
     return injured
+
+
+def get_probable_starters(session, base_url, date):
+    """Pitchers scheduled to start a game on `date` (YYYY-MM-DD), keyed by
+    person id. Used to restrict the strikeouts category to today's starters
+    instead of any pitcher who has appeared recently."""
+    data = _get(
+        session,
+        f"{base_url}/schedule",
+        params={"sportId": 1, "date": date, "hydrate": "probablePitcher"},
+    )
+    dates = data.get("dates", [])
+    if not dates:
+        return {}
+    starters = {}
+    for game in dates[0].get("games", []):
+        for side in ("away", "home"):
+            team_info = game.get("teams", {}).get(side, {})
+            pitcher = team_info.get("probablePitcher")
+            if not pitcher or pitcher.get("id") is None:
+                continue
+            starters[pitcher["id"]] = {
+                "name": pitcher.get("fullName"),
+                "team": team_info.get("team", {}).get("name"),
+            }
+    return starters
 
 
 def get_last_x_games_stat(session, base_url, person_id, season, group, window_games):
@@ -163,6 +191,30 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
     return records
 
 
+def fetch_probable_starters_category(session, base_url, season, window_games, cat_cfg, injured_ids, game_date):
+    starters = get_probable_starters(session, base_url, game_date)
+    records = []
+    for person_id, player in starters.items():
+        if person_id in injured_ids:
+            continue
+        stat = get_last_x_games_stat(session, base_url, person_id, season, cat_cfg["group"], window_games)
+        if not stat:
+            continue
+        value = sum(stat.get(field, 0) or 0 for field in cat_cfg["fields"])
+        last_game_date = get_last_game_date(session, base_url, person_id, season, cat_cfg["group"])
+        records.append(
+            {
+                "entity": player["name"],
+                "team": player["team"],
+                "stat_category": cat_cfg["key"],
+                "window": f"last_{window_games}_games_starters_only",
+                "value": value,
+                "last_game_date": last_game_date,
+            }
+        )
+    return records
+
+
 def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size
@@ -190,19 +242,27 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
     return records
 
 
-def fetch(config):
+def fetch(config, game_date=None):
     """Fetch raw (unranked) records for every configured MLB stat category."""
     mlb_cfg = config["mlb"]
     base_url = mlb_cfg["base_url"]
     season = mlb_cfg["season"]
-    window_games = mlb_cfg["window_games"]
+    default_window_games = mlb_cfg["window_games"]
     pool_size = mlb_cfg["candidate_pool_size"]
+    game_date = game_date or datetime.date.today().isoformat()
 
     session = requests.Session()
     injured_ids = get_injured_player_ids(session, base_url)
     records = []
     for cat_cfg in mlb_cfg["stat_categories"]:
-        if cat_cfg["mode"] == "rolling_sum":
+        window_games = cat_cfg.get("window_games", default_window_games)
+        if cat_cfg["mode"] == "rolling_sum" and cat_cfg.get("starters_only"):
+            records.extend(
+                fetch_probable_starters_category(
+                    session, base_url, season, window_games, cat_cfg, injured_ids, game_date
+                )
+            )
+        elif cat_cfg["mode"] == "rolling_sum":
             records.extend(
                 fetch_rolling_sum_category(
                     session, base_url, season, window_games, cat_cfg, pool_size, injured_ids

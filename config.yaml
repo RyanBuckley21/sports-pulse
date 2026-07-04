@@ -33,11 +33,12 @@ mlb:
       seed_leaderboards: [hits, runs, runsBattedIn]
 
     - key: strikeouts
-      label: Strikeouts (last 10 G, pitching)
+      label: "Strikeouts (last 5 G, today's starters only)"
       group: pitching
       mode: rolling_sum
       fields: [strikeOuts]
-      seed_leaderboards: [strikeouts]
+      starters_only: true
+      window_games: 5
 
     - key: hit_streak
       label: Active Hit Streak
