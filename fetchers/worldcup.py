@@ -37,10 +37,15 @@ def get_tournament_date_range(session, scoreboard_url):
 
 
 def get_completed_events(session, scoreboard_url, start, end):
+    """Matches ESPN marks as finished. Knockout-stage games that go to extra
+    time or penalties get a different status name (STATUS_FINAL_AET,
+    STATUS_FINAL_PENALTIES, ...) than a regular STATUS_FULL_TIME game, so we
+    check the type's `completed` flag rather than matching one exact name --
+    otherwise any match decided beyond 90 minutes silently drops out."""
     data = _get(session, scoreboard_url, params={"dates": f"{start}-{end}"})
     events = []
     for event in data.get("events", []):
-        if event.get("status", {}).get("type", {}).get("name") != "STATUS_FULL_TIME":
+        if not event.get("status", {}).get("type", {}).get("completed"):
             continue
         events.append({"id": event["id"], "date": event["date"][:10]})
     return events
