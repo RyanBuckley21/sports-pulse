@@ -1,0 +1,63 @@
+# sports-pulse config
+# Declares which stat categories to track per sport and how to compute them.
+
+output_dir: output
+top_n: 10
+
+mlb:
+  base_url: https://statsapi.mlb.com/api/v1
+  season: 2026
+  window_games: 10        # rolling window size for counting stats
+  candidate_pool_size: 40 # season leaders pulled per seed category before re-ranking on the rolling window
+
+  stat_categories:
+    - key: home_runs
+      label: Home Runs (last 10 G)
+      group: hitting
+      mode: rolling_sum
+      fields: [homeRuns]
+      seed_leaderboards: [homeRuns]
+
+    - key: total_bases
+      label: Total Bases (last 10 G)
+      group: hitting
+      mode: rolling_sum
+      fields: [totalBases]
+      seed_leaderboards: [totalBases]
+
+    - key: hits_runs_rbi
+      label: Hits + Runs + RBI (last 10 G)
+      group: hitting
+      mode: rolling_sum
+      fields: [hits, runs, rbi]
+      seed_leaderboards: [hits, runs, runsBattedIn]
+
+    - key: strikeouts
+      label: Strikeouts (last 10 G, pitching)
+      group: pitching
+      mode: rolling_sum
+      fields: [strikeOuts]
+      seed_leaderboards: [strikeouts]
+
+    - key: hit_streak
+      label: Active Hit Streak
+      group: hitting
+      mode: hit_streak
+      seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+
+worldcup:
+  competition: FIFA World Cup 2026
+  scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
+
+  stat_categories:
+    - key: shots
+      label: Shots (tournament)
+      mode: tournament_total
+
+    - key: goals
+      label: Goals (tournament)
+      mode: tournament_total
+
+    - key: goal_or_assist
+      label: Goal Involvements (tournament)
+      mode: tournament_total
