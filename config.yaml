@@ -61,10 +61,11 @@ worldcup:
 
   stat_categories:
     - key: shots
-      label: Shots (tournament)
-      short_label: Shots
+      label: Shots per Game (tournament, true avg)
+      short_label: Shots/Game
       mode: tournament_total
       fields: [totalShots]
+      per_game: true
 
     - key: goals
       label: Goals (tournament)

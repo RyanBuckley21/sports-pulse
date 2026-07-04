@@ -326,7 +326,18 @@ def main():
     with open(html_path, "w") as f:
         f.write(html_report)
 
-    print(f"Wrote {md_path} and {html_path} ({len(ranked)} ranked rows)")
+    # Stable filenames (overwritten every run) so a bookmarked/published copy
+    # of the dashboard can always be refreshed in place instead of piling up
+    # a new dated snapshot that lingers with stale data.
+    latest_md_path = os.path.join(output_dir, "latest-whos-hot.md")
+    with open(latest_md_path, "w") as f:
+        f.write(markdown)
+
+    latest_html_path = os.path.join(output_dir, "latest-whos-hot.html")
+    with open(latest_html_path, "w") as f:
+        f.write(html_report)
+
+    print(f"Wrote {md_path}, {html_path}, and latest-whos-hot.{{md,html}} ({len(ranked)} ranked rows)")
 
 
 if __name__ == "__main__":

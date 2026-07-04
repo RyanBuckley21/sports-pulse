@@ -86,6 +86,19 @@ def aggregate_tournament_stats(session, scoreboard_url, summary_url):
     return players
 
 
+def compute_category_value(player_stats, cat_cfg):
+    """Sum the configured fields; for `per_game` categories, divide by the
+    player's actual appearances (games played) across the tournament so far,
+    the same "true average" approach used for MLB's per-game categories."""
+    total = sum(player_stats.get(field, 0) for field in cat_cfg["fields"])
+    if not cat_cfg.get("per_game"):
+        return total
+    appearances = player_stats.get("appearances") or 0
+    if not appearances:
+        return None
+    return round(total / appearances, 2)
+
+
 def fetch(config):
     """Fetch raw (unranked) tournament-to-date records for every configured
     World Cup stat category."""
@@ -95,17 +108,18 @@ def fetch(config):
 
     records = []
     for cat_cfg in wc_cfg["stat_categories"]:
+        window = "tournament_to_date" + ("_per_game" if cat_cfg.get("per_game") else "")
         for player in players.values():
-            value = sum(player["stats"].get(field, 0) for field in cat_cfg["fields"])
-            if value <= 0:
+            value = compute_category_value(player["stats"], cat_cfg)
+            if not value:
                 continue
             records.append(
                 {
                     "entity": player["entity"],
                     "team": player["team"],
                     "stat_category": cat_cfg["key"],
-                    "window": "tournament_to_date",
-                    "value": int(value),
+                    "window": window,
+                    "value": value if cat_cfg.get("per_game") else int(value),
                     "last_game_date": player["last_game_date"],
                 }
             )
