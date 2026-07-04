@@ -165,6 +165,23 @@ def compute_hit_streak(game_log):
     return streak, last_game_date
 
 
+def compute_category_value(stat, cat_cfg):
+    """Sum the configured fields; for `per_game` categories, divide by the
+    player's *actual* games played in the window (from the API's own
+    gamesPlayed count) rather than the requested window size, so a rookie
+    with only 6 games this season -- or a window that otherwise doesn't
+    line up with games actually played -- still gets a true per-game rate,
+    not the sum spread over games they didn't play. Returns None if a
+    per-game category has no games to divide by."""
+    total = sum(stat.get(field, 0) or 0 for field in cat_cfg["fields"])
+    if not cat_cfg.get("per_game"):
+        return total
+    games_played = stat.get("gamesPlayed") or 0
+    if not games_played:
+        return None
+    return round(total / games_played, 2)
+
+
 def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size
@@ -176,14 +193,17 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
         stat = get_last_x_games_stat(session, base_url, person_id, season, cat_cfg["group"], window_games)
         if not stat:
             continue
-        value = sum(stat.get(field, 0) or 0 for field in cat_cfg["fields"])
+        value = compute_category_value(stat, cat_cfg)
+        if value is None:
+            continue
         last_game_date = get_last_game_date(session, base_url, person_id, season, cat_cfg["group"])
+        window = f"last_{window_games}_games" + ("_per_game" if cat_cfg.get("per_game") else "")
         records.append(
             {
                 "entity": player["name"],
                 "team": player["team"],
                 "stat_category": cat_cfg["key"],
-                "window": f"last_{window_games}_games",
+                "window": window,
                 "value": value,
                 "last_game_date": last_game_date,
             }
@@ -200,14 +220,17 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
         stat = get_last_x_games_stat(session, base_url, person_id, season, cat_cfg["group"], window_games)
         if not stat:
             continue
-        value = sum(stat.get(field, 0) or 0 for field in cat_cfg["fields"])
+        value = compute_category_value(stat, cat_cfg)
+        if value is None:
+            continue
         last_game_date = get_last_game_date(session, base_url, person_id, season, cat_cfg["group"])
+        window = f"last_{window_games}_games_starters_only" + ("_per_game" if cat_cfg.get("per_game") else "")
         records.append(
             {
                 "entity": player["name"],
                 "team": player["team"],
                 "stat_category": cat_cfg["key"],
-                "window": f"last_{window_games}_games_starters_only",
+                "window": window,
                 "value": value,
                 "last_game_date": last_game_date,
             }

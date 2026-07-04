@@ -19,17 +19,19 @@ mlb:
       seed_leaderboards: [homeRuns]
 
     - key: total_bases
-      label: Total Bases (last 10 G)
+      label: Total Bases per Game (last 10 G, true avg)
       group: hitting
       mode: rolling_sum
       fields: [totalBases]
+      per_game: true
       seed_leaderboards: [totalBases]
 
     - key: hits_runs_rbi
-      label: Hits + Runs + RBI (last 10 G)
+      label: Hits + Runs + RBI per Game (last 10 G, true avg)
       group: hitting
       mode: rolling_sum
       fields: [hits, runs, rbi]
+      per_game: true
       seed_leaderboards: [hits, runs, runsBattedIn]
 
     - key: strikeouts

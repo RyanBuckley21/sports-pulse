@@ -67,8 +67,9 @@ def render_markdown(ranked_records, generated_at):
         lines.append("|---|---|---|---|---|")
         for r in records:
             last_game = r["last_game_date"] or "-"
+            value = f"{r['value']:.2f}" if isinstance(r["value"], float) else r["value"]
             lines.append(
-                f"| {r['rank']} | {r['entity']} | {r['team'] or '-'} | {r['value']} | {last_game} |"
+                f"| {r['rank']} | {r['entity']} | {r['team'] or '-'} | {value} | {last_game} |"
             )
         lines.append("")
     return "\n".join(lines)
