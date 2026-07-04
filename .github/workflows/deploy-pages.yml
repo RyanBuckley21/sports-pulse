@@ -1,0 +1,47 @@
+name: Deploy who's-hot dashboard to GitHub Pages
+
+on:
+  schedule:
+    # 14:00 UTC = 10:00 AM US Eastern (EDT, UTC-4). Shift to 15:00 UTC when
+    # the US switches back to EST (UTC-5) in the fall if you want the wall-
+    # clock time to stay fixed at 10:00 AM Eastern.
+    - cron: "0 14 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python3 generate_stats.py
+      - run: |
+          mkdir -p site
+          cp output/latest-whos-hot.html site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
