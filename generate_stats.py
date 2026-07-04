@@ -217,6 +217,8 @@ HTML_TEMPLATE = """<!doctype html>
     --bar-fill: rgba(255,90,50,0.14);
     --warning: #d98200;
     --critical: #d03b3b;
+    --warning-text: #b45309;
+    --critical-text: #b91c1c;
   }}
   @media (prefers-color-scheme: dark) {{
     :root {{
@@ -240,6 +242,8 @@ HTML_TEMPLATE = """<!doctype html>
       --bar-fill: rgba(255,122,90,0.22);
       --warning: #fab219;
       --critical: #e66767;
+      --warning-text: #fbbf24;
+      --critical-text: #f87171;
     }}
   }}
   * {{ box-sizing: border-box; }}
@@ -266,6 +270,8 @@ HTML_TEMPLATE = """<!doctype html>
   }}
   .freshness-dot.stale-1 {{ background: var(--warning); }}
   .freshness-dot.stale-old {{ background: var(--critical); }}
+  .meta.stale-1 {{ color: var(--warning-text); font-weight: 600; }}
+  .meta.stale-old {{ color: var(--critical-text); font-weight: 600; }}
   .sport-tabs {{
     display: flex; gap: 8px; padding: 12px 16px 0;
   }}
@@ -404,8 +410,11 @@ HTML_TEMPLATE = """<!doctype html>
       var generated = new Date(meta.dataset.generatedIso);
       if (isNaN(generated.getTime())) return;
       var hoursOld = (Date.now() - generated.getTime()) / 36e5;
-      if (hoursOld >= 48) dot.classList.add('stale-old');
-      else if (hoursOld >= 24) dot.classList.add('stale-1');
+      var cls = hoursOld >= 48 ? 'stale-old' : (hoursOld >= 24 ? 'stale-1' : null);
+      if (cls) {{
+        dot.classList.add(cls);
+        meta.classList.add(cls);
+      }}
     }})();
   </script>
 </body>
