@@ -206,6 +206,7 @@ HTML_TEMPLATE = """<!doctype html>
     --border: rgba(11,11,11,0.10);
     --accent: #2a78d6;
     --accent-wash: rgba(42,120,214,0.14);
+    --good: #0ca30c;
     --hot-1-a: #ff7a45;
     --hot-1-b: #ffc93c;
     --hot-1-c: #ff4d6d;
@@ -266,7 +267,7 @@ HTML_TEMPLATE = """<!doctype html>
   .topbar .meta {{ margin-top: 4px; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; }}
   .freshness-dot {{
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-    margin-right: 6px; background: var(--text-muted); flex: 0 0 auto;
+    margin-right: 6px; background: var(--good); flex: 0 0 auto;
   }}
   .freshness-dot.stale-1 {{ background: var(--warning); }}
   .freshness-dot.stale-old {{ background: var(--critical); }}
