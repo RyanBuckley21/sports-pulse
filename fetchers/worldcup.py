@@ -87,11 +87,14 @@ def get_completed_events(session, scoreboard_url, start, end):
     return events
 
 
-def get_match_player_stats(session, summary_url, event_id):
+def get_match_summary(session, summary_url, event_id):
+    return _get(session, summary_url, params={"event": event_id})
+
+
+def extract_player_stat_rows(summary_data):
     """Per-player stat lines for everyone who appeared in one match."""
-    data = _get(session, summary_url, params={"event": event_id})
     rows = []
-    for team_roster in data.get("rosters", []):
+    for team_roster in summary_data.get("rosters", []):
         team_name = team_roster.get("team", {}).get("displayName")
         for player in team_roster.get("roster", []):
             stat_map = {s["name"]: s.get("value", 0) for s in player.get("stats", [])}
@@ -108,21 +111,79 @@ def get_match_player_stats(session, summary_url, event_id):
     return rows
 
 
+def extract_clean_sheet_credits(summary_data):
+    """Starting goalkeepers whose team conceded 0 in a match they played
+    start to finish. `goalsConceded` on its own isn't trustworthy for this --
+    if a backup keeper subs on, we don't know whether that field is scoped to
+    the whole match or just the sub's time on the pitch (and some adjacent
+    ESPN fields, like shotsFaced, have been outright wrong in spot checks) --
+    so a clean sheet only counts when BOTH hold: the starter's own roster
+    entry shows they were never subbed out, AND no "Substitution" event in
+    the match involves any goalkeeper on their team. Either signal alone
+    could be missed or stale; requiring both is the safeguard."""
+    keeper_ids = set()
+    starters = []
+    for team_roster in summary_data.get("rosters", []):
+        team_name = team_roster.get("team", {}).get("displayName")
+        for player in team_roster.get("roster", []):
+            if player.get("position", {}).get("name") != "Goalkeeper":
+                continue
+            keeper_ids.add(player["athlete"]["id"])
+            if player.get("starter"):
+                stat_map = {s["name"]: s.get("value", 0) for s in player.get("stats", [])}
+                starters.append(
+                    {
+                        "team": team_name,
+                        "id": player["athlete"]["id"],
+                        "name": player["athlete"]["fullName"],
+                        "subbed_out": bool(player.get("subbedOut")),
+                        "goals_conceded": stat_map.get("goalsConceded"),
+                    }
+                )
+
+    keeper_sub_teams = set()
+    for event in summary_data.get("keyEvents", []):
+        if event.get("type", {}).get("type") != "substitution":
+            continue
+        participant_ids = {p.get("athlete", {}).get("id") for p in event.get("participants", [])}
+        if participant_ids & keeper_ids:
+            team_name = event.get("team", {}).get("displayName")
+            if team_name:
+                keeper_sub_teams.add(team_name)
+
+    return [
+        s
+        for s in starters
+        if s["team"] not in keeper_sub_teams and not s["subbed_out"] and s["goals_conceded"] == 0
+    ]
+
+
 def aggregate_tournament_stats(session, scoreboard_url, summary_url, start_compact, today_compact):
-    """Sum every player's per-match stat lines across all completed matches."""
+    """Sum every player's per-match stat lines across all completed matches,
+    plus a cleanSheets count folded into the same per-player stats dict so
+    it flows through the generic per-category pipeline like any other stat."""
     events = get_completed_events(session, scoreboard_url, start_compact, today_compact)
 
     players = {}
+
+    def add_stats(person_id, name, team, event_date, stat_updates):
+        entry = players.setdefault(
+            person_id, {"entity": name, "team": team, "stats": {}, "last_game_date": None}
+        )
+        for stat_name, value in stat_updates.items():
+            entry["stats"][stat_name] = entry["stats"].get(stat_name, 0) + (value or 0)
+        if entry["last_game_date"] is None or event_date > entry["last_game_date"]:
+            entry["last_game_date"] = event_date
+
     for event in events:
-        for row in get_match_player_stats(session, summary_url, event["id"]):
-            entry = players.setdefault(
-                row["id"],
-                {"entity": row["name"], "team": row["team"], "stats": {}, "last_game_date": None},
-            )
-            for stat_name, value in row["stats"].items():
-                entry["stats"][stat_name] = entry["stats"].get(stat_name, 0) + (value or 0)
-            if entry["last_game_date"] is None or event["date"] > entry["last_game_date"]:
-                entry["last_game_date"] = event["date"]
+        summary_data = get_match_summary(session, summary_url, event["id"])
+
+        for row in extract_player_stat_rows(summary_data):
+            add_stats(row["id"], row["name"], row["team"], event["date"], row["stats"])
+
+        for credit in extract_clean_sheet_credits(summary_data):
+            add_stats(credit["id"], credit["name"], credit["team"], event["date"], {"cleanSheets": 1})
+
     return players
 
 

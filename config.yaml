@@ -59,6 +59,15 @@ mlb:
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
 
+    - key: rbi
+      label: RBI (last 10 G)
+      short_label: RBI
+      unit: RBI
+      group: hitting
+      mode: rolling_sum
+      fields: [rbi]
+      seed_leaderboards: [runsBattedIn]
+
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
@@ -94,3 +103,17 @@ worldcup:
       unit: G+A
       mode: tournament_total
       fields: [totalGoals, goalAssists]
+
+    - key: assists
+      label: Assists (tournament)
+      short_label: Assists
+      unit: A
+      mode: tournament_total
+      fields: [goalAssists]
+
+    - key: clean_sheets
+      label: Clean Sheets (tournament, starting GK, full match only)
+      short_label: Clean Sheets
+      unit: CS
+      mode: tournament_total
+      fields: [cleanSheets]
