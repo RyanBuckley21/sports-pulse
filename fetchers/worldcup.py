@@ -17,6 +17,11 @@ import requests
 
 REQUEST_TIMEOUT = 15
 
+# Single-elimination rounds, in order, after the group stage. Any team that
+# doesn't turn up in one of these once the bracket is set has failed to
+# advance; any team that loses one of these matches is out.
+KNOCKOUT_STAGE_SLUGS = {"round-of-32", "round-of-16", "quarterfinals", "semifinals", "third-place", "final"}
+
 
 def _get(session, url, params=None):
     resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
@@ -24,16 +29,47 @@ def _get(session, url, params=None):
     return resp.json()
 
 
-def get_tournament_date_range(session, scoreboard_url):
-    """Tournament start date (from ESPN's season metadata) through today,
-    formatted as the YYYYMMDD strings ESPN's dates-range query expects."""
+def get_tournament_start_date(session, scoreboard_url):
+    """Tournament start date (from ESPN's season metadata), as an ISO date
+    string (YYYY-MM-DD)."""
     data = _get(session, scoreboard_url)
     leagues = data.get("leagues", [])
     if not leagues:
         raise ValueError("ESPN scoreboard response had no league/season metadata")
-    start_date = leagues[0]["season"]["startDate"][:10]
-    today = datetime.date.today().isoformat()
-    return start_date.replace("-", ""), today.replace("-", "")
+    return leagues[0]["season"]["startDate"][:10]
+
+
+def get_eliminated_teams(session, scoreboard_url, start_compact, end_compact):
+    """Team display names that are out of the tournament: they either never
+    reached the knockout bracket once it was set, or lost a knockout match.
+    `end_compact` should reach well past today, since a team's advancement
+    into the next round is visible as soon as it's slotted in -- not just
+    from completed matches -- and the query is otherwise cheap (one call)."""
+    data = _get(session, scoreboard_url, params={"dates": f"{start_compact}-{end_compact}"})
+    group_teams = set()
+    knockout_teams = set()
+    eliminated = set()
+    knockout_stage_seen = False
+
+    for event in data.get("events", []):
+        slug = event.get("season", {}).get("slug")
+        competitors = event.get("competitions", [{}])[0].get("competitors", [])
+        names = [c.get("team", {}).get("displayName") for c in competitors]
+        if slug == "group-stage":
+            group_teams.update(n for n in names if n)
+        elif slug in KNOCKOUT_STAGE_SLUGS:
+            knockout_stage_seen = True
+            knockout_teams.update(n for n in names if n)
+            if event.get("status", {}).get("type", {}).get("completed"):
+                for c in competitors:
+                    if c.get("winner") is False:
+                        name = c.get("team", {}).get("displayName")
+                        if name:
+                            eliminated.add(name)
+
+    if knockout_stage_seen:
+        eliminated.update(group_teams - knockout_teams)
+    return eliminated
 
 
 def get_completed_events(session, scoreboard_url, start, end):
@@ -72,10 +108,9 @@ def get_match_player_stats(session, summary_url, event_id):
     return rows
 
 
-def aggregate_tournament_stats(session, scoreboard_url, summary_url):
+def aggregate_tournament_stats(session, scoreboard_url, summary_url, start_compact, today_compact):
     """Sum every player's per-match stat lines across all completed matches."""
-    start, end = get_tournament_date_range(session, scoreboard_url)
-    events = get_completed_events(session, scoreboard_url, start, end)
+    events = get_completed_events(session, scoreboard_url, start_compact, today_compact)
 
     players = {}
     for event in events:
@@ -106,10 +141,23 @@ def compute_category_value(player_stats, cat_cfg):
 
 def fetch(config):
     """Fetch raw (unranked) tournament-to-date records for every configured
-    World Cup stat category."""
+    World Cup stat category, restricted to players on teams still alive."""
     wc_cfg = config["worldcup"]
+    scoreboard_url = wc_cfg["scoreboard_url"]
+    summary_url = wc_cfg["summary_url"]
     session = requests.Session()
-    players = aggregate_tournament_stats(session, wc_cfg["scoreboard_url"], wc_cfg["summary_url"])
+
+    start_iso = get_tournament_start_date(session, scoreboard_url)
+    start_compact = start_iso.replace("-", "")
+    today_compact = datetime.date.today().strftime("%Y%m%d")
+    # Wide enough to see the whole revealed bracket (not just played matches),
+    # since a team's advancement is known as soon as it's slotted into the
+    # next round -- comfortably past a ~5-week World Cup schedule.
+    wide_end_compact = (datetime.date.fromisoformat(start_iso) + datetime.timedelta(days=60)).strftime("%Y%m%d")
+
+    eliminated_teams = get_eliminated_teams(session, scoreboard_url, start_compact, wide_end_compact)
+    players = aggregate_tournament_stats(session, scoreboard_url, summary_url, start_compact, today_compact)
+    players = {pid: p for pid, p in players.items() if p["team"] not in eliminated_teams}
 
     records = []
     for cat_cfg in wc_cfg["stat_categories"]:
