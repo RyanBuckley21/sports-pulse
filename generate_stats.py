@@ -4,7 +4,10 @@ to ./output/ with a ranked "who's hot" table per stat category."""
 import base64
 import datetime
 import html
+import json
 import os
+import re
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -31,14 +34,79 @@ SPORT_LABELS = {
 
 CATEGORY_LABELS = {}
 CATEGORY_SHORT_LABELS = {}
+CATEGORY_UNITS = {}
 CATEGORY_ORDER_BY_SPORT = {}
 
+# Small monochrome icons (stroke="currentColor") for the category chips, so
+# they pick up the chip's active/inactive text color automatically. Baseball
+# categories use their real scorekeeping shorthand where one exists (K).
+CATEGORY_ICON_SVG = {
+    "home_runs": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>',
+    "total_bases": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="12" y="3" width="12.7" height="12.7" rx="2" transform="rotate(45 12 12)"/></svg>',
+    "hits_runs_rbi": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.2"/><path d="M5 21v-3a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v3"/></svg>',
+    "strikeouts": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M9 8v8M9 8h3.2a2.5 2.5 0 0 1 0 5H9M12.5 13l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    "hit_streak": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.5 0 7-2.7 7-6.5 0-3-2-5-3-7-1 2-2 2.5-2 4 0-3-2.5-5-3.5-8-2.5 3-6.5 7.5-6.5 11 0 3.8 2.5 6.5 8 6.5Z"/></svg>',
+    "shots": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3" stroke-linecap="round"/></svg>',
+    "shots_on_goal": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>',
+    "goals": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h13v6h-3v10H7V10H4Z"/></svg>',
+    "goal_or_assist": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M2 21v-2a5 5 0 0 1 5-5h1a5 5 0 0 1 4 2 5 5 0 0 1 4-2h1a5 5 0 0 1 5 5v2"/></svg>',
+}
+
 ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "icon-180.png")
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+LOGO_MANIFEST_PATH = os.path.join(ASSETS_DIR, "logos", "manifest.json")
+
+_logo_manifest = None
+# css_class -> absolute file path, populated as render_html() encounters
+# teams; only these get embedded, not every team in the manifest.
+_used_team_logos = {}
 
 
 def load_icon_base64():
     with open(ICON_PATH, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
+
+
+def slugify_for_css(s):
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+
+
+def load_logo_manifest():
+    global _logo_manifest
+    if _logo_manifest is None:
+        if os.path.exists(LOGO_MANIFEST_PATH):
+            with open(LOGO_MANIFEST_PATH) as f:
+                _logo_manifest = json.load(f)
+        else:
+            _logo_manifest = {}
+    return _logo_manifest
+
+
+def team_logo_css_class(sport_key, team_name):
+    """CSS class for a team's cached logo, registering it for embedding.
+    Returns None if we don't have a cached logo for this team (e.g. a
+    World Cup team that wasn't in the tournament window when logos were
+    last fetched) -- callers should just omit the logo in that case."""
+    if not team_name:
+        return None
+    rel_path = load_logo_manifest().get(sport_key, {}).get(team_name)
+    if not rel_path:
+        return None
+    abs_path = os.path.join(ASSETS_DIR, rel_path)
+    if not os.path.exists(abs_path):
+        return None
+    css_class = f"logo-{slugify_for_css(sport_key + '-' + team_name)}"
+    _used_team_logos[css_class] = abs_path
+    return css_class
+
+
+def render_team_logo_css():
+    rules = []
+    for css_class, abs_path in _used_team_logos.items():
+        with open(abs_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
+        rules.append(f'.{css_class} {{ background-image: url("data:image/png;base64,{b64}"); }}')
+    return "\n".join(rules)
 
 
 def load_config(path=CONFIG_PATH):
@@ -52,6 +120,7 @@ def index_category_labels(config):
         for cat_cfg in config.get(sport_key, {}).get("stat_categories", []):
             CATEGORY_LABELS[cat_cfg["key"]] = cat_cfg.get("label", cat_cfg["key"])
             CATEGORY_SHORT_LABELS[cat_cfg["key"]] = cat_cfg.get("short_label", cat_cfg["key"])
+            CATEGORY_UNITS[cat_cfg["key"]] = cat_cfg.get("unit", "")
             cat_keys.append(cat_cfg["key"])
         CATEGORY_ORDER_BY_SPORT[sport_key] = cat_keys
 
@@ -112,6 +181,7 @@ def rank_badge_class(rank):
 
 
 def render_html(ranked_records, generated_at):
+    _used_team_logos.clear()
     by_sport_category = {}
     for r in ranked_records:
         by_sport_category.setdefault(r["sport"], {}).setdefault(r["stat_category"], []).append(r)
@@ -132,8 +202,10 @@ def render_html(ranked_records, generated_at):
         chips = []
         for c_idx, cat_key in enumerate(cat_keys):
             chip_active = " active" if s_idx == 0 and c_idx == 0 else ""
+            icon = CATEGORY_ICON_SVG.get(cat_key, "")
             chips.append(
                 f'<button class="chip{chip_active}" data-sport="{sport_key}" data-cat="{cat_key}">'
+                f'<span class="chip-icon" aria-hidden="true">{icon}</span>'
                 f"{html.escape(CATEGORY_SHORT_LABELS.get(cat_key, cat_key))}</button>"
             )
         group_hidden = "" if s_idx == 0 else " hidden"
@@ -155,15 +227,19 @@ def render_html(ranked_records, generated_at):
                 row_class = "row row-hero" if is_top else "row"
                 val_class = "val val-hero" if is_top else "val"
                 flame = '<i class="flame-badge" aria-hidden="true">&#128293;</i>' if is_top else ""
+                unit = CATEGORY_UNITS.get(cat_key, "")
+                unit_html = f'<div class="unit">{html.escape(unit)}</div>' if unit else ""
+                team_logo_class = team_logo_css_class(sport_key, r["team"])
+                logo_html = f'<span class="team-logo {team_logo_class}" aria-hidden="true"></span>' if team_logo_class else ""
                 rows.append(
                     f'<li class="{row_class}">'
                     f'<div class="value-bar" style="width:{bar_pct}%" aria-hidden="true"></div>'
                     f'<span class="rank-badge {rank_badge_class(r["rank"])}">{r["rank"]}{flame}</span>'
                     f'<div class="who">'
                     f'<div class="name">{html.escape(r["entity"])}</div>'
-                    f'<div class="sub">{html.escape(r["team"] or "-")} &middot; {html.escape(last_game)}</div>'
+                    f'<div class="sub">{logo_html}<span class="sub-text">{html.escape(r["team"] or "-")} &middot; {html.escape(last_game)}</span></div>'
                     f"</div>"
-                    f'<div class="{val_class}">{format_value(r["value"])}</div>'
+                    f'<div class="val-wrap"><div class="{val_class}">{format_value(r["value"])}</div>{unit_html}</div>'
                     f"</li>"
                 )
             panels.append(
@@ -173,10 +249,12 @@ def render_html(ranked_records, generated_at):
                 f"</section>"
             )
 
+    generated_at_eastern = generated_at.astimezone(ZoneInfo("America/New_York"))
     return HTML_TEMPLATE.format(
-        generated_at=generated_at.strftime("%b %-d, %Y %-I:%M %p %Z"),
+        generated_at=generated_at_eastern.strftime("%b %-d, %Y %-I:%M %p %Z"),
         generated_at_iso=generated_at.isoformat(),
         icon_b64=load_icon_base64(),
+        team_logo_css=render_team_logo_css(),
         sport_tabs="".join(sport_tabs),
         cat_chip_groups="".join(cat_chip_groups),
         panels="".join(panels),
@@ -295,11 +373,14 @@ HTML_TEMPLATE = """<!doctype html>
     pointer-events: none; opacity: 1; transition: opacity 0.15s ease;
   }}
   .chip {{
-    flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+    flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
     background: var(--surface-1); color: var(--text-secondary);
     font-size: 13px; font-weight: 600; font-family: inherit; white-space: nowrap;
   }}
   .chip.active {{ background: var(--accent-wash); color: var(--accent); border-color: var(--accent); }}
+  .chip-icon {{ display: inline-flex; width: 15px; height: 15px; flex: 0 0 auto; }}
+  .chip-icon svg {{ width: 100%; height: 100%; display: block; }}
   .cat-panel {{ padding: 8px 16px 4px; }}
   .cat-panel h2 {{
     font-size: 14px; font-weight: 600; color: var(--text-secondary);
@@ -341,14 +422,27 @@ HTML_TEMPLATE = """<!doctype html>
   }}
   .who {{ position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; }}
   .name {{ font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
-  .sub {{ font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+  .sub {{
+    font-size: 12px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px; min-width: 0;
+  }}
+  .sub-text {{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }}
+  .team-logo {{
+    flex: 0 0 auto; width: 14px; height: 14px; border-radius: 3px;
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+  }}
+  .val-wrap {{ position: relative; z-index: 1; flex: 0 0 auto; text-align: right; }}
   .val {{
-    position: relative; z-index: 1;
-    flex: 0 0 auto; font-size: 18px; font-weight: 700;
+    font-size: 18px; font-weight: 700;
     font-variant-numeric: tabular-nums;
   }}
   .val-hero {{ font-size: 21px; }}
+  .unit {{
+    font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-muted);
+    text-transform: uppercase; margin-top: 1px;
+  }}
   [hidden] {{ display: none !important; }}
+  {team_logo_css}
 </style>
 </head>
 <body>

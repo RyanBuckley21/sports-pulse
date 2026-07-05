@@ -14,6 +14,7 @@ mlb:
     - key: home_runs
       label: Home Runs (last 10 G)
       short_label: Home Runs
+      unit: HR
       group: hitting
       mode: rolling_sum
       fields: [homeRuns]
@@ -22,6 +23,7 @@ mlb:
     - key: total_bases
       label: Total Bases per Game (last 10 G, true avg)
       short_label: Total Bases/G
+      unit: TB/G
       group: hitting
       mode: rolling_sum
       fields: [totalBases]
@@ -31,6 +33,7 @@ mlb:
     - key: hits_runs_rbi
       label: Hits + Runs + RBI per Game (last 10 G, true avg)
       short_label: H+R+RBI/G
+      unit: H+R+RBI/G
       group: hitting
       mode: rolling_sum
       fields: [hits, runs, rbi]
@@ -40,6 +43,7 @@ mlb:
     - key: strikeouts
       label: "Strikeouts per Game (last 10 G, today's starters only, true avg)"
       short_label: K/G (Starters)
+      unit: K/G
       group: pitching
       mode: rolling_sum
       fields: [strikeOuts]
@@ -50,6 +54,7 @@ mlb:
     - key: hit_streak
       label: Active Hit Streak
       short_label: Hit Streak
+      unit: GAMES
       group: hitting
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
@@ -63,6 +68,7 @@ worldcup:
     - key: shots
       label: Total Shots per Game (tournament, true avg)
       short_label: Total Shots/Game
+      unit: SH/G
       mode: tournament_total
       fields: [totalShots]
       per_game: true
@@ -70,6 +76,7 @@ worldcup:
     - key: shots_on_goal
       label: Shots on Goal per Game (tournament, true avg)
       short_label: Shots on Goal/G
+      unit: SOG/G
       mode: tournament_total
       fields: [shotsOnTarget]
       per_game: true
@@ -77,11 +84,13 @@ worldcup:
     - key: goals
       label: Goals (tournament)
       short_label: Goals
+      unit: G
       mode: tournament_total
       fields: [totalGoals]
 
     - key: goal_or_assist
       label: Goal Involvements (tournament)
       short_label: Goal Involvements
+      unit: G+A
       mode: tournament_total
       fields: [totalGoals, goalAssists]
