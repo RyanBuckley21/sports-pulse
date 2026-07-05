@@ -1,0 +1,29 @@
+name: Fetch team logos
+
+# Manual only -- this caches team logos into assets/logos/ so the daily
+# deploy workflow never needs network access to mlbstatic.com or
+# a.espncdn.com. Re-run only when logos are missing or a new team needs
+# adding (e.g. a World Cup team not seen in the cached date range).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-logos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt -r scripts/requirements.txt
+      - run: playwright install --with-deps chromium
+      - run: python3 scripts/fetch_logos.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/logos
+          git diff --cached --quiet && echo "No logo changes to commit" || git commit -m "Update cached team logos"
+          git push
