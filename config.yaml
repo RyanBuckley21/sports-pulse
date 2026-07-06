@@ -59,15 +59,6 @@ mlb:
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
 
-    - key: rbi
-      label: RBI (last 10 G)
-      short_label: RBI
-      unit: RBI
-      group: hitting
-      mode: rolling_sum
-      fields: [rbi]
-      seed_leaderboards: [runsBattedIn]
-
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard

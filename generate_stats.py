@@ -29,11 +29,11 @@ SPORT_LABELS = {"mlb": "MLB", "worldcup": "World Cup"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear. config.yaml keeps a couple of categories
-# (hits_runs_rbi, goal_or_assist, shots_on_goal) that aren't part of this
-# UI's confirmed set -- they still get fetched/ranked like everything else,
-# just not emitted into data.json.
+# (goal_or_assist, shots_on_goal) that aren't part of this UI's confirmed
+# set -- they still get fetched/ranked like everything else, just not
+# emitted into data.json.
 APPROVED_CATEGORIES = {
-    "mlb": ["home_runs", "rbi", "total_bases", "strikeouts", "hit_streak"],
+    "mlb": ["home_runs", "hits_runs_rbi", "total_bases", "strikeouts", "hit_streak"],
     "worldcup": ["goals", "assists", "shots", "clean_sheets"],
 }
 
@@ -45,9 +45,17 @@ APPROVED_CATEGORIES = {
 # headers -- config.yaml's `label` is intentionally verbose (parenthetical
 # window/mode detail meant for the old Markdown/HTML report headers) and
 # would duplicate `sub` if reused here.
+#
+# hits_runs_rbi is `kind: rate` (not `count`) even though it's a combined
+# counting stat: config.yaml has `per_game: true` for it, so its ranked
+# `value` is already a true per-game average (like total_bases/strikeouts),
+# not a raw sum (like home_runs). The `count` breakdown formula divides
+# `value` by the series length to *get* a per-game average -- doing that
+# to a value that's already an average would silently double-average it.
+# `rate`'s Average/Peak/Low breakdown reads `value` directly instead.
 CATEGORY_META = {
     "home_runs": {"kind": "count", "sub": "Last 10 G", "title": "Home Runs"},
-    "rbi": {"kind": "count", "sub": "Last 10 G", "title": "RBI"},
+    "hits_runs_rbi": {"kind": "rate", "sub": "Last 10 G", "title": "H+R+RBI / G"},
     "total_bases": {"kind": "rate", "sub": "Last 10 G", "title": "Total Bases / G"},
     "strikeouts": {"kind": "rate", "sub": "Starters", "title": "Strikeouts / G"},
     "hit_streak": {"kind": "streak", "sub": "Active", "title": "Hit Streak"},
