@@ -49,6 +49,7 @@ def get_season_leaders(session, base_url, season, category, group, limit):
                 "id": person.get("id"),
                 "name": person.get("fullName"),
                 "team": team.get("name"),
+                "team_id": team.get("id"),
             }
         )
     return leaders
@@ -91,6 +92,23 @@ def get_roster_index(session, base_url):
             if abbr:
                 positions[person_id] = abbr
     return injured, positions
+
+
+def get_teams_playing(session, base_url, date):
+    """Team ids with a game scheduled on `date` (YYYY-MM-DD). The dashboard
+    is a same-day "who's hot" board -- generated in the morning for that
+    day's slate -- so every MLB category is restricted to players whose
+    team actually takes the field, the same way strikeouts is already
+    restricted to today's probable starters."""
+    data = _get(session, f"{base_url}/schedule", params={"sportId": 1, "date": date})
+    team_ids = set()
+    for d in data.get("dates", []):
+        for game in d.get("games", []):
+            for side in ("away", "home"):
+                team_id = game.get("teams", {}).get(side, {}).get("team", {}).get("id")
+                if team_id is not None:
+                    team_ids.add(team_id)
+    return team_ids
 
 
 def get_probable_starters(session, base_url, date):
@@ -192,13 +210,15 @@ def compute_category_value(stat, cat_cfg):
     return round(total / games_played, 2)
 
 
-def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions):
+def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size
     )
     records = []
     for person_id, player in pool.items():
         if person_id in injured_ids:
+            continue
+        if playing_team_ids and player.get("team_id") not in playing_team_ids:
             continue
         stat = get_last_x_games_stat(session, base_url, person_id, season, cat_cfg["group"], window_games)
         if not stat:
@@ -252,13 +272,15 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
     return records
 
 
-def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions):
+def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size
     )
     records = []
     for person_id, player in pool.items():
         if person_id in injured_ids:
+            continue
+        if playing_team_ids and player.get("team_id") not in playing_team_ids:
             continue
         game_log = get_game_log(session, base_url, person_id, season, "hitting")
         if not game_log:
@@ -334,6 +356,10 @@ def fetch(config, game_date=None):
 
     session = requests.Session()
     injured_ids, positions = get_roster_index(session, base_url)
+    # Empty on an off-day (no games scheduled): the category fetchers treat
+    # an empty set as "don't filter" so a rare no-game day still shows the
+    # latest boards instead of an empty dashboard.
+    playing_team_ids = get_teams_playing(session, base_url, game_date)
     records = []
     for cat_cfg in mlb_cfg["stat_categories"]:
         window_games = cat_cfg.get("window_games", default_window_games)
@@ -346,12 +372,12 @@ def fetch(config, game_date=None):
         elif cat_cfg["mode"] == "rolling_sum":
             records.extend(
                 fetch_rolling_sum_category(
-                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions
+                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids
                 )
             )
         elif cat_cfg["mode"] == "hit_streak":
             records.extend(
-                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions)
+                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids)
             )
         else:
             raise ValueError(f"Unknown MLB stat category mode: {cat_cfg['mode']}")
