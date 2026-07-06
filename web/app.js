@@ -27,8 +27,11 @@
   }
 
   function fmtValue(value, kind) {
+    // Number() coercion is defense-in-depth: values are numeric by
+    // construction in generate_stats.py, but nothing rendered into the
+    // DOM should trust data.json enough to pass a string through raw.
     if (kind === "rate") return Number(value).toFixed(1);
-    return String(value);
+    return String(Number(value));
   }
 
   function relativeTime(iso) {
@@ -157,7 +160,7 @@
     var rows = players
       .map(function (p) {
         var isLeader = p.rank === 1;
-        var pct = Math.max(6, Math.round((p.value / leaderValue) * 100));
+        var pct = Math.max(6, Math.round((Number(p.value) / Number(leaderValue)) * 100) || 0);
         var teamColor = p.team_color || "rgba(255,255,255,0.4)";
         var heatDot = isLeader ? '<span class="heat-dot"></span>' : "";
         var logo = p.logo_path ? '<img class="row-logo" src="' + esc(p.logo_path) + '" alt="">' : "";
@@ -166,9 +169,9 @@
           : "";
         var barShadow = isLeader ? "box-shadow:0 0 10px " + alpha(p.team_color, "80") + ";" : "";
         return (
-          '<li><button class="player-row" data-rank="' + p.rank + '" type="button">' +
+          '<li><button class="player-row" data-rank="' + Number(p.rank) + '" type="button">' +
           '<div class="row-top">' +
-          '<span class="row-rank">' + String(p.rank).padStart(2, "0") + "</span>" +
+          '<span class="row-rank">' + String(Number(p.rank)).padStart(2, "0") + "</span>" +
           '<span class="row-name">' + esc(p.entity) + "</span>" +
           heatDot +
           logo +
@@ -208,7 +211,7 @@
         teamChipLogo + esc(player.team_abbr) + "</span>"
       : "";
 
-    var posLine = player.team + (player.position ? " &middot; " + esc(player.position) : "");
+    var posLine = esc(player.team) + (player.position ? " &middot; " + esc(player.position) : "");
     var heat = isLeader ? '<span class="identity-heat"></span>' : "";
 
     var leaderVal = board[0].value;
@@ -225,7 +228,7 @@
     // never eats into the space reserved for its label above it.
     var bars = series
       .map(function (s) {
-        var hPx = Math.max(4, Math.round((s.value / maxVal) * BAR_MAX_PX));
+        var hPx = Math.max(4, Math.round((Number(s.value) / Number(maxVal)) * BAR_MAX_PX) || 0);
         var o = s.value === 0 ? 0.22 : 1;
         var label = fmtValue(s.value, cat.kind);
         return (
@@ -271,10 +274,10 @@
       '<div class="hero-row">' +
       '<div class="hero-value" style="color:' + teamColor + '">' + fmtValue(player.value, cat.kind) + "</div>" +
       '<div class="hero-caption"><div class="hero-cat">' + esc(cat.label) + '</div><div class="hero-sub">' +
-      esc(cat.sub).toUpperCase() + " &middot; #" + player.rank + "</div></div>" +
+      esc(cat.sub).toUpperCase() + " &middot; #" + Number(player.rank) + "</div></div>" +
       "</div>" +
       '<div class="key-row">' +
-      keyCell("#" + player.rank, "Rank") +
+      keyCell("#" + Number(player.rank), "Rank") +
       keyCell(String(player.total_qualified != null ? player.total_qualified : "-"), "Ranked") +
       keyCell(gapStr, gapLabel) +
       "</div>" +
