@@ -34,6 +34,13 @@ jobs:
           cp web/index.html web/app.css web/app.js site/
           cp output/data.json site/data.json
           cp -r assets site/assets
+          # Cache-bust app.css/app.js on every deploy: without this, Safari
+          # (especially in "Add to Home Screen" standalone mode) can keep
+          # serving a stale cached copy of these files indefinitely even
+          # after a hard refresh or app relaunch, since nothing about their
+          # URL ever changes from one deploy to the next.
+          sed -i "s/app.css\"/app.css?v=${GITHUB_SHA}\"/" site/index.html
+          sed -i "s/app.js\"/app.js?v=${GITHUB_SHA}\"/" site/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
