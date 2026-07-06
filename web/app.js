@@ -104,9 +104,6 @@
       '<span class="status-text ' + cls + '" id="statusText">Updated ' + esc(relativeTime(generatedAt)) + "</span>" +
       "</div>" +
       "</div>" +
-      '<button class="refresh-btn" id="refreshBtn" aria-label="Refresh" type="button">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>' +
-      "</button>" +
       "</header>"
     );
   }
@@ -401,10 +398,6 @@
       render();
       return;
     }
-    if (e.target.closest("#refreshBtn")) {
-      refresh();
-      return;
-    }
   });
 
   appEl.addEventListener(
@@ -415,14 +408,6 @@
     true
   );
   window.addEventListener("resize", updateScrollFade);
-
-  function refresh() {
-    var btn = document.getElementById("refreshBtn");
-    if (btn) btn.classList.add("spinning");
-    loadData().finally(function () {
-      if (btn) btn.classList.remove("spinning");
-    });
-  }
 
   // Keep the relative "Updated X ago" text and freshness color live without
   // a full re-render (avoids disrupting scroll position / open detail view).
