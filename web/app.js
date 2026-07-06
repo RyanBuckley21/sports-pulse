@@ -70,10 +70,14 @@
 
   function render() {
     var html = '<div class="wrap">';
-    html += renderHeader();
-    html += renderSportToggle();
-    html += renderChipRow();
-    html += state.view === "detail" ? renderDetail() : renderList();
+    if (state.view === "detail") {
+      html += renderDetail();
+    } else {
+      html += renderHeader();
+      html += renderSportToggle();
+      html += renderChipRow();
+      html += renderList();
+    }
     html += "</div>";
     appEl.innerHTML = html;
     updateScrollFade();
