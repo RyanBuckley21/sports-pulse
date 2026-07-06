@@ -31,7 +31,9 @@ jobs:
       - run: python3 generate_stats.py
       - run: |
           mkdir -p site
-          cp output/latest-whos-hot.html site/index.html
+          cp web/index.html web/app.css web/app.js site/
+          cp output/data.json site/data.json
+          cp -r assets site/assets
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

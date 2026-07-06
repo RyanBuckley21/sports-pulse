@@ -1,0 +1,143 @@
+:root {
+  --bg: #0A0A0B;
+  --surface: #0E0E10;
+  --hairline: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-chip: rgba(255, 255, 255, 0.09);
+  --text: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.5);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+  --text-rank: rgba(255, 255, 255, 0.32);
+  --accent: #FF7A2E;
+  --good: #3FD07A;
+  --warning: #FBBF24;
+  --critical: #F87171;
+  --heat: radial-gradient(circle at 35% 30%, #FFD9A0, #FF7A2E 55%, #E8480E);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: 24px 18px 60px; }
+
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.app-header { display: flex; align-items: center; gap: 12px; }
+.app-icon {
+  width: 44px; height: 44px; flex: none; border-radius: 13px;
+  background: radial-gradient(circle at 32% 26%, #33203F, #120B1D);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.app-icon .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--heat); box-shadow: 0 0 8px rgba(255, 120, 40, 0.7); }
+.app-title { font: 700 22px/1 'Space Grotesk'; letter-spacing: -0.6px; }
+.app-status { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--good); box-shadow: 0 0 6px var(--good); }
+.live-dot.stale-1 { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+.live-dot.stale-old { background: var(--critical); box-shadow: 0 0 6px var(--critical); }
+.status-text { font: 500 11.5px/1 'JetBrains Mono'; color: var(--text-tertiary); }
+.status-text.stale-1 { color: var(--warning); }
+.status-text.stale-old { color: var(--critical); }
+.refresh-btn {
+  margin-left: auto; width: 38px; height: 38px; flex: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  color: rgba(255, 255, 255, 0.55); padding: 0;
+}
+.refresh-btn svg { width: 16px; height: 16px; display: block; }
+.refresh-btn.spinning svg { animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- sport toggle ---------- */
+.sport-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
+.sport-btn {
+  text-align: center; padding: 11px; border-radius: 10px; font: 500 14px 'Space Grotesk';
+  cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-tertiary);
+}
+.sport-btn.active { background: rgba(255, 255, 255, 0.06); border-bottom: 2px solid var(--accent); font-weight: 600; color: var(--text); }
+
+/* ---------- stat chips ---------- */
+.chip-row-wrap { position: relative; }
+.chip-row {
+  display: flex; gap: 6px; margin: 16px 0 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; padding-bottom: 2px;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip-fade {
+  position: absolute; top: 0; right: 0; bottom: 4px; width: 30px;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none; opacity: 1; transition: opacity 0.15s ease;
+}
+.chip {
+  flex: none; padding: 8px 12px; border-radius: 7px; font: 600 11px 'JetBrains Mono';
+  letter-spacing: 0.5px; white-space: nowrap; cursor: pointer;
+  background: transparent; border: 1px solid var(--border-chip); color: rgba(255, 255, 255, 0.45);
+}
+.chip.active { color: var(--accent); }
+
+/* ---------- section title ---------- */
+.section-title-row { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 2px 8px; }
+.section-title { font: 600 12px 'JetBrains Mono'; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; }
+.section-sub { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); }
+
+/* ---------- leaderboard rows ---------- */
+.board { list-style: none; margin: 0; padding: 0; }
+.player-row { padding: 12px 10px; border-radius: 10px; cursor: pointer; margin: 0 -6px; border: none; background: none; width: calc(100% + 12px); text-align: left; font: inherit; color: inherit; display: block; }
+.player-row:hover, .player-row:active { background: rgba(255, 255, 255, 0.04); }
+.row-top { display: flex; align-items: center; gap: 10px; }
+.row-rank { font: 500 13px 'JetBrains Mono'; color: var(--text-rank); width: 22px; flex: none; }
+.row-name { font: 600 15px 'Space Grotesk'; color: var(--text); letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.heat-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--heat); box-shadow: 0 0 6px rgba(255, 120, 40, 0.75); }
+.row-logo { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; flex: none; }
+.row-team { font: 600 10px 'JetBrains Mono'; letter-spacing: 0.5px; flex: none; }
+.row-value-wrap { margin-left: auto; flex: none; }
+.row-value { font: 600 20px 'Space Grotesk'; color: var(--text); letter-spacing: -0.5px; }
+.mag-track { margin-top: 9px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.mag-fill { height: 100%; border-radius: 3px; }
+.empty-state { font: 400 13px system-ui; color: var(--text-tertiary); padding: 20px 4px; }
+
+/* ---------- detail view ---------- */
+.detail-back-row { display: flex; align-items: center; gap: 12px; }
+.back-btn {
+  width: 36px; height: 36px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.crumb { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; }
+
+.identity-row { margin-top: 22px; display: flex; align-items: center; gap: 11px; }
+.team-chip { font: 700 13px 'JetBrains Mono'; padding: 6px 8px; border-radius: 6px; letter-spacing: 0.5px; flex: none; display: flex; align-items: center; gap: 6px; }
+.team-chip img { width: 16px; height: 16px; border-radius: 3px; object-fit: contain; }
+.identity-name { font: 700 24px/1 'Space Grotesk'; color: var(--text); letter-spacing: -0.6px; }
+.identity-sub { font: 400 12px system-ui; color: rgba(255, 255, 255, 0.45); margin-top: 5px; }
+.identity-heat { margin-left: auto; width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--heat); box-shadow: 0 0 9px rgba(255, 120, 40, 0.8); }
+
+.hero-row { margin-top: 24px; display: flex; align-items: flex-end; gap: 14px; }
+.hero-value { font: 700 68px/0.82 'Space Grotesk'; letter-spacing: -2.5px; }
+.hero-caption { padding-bottom: 10px; }
+.hero-cat { font: 600 13px 'Space Grotesk'; color: var(--text); }
+.hero-sub { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); margin-top: 4px; }
+
+.key-row { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border-radius: 14px; overflow: hidden; background: var(--hairline); }
+.key-cell { background: var(--surface); padding: 15px 8px; text-align: center; }
+.key-value { font: 600 22px 'Space Grotesk'; color: var(--text); letter-spacing: -0.5px; }
+.key-label { font: 500 9px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+.bars-section { margin-top: 22px; }
+.bars-label { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+.bars-row { display: flex; align-items: flex-end; gap: 6px; height: 58px; }
+.bar { flex: 1; border-radius: 3px; min-width: 0; }
+.no-series-note { font: 400 13px system-ui; color: var(--text-tertiary); }
+
+.breakdown-section { margin-top: 24px; }
+.breakdown-label { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+.breakdown-row { display: flex; justify-content: space-between; padding: 13px 2px; border-bottom: 1px solid var(--hairline); }
+.breakdown-row-label { font: 400 13px system-ui; color: rgba(255, 255, 255, 0.55); }
+.breakdown-row-value { font: 600 13px 'JetBrains Mono'; color: var(--text); }

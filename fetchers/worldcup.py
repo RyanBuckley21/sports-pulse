@@ -22,6 +22,23 @@ REQUEST_TIMEOUT = 15
 # advance; any team that loses one of these matches is out.
 KNOCKOUT_STAGE_SLUGS = {"round-of-32", "round-of-16", "quarterfinals", "semifinals", "third-place", "final"}
 
+# ESPN reports granular positions ("Center Left Defender", "Attacking
+# Midfielder Left", ...); collapse to the four broad buckets the UI groups
+# by. Order matters only in that each keyword is unambiguous on its own.
+def classify_position(position_name):
+    if not position_name:
+        return None
+    name = position_name.lower()
+    if "goalkeeper" in name:
+        return "Goalkeeper"
+    if "back" in name or "defender" in name:
+        return "Defender"
+    if "midfielder" in name:
+        return "Midfielder"
+    if "forward" in name:
+        return "Forward"
+    return position_name
+
 
 def _get(session, url, params=None):
     resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
@@ -105,6 +122,7 @@ def extract_player_stat_rows(summary_data):
                     "id": player["athlete"]["id"],
                     "name": player["athlete"]["fullName"],
                     "team": team_name,
+                    "position": classify_position(player.get("position", {}).get("name")),
                     "stats": stat_map,
                 }
             )
@@ -161,28 +179,45 @@ def extract_clean_sheet_credits(summary_data):
 def aggregate_tournament_stats(session, scoreboard_url, summary_url, start_compact, today_compact):
     """Sum every player's per-match stat lines across all completed matches,
     plus a cleanSheets count folded into the same per-player stats dict so
-    it flows through the generic per-category pipeline like any other stat."""
+    it flows through the generic per-category pipeline like any other stat.
+    Also retains each match's individual (already-merged) stat line in
+    `series`, so the detail view can show a real per-match breakdown instead
+    of just the tournament-to-date total.
+
+    A clean-sheet credit and a player's regular stat row for the same match
+    are merged into one series entry per match (not two) -- both ultimately
+    describe the same player-match, and keeping them separate would double
+    the series length for any credited goalkeeper without changing the
+    running totals, which are unaffected either way since dict-keyed
+    summation doesn't care whether it's called once or twice per match."""
     events = get_completed_events(session, scoreboard_url, start_compact, today_compact)
 
     players = {}
 
-    def add_stats(person_id, name, team, event_date, stat_updates):
+    def add_stats(person_id, name, team, position, event_date, stat_updates):
         entry = players.setdefault(
-            person_id, {"entity": name, "team": team, "stats": {}, "last_game_date": None}
+            person_id,
+            {"entity": name, "team": team, "position": position, "stats": {}, "last_game_date": None, "series": []},
         )
         for stat_name, value in stat_updates.items():
             entry["stats"][stat_name] = entry["stats"].get(stat_name, 0) + (value or 0)
+        entry["series"].append({"date": event_date, "stats": stat_updates})
         if entry["last_game_date"] is None or event_date > entry["last_game_date"]:
             entry["last_game_date"] = event_date
 
     for event in events:
         summary_data = get_match_summary(session, summary_url, event["id"])
 
-        for row in extract_player_stat_rows(summary_data):
-            add_stats(row["id"], row["name"], row["team"], event["date"], row["stats"])
-
+        match_rows = {row["id"]: row for row in extract_player_stat_rows(summary_data)}
         for credit in extract_clean_sheet_credits(summary_data):
-            add_stats(credit["id"], credit["name"], credit["team"], event["date"], {"cleanSheets": 1})
+            row = match_rows.setdefault(
+                credit["id"],
+                {"id": credit["id"], "name": credit["name"], "team": credit["team"], "position": "Goalkeeper", "stats": {}},
+            )
+            row["stats"]["cleanSheets"] = 1
+
+        for row in match_rows.values():
+            add_stats(row["id"], row["name"], row["team"], row.get("position"), event["date"], row["stats"])
 
     return players
 
@@ -223,18 +258,29 @@ def fetch(config):
     records = []
     for cat_cfg in wc_cfg["stat_categories"]:
         window = "tournament_to_date" + ("_per_game" if cat_cfg.get("per_game") else "")
-        for player in players.values():
+        for person_id, player in players.items():
             value = compute_category_value(player["stats"], cat_cfg)
             if not value:
                 continue
+            # Per-match value for this category = the same configured fields,
+            # summed within just that one match's stat line -- consistent
+            # with how the tournament-to-date total is computed, just scoped
+            # to a single series entry instead of the whole tournament.
+            series = [
+                {"date": s["date"], "value": int(sum(s["stats"].get(f, 0) for f in cat_cfg["fields"]))}
+                for s in player["series"]
+            ]
             records.append(
                 {
                     "entity": player["entity"],
+                    "entity_id": person_id,
                     "team": player["team"],
+                    "position": player.get("position"),
                     "stat_category": cat_cfg["key"],
                     "window": window,
                     "value": value if cat_cfg.get("per_game") else int(value),
                     "last_game_date": player["last_game_date"],
+                    "series": series,
                 }
             )
     return records

@@ -64,12 +64,18 @@ def build_candidate_pool(session, base_url, season, seed_categories, group, pool
     return pool
 
 
-def get_injured_player_ids(session, base_url):
-    """Person ids currently on a Major League injured list (D7/D10/D15/D60
-    roster status codes), pulled from every team's 40-man roster. Fetched
-    once per run and reused across all categories."""
+def get_roster_index(session, base_url):
+    """One pass over every team's 40-man roster, fetched once per run and
+    reused across all categories, producing both:
+      - injured: person ids on a Major League injured list (D7/D10/D15/D60
+        roster status codes)
+      - positions: person id -> position abbreviation (e.g. "3B", "SP"),
+        for display in the player detail view
+    Combined into one function since both are derived from the same roster
+    calls -- splitting them would double the ~30 team-roster requests."""
     teams = _get(session, f"{base_url}/teams", params={"sportId": 1}).get("teams", [])
     injured = set()
+    positions = {}
     for team in teams:
         roster = _get(
             session,
@@ -77,10 +83,14 @@ def get_injured_player_ids(session, base_url):
             params={"rosterType": "40Man"},
         ).get("roster", [])
         for entry in roster:
+            person_id = entry["person"]["id"]
             status_code = entry.get("status", {}).get("code", "")
             if status_code.startswith("D"):
-                injured.add(entry["person"]["id"])
-    return injured
+                injured.add(person_id)
+            abbr = entry.get("position", {}).get("abbreviation")
+            if abbr:
+                positions[person_id] = abbr
+    return injured, positions
 
 
 def get_probable_starters(session, base_url, date):
@@ -182,7 +192,7 @@ def compute_category_value(stat, cat_cfg):
     return round(total / games_played, 2)
 
 
-def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids):
+def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size
     )
@@ -201,7 +211,9 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
         records.append(
             {
                 "entity": player["name"],
+                "entity_id": person_id,
                 "team": player["team"],
+                "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": window,
                 "value": value,
@@ -211,7 +223,7 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
     return records
 
 
-def fetch_probable_starters_category(session, base_url, season, window_games, cat_cfg, injured_ids, game_date):
+def fetch_probable_starters_category(session, base_url, season, window_games, cat_cfg, injured_ids, positions, game_date):
     starters = get_probable_starters(session, base_url, game_date)
     records = []
     for person_id, player in starters.items():
@@ -228,7 +240,9 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
         records.append(
             {
                 "entity": player["name"],
+                "entity_id": person_id,
                 "team": player["team"],
+                "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": window,
                 "value": value,
@@ -238,7 +252,7 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
     return records
 
 
-def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids):
+def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions):
     pool = build_candidate_pool(
         session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size
     )
@@ -255,7 +269,9 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
         records.append(
             {
                 "entity": player["name"],
+                "entity_id": person_id,
                 "team": player["team"],
+                "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": "active_streak",
                 "value": streak,
@@ -263,6 +279,48 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
             }
         )
     return records
+
+
+def fetch_series_for_player(session, base_url, person_id, season, group, fields, window_games):
+    """Per-game value series for one player, using the same `gameLog`
+    endpoint already trusted for hit streaks -- just reading different
+    fields out of each game's split instead of walking it for a streak."""
+    game_log = get_game_log(session, base_url, person_id, season, group, limit=window_games)
+    return [
+        {
+            "date": split.get("date"),
+            "value": int(sum(split.get("stat", {}).get(f, 0) or 0 for f in fields)),
+        }
+        for split in game_log
+    ]
+
+
+def enrich_with_series(ranked_records, config):
+    """Attach a per-game series to each already-ranked MLB record, for the
+    detail view's recent-form bars and breakdown stats. Deliberately runs
+    *after* ranking/truncation so only the players who actually made a
+    top-N board pay for the extra call -- not every member of the (much
+    larger) candidate pool that was queried just to produce the rankings.
+    Does not touch `value`/`rank`, which were already decided upstream."""
+    mlb_cfg = config["mlb"]
+    base_url = mlb_cfg["base_url"]
+    season = mlb_cfg["season"]
+    default_window_games = mlb_cfg["window_games"]
+    cat_cfg_by_key = {c["key"]: c for c in mlb_cfg["stat_categories"]}
+
+    session = requests.Session()
+    for r in ranked_records:
+        cat_cfg = cat_cfg_by_key.get(r["stat_category"])
+        if cat_cfg is None or r.get("entity_id") is None:
+            continue
+        window_games = cat_cfg.get("window_games", default_window_games)
+        # Hit streaks are ranked off the full-season game log, not a fixed
+        # window/fields config -- the recent-form bars for a streak show
+        # hits over the same trailing window as every other category, so
+        # fall back to that explicitly.
+        group = cat_cfg.get("group", "hitting")
+        fields = cat_cfg.get("fields") or ["hits"]
+        r["series"] = fetch_series_for_player(session, base_url, r["entity_id"], season, group, fields, window_games)
 
 
 def fetch(config, game_date=None):
@@ -275,25 +333,25 @@ def fetch(config, game_date=None):
     game_date = game_date or datetime.date.today().isoformat()
 
     session = requests.Session()
-    injured_ids = get_injured_player_ids(session, base_url)
+    injured_ids, positions = get_roster_index(session, base_url)
     records = []
     for cat_cfg in mlb_cfg["stat_categories"]:
         window_games = cat_cfg.get("window_games", default_window_games)
         if cat_cfg["mode"] == "rolling_sum" and cat_cfg.get("starters_only"):
             records.extend(
                 fetch_probable_starters_category(
-                    session, base_url, season, window_games, cat_cfg, injured_ids, game_date
+                    session, base_url, season, window_games, cat_cfg, injured_ids, positions, game_date
                 )
             )
         elif cat_cfg["mode"] == "rolling_sum":
             records.extend(
                 fetch_rolling_sum_category(
-                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids
+                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions
                 )
             )
         elif cat_cfg["mode"] == "hit_streak":
             records.extend(
-                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids)
+                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions)
             )
         else:
             raise ValueError(f"Unknown MLB stat category mode: {cat_cfg['mode']}")
