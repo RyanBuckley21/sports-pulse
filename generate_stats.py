@@ -28,13 +28,10 @@ SPORT_FETCHERS = {
 SPORT_LABELS = {"mlb": "MLB", "worldcup": "World Cup"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
-# the stat chips appear. config.yaml keeps a couple of categories
-# (goal_or_assist, shots_on_goal) that aren't part of this UI's confirmed
-# set -- they still get fetched/ranked like everything else, just not
-# emitted into data.json.
+# the stat chips appear.
 APPROVED_CATEGORIES = {
     "mlb": ["home_runs", "hits_runs_rbi", "total_bases", "strikeouts", "hit_streak"],
-    "worldcup": ["goals", "assists", "shots", "clean_sheets"],
+    "worldcup": ["goals", "goal_or_assist", "assists", "shots", "shots_on_goal", "clean_sheets"],
 }
 
 # Presentation metadata that isn't tied to fetch mechanics, so it stays out
@@ -60,8 +57,10 @@ CATEGORY_META = {
     "strikeouts": {"kind": "rate", "sub": "Starters", "title": "Strikeouts / G"},
     "hit_streak": {"kind": "streak", "sub": "Active", "title": "Hit Streak"},
     "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
+    "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
     "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},
     "shots": {"kind": "rate", "sub": "This tournament", "title": "Shots / Game"},
+    "shots_on_goal": {"kind": "rate", "sub": "This tournament", "title": "Shots on Goal / G"},
     "clean_sheets": {"kind": "count", "sub": "Goalkeepers", "title": "Clean Sheets"},
 }
 
