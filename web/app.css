@@ -25,7 +25,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: 24px 18px 60px; }
+.wrap { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 24px 18px 60px; }
 
 [hidden] { display: none !important; }
 
@@ -125,7 +125,7 @@ body {
 .hero-cat { font: 600 13px 'Space Grotesk'; color: var(--text); }
 .hero-sub { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); margin-top: 4px; }
 
-.key-row { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border-radius: 14px; overflow: hidden; background: var(--hairline); }
+.key-row { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border-radius: 14px; overflow: hidden; background: rgba(255, 255, 255, 0.16); }
 .key-cell { background: var(--surface); padding: 15px 8px; text-align: center; }
 .key-value { font: 600 22px 'Space Grotesk'; color: var(--text); letter-spacing: -0.5px; }
 .key-label { font: 500 9px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }

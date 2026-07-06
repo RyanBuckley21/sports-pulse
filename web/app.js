@@ -69,11 +69,12 @@
   // ---------------- rendering ----------------
 
   function render() {
-    var html = "";
+    var html = '<div class="wrap">';
     html += renderHeader();
     html += renderSportToggle();
     html += renderChipRow();
     html += state.view === "detail" ? renderDetail() : renderList();
+    html += "</div>";
     appEl.innerHTML = html;
     updateScrollFade();
   }
