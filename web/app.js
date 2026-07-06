@@ -11,6 +11,11 @@
 
   var appEl = document.getElementById("app");
 
+  // Max pixel height of a recent-form bar itself, independent of the
+  // row's total height -- keeps a fixed amount of headroom above the
+  // tallest bar for its value label, no matter the value.
+  var BAR_MAX_PX = 54;
+
   function esc(s) {
     var div = document.createElement("div");
     div.textContent = s == null ? "" : String(s);
@@ -216,11 +221,19 @@
     var seriesCount = series.length;
     var vals = series.map(function (s) { return s.value; });
     var maxVal = Math.max(1, Math.max.apply(null, vals.length ? vals : [0]));
+    // Bar heights are pixel-based (not a % of the row) so the tallest bar
+    // never eats into the space reserved for its label above it.
     var bars = series
       .map(function (s) {
-        var h = Math.max(6, Math.round((s.value / maxVal) * 100));
+        var hPx = Math.max(4, Math.round((s.value / maxVal) * BAR_MAX_PX));
         var o = s.value === 0 ? 0.22 : 1;
-        return '<div class="bar" style="height:' + h + "%;opacity:" + o + ";background:" + teamColor + ';"></div>';
+        var label = fmtValue(s.value, cat.kind);
+        return (
+          '<div class="bar-col">' +
+          '<span class="bar-label">' + esc(label) + "</span>" +
+          '<div class="bar" style="height:' + hPx + "px;opacity:" + o + ";background:" + teamColor + ';"></div>' +
+          "</div>"
+        );
       })
       .join("");
     var noun = isSoccer ? "match" : "game";

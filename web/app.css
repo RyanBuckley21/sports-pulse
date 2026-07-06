@@ -132,8 +132,10 @@ body {
 
 .bars-section { margin-top: 22px; }
 .bars-label { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
-.bars-row { display: flex; align-items: flex-end; gap: 6px; height: 58px; }
-.bar { flex: 1; border-radius: 3px; min-width: 0; }
+.bars-row { display: flex; align-items: flex-end; gap: 6px; height: 78px; }
+.bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.bar-label { font: 500 9px 'JetBrains Mono'; color: rgba(255, 255, 255, 0.55); line-height: 1; margin-bottom: 4px; white-space: nowrap; }
+.bar { width: 100%; border-radius: 3px; flex: none; }
 .no-series-note { font: 400 13px system-ui; color: var(--text-tertiary); }
 
 .breakdown-section { margin-top: 24px; }
