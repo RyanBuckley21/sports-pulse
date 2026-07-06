@@ -259,6 +259,8 @@
       })
       .join("");
 
+    var vsHtml = renderVsNextStarter(player.vs_next_starter);
+
     return (
       '<div class="detail-back-row">' +
       '<button class="back-btn" id="backBtn" type="button" aria-label="Back">' +
@@ -282,7 +284,41 @@
       keyCell(gapStr, gapLabel) +
       "</div>" +
       '<div class="bars-section"><div class="bars-label">' + barsTitle + "</div>" + barsHtml + "</div>" +
-      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml + "</div>"
+      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml + vsHtml + "</div>"
+    );
+  }
+
+  // "2026-07-06" -> "Jul 6". Parsed by hand: new Date("2026-07-06") is UTC
+  // midnight, which renders as the previous day in US timezones.
+  function fmtGameDate(iso) {
+    var parts = String(iso || "").split("-");
+    if (parts.length !== 3) return "";
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var m = Number(parts[1]), day = Number(parts[2]);
+    if (!months[m - 1] || !day) return "";
+    return months[m - 1] + " " + day;
+  }
+
+  function renderVsNextStarter(vs) {
+    // Null means no starter announced yet or no head-to-head history --
+    // per spec, render nothing rather than an empty block.
+    if (!vs) return "";
+    var date = fmtGameDate(vs.game_date);
+    var title = "Vs next starter &mdash; " + esc(vs.pitcher_name) + (date ? " (" + esc(date) + ")" : "");
+    var line =
+      Number(vs.hits) + "-" + Number(vs.ab) +
+      " &middot; " + Number(vs.hr) + " HR" +
+      " &middot; " + Number(vs.rbi) + " RBI" +
+      (vs.avg ? " &middot; " + esc(vs.avg) + " AVG" : "");
+    var caveat = Number(vs.ab) < 10
+      ? '<div class="vs-starter-caveat">Small sample &middot; ' + Number(vs.ab) + " career AB</div>"
+      : "";
+    return (
+      '<div class="vs-starter-section">' +
+      '<div class="breakdown-label">' + title + "</div>" +
+      '<div class="vs-starter-line">' + line + "</div>" +
+      caveat +
+      "</div>"
     );
   }
 

@@ -190,6 +190,7 @@ def build_data(ranked_records, generated_at):
                         "last_game_date": r.get("last_game_date"),
                         "total_qualified": r.get("total_qualified"),
                         "series": r.get("series") or [],
+                        "vs_next_starter": r.get("vs_next_starter"),
                     }
                 )
             categories_out.append(
@@ -221,10 +222,12 @@ def main():
 
     ranked = rank_records(all_normalized, top_n)
 
-    # Series enrichment runs after ranking/truncation so only the players
-    # who actually made a top-N board pay for the extra per-game-log call.
+    # Enrichments run after ranking/truncation so only the players who
+    # actually made a top-N board pay for the extra calls (per-game series
+    # for all boards; next-opponent career matchup for hitting boards).
     mlb_ranked = [r for r in ranked if r["sport"] == "mlb"]
     mlb.enrich_with_series(mlb_ranked, config)
+    mlb.enrich_with_vs_next_starter(mlb_ranked, config)
 
     # Timezone-aware UTC: the site's freshness indicator compares this
     # timestamp against the viewer's local clock in JS, which would misread

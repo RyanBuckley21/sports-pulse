@@ -9,7 +9,7 @@ stat_category + window are grouped and sorted.
 
 Every fetcher is expected to emit raw records shaped like:
     {"entity": str, "entity_id": str | int | None, "team": str | None,
-     "position": str | None, "stat_category": str, "window": str,
+     "team_id": int | None, "position": str | None, "stat_category": str, "window": str,
      "value": int | float, "last_game_date": str | None,
      "series": list | None}
 
@@ -32,6 +32,7 @@ def normalize(sport, competition, raw_records):
                 "entity": r["entity"],
                 "entity_id": r.get("entity_id"),
                 "team": r.get("team"),
+                "team_id": r.get("team_id"),
                 "position": r.get("position"),
                 "stat_category": r["stat_category"],
                 "window": r["window"],

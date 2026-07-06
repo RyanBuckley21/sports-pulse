@@ -133,6 +133,7 @@ def get_probable_starters(session, base_url, date):
             starters[pitcher["id"]] = {
                 "name": pitcher.get("fullName"),
                 "team": team_info.get("team", {}).get("name"),
+                "team_id": team_info.get("team", {}).get("id"),
             }
     return starters
 
@@ -233,6 +234,7 @@ def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg,
                 "entity": player["name"],
                 "entity_id": person_id,
                 "team": player["team"],
+                "team_id": player.get("team_id"),
                 "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": window,
@@ -262,6 +264,7 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
                 "entity": player["name"],
                 "entity_id": person_id,
                 "team": player["team"],
+                "team_id": player.get("team_id"),
                 "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": window,
@@ -293,6 +296,7 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
                 "entity": player["name"],
                 "entity_id": person_id,
                 "team": player["team"],
+                "team_id": player.get("team_id"),
                 "position": positions.get(person_id),
                 "stat_category": cat_cfg["key"],
                 "window": "active_streak",
@@ -343,6 +347,115 @@ def enrich_with_series(ranked_records, config):
         group = cat_cfg.get("group", "hitting")
         fields = cat_cfg.get("fields") or ["hits"]
         r["series"] = fetch_series_for_player(session, base_url, r["entity_id"], season, group, fields, window_games)
+
+
+def get_next_opposing_starter(session, base_url, team_id, from_date):
+    """The announced probable starter this team will face in its next
+    not-yet-finished game on/after `from_date`, or None if the next game
+    has no announced opposing starter yet (statsapi simply omits the
+    probablePitcher key until a starter is announced)."""
+    end_date = (datetime.date.fromisoformat(from_date) + datetime.timedelta(days=7)).isoformat()
+    data = _get(
+        session,
+        f"{base_url}/schedule",
+        params={
+            "sportId": 1,
+            "teamId": team_id,
+            "startDate": from_date,
+            "endDate": end_date,
+            "hydrate": "probablePitcher",
+        },
+    )
+    for d in data.get("dates", []):
+        for game in d.get("games", []):
+            if game.get("status", {}).get("abstractGameState") == "Final":
+                continue
+            for side, other in (("away", "home"), ("home", "away")):
+                if game.get("teams", {}).get(side, {}).get("team", {}).get("id") == team_id:
+                    opp = game["teams"][other]
+                    pitcher = opp.get("probablePitcher")
+                    if not pitcher or pitcher.get("id") is None:
+                        return None
+                    return {
+                        "pitcher_id": pitcher["id"],
+                        "pitcher_name": pitcher.get("fullName"),
+                        "pitcher_team": opp.get("team", {}).get("name"),
+                        "game_date": game.get("officialDate"),
+                    }
+    return None
+
+
+def get_vs_pitcher_career_line(session, base_url, batter_id, pitcher_id):
+    """Career batter-vs-pitcher hitting line, or None if they've never
+    faced each other (the vsPlayerTotal block comes back with an empty
+    splits list in that case -- not zeros)."""
+    data = _get(
+        session,
+        f"{base_url}/people/{batter_id}/stats",
+        params={"stats": "vsPlayer", "opposingPlayerId": pitcher_id, "group": "hitting"},
+    )
+    for block in data.get("stats", []):
+        if block.get("type", {}).get("displayName") != "vsPlayerTotal":
+            continue
+        splits = block.get("splits", [])
+        if not splits:
+            return None
+        stat = splits[0].get("stat", {})
+        return {
+            "ab": int(stat.get("atBats") or 0),
+            "hits": int(stat.get("hits") or 0),
+            "hr": int(stat.get("homeRuns") or 0),
+            "rbi": int(stat.get("rbi") or 0),
+            "avg": stat.get("avg"),
+        }
+    return None
+
+
+def enrich_with_vs_next_starter(ranked_records, config, game_date=None):
+    """Attach each hitting-board player's career line against the probable
+    starter their team faces next. Same top-N-only economics as the series
+    enrichment, with two caches on top: one schedule lookup per team (not
+    per record), one vsPlayer lookup per unique batter/pitcher pair (a
+    batter on several boards pays once). Pitching boards (K/G) are skipped
+    -- this is a batter-vs-pitcher stat. Records end up with
+    `vs_next_starter` either as a merged dict (matchup + career line) or
+    None when no starter is announced or there's no head-to-head history;
+    nothing synthetic is ever filled in."""
+    mlb_cfg = config["mlb"]
+    base_url = mlb_cfg["base_url"]
+    game_date = game_date or datetime.date.today().isoformat()
+    hitting_categories = {
+        c["key"] for c in mlb_cfg["stat_categories"] if c.get("group", "hitting") == "hitting"
+    }
+
+    session = requests.Session()
+    starter_by_team = {}
+    line_by_pair = {}
+    for r in ranked_records:
+        if r["stat_category"] not in hitting_categories:
+            continue
+        batter_id, team_id = r.get("entity_id"), r.get("team_id")
+        if batter_id is None or team_id is None:
+            continue
+        if team_id not in starter_by_team:
+            starter_by_team[team_id] = get_next_opposing_starter(session, base_url, team_id, game_date)
+        starter = starter_by_team[team_id]
+        if not starter:
+            r["vs_next_starter"] = None
+            continue
+        pair = (batter_id, starter["pitcher_id"])
+        if pair not in line_by_pair:
+            line_by_pair[pair] = get_vs_pitcher_career_line(session, base_url, batter_id, starter["pitcher_id"])
+        line = line_by_pair[pair]
+        if not line:
+            r["vs_next_starter"] = None
+            continue
+        r["vs_next_starter"] = {
+            "pitcher_name": starter["pitcher_name"],
+            "pitcher_team": starter["pitcher_team"],
+            "game_date": starter["game_date"],
+            **line,
+        }
 
 
 def fetch(config, game_date=None):
