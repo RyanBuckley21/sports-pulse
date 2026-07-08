@@ -310,15 +310,24 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
 def fetch_series_for_player(session, base_url, person_id, season, group, fields, window_games):
     """Per-game value series for one player, using the same `gameLog`
     endpoint already trusted for hit streaks -- just reading different
-    fields out of each game's split instead of walking it for a streak."""
+    fields out of each game's split instead of walking it for a streak.
+    Pitching game logs also carry innings pitched per outing, kept as the
+    raw API string ("5.2" is MLB thirds notation, 5 2/3 IP -- NOT a
+    decimal; any future math on it must convert to outs first, never
+    average the strings)."""
     game_log = get_game_log(session, base_url, person_id, season, group, limit=window_games)
-    return [
-        {
+    series = []
+    for split in game_log:
+        stat = split.get("stat", {})
+        entry = {
             "date": split.get("date"),
-            "value": int(sum(split.get("stat", {}).get(f, 0) or 0 for f in fields)),
+            "value": int(sum(stat.get(f, 0) or 0 for f in fields)),
         }
-        for split in game_log
-    ]
+        ip = stat.get("inningsPitched")
+        if ip is not None:
+            entry["ip"] = ip
+        series.append(entry)
+    return series
 
 
 def enrich_with_series(ranked_records, config):

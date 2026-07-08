@@ -223,15 +223,23 @@
     var maxVal = Math.max(1, Math.max.apply(null, vals.length ? vals : [0]));
     // Bar heights are pixel-based (not a % of the row) so the tallest bar
     // never eats into the space reserved for its label above it.
+    // Pitching series (K/G) also carry innings pitched per outing, shown
+    // as a secondary label under each bar. Rendered raw: "5.2" is MLB
+    // thirds notation (5 2/3 IP), standard as-is per game.
+    var hasIp = series.some(function (s) { return s.ip != null; });
     var bars = series
       .map(function (s) {
         var hPx = Math.max(4, Math.round((Number(s.value) / Number(maxVal)) * BAR_MAX_PX) || 0);
         var o = s.value === 0 ? 0.22 : 1;
         var label = fmtValue(s.value, cat.kind);
+        // Keep an empty sublabel slot when other bars have one, so every
+        // bar in the row shares the same bottom baseline.
+        var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s.ip != null ? esc(s.ip) : "") + "</span>" : "";
         return (
           '<div class="bar-col">' +
           '<span class="bar-label">' + esc(label) + "</span>" +
           '<div class="bar" style="height:' + hPx + "px;opacity:" + o + ";background:" + teamColor + ';"></div>' +
+          ipLabel +
           "</div>"
         );
       })
@@ -242,7 +250,7 @@
         ? "Hits &middot; Last " + seriesCount + " G"
         : "Per " + noun + " &middot; Last " + seriesCount + " " + (isSoccer ? "matches" : "G");
     var barsHtml = seriesCount
-      ? '<div class="bars-row">' + bars + "</div>"
+      ? '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + '">' + bars + "</div>"
       : '<p class="no-series-note">No per-' + noun + " data available yet.</p>";
 
     var breakdownRows = buildBreakdownRows(cat, player, seriesCount, vals, isSoccer);
