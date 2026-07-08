@@ -61,9 +61,11 @@ CATEGORY_META = {
     "hit_streak": {"kind": "streak", "sub": "Active", "title": "Hit Streak"},
     # threshold kind: value is a rate (0..1) for ranking/bars, displayed as
     # "met/window" (e.g. 8/10) in the UI; breakdown shows rate + streaks.
-    "hit_rate": {"kind": "threshold", "sub": "Last 10 G", "title": "Hit Rate"},
-    "run_producer_rate": {"kind": "threshold", "sub": "Last 10 G", "title": "Run Producer Rate"},
-    "k_rate": {"kind": "threshold", "sub": "Last 10 starts", "title": "K Rate"},
+    # sub states the actual bar + window so the "N/M" value reads
+    # unambiguously ("13/20" = 13 of the last 20 games with 1+ hit).
+    "hit_rate": {"kind": "threshold", "sub": "1+ H · Last 20 G", "title": "Hit Rate"},
+    "run_producer_rate": {"kind": "threshold", "sub": "2+ H+R+RBI · Last 20 G", "title": "Run Producer Rate"},
+    "k_rate": {"kind": "threshold", "sub": "6+ K · Last 10 starts", "title": "K Rate"},
     "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
     "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
     "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},

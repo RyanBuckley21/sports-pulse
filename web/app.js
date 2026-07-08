@@ -238,6 +238,10 @@
     // as a secondary label under each bar. Rendered raw: "5.2" is MLB
     // thirds notation (5 2/3 IP), standard as-is per game.
     var hasIp = series.some(function (s) { return s.ip != null; });
+    // A 20-game window can't fit a legible numeric label above every bar in
+    // the fixed-width column, so dense series render as a label-less
+    // hit/miss sparkline (the exact per-game counts live in the breakdown).
+    var dense = seriesCount > 12;
     var bars = series
       .map(function (s) {
         var hPx = Math.max(4, Math.round((Number(s.value) / Number(maxVal)) * BAR_MAX_PX) || 0);
@@ -246,12 +250,13 @@
         // label with the raw count that game so a met bar still shows "2"
         // hits / "6" K rather than a bare 1.
         var label = s.raw != null ? String(Number(s.raw)) : fmtValue(s.value, cat.kind);
+        var barLabel = dense ? "" : '<span class="bar-label">' + esc(label) + "</span>";
         // Keep an empty sublabel slot when other bars have one, so every
         // bar in the row shares the same bottom baseline.
         var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s.ip != null ? esc(s.ip) : "") + "</span>" : "";
         return (
           '<div class="bar-col">' +
-          '<span class="bar-label">' + esc(label) + "</span>" +
+          barLabel +
           '<div class="bar" style="height:' + hPx + "px;opacity:" + o + ";background:" + teamColor + ';"></div>' +
           ipLabel +
           "</div>"
@@ -270,7 +275,7 @@
       barsTitle = "Per " + noun + " &middot; Last " + seriesCount + " " + (isSoccer ? "matches" : "G");
     }
     var barsHtml = seriesCount
-      ? '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + '">' + bars + "</div>"
+      ? '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + (dense ? " bars-row-dense" : "") + '">' + bars + "</div>"
       : '<p class="no-series-note">No per-' + noun + " data available yet.</p>";
 
     var breakdownRows = buildBreakdownRows(cat, player, seriesCount, vals, isSoccer);
