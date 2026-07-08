@@ -30,7 +30,10 @@ SPORT_LABELS = {"mlb": "MLB", "worldcup": "World Cup"}
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.
 APPROVED_CATEGORIES = {
-    "mlb": ["home_runs", "hits_runs_rbi", "total_bases", "strikeouts", "hit_streak"],
+    "mlb": [
+        "home_runs", "hits_runs_rbi", "total_bases", "hit_rate",
+        "run_producer_rate", "hit_streak", "strikeouts", "k_rate",
+    ],
     "worldcup": ["goals", "goal_or_assist", "assists", "shots", "shots_on_goal", "clean_sheets"],
 }
 
@@ -56,6 +59,11 @@ CATEGORY_META = {
     "total_bases": {"kind": "rate", "sub": "Last 10 G", "title": "Total Bases / G"},
     "strikeouts": {"kind": "rate", "sub": "Starters", "title": "Strikeouts / G"},
     "hit_streak": {"kind": "streak", "sub": "Active", "title": "Hit Streak"},
+    # threshold kind: value is a rate (0..1) for ranking/bars, displayed as
+    # "met/window" (e.g. 8/10) in the UI; breakdown shows rate + streaks.
+    "hit_rate": {"kind": "threshold", "sub": "Last 10 G", "title": "Hit Rate"},
+    "run_producer_rate": {"kind": "threshold", "sub": "Last 10 G", "title": "Run Producer Rate"},
+    "k_rate": {"kind": "threshold", "sub": "Last 10 starts", "title": "K Rate"},
     "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
     "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
     "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},
@@ -123,7 +131,11 @@ def rank_records(records, top_n):
 
     ranked = []
     for group in groups.values():
-        group.sort(key=lambda r: r["value"], reverse=True)
+        # Secondary key breaks value ties (used by threshold_rate, where two
+        # players can share a rate -- e.g. 8/10 and 4/5 -- and the one with
+        # more games met should rank higher). Defaults to 0 for every other
+        # category, leaving their pure value ordering unchanged.
+        group.sort(key=lambda r: (r["value"], r.get("tiebreak") or 0), reverse=True)
         total_qualified = len(group)
         for i, r in enumerate(group[:top_n], start=1):
             r["rank"] = i
@@ -190,6 +202,9 @@ def build_data(ranked_records, generated_at):
                         "total_qualified": r.get("total_qualified"),
                         "series": r.get("series") or [],
                         "vs_next_starter": r.get("vs_next_starter"),
+                        # threshold_rate: met/window drive the "8/10" display.
+                        "met": r.get("met"),
+                        "window": r.get("games_window"),
                     }
                 )
             categories_out.append(

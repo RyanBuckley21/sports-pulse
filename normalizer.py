@@ -40,6 +40,11 @@ def normalize(sport, competition, raw_records):
                 "rank": None,
                 "last_game_date": r.get("last_game_date"),
                 "series": r.get("series"),
+                # threshold_rate categories: met count + window size drive the
+                # "8/10" display; tiebreak (= met) breaks value (rate) ties.
+                "met": r.get("met"),
+                "games_window": r.get("games_window"),
+                "tiebreak": r.get("tiebreak"),
             }
         )
     return normalized

@@ -59,6 +59,50 @@ mlb:
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
 
+    # threshold_rate: how often a player clears a per-game bar within a
+    # recent window. `fields` are summed per game, compared to `threshold`;
+    # `min_games` is a small-sample qualification floor (fewer games in the
+    # window than this and the player is dropped from ranking entirely).
+    - key: hit_rate
+      label: Hit Rate (games with 1+ hit, last 10 G)
+      short_label: Hit Rate
+      unit: "1+H"
+      group: hitting
+      mode: threshold_rate
+      fields: [hits]
+      threshold: 1
+      window_games: 10
+      min_games: 8
+      seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+
+    - key: run_producer_rate
+      label: Run Producer Rate (games with 1+ H/R/RBI, last 10 G)
+      short_label: Run Producer
+      unit: "1+HRR"
+      group: hitting
+      mode: threshold_rate
+      fields: [hits, runs, rbi]
+      threshold: 1
+      window_games: 10
+      min_games: 8
+      seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+
+    # window_starts_only: the window counts a pitcher's actual starts (games
+    # with gamesStarted >= 1), not calendar games, so relief cameos don't
+    # dilute a starter's last-10-starts rate.
+    - key: k_rate
+      label: K Rate (starts with 4+ K, last 10 starts)
+      short_label: K Rate
+      unit: "4+K"
+      group: pitching
+      mode: threshold_rate
+      fields: [strikeOuts]
+      threshold: 4
+      window_games: 10
+      min_games: 6
+      starters_only: true
+      window_starts_only: true
+
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard

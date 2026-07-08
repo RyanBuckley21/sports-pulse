@@ -34,6 +34,12 @@
     return String(Number(value));
   }
 
+  // threshold_rate categories display "met/window" (e.g. 8/10) instead of
+  // the raw rate value that drives ranking + bar widths.
+  function thresholdDisplay(p) {
+    return Number(p.met) + "/" + Number(p.window);
+  }
+
   function relativeTime(iso) {
     var diffMs = Date.now() - new Date(iso).getTime();
     var mins = Math.floor(diffMs / 60000);
@@ -165,6 +171,7 @@
           ? '<span class="row-team" style="color:' + teamColor + '">' + esc(p.team_abbr) + "</span>"
           : "";
         var barShadow = isLeader ? "box-shadow:0 0 10px " + alpha(p.team_color, "80") + ";" : "";
+        var valDisplay = cat.kind === "threshold" ? esc(thresholdDisplay(p)) : fmtValue(p.value, cat.kind);
         return (
           '<li><button class="player-row" data-rank="' + Number(p.rank) + '" type="button">' +
           '<div class="row-top">' +
@@ -173,7 +180,7 @@
           heatDot +
           logo +
           teamMark +
-          '<span class="row-value-wrap"><span class="row-value">' + fmtValue(p.value, cat.kind) + "</span></span>" +
+          '<span class="row-value-wrap"><span class="row-value">' + valDisplay + "</span></span>" +
           "</div>" +
           '<div class="mag-track"><div class="mag-fill" style="width:' + pct + "%;background:" + teamColor + ";" + barShadow + '"></div></div>' +
           "</button></li>"
@@ -215,7 +222,11 @@
     var secondVal = board.length > 1 ? board[1].value : board[0].value;
     var gapRaw = isLeader ? player.value - secondVal : leaderVal - player.value;
     var gapLabel = isLeader ? "Ahead of #2" : "Behind #1";
-    var gapStr = (isLeader ? "+" : "−") + fmtValue(Math.abs(gapRaw), cat.kind);
+    // threshold gaps are rate differences -- show as percentage points
+    // (e.g. +10%) rather than a bare 0.10 that reads like a count.
+    var gapStr = cat.kind === "threshold"
+      ? (isLeader ? "+" : "−") + Math.round(Math.abs(gapRaw) * 100) + "%"
+      : (isLeader ? "+" : "−") + fmtValue(Math.abs(gapRaw), cat.kind);
 
     var series = player.series || [];
     var seriesCount = series.length;
@@ -231,7 +242,10 @@
       .map(function (s) {
         var hPx = Math.max(4, Math.round((Number(s.value) / Number(maxVal)) * BAR_MAX_PX) || 0);
         var o = s.value === 0 ? 0.22 : 1;
-        var label = fmtValue(s.value, cat.kind);
+        // threshold series are binary (met/miss drives the bar height), but
+        // label with the raw count that game so a met bar still shows "2"
+        // hits / "6" K rather than a bare 1.
+        var label = s.raw != null ? String(Number(s.raw)) : fmtValue(s.value, cat.kind);
         // Keep an empty sublabel slot when other bars have one, so every
         // bar in the row shares the same bottom baseline.
         var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s.ip != null ? esc(s.ip) : "") + "</span>" : "";
@@ -245,10 +259,16 @@
       })
       .join("");
     var noun = isSoccer ? "match" : "game";
-    var barsTitle =
-      cat.kind === "streak"
-        ? "Hits &middot; Last " + seriesCount + " G"
-        : "Per " + noun + " &middot; Last " + seriesCount + " " + (isSoccer ? "matches" : "G");
+    var barsTitle;
+    if (cat.kind === "streak") {
+      barsTitle = "Hits &middot; Last " + seriesCount + " G";
+    } else if (cat.kind === "threshold") {
+      // K Rate windows on starts; the hitting rates on games.
+      var uw = cat.sub && cat.sub.indexOf("start") !== -1 ? "starts" : "G";
+      barsTitle = "Last " + seriesCount + " " + uw;
+    } else {
+      barsTitle = "Per " + noun + " &middot; Last " + seriesCount + " " + (isSoccer ? "matches" : "G");
+    }
     var barsHtml = seriesCount
       ? '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + '">' + bars + "</div>"
       : '<p class="no-series-note">No per-' + noun + " data available yet.</p>";
@@ -279,7 +299,8 @@
       heat +
       "</div>" +
       '<div class="hero-row">' +
-      '<div class="hero-value" style="color:' + teamColor + '">' + fmtValue(player.value, cat.kind) + "</div>" +
+      '<div class="hero-value" style="color:' + teamColor + '">' +
+      (cat.kind === "threshold" ? esc(thresholdDisplay(player)) : fmtValue(player.value, cat.kind)) + "</div>" +
       '<div class="hero-caption"><div class="hero-cat">' + esc(cat.label) + '</div><div class="hero-sub">' +
       esc(cat.sub).toUpperCase() + " &middot; #" + Number(player.rank) + "</div></div>" +
       "</div>" +
@@ -334,6 +355,28 @@
   function buildBreakdownRows(cat, player, seriesCount, vals, isSoccer) {
     var noun = isSoccer ? "match" : "game";
     var nounPlural = isSoccer ? "Matches" : "Games";
+    if (cat.kind === "threshold") {
+      // vals are binary (1 = met the threshold that game, 0 = missed).
+      var pct = Math.round((Number(player.value) || 0) * 100);
+      // Current streak: consecutive met counting back from the latest game
+      // (0 if the most recent game missed). "Games since last miss" would be
+      // the same number, so the distinct second metric is longest-in-window.
+      var current = 0;
+      for (var i = vals.length - 1; i >= 0; i--) {
+        if (vals[i]) current++;
+        else break;
+      }
+      var longest = 0, run = 0;
+      vals.forEach(function (v) {
+        if (v) { run++; if (run > longest) longest = run; }
+        else run = 0;
+      });
+      return [
+        { l: "Rate", v: Number(player.met) + " of " + Number(player.window) + " (" + pct + "%)" },
+        { l: "Current streak", v: current + " G" },
+        { l: "Longest streak", v: longest + " G" },
+      ];
+    }
     if (cat.kind === "count") {
       var avg = seriesCount ? player.value / seriesCount : 0;
       var best = vals.length ? Math.max.apply(null, vals) : 0;

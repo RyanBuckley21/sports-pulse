@@ -307,6 +307,101 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
     return records
 
 
+def compute_threshold_rate(game_log, fields, threshold, window_games, starts_only=False):
+    """How often a player cleared a per-game bar over their most recent
+    window. Walks the (oldest-first) game log, counting games where the
+    summed `fields` reach `threshold`. For pitchers, `starts_only` restricts
+    the window to actual starts (gamesStarted >= 1) so relief outings don't
+    count toward a "last 10 starts" window.
+
+    Returns a dict with the rate plus a binary per-game series (1 = met,
+    0 = missed, with the raw count kept for the bar label), or None if the
+    player has no games in the window at all. The min-games qualification
+    floor is applied by the caller, which knows the category's threshold."""
+    splits = game_log
+    if starts_only:
+        splits = [s for s in splits if (s.get("stat", {}).get("gamesStarted") or 0) >= 1]
+    window = splits[-window_games:]
+    if not window:
+        return None
+
+    series = []
+    met_count = 0
+    for split in window:
+        stat = split.get("stat", {})
+        raw = int(sum(stat.get(f, 0) or 0 for f in fields))
+        met = 1 if raw >= threshold else 0
+        met_count += met
+        series.append({"date": split.get("date"), "value": met, "raw": raw})
+
+    return {
+        "met": met_count,
+        "window": len(window),
+        "rate": round(met_count / len(window), 4),
+        "series": series,
+        "last_game_date": window[-1].get("date"),
+    }
+
+
+def fetch_threshold_rate_category(
+    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date
+):
+    """Rank players by how often they clear a per-game threshold within a
+    recent window. Pool source mirrors the two rolling_sum paths: a
+    `starters_only` category (K Rate) seeds from today's probable starters
+    (so the same-day slate is implicit); everything else seeds from the
+    season-leader candidate pool and applies the injured + same-day-team
+    filters, exactly like fetch_hit_streak_category.
+
+    The per-game log is walked here (same network cost profile as hit
+    streak), so the binary series is built inline -- no separate post-rank
+    enrichment pass is needed for these."""
+    group = cat_cfg.get("group", "hitting")
+    fields = cat_cfg["fields"]
+    threshold = cat_cfg["threshold"]
+    window_games = cat_cfg["window_games"]
+    min_games = cat_cfg["min_games"]
+    starts_only = bool(cat_cfg.get("window_starts_only"))
+
+    if cat_cfg.get("starters_only"):
+        pool = get_probable_starters(session, base_url, game_date)
+        pool_is_starters = True
+    else:
+        pool = build_candidate_pool(session, base_url, season, cat_cfg["seed_leaderboards"], group, pool_size)
+        pool_is_starters = False
+
+    records = []
+    for person_id, player in pool.items():
+        if person_id in injured_ids:
+            continue
+        if not pool_is_starters and playing_team_ids and player.get("team_id") not in playing_team_ids:
+            continue
+        game_log = get_game_log(session, base_url, person_id, season, group)
+        if not game_log:
+            continue
+        result = compute_threshold_rate(game_log, fields, threshold, window_games, starts_only)
+        if result is None or result["window"] < min_games:
+            continue
+        records.append(
+            {
+                "entity": player["name"],
+                "entity_id": person_id,
+                "team": player["team"],
+                "team_id": player.get("team_id"),
+                "position": positions.get(person_id),
+                "stat_category": cat_cfg["key"],
+                "window": f"threshold_last_{window_games}",
+                "value": result["rate"],
+                "tiebreak": result["met"],
+                "met": result["met"],
+                "games_window": result["window"],
+                "series": result["series"],
+                "last_game_date": result["last_game_date"],
+            }
+        )
+    return records
+
+
 def fetch_series_for_player(session, base_url, person_id, season, group, fields, window_games):
     """Per-game value series for one player, using the same `gameLog`
     endpoint already trusted for hit streaks -- just reading different
@@ -347,6 +442,10 @@ def enrich_with_series(ranked_records, config):
     for r in ranked_records:
         cat_cfg = cat_cfg_by_key.get(r["stat_category"])
         if cat_cfg is None or r.get("entity_id") is None:
+            continue
+        # threshold_rate categories build their own binary series inline
+        # during ranking -- don't clobber it with a magnitude series here.
+        if cat_cfg["mode"] == "threshold_rate":
             continue
         window_games = cat_cfg.get("window_games", default_window_games)
         # Hit streaks are ranked off the full-season game log, not a fixed
@@ -500,6 +599,12 @@ def fetch(config, game_date=None):
         elif cat_cfg["mode"] == "hit_streak":
             records.extend(
                 fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids)
+            )
+        elif cat_cfg["mode"] == "threshold_rate":
+            records.extend(
+                fetch_threshold_rate_category(
+                    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date
+                )
             )
         else:
             raise ValueError(f"Unknown MLB stat category mode: {cat_cfg['mode']}")
