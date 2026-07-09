@@ -33,11 +33,11 @@ body {
 .app-header { display: flex; align-items: center; gap: 12px; }
 .app-icon {
   width: 44px; height: 44px; flex: none; border-radius: 13px;
-  background: radial-gradient(circle at 32% 26%, #33203F, #120B1D);
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); overflow: hidden;
 }
-.app-icon .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--heat); box-shadow: 0 0 8px rgba(255, 120, 40, 0.7); }
+/* The 180px iOS home-screen icon (assets/icon-180.png) is an RGB square with
+   its own dark art; clip it to the tile's rounded corners and let it fill. */
+.app-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .app-title { font: 700 22px/1 'Space Grotesk'; letter-spacing: -0.6px; }
 .app-status { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
 .live-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--good); box-shadow: 0 0 6px var(--good); }

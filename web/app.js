@@ -102,7 +102,7 @@
     var cls = freshnessClass(generatedAt);
     return (
       '<header class="app-header">' +
-      '<div class="app-icon"><div class="dot"></div></div>' +
+      '<div class="app-icon"><img src="assets/icon-180.png" alt="Who\'s Hot app icon"></div>' +
       "<div>" +
       '<div class="app-title">Who\'s Hot</div>' +
       '<div class="app-status">' +
