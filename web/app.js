@@ -450,11 +450,92 @@
       return;
     }
     if (e.target.closest("#backBtn")) {
-      state.view = "list";
-      render();
+      goBack();
       return;
     }
   });
+
+  function goBack() {
+    state.view = "list";
+    state.selected = null;
+    render();
+  }
+
+  // ---------------- swipe-to-go-back ----------------
+  // The detail view is a state swap, not a history entry, so iOS' native
+  // edge-swipe-back (which needs browser history) does nothing here -- and in
+  // standalone/home-screen mode there's no edge swipe at all. This hand-rolled
+  // gesture lets a rightward drag dismiss the detail page: the page follows
+  // the finger and, past a distance threshold, slides off and returns to the
+  // list; otherwise it snaps back. It only engages once a drag is clearly
+  // horizontal + rightward, so vertical scrolling is never intercepted. The
+  // detail view has no horizontally-scrollable content, so there's nothing to
+  // conflict with.
+  var swipe = null;
+
+  function activeWrap() {
+    return appEl.querySelector(".wrap");
+  }
+
+  function onTouchStart(e) {
+    if (state.view !== "detail" || e.touches.length !== 1) {
+      swipe = null;
+      return;
+    }
+    var t = e.touches[0];
+    swipe = { x0: t.clientX, y0: t.clientY, dx: 0, decided: false, active: false };
+  }
+
+  function onTouchMove(e) {
+    if (!swipe) return;
+    var t = e.touches[0];
+    swipe.dx = t.clientX - swipe.x0;
+    var dy = t.clientY - swipe.y0;
+    if (!swipe.decided) {
+      // Wait until the finger has moved enough to reveal intent, then decide
+      // once: a rightward, horizontally-dominant drag claims the gesture;
+      // anything else (vertical scroll, leftward) is left alone for good.
+      if (Math.abs(swipe.dx) < 12 && Math.abs(dy) < 12) return;
+      swipe.decided = true;
+      swipe.active = swipe.dx > 0 && Math.abs(swipe.dx) > Math.abs(dy);
+    }
+    if (!swipe.active) return;
+    e.preventDefault(); // own the gesture; suppress native scroll/overscroll
+    var wrap = activeWrap();
+    if (!wrap) return;
+    var x = Math.max(0, swipe.dx);
+    wrap.style.transform = "translateX(" + x + "px)";
+    wrap.style.opacity = String(Math.max(0.35, 1 - x / (window.innerWidth * 1.3)));
+  }
+
+  function onTouchEnd() {
+    if (!swipe) return;
+    var wrap = activeWrap();
+    var committed = swipe.active && swipe.dx > Math.min(90, window.innerWidth * 0.28);
+    if (wrap && swipe.active) {
+      if (committed) {
+        wrap.style.transition = "transform 0.18s ease, opacity 0.18s ease";
+        wrap.style.transform = "translateX(100%)";
+        wrap.style.opacity = "0";
+        window.setTimeout(goBack, 170); // render() rebuilds a fresh, untransformed .wrap
+      } else {
+        // Didn't travel far enough -- ease back to rest.
+        wrap.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        wrap.style.transform = "";
+        wrap.style.opacity = "";
+        window.setTimeout(function () {
+          var w = activeWrap();
+          if (w) w.style.transition = "";
+        }, 210);
+      }
+    }
+    swipe = null;
+  }
+
+  appEl.addEventListener("touchstart", onTouchStart, { passive: true });
+  appEl.addEventListener("touchmove", onTouchMove, { passive: false });
+  appEl.addEventListener("touchend", onTouchEnd, { passive: true });
+  appEl.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
   appEl.addEventListener(
     "scroll",
