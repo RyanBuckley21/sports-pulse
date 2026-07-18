@@ -97,16 +97,28 @@ WORLDCUP_TEAMS = {
 }
 
 MIN_LIGHTNESS = 0.55
+# How much saturation a color sheds as it's lifted, scaled by the size of the
+# lift. A color that barely needs brightening keeps its saturation; one lifted
+# from near-black sheds most of it. Without this, brightening a very dark,
+# fully-saturated brand color to the lightness floor keeps S≈1.0 and produces a
+# fluorescent neon (e.g. the Athletics' dark green #003831 -> #1AFFE2 aqua);
+# with it, the same color lands on a faithful lighter tint (#5ABFB2). Mid-
+# lightness colors (most reds) lift a little and stay vivid + distinct.
+DESAT_STRENGTH = 0.7
 
 
 def _ensure_legible(hex_color):
-    """Raise HSL lightness to a floor of ~55% so a team's real (possibly dark
-    navy/black) brand color still reads against the app's #0A0A0B background.
-    Hue/saturation are preserved -- this only brightens, never changes color."""
+    """Raise a too-dark brand color to a ~55% lightness floor so it still reads
+    against the app's #0A0A0B background, shedding saturation in proportion to
+    how far it's lifted so the result is a faithful lighter tint rather than
+    neon. Hue is always preserved; colors already at/above the floor are
+    returned unchanged."""
     hex_color = hex_color.lstrip("#")
     r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (0, 2, 4))
     h, l, s = colorsys.rgb_to_hls(r, g, b)
     if l < MIN_LIGHTNESS:
+        lift = (MIN_LIGHTNESS - l) / MIN_LIGHTNESS
+        s *= 1 - lift * DESAT_STRENGTH
         l = MIN_LIGHTNESS
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     return "#{:02X}{:02X}{:02X}".format(round(r * 255), round(g * 255), round(b * 255))
