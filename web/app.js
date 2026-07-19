@@ -7,6 +7,8 @@
     statBySport: {},
     view: "list", // 'list' | 'detail'
     selected: null, // {sport, cat, rank}
+    listScroll: 0, // page scroll of the list, restored on return from detail
+    chipScroll: 0, // chip row's horizontal scroll, restored on return
   };
 
   var appEl = document.getElementById("app");
@@ -422,6 +424,17 @@
 
   // ---------------- events ----------------
 
+  // render() rebuilds appEl.innerHTML wholesale, which resets both the window
+  // scroll and the chip row's horizontal scroll. These helpers let each
+  // transition capture and restore whichever positions should persist.
+  function pageScroll() { return window.scrollY || document.documentElement.scrollTop || 0; }
+  function setPageScroll(y) { window.scrollTo(0, y); }
+  function getChipScroll() { var c = document.getElementById("chipRow"); return c ? c.scrollLeft : 0; }
+  function setChipScroll(x) {
+    var c = document.getElementById("chipRow");
+    if (c) { c.scrollLeft = x; updateScrollFade(); }
+  }
+
   appEl.addEventListener("click", function (e) {
     var sportBtn = e.target.closest("[data-sport]");
     if (sportBtn) {
@@ -430,23 +443,34 @@
         state.sport = sport;
         state.view = "list";
         state.selected = null;
+        render();
+        setPageScroll(0); // new sport = fresh context; start at the top
       }
-      render();
       return;
     }
     var chipBtn = e.target.closest("[data-cat]");
     if (chipBtn) {
-      state.statBySport[state.sport] = chipBtn.dataset.cat;
-      state.view = "list";
-      state.selected = null;
-      render();
+      if (chipBtn.dataset.cat !== state.statBySport[state.sport]) {
+        var y = pageScroll(), x = getChipScroll();
+        state.statBySport[state.sport] = chipBtn.dataset.cat;
+        state.view = "list";
+        state.selected = null;
+        render();
+        setChipScroll(x); // keep the chip row (and page) where they were
+        setPageScroll(y);
+      }
       return;
     }
     var rowBtn = e.target.closest("[data-rank]");
     if (rowBtn) {
+      // Remember the list's scroll positions so returning lands you back where
+      // you tapped, rather than at the top.
+      state.listScroll = pageScroll();
+      state.chipScroll = getChipScroll();
       state.selected = { sport: state.sport, cat: currentCategory().key, rank: Number(rowBtn.dataset.rank) };
       state.view = "detail";
       render();
+      setPageScroll(0); // detail opens at the top
       return;
     }
     if (e.target.closest("#backBtn")) {
@@ -459,6 +483,8 @@
     state.view = "list";
     state.selected = null;
     render();
+    setChipScroll(state.chipScroll || 0);
+    setPageScroll(state.listScroll || 0); // land back where you left the list
   }
 
   // ---------------- swipe-to-go-back ----------------
