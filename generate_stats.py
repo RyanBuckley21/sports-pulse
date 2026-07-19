@@ -230,8 +230,17 @@ def main():
     index_category_labels(config)
     top_n = config.get("top_n", 10)
 
+    # Only build the sports listed in config's active_sports (in order); others
+    # (e.g. the preserved worldcup template) stay wired up but dormant. Falls
+    # back to every registered fetcher if the key is absent.
+    active_sports = config.get("active_sports") or list(SPORT_FETCHERS)
+
     all_normalized = []
-    for sport_key, sport_impl in SPORT_FETCHERS.items():
+    for sport_key in active_sports:
+        sport_impl = SPORT_FETCHERS.get(sport_key)
+        if not sport_impl:
+            print(f"Skipping '{sport_key}': no fetcher registered in SPORT_FETCHERS")
+            continue
         raw_records = sport_impl["fetch"](config)
         competition = sport_impl["competition"](config)
         all_normalized.extend(normalizer.normalize(sport_key, competition, raw_records))

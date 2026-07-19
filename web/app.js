@@ -118,6 +118,9 @@
 
   function renderSportToggle() {
     var sportKeys = Object.keys(state.data.sports);
+    // Nothing to toggle between with a single sport -- omit the row entirely
+    // (it reappears automatically once a second sport is in data.json).
+    if (sportKeys.length <= 1) return "";
     var buttons = sportKeys
       .map(function (key) {
         var active = key === state.sport ? " active" : "";

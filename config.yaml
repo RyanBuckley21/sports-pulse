@@ -4,6 +4,12 @@
 output_dir: output
 top_n: 10
 
+# Sports the site actually builds and shows, in toggle order. Only these are
+# fetched and written to data.json. The worldcup block below is kept intact as
+# a working reference/template for future soccer leagues (e.g. Premier League)
+# but stays off until its key is listed here. See docs/leagues.md.
+active_sports: [mlb]
+
 mlb:
   base_url: https://statsapi.mlb.com/api/v1
   season: 2026
@@ -103,6 +109,9 @@ mlb:
       starters_only: true
       window_starts_only: true
 
+# INACTIVE -- preserved as a template for future soccer leagues (see
+# active_sports above and docs/leagues.md). Not fetched or shown while its key
+# is absent from active_sports.
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
