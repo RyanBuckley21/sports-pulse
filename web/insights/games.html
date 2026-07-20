@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="../app.css">
 <link rel="stylesheet" href="insights.css">
 </head>
-<body>
+<body data-insights-view="games">
 <div class="wrap">
   <div class="detail-back-row">
     <a class="back-btn" href="index.html" aria-label="Back to Insights">
@@ -21,7 +21,8 @@
     <span class="crumb">Insights &middot; Today's Games</span>
   </div>
   <h1 class="insights-h1">Today's Games</h1>
-  <p class="empty-state">Coming soon &mdash; AI-assisted matchup context and storylines for today's MLB slate. No predictions, just what matters and why.</p>
+  <p class="insights-note">Preview with mock data &mdash; not live.</p>
+  <div id="insightsRoot"><p class="empty-state">Loading&hellip;</p></div>
 </div>
 <script src="insights.js"></script>
 </body>

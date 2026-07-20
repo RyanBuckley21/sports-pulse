@@ -71,3 +71,98 @@
   color: var(--text);
   margin: 22px 2px 8px;
 }
+
+/* Transparency note shown above mock-data previews. */
+.insights-note {
+  font: 500 11px 'JetBrains Mono';
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+  margin: 0 2px 16px;
+}
+
+/* ---------------- reusable insight cards ---------------- */
+
+/* Base card shell shared by Game / Team / Player insight cards (and used to
+   box the standalone sub-cards in the gallery). */
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.ic-head { display: flex; align-items: center; gap: 10px; }
+
+/* Game card header: AWAY @ HOME on the left, first pitch on the right. */
+.gi-head { justify-content: space-between; }
+.gi-teams { display: flex; align-items: center; gap: 8px; }
+.gi-at { font: 600 12px 'JetBrains Mono'; color: var(--text-tertiary); }
+.gi-when { font: 600 11px 'JetBrains Mono'; color: var(--text-secondary); white-space: nowrap; }
+.gi-venue { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); margin-top: 6px; }
+
+/* Team card header. */
+.ti-name { font: 700 18px 'Space Grotesk'; color: var(--text); letter-spacing: -0.3px; }
+
+/* Player card header. */
+.pi-head { flex-direction: column; align-items: flex-start; gap: 3px; }
+.pi-name { font: 700 18px 'Space Grotesk'; color: var(--text); letter-spacing: -0.3px; }
+.pi-sub { font: 500 11px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0.5px; }
+
+.insight-headline {
+  font: 500 14px/1.4 'Space Grotesk';
+  color: var(--text);
+  margin: 12px 0 0;
+}
+
+.insight-section { margin-top: 16px; }
+
+/* ---- Pulse Score ---- */
+.pulse { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.pulse-score { font: 700 36px/1 'Space Grotesk'; letter-spacing: -1.5px; flex: none; }
+.pulse-max { font: 600 13px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0; margin-left: 2px; }
+.pulse-meta { flex: 1; min-width: 0; }
+.pulse-label {
+  font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-tertiary); margin-bottom: 8px;
+}
+.pulse-bar { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.pulse-fill { height: 100%; border-radius: 3px; }
+/* Score bands: hot = heat accent, warm = amber, cool = calm green. */
+.pulse-hot .pulse-score { color: var(--accent); }
+.pulse-hot .pulse-fill { background: var(--heat); }
+.pulse-warm .pulse-score { color: var(--warning); }
+.pulse-warm .pulse-fill { background: var(--warning); }
+.pulse-cool .pulse-score { color: var(--good); }
+.pulse-cool .pulse-fill { background: var(--good); }
+
+/* ---- Key Signals ---- */
+.signals { margin-top: 4px; }
+.signal-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 2px; border-bottom: 1px solid var(--hairline);
+}
+.signal-row:last-child { border-bottom: none; }
+.signal-label { font: 400 13px system-ui; color: var(--text-secondary); }
+.signal-value { font: 600 13px 'JetBrains Mono'; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.signal-mark { font-size: 9px; line-height: 1; }
+.signal-pos { color: var(--good); }
+.signal-neg { color: var(--critical); }
+.signal-neutral { color: var(--text-tertiary); }
+
+/* ---- AI Summary ---- */
+.ai-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ai-badge {
+  font: 600 9px 'JetBrains Mono'; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--border-chip); border-radius: 5px; padding: 3px 6px;
+}
+.ai-summary-title { font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-tertiary); }
+.ai-summary-text { font: 400 13.5px/1.55 system-ui; color: var(--text-secondary); margin: 0; }
+.ai-caveat { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0.5px; margin-top: 8px; }
+
+/* ---- component gallery (components.html) ---- */
+.gallery-item { margin-bottom: 26px; }
+.gallery-tag {
+  font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--accent); margin: 0 2px 8px;
+}
