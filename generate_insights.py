@@ -38,6 +38,11 @@ MODEL = os.environ.get("SP_INSIGHTS_MODEL", "haiku")
 # margin; a genuinely stuck call still can't hang the pipeline.
 CALL_TIMEOUT_S = 60
 
+# Auth safety: by default we STRIP these from the subprocess env so `claude`
+# authenticates via the logged-in Claude *subscription* session, never against
+# paid API billing. Opt into API-key auth deliberately with SP_ALLOW_API_BILLING=1.
+API_KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
+
 PROMPT_TEMPLATE = """You are a baseball analyst writing brief, factual context for a "who's hot" dashboard. You are given ONE player's already-computed recent stats as JSON. Your job is INTERPRETATION ONLY.
 
 Hard rules:
@@ -157,13 +162,55 @@ def _parse_json_object(text):
         return json.loads(m.group(0))
 
 
-def _call_claude(ent):
+class _AuthError(RuntimeError):
+    """Auth could not be established via the subscription session."""
+
+
+def _subprocess_env():
+    """Env for the `claude` subprocess. By default removes any API-key vars so
+    the CLI must use the logged-in Claude subscription session -- this guarantees
+    we never silently run against paid API billing. SP_ALLOW_API_BILLING=1 is an
+    explicit opt-in to keep the key."""
+    env = dict(os.environ)
+    present = [v for v in API_KEY_VARS if env.get(v)]
+    if present and not os.environ.get("SP_ALLOW_API_BILLING"):
+        for v in present:
+            env.pop(v, None)
+        print("insights: NOTE {} set in env -> stripped so calls use your Claude "
+              "subscription, not paid API billing (set SP_ALLOW_API_BILLING=1 to override)."
+              .format(", ".join(present)))
+    elif present:
+        print("insights: SP_ALLOW_API_BILLING=1 -> using API-key auth; this MAY incur API charges.")
+    return env
+
+
+def _preflight(env):
+    """One tiny call to confirm the session authenticates before the loop. Raises
+    _AuthError (loud abort) rather than letting the run limp on -- and because the
+    API key is already stripped, a failure here means only an API key was
+    available, which we refuse to use silently."""
+    proc = subprocess.run(
+        ["claude", "-p", "--output-format", "json", "--model", MODEL],
+        input="Reply with exactly: ok", capture_output=True, text=True,
+        timeout=CALL_TIMEOUT_S, env=env,
+    )
+    if proc.returncode != 0:
+        raise _AuthError((proc.stderr or proc.stdout or "").strip()[:300])
+    try:
+        envelope = json.loads(proc.stdout)
+    except ValueError:
+        raise _AuthError("unparseable preflight response")
+    if envelope.get("is_error"):
+        raise _AuthError("claude reported error: {}".format(envelope.get("subtype")))
+
+
+def _call_claude(ent, env):
     """One headless call for one entity. Returns {story,summary,takeaways} or
     raises on any failure (caller decides carry-forward)."""
     prompt = PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False)
     proc = subprocess.run(
         ["claude", "-p", "--output-format", "json", "--model", MODEL],
-        input=prompt, capture_output=True, text=True, timeout=CALL_TIMEOUT_S,
+        input=prompt, capture_output=True, text=True, timeout=CALL_TIMEOUT_S, env=env,
     )
     if proc.returncode != 0:
         raise RuntimeError("claude exit {}: {}".format(proc.returncode, (proc.stderr or "")[:200]))
@@ -228,6 +275,23 @@ def run(data, generated_at, store_path=STORE_PATH):
     now_iso = generated_at.isoformat()
     print("insights: {} unique players; model={}".format(total, MODEL))
 
+    # Only auth/preflight when at least one entity actually needs a model call,
+    # so a fully-cached run stays truly zero-call.
+    child_env = None
+    if any(_needs_regen(e, store.get(k)) for k, e in entities.items()):
+        child_env = _subprocess_env()
+        try:
+            _preflight(child_env)
+        except Exception as e:  # noqa: BLE001 -- loud abort, never fall back to paid billing
+            print("\n" + "!" * 70)
+            print("insights: AUTH PREFLIGHT FAILED -- making no AI calls this run.")
+            print("  reason: {}".format(str(e)[:220]))
+            print("  This step runs ONLY on your Claude subscription session. If just an")
+            print("  API key is available, log in with `claude`, or deliberately opt into")
+            print("  API billing with SP_ALLOW_API_BILLING=1.")
+            print("!" * 70 + "\n")
+            return ""  # data pipeline already produced its output; simply no insights
+
     gen = carried = failed = 0
     insight_map = {}
     for i, (key, ent) in enumerate(sorted(entities.items()), start=1):
@@ -235,7 +299,7 @@ def run(data, generated_at, store_path=STORE_PATH):
         if _needs_regen(ent, prev):
             print("  [{}/{}] {} -- regenerating".format(i, total, ent.get("entity")))
             try:
-                text = _call_claude(ent)
+                text = _call_claude(ent, child_env)
                 gen += 1
             except Exception as e:  # noqa: BLE001 -- never let one entity break the run
                 print("      call failed ({}); {}".format(
