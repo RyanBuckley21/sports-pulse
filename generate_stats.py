@@ -8,6 +8,7 @@ import os
 
 import yaml
 
+import generate_insights
 import normalizer
 import team_meta
 from fetchers import mlb, worldcup
@@ -259,8 +260,12 @@ def main():
     # a naive (no-offset) ISO string as the viewer's own local time instead
     # of UTC.
     generated_at = datetime.datetime.now(datetime.timezone.utc)
-    markdown = render_markdown(ranked, generated_at)
     data = build_data(ranked, generated_at)
+    # AI Insight Generator (Phase 3): enriches `data` with per-player insight
+    # text and maintains the committed data/insights.json store. Guarded --
+    # no-ops when the claude CLI is unavailable (e.g. in CI).
+    insights_md = generate_insights.run(data, generated_at)
+    markdown = render_markdown(ranked, generated_at) + insights_md
 
     output_dir = config.get("output_dir", "output")
     os.makedirs(output_dir, exist_ok=True)
