@@ -44,6 +44,14 @@ jobs:
           # URL ever changes from one deploy to the next.
           sed -i "s/app.css\"/app.css?v=${GITHUB_SHA}\"/" site/index.html
           sed -i "s/app.js\"/app.js?v=${GITHUB_SHA}\"/" site/index.html
+          # Same cache-bust for the insights pages' CSS/JS references (../app.css,
+          # insights.css, insights.js) so hub/insights style + logic updates land
+          # without a hard refresh. Applied to every insights/*.html page.
+          for f in site/insights/*.html; do
+            sed -i "s/app.css\"/app.css?v=${GITHUB_SHA}\"/" "$f"
+            sed -i "s/insights.css\"/insights.css?v=${GITHUB_SHA}\"/" "$f"
+            sed -i "s/insights.js\"/insights.js?v=${GITHUB_SHA}\"/" "$f"
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
