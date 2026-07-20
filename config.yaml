@@ -161,3 +161,63 @@ worldcup:
       unit: CS
       mode: tournament_total
       fields: [cleanSheets]
+
+# Betting Signal Layer -- deterministic per-game Signal Scores per bet type,
+# computed by betting_signals.py from the Game builder's existing inputs (14d
+# OPS, 7d bullpen ERA, probable-starter ERA, season series) plus availability.
+# Sport-keyed: mlb populated, other sports reserved empty. All values are v1,
+# tunable (see the design proposal). `favors` direction per metric is intrinsic
+# and lives in code, not here; this block holds weights, scales, and thresholds.
+betting_signals:
+  mlb:
+    # Score below which a bet type reports "No clear lean" instead of a side.
+    min_threshold: 15
+    # Run Line needs a stronger lean (the favorite must cover 1.5 runs).
+    run_line_threshold: 35
+    # tanh normalization: `*_gap` = the home-vs-away spread that reads as a
+    # meaningful edge; `*_total`/`*_solo` = league baseline + spread for
+    # over/under-style magnitudes.
+    scales:
+      ops_gap: 0.080
+      bullpen_gap: 1.50
+      era_gap: 1.20
+      ops_total: { base: 1.45, scale: 0.15 }
+      starter_total: { base: 8.0, scale: 2.5 }
+      bullpen_total: { base: 8.0, scale: 3.0 }
+      ops_solo: { base: 0.725, scale: 0.080 }
+      era_solo: { base: 4.0, scale: 1.20 }
+      bullpen_solo: { base: 4.0, scale: 1.50 }
+    # Per bet type: which base signals feed it and their weights. Bullpen is
+    # excluded from the first-five markets (relievers rarely pitch in the first
+    # five innings); NRFI/YRFI and totals lean toward more runs on the (+) side.
+    bet_types:
+      moneyline:
+        team_ops: 0.30
+        bullpen_era: 0.25
+        probable_era: 0.30
+        season_series: 0.15
+      run_line:
+        team_ops: 0.30
+        bullpen_era: 0.25
+        probable_era: 0.30
+        season_series: 0.15
+      game_total:
+        combined_ops: 0.35
+        combined_starter_era: 0.35
+        combined_bullpen_era: 0.30
+      first_five_moneyline:
+        probable_era: 0.55
+        team_ops: 0.35
+        season_series: 0.10
+      first_five_total:
+        combined_starter_era: 0.60
+        combined_ops: 0.40
+      nrfi_yrfi:
+        combined_starter_era: 0.60
+        combined_ops: 0.40
+      team_total:
+        team_ops: 0.45
+        opp_bullpen_era: 0.30
+        opp_starter_era: 0.25
+  # Reserved for future sports (e.g. Premier League); empty = no betting layer.
+  worldcup: {}

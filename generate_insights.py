@@ -530,7 +530,8 @@ def _generate_games(entities, store, now_iso, store_path, child_env):
             "away": ent.get("away"), "home": ent.get("home"),
             "start": ent.get("start"), "venue": ent.get("venue"),
             "probables": ent.get("probables"), "signals": ent.get("signals"),
-            "pulse": ent.get("pulse"), "status": ent.get("status"),
+            "pulse": ent.get("pulse"), "betting_signals": ent.get("betting_signals"),
+            "status": ent.get("status"),
             "template_version": GAME_PROMPT_VERSION,
             "generated_at": now_iso if (prev is None or _needs_regen_game(ent, prev)) else prev.get("generated_at", now_iso),
             "story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
@@ -560,6 +561,7 @@ def _build_games_section(entities, text_map):
             "probables": ent.get("probables"),
             "pulse": ent.get("pulse"),
             "signals": ent.get("signals"),
+            "betting_signals": ent.get("betting_signals"),
             "summary": t.get("summary"),
             "story": t.get("story"),
         })

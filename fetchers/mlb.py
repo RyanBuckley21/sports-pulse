@@ -785,8 +785,10 @@ def _game_pulse(framed_ops, framed_bullpen_era, series):
     return {"score": score, "label": label}
 
 
-def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, touched, ops_cache, era_cache):
+def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, touched,
+                    ops_cache, era_cache, config, injured_ids):
     import team_meta  # local import: keeps the standalone `python3 fetchers/mlb.py` helper working
+    import betting_signals
 
     teams = g.get("teams", {})
     away_t = teams.get("away", {}).get("team", {})
@@ -855,6 +857,19 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     if away_era and home_era:
         signals.append({"label": "Probables ERA", "value": f"{away_era} vs {home_era}", "tone": "neutral"})
 
+    # Betting Signal Layer -- deterministic per-bet-type Signal Scores from the
+    # same inputs (AI only explains them later, never invents; runs in CI).
+    # Availability override: a probable starter on the IL (id in injured_ids)
+    # materially changes the ML/first-five/total markets -- see betting_signals.
+    away_out = bool(away_pp and away_pp.get("id") in injured_ids)
+    home_out = bool(home_pp and home_pp.get("id") in injured_ids)
+    betting = betting_signals.score_game(
+        config, "mlb",
+        betting_signals.build_inputs(away_ref, home_ref, away_ops, home_ops,
+                                     away_pen, home_pen, away_era, home_era, series),
+        availability={"away_probable_out": away_out, "home_probable_out": home_out},
+    )
+
     return {
         "gamePk": g.get("gamePk"),
         "status": g.get("status", {}).get("abstractGameState"),
@@ -865,6 +880,7 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         "probables": probables or None,
         "signals": signals,
         "pulse": _game_pulse(framed_ops, framed_pen, series),
+        "betting_signals": betting,
         # Full both-sides context for the AI payload only -- never shown directly.
         "context": {
             "away_team": away_ref["name"], "home_team": home_ref["name"],
@@ -900,13 +916,23 @@ def build_game_entities(config, game_date, boxscore_cache):
         f"{base_url}/schedule",
         params={"sportId": 1, "date": game_date, "hydrate": "probablePitcher,team,venue"},
     )
+    # Availability (IL) set for the betting layer's probable-starter override --
+    # one league-wide roster pass (reuses get_roster_index -> D* status codes).
+    # Guarded: any failure degrades to "no overrides", never breaks the build.
+    try:
+        injured_ids, _positions = get_roster_index(session, base_url)
+    except Exception as e:  # noqa: BLE001 -- availability is best-effort
+        print("insights(games): roster/availability pass failed ({}); no IL overrides"
+              .format(str(e)[:120]))
+        injured_ids = set()
     touched = set()
     ops_cache, era_cache = {}, {}
     entities = {}
     for d in sched.get("dates", []):
         for g in d.get("games", []):
             ent = _build_one_game(
-                session, base_url, season, game_date, g, boxscore_cache, touched, ops_cache, era_cache
+                session, base_url, season, game_date, g, boxscore_cache, touched,
+                ops_cache, era_cache, config, injured_ids,
             )
             entities[str(g.get("gamePk"))] = ent
 
