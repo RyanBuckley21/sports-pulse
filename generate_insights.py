@@ -28,6 +28,10 @@ import subprocess
 
 PROMPT_VERSION = "v1"
 STORE_PATH = "data/insights.json"
+# Only the top-N players by pulse score get insights (AI calls, store entries,
+# and rendered cards). Caps generation/CI/merge work and keeps the committed
+# store bounded (stale entries below the cap are pruned each generation run).
+TOP_N = 20
 # Simple interpretation task -> default to a small, fast, cheap model. Uses the
 # CLI's short model alias ("haiku"); the fully-qualified id is not accepted by
 # --model and hangs. Override with SP_INSIGHTS_MODEL=sonnet for richer prose.
@@ -267,6 +271,15 @@ def _carry(prev):
             "takeaways": prev.get("takeaways", [])}
 
 
+def _top_n(entities, n):
+    """The top-N entities by pulse score (desc), name as a deterministic
+    tiebreak so the cap doesn't flap between runs on pulse ties."""
+    def score(ent):
+        return (ent.get("pulse") or {}).get("score", 0)
+    ordered = sorted(entities.items(), key=lambda kv: (-score(kv[1]), (kv[1].get("entity") or "")))
+    return dict(ordered[:n])
+
+
 def run(data, generated_at, store_path=STORE_PATH):
     """Enrich `data` with per-player insight and return a Markdown addendum.
 
@@ -275,7 +288,8 @@ def run(data, generated_at, store_path=STORE_PATH):
     ALWAYS happens. Only the AI *generation* is skipped when `claude` is
     unavailable or SP_SKIP_INSIGHTS is set -- that's what lets deployed builds
     (which never have Claude) still surface the committed insights."""
-    entities = build_entities(data)
+    all_entities = build_entities(data)
+    entities = _top_n(all_entities, TOP_N)  # cap to the top-N players by pulse score
     store = _load_store(store_path)
     total = len(entities)
 
@@ -283,11 +297,11 @@ def run(data, generated_at, store_path=STORE_PATH):
     if skip_generation:
         reason = "SP_SKIP_INSIGHTS set" if os.environ.get("SP_SKIP_INSIGHTS") else "`claude` CLI not found"
         with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
-        print("insights: {} -> merge-only: {} players, {} with committed insight text, no AI calls"
+        print("insights: {} -> merge-only: top {} players, {} with committed insight text, no AI calls"
               .format(reason, total, with_text))
         insight_map = {k: _carry(store.get(k)) for k in entities}
     else:
-        print("insights: {} unique players; model={}".format(total, MODEL))
+        print("insights: top {} of {} players; model={}".format(total, len(all_entities), MODEL))
         insight_map = _generate_all(entities, store, generated_at.isoformat(), total, store_path)
 
     _write_back(data, insight_map)
@@ -317,6 +331,7 @@ def _generate_all(entities, store, now_iso, total, store_path):
 
     gen = carried = failed = 0
     insight_map = {}
+    new_store = {}  # rebuilt from the current (top-N) entity set -> prunes stale entries
     for i, (key, ent) in enumerate(sorted(entities.items()), start=1):
         prev = store.get(key)
         if _needs_regen(ent, prev):
@@ -334,7 +349,7 @@ def _generate_all(entities, store, now_iso, total, store_path):
             carried += 1
             text = _carry(prev)
 
-        store[key] = {
+        new_store[key] = {
             "entity": ent.get("entity"), "team": ent.get("team"),
             "last_game_date": ent.get("last_game_date"),
             "template_version": PROMPT_VERSION,
@@ -343,8 +358,9 @@ def _generate_all(entities, store, now_iso, total, store_path):
         }
         insight_map[key] = {"story": text["story"], "summary": text["summary"], "takeaways": text["takeaways"]}
 
-    _save_store(store_path, store)
-    print("insights: generated {}, carried forward {}, failed {}".format(gen, carried, failed))
+    _save_store(store_path, new_store)
+    print("insights: generated {}, carried forward {}, failed {} (store pruned to {} entries)"
+          .format(gen, carried, failed, len(new_store)))
     return insight_map
 
 
