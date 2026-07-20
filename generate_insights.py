@@ -26,8 +26,19 @@ import re
 import shutil
 import subprocess
 
+from fetchers import mlb
+
 PROMPT_VERSION = "v1"
 STORE_PATH = "data/insights.json"
+# Game insights (full slate every run -- NOT capped like players). Their own
+# committed store (keyed by gamePk), separate from the player store's name|team
+# keys so pruning and change-detection stay clean.
+GAME_PROMPT_VERSION = "v1"
+GAMES_STORE_PATH = "data/insights.games.json"
+# Committed per-gamePk boxscore cache (lean reliever lines) backing bullpen ERA
+# (7d). A final game's boxscore is immutable, so it's fetched once and reused
+# across runs; see fetchers/mlb.build_game_entities.
+BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # Only the top-N players by pulse score get insights (AI calls, store entries,
 # and rendered cards). Caps generation/CI/merge work and keeps the committed
 # store bounded (stale entries below the cap are pruned each generation run).
@@ -58,6 +69,20 @@ Return STRICT JSON only (no prose, no markdown), exactly:
 { "story": "<2-3 sentences>", "summary": "<1 sentence>", "takeaways": ["<short>", "<short>", "<short>"] }
 
 Player JSON:
+"""
+
+PROMPT_TEMPLATE_GAME = """You are a baseball analyst writing brief, factual context for one of today's games on a "who's hot" dashboard. You are given ONE game's already-computed matchup context as JSON. Your job is INTERPRETATION ONLY.
+
+Hard rules:
+- Never compute, estimate, round, or invent any number. Use only numbers that appear verbatim in the input. If unsure, omit the number.
+- Never predict the outcome, score, or winner. No "will", no odds, no projections. Describe the form and context each side brings in, and why it's notable.
+- Both teams' numbers are provided; write even-handed context, not a pick.
+- Plain language, no hype, no cliches.
+
+Return STRICT JSON only (no prose, no markdown), exactly:
+{ "story": "<2-3 sentences>", "summary": "<1 sentence>" }
+
+Game JSON:
 """
 
 
@@ -208,10 +233,10 @@ def _preflight(env):
         raise _AuthError("claude reported error: {}".format(envelope.get("subtype")))
 
 
-def _call_claude(ent, env):
-    """One headless call for one entity. Returns {story,summary,takeaways} or
-    raises on any failure (caller decides carry-forward)."""
-    prompt = PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False)
+def _invoke_claude(prompt, env):
+    """Run one `claude -p` headless call and return the parsed JSON object from
+    its result envelope. Raises on non-zero exit / error envelope / unparseable
+    output (caller decides carry-forward). Shared by the player and game paths."""
     proc = subprocess.run(
         ["claude", "-p", "--output-format", "json", "--model", MODEL],
         input=prompt, capture_output=True, text=True, timeout=CALL_TIMEOUT_S, env=env,
@@ -221,7 +246,13 @@ def _call_claude(ent, env):
     envelope = json.loads(proc.stdout)
     if envelope.get("is_error"):
         raise RuntimeError("claude reported error: {}".format(envelope.get("subtype")))
-    obj = _parse_json_object(envelope.get("result", ""))
+    return _parse_json_object(envelope.get("result", ""))
+
+
+def _call_claude(ent, env):
+    """One headless call for one player entity. Returns {story,summary,takeaways}
+    or raises on any failure (caller decides carry-forward)."""
+    obj = _invoke_claude(PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False), env)
     takeaways = obj.get("takeaways") or []
     if not isinstance(takeaways, list):
         takeaways = [str(takeaways)]
@@ -230,6 +261,27 @@ def _call_claude(ent, env):
         "summary": str(obj.get("summary", "")).strip(),
         "takeaways": [str(t).strip() for t in takeaways][:3],
     }
+
+
+def _game_prompt_payload(ent):
+    """The trimmed game object sent to the model. Includes BOTH sides' full
+    context (framing surfaces one side per signal; the AI gets everything)."""
+    return {
+        "matchup": "{} @ {}".format((ent.get("away") or {}).get("name"), (ent.get("home") or {}).get("name")),
+        "start": ent.get("start"),
+        "venue": ent.get("venue"),
+        "status": ent.get("status"),
+        "probables": ent.get("probables"),
+        "pulse": ent.get("pulse"),
+        "context": ent.get("context"),
+    }
+
+
+def _call_claude_game(ent, env):
+    """One headless call for one game entity. Returns {story,summary} (games carry
+    no takeaways) or raises on any failure (caller decides carry-forward)."""
+    obj = _invoke_claude(PROMPT_TEMPLATE_GAME + json.dumps(_game_prompt_payload(ent), ensure_ascii=False), env)
+    return {"story": str(obj.get("story", "")).strip(), "summary": str(obj.get("summary", "")).strip()}
 
 
 # ---------------- store I/O ----------------
@@ -261,14 +313,33 @@ def _needs_regen(ent, prev):
     return False
 
 
+def _needs_regen_game(ent, prev):
+    """Games regenerate every run UNTIL they're final. A completed game's data
+    never changes, so once the store has it as Final it's carried forever; a
+    not-yet-final game (probables/form still moving) is refreshed each run. New
+    games and prompt-template bumps always regenerate."""
+    if prev is None:
+        return True
+    if prev.get("template_version") != GAME_PROMPT_VERSION:
+        return True
+    return prev.get("status") != "Final"
+
+
 # ---------------- entry point ----------------
 
 def _carry(prev):
-    """Carry-forward view of a stored record (or None if we have nothing)."""
+    """Carry-forward view of a stored player record (or None if we have nothing)."""
     if not prev:
         return None
     return {"story": prev.get("story"), "summary": prev.get("summary"),
             "takeaways": prev.get("takeaways", [])}
+
+
+def _carry_game(prev):
+    """Carry-forward view of a stored game record (or None if we have nothing)."""
+    if not prev:
+        return None
+    return {"story": prev.get("story"), "summary": prev.get("summary")}
 
 
 def _top_n(entities, n):
@@ -280,55 +351,98 @@ def _top_n(entities, n):
     return dict(ordered[:n])
 
 
-def run(data, generated_at, store_path=STORE_PATH):
-    """Enrich `data` with per-player insight and return a Markdown addendum.
+def _print_auth_abort(e):
+    print("\n" + "!" * 70)
+    print("insights: AUTH PREFLIGHT FAILED -- making no AI calls this run.")
+    print("  reason: {}".format(str(e)[:220]))
+    print("  This step runs ONLY on your Claude subscription session. If just an")
+    print("  API key is available, log in with `claude`, or deliberately opt into")
+    print("  API billing with SP_ALLOW_API_BILLING=1.")
+    print("  -> merging committed insights only (no generation this run).")
+    print("!" * 70 + "\n")
 
-    The MERGE (writing committed insight text into `data` -- both the per-row
-    `insight` objects and the card-ready `data["insights"]["players"]` section)
+
+def _build_game_entities(config, generated_at):
+    """Deterministic game builder + its stores. Runs in CI too (only the AI calls
+    are gated later). Guarded: any failure yields empty games (players unaffected).
+    Returns (game_entities, games_store, game_date)."""
+    if config is None:
+        return {}, {}, None
+    game_date = generated_at.date().isoformat()
+    try:
+        box_cache = _load_store(BOXSCORE_CACHE_PATH)
+        game_entities, box_cache = mlb.build_game_entities(config, game_date, box_cache)
+        _save_store(BOXSCORE_CACHE_PATH, box_cache)
+        games_store = _load_store(GAMES_STORE_PATH)
+        print("insights(games): built {} games for {} (boxscore cache: {} final games)"
+              .format(len(game_entities), game_date, len(box_cache)))
+        return game_entities, games_store, game_date
+    except Exception as e:  # noqa: BLE001 -- never let the games path break the pipeline
+        print("insights(games): builder failed ({}); games section skipped".format(str(e)[:160]))
+        return {}, {}, game_date
+
+
+def run(data, generated_at, config=None, store_path=STORE_PATH):
+    """Enrich `data` with per-player AND per-game insight, return a Markdown addendum.
+
+    The MERGE (writing committed insight text into `data` -- the per-row `insight`
+    objects and the card-ready `data["insights"]["players"|"games"]` sections)
     ALWAYS happens. Only the AI *generation* is skipped when `claude` is
     unavailable or SP_SKIP_INSIGHTS is set -- that's what lets deployed builds
-    (which never have Claude) still surface the committed insights."""
+    (which never have Claude) still surface the committed insights. The
+    deterministic game builder itself runs even in CI; only its AI calls are gated.
+    A single auth preflight covers both players and games."""
+    now_iso = generated_at.isoformat()
     all_entities = build_entities(data)
-    entities = _top_n(all_entities, TOP_N)  # cap to the top-N players by pulse score
+    entities = _top_n(all_entities, TOP_N)  # cap players to top-N by pulse (games are NOT capped)
     store = _load_store(store_path)
     total = len(entities)
+
+    # Games: full slate, uncapped. Built deterministically here (CI included).
+    game_entities, games_store, _game_date = _build_game_entities(config, generated_at)
 
     skip_generation = bool(os.environ.get("SP_SKIP_INSIGHTS")) or shutil.which("claude") is None
     if skip_generation:
         reason = "SP_SKIP_INSIGHTS set" if os.environ.get("SP_SKIP_INSIGHTS") else "`claude` CLI not found"
         with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
-        print("insights: {} -> merge-only: top {} players, {} with committed insight text, no AI calls"
-              .format(reason, total, with_text))
+        g_with_text = sum(1 for pk in game_entities if (games_store.get(pk) or {}).get("summary"))
+        print("insights: {} -> merge-only: top {} players ({} w/ text), {} games ({} w/ text), no AI calls"
+              .format(reason, total, with_text, len(game_entities), g_with_text))
         insight_map = {k: _carry(store.get(k)) for k in entities}
+        game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
     else:
-        print("insights: top {} of {} players; model={}".format(total, len(all_entities), MODEL))
-        insight_map = _generate_all(entities, store, generated_at.isoformat(), total, store_path)
+        # One preflight for the whole run, iff anything (player or game) needs regen.
+        needs = (any(_needs_regen(e, store.get(k)) for k, e in entities.items())
+                 or any(_needs_regen_game(e, games_store.get(pk)) for pk, e in game_entities.items()))
+        child_env, auth_ok = None, True
+        if needs:
+            child_env = _subprocess_env()
+            try:
+                _preflight(child_env)
+            except Exception as e:  # noqa: BLE001 -- loud abort, never fall back to paid billing
+                _print_auth_abort(e)
+                auth_ok = False
+        if not auth_ok:
+            insight_map = {k: _carry(store.get(k)) for k in entities}
+            game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
+        else:
+            print("insights: top {} of {} players; {} games; model={}"
+                  .format(total, len(all_entities), len(game_entities), MODEL))
+            insight_map = _generate_all(entities, store, now_iso, total, store_path, child_env)
+            game_text = (_generate_games(game_entities, games_store, now_iso, GAMES_STORE_PATH, child_env)
+                         if game_entities else {})
 
     _write_back(data, insight_map)
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
+    if game_entities:
+        data["insights"]["games"] = _build_games_section(game_entities, game_text)
     return _markdown_addendum(data, insight_map)
 
 
-def _generate_all(entities, store, now_iso, total, store_path):
-    """Run the AI generation loop (regenerate changed entities, carry the rest).
-    Returns the insight_map. On auth-preflight failure, aborts loudly and falls
-    back to merge-only (committed text) without spending anything."""
-    child_env = None
-    if any(_needs_regen(e, store.get(k)) for k, e in entities.items()):
-        child_env = _subprocess_env()
-        try:
-            _preflight(child_env)
-        except Exception as e:  # noqa: BLE001 -- loud abort, never fall back to paid billing
-            print("\n" + "!" * 70)
-            print("insights: AUTH PREFLIGHT FAILED -- making no AI calls this run.")
-            print("  reason: {}".format(str(e)[:220]))
-            print("  This step runs ONLY on your Claude subscription session. If just an")
-            print("  API key is available, log in with `claude`, or deliberately opt into")
-            print("  API billing with SP_ALLOW_API_BILLING=1.")
-            print("  -> merging committed insights only (no generation this run).")
-            print("!" * 70 + "\n")
-            return {k: _carry(store.get(k)) for k in entities}
-
+def _generate_all(entities, store, now_iso, total, store_path, child_env):
+    """Run the player AI generation loop (regenerate changed entities, carry the
+    rest). Returns the insight_map. Auth preflight is handled once by run(), so
+    child_env is already validated (or None when nothing needs regen)."""
     gen = carried = failed = 0
     insight_map = {}
     new_store = {}  # rebuilt from the current (top-N) entity set -> prunes stale entries
@@ -384,6 +498,72 @@ def _build_players_section(entities, insight_map, generated_at):
         })
     players.sort(key=lambda p: (p.get("pulse") or {}).get("score", 0), reverse=True)
     return {"generated_at": generated_at.isoformat(), "players": players}
+
+
+def _generate_games(entities, store, now_iso, store_path, child_env):
+    """Game AI generation loop: regenerate non-final games each run, carry final
+    ones. Mirrors _generate_all -- rebuilds the store pruned to today's gamePks
+    (yesterday's slate drops off). Returns {gamePk: {story, summary}}."""
+    gen = carried = failed = 0
+    text_map = {}
+    new_store = {}  # rebuilt from today's slate -> prunes yesterday's games
+    total = len(entities)
+    for i, (pk, ent) in enumerate(entities.items(), start=1):
+        prev = store.get(pk)
+        label = "{} @ {}".format((ent.get("away") or {}).get("abbr"), (ent.get("home") or {}).get("abbr"))
+        if _needs_regen_game(ent, prev):
+            print("  [game {}/{}] {} -- regenerating".format(i, total, label))
+            try:
+                text = _call_claude_game(ent, child_env)
+                gen += 1
+            except Exception as e:  # noqa: BLE001 -- never let one game break the run
+                print("      call failed ({}); {}".format(
+                    str(e)[:120], "carrying previous" if prev else "leaving empty"))
+                failed += 1
+                text = _carry_game(prev) or {"story": None, "summary": None}
+        else:
+            print("  [game {}/{}] {} -- cached (final)".format(i, total, label))
+            carried += 1
+            text = _carry_game(prev)
+
+        new_store[pk] = {
+            "away": ent.get("away"), "home": ent.get("home"),
+            "start": ent.get("start"), "venue": ent.get("venue"),
+            "probables": ent.get("probables"), "signals": ent.get("signals"),
+            "pulse": ent.get("pulse"), "status": ent.get("status"),
+            "template_version": GAME_PROMPT_VERSION,
+            "generated_at": now_iso if (prev is None or _needs_regen_game(ent, prev)) else prev.get("generated_at", now_iso),
+            "story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
+        }
+        text_map[pk] = {"story": (text or {}).get("story"), "summary": (text or {}).get("summary")}
+
+    _save_store(store_path, new_store)
+    print("insights(games): generated {}, carried forward {}, failed {} (store pruned to {} entries)"
+          .format(gen, carried, failed, len(new_store)))
+    return text_map
+
+
+def _build_games_section(entities, text_map):
+    """Card-ready game insights for the UI, in slate order (no ranking/cap).
+    Returns a bare list assigned to data["insights"]["games"] -- mirroring
+    data["insights"]["players"] (also a bare list). Deterministic signals/pulse
+    from the builder; story/summary from text_map (omitted client-side when empty)."""
+    games = []
+    for pk, ent in entities.items():
+        t = text_map.get(pk) or {}
+        games.append({
+            "id": ent.get("gamePk"),
+            "away": ent.get("away"),
+            "home": ent.get("home"),
+            "start": ent.get("start"),
+            "venue": ent.get("venue"),
+            "probables": ent.get("probables"),
+            "pulse": ent.get("pulse"),
+            "signals": ent.get("signals"),
+            "summary": t.get("summary"),
+            "story": t.get("story"),
+        })
+    return games
 
 
 def _write_back(data, insight_map):

@@ -261,10 +261,12 @@ def main():
     # of UTC.
     generated_at = datetime.datetime.now(datetime.timezone.utc)
     data = build_data(ranked, generated_at)
-    # AI Insight Generator (Phase 3): enriches `data` with per-player insight
-    # text and maintains the committed data/insights.json store. Guarded --
-    # no-ops when the claude CLI is unavailable (e.g. in CI).
-    insights_md = generate_insights.run(data, generated_at)
+    # AI Insight Generator: enriches `data` with per-player and per-game insight
+    # text and maintains the committed insight stores (data/insights.json,
+    # data/insights.games.json) + boxscore cache. `config` is passed so the game
+    # builder can reach the MLB endpoints. AI generation no-ops when the claude
+    # CLI is unavailable (e.g. in CI); the deterministic game build still runs.
+    insights_md = generate_insights.run(data, generated_at, config=config)
     markdown = render_markdown(ranked, generated_at) + insights_md
 
     output_dir = config.get("output_dir", "output")

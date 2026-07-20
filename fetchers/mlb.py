@@ -566,6 +566,354 @@ def enrich_with_vs_next_starter(ranked_records, config, game_date=None):
         }
 
 
+# ---------------- Game insight entities (deterministic; "AI never calculates") ----------------
+#
+# One entity per game on a day's slate, assembled entirely from StatsAPI. The AI
+# step (generate_insights.py) only writes prose from these numbers. See
+# docs/sports-pulse-schema.md -> "Game signal catalog (v1)" for the contract and
+# the team-relative framing rule surfaced here.
+
+
+def _ip_to_outs(ip):
+    """MLB thirds-notation innings-pitched string -> integer outs. "6.2" -> 20
+    (6 innings + 2 outs), "1.0" -> 3, "" / None -> 0. NEVER treat the string as
+    a decimal (see fetch_series_for_player's note)."""
+    if not ip:
+        return 0
+    s = str(ip)
+    whole, _, frac = s.partition(".")
+    try:
+        return int(whole) * 3 + (int(frac[0]) if frac else 0)
+    except (ValueError, IndexError):
+        return 0
+
+
+def _recompute_ops(splits):
+    """Sum hitting components across game splits and RECOMPUTE OPS = OBP + SLG
+    (never average per-game OPS). Returns a rounded float, or None if no at-bats."""
+    h = bb = hbp = ab = sf = tb = 0
+    for sp in splits:
+        st = sp.get("stat", {})
+        h += int(st.get("hits", 0) or 0)
+        bb += int(st.get("baseOnBalls", 0) or 0)
+        hbp += int(st.get("hitByPitch", 0) or 0)
+        ab += int(st.get("atBats", 0) or 0)
+        sf += int(st.get("sacFlies", 0) or 0)
+        tb += int(st.get("totalBases", 0) or 0)
+    if ab == 0:
+        return None
+    obp_den = ab + bb + hbp + sf
+    obp = (h + bb + hbp) / obp_den if obp_den else 0.0
+    slg = tb / ab
+    return round(obp + slg, 3)
+
+
+def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache, window_days=14):
+    """A team's recomputed OPS over its last `window_days` of completed games on
+    one side (home games for the home team, road games for the away team). Cached
+    per (team_id, is_home) so a doubleheader team isn't fetched twice. None if the
+    team has no games on that side in the window."""
+    key = (team_id, is_home)
+    if key in cache:
+        return cache[key]
+    data = _get(
+        session,
+        f"{base_url}/teams/{team_id}/stats",
+        params={"stats": "gameLog", "group": "hitting", "season": season},
+    )
+    stats = data.get("stats", [])
+    splits = stats[0].get("splits", []) if stats else []
+    cutoff = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=window_days)).isoformat()
+    windowed = [
+        s for s in splits
+        if s.get("date") and cutoff <= s["date"] < as_of_date and bool(s.get("isHome")) == is_home
+    ]
+    ops = _recompute_ops(windowed)
+    cache[key] = ops
+    return ops
+
+
+def _bullpen_lines_from_boxscore(box):
+    """Both teams' GS=0 (reliever) {er, ip_outs} from one boxscore, keyed by team
+    id. Starters (gamesStarted>=1) are excluded -- this is a true bullpen line."""
+    out = {}
+    for side in ("away", "home"):
+        tside = box.get("teams", {}).get(side, {})
+        team_id = tside.get("team", {}).get("id")
+        if team_id is None:
+            continue
+        er = outs = 0
+        players = tside.get("players", {})
+        for pid in tside.get("pitchers", []):
+            pitch = players.get(f"ID{pid}", {}).get("stats", {}).get("pitching", {})
+            if (pitch.get("gamesStarted") or 0) >= 1:
+                continue
+            er += int(pitch.get("earnedRuns", 0) or 0)
+            outs += _ip_to_outs(pitch.get("inningsPitched"))
+        out[str(team_id)] = {"er": er, "ip_outs": outs}
+    return out
+
+
+def team_bullpen_era(session, base_url, team_id, as_of_date, boxscore_cache, touched, window_days=7):
+    """A team's true bullpen ERA over its Final games in the trailing
+    `window_days`. Reuses the committed boxscore cache -- only Final gamePks NOT
+    already cached are fetched; a cached (immutable) final game is never re-fetched.
+    Every Final gamePk it considers is recorded in `touched` for cache pruning.
+    Returns a rounded ERA float, or None if the bullpen threw no innings."""
+    start = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=window_days)).isoformat()
+    end = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=1)).isoformat()
+    sched = _get(
+        session,
+        f"{base_url}/schedule",
+        params={"sportId": 1, "teamId": team_id, "startDate": start, "endDate": end},
+    )
+    er = outs = 0
+    for d in sched.get("dates", []):
+        for g in d.get("games", []):
+            if g.get("status", {}).get("abstractGameState") != "Final":
+                continue
+            pk = str(g.get("gamePk"))
+            touched.add(pk)
+            entry = boxscore_cache.get(pk)
+            if entry is None:
+                entry = _bullpen_lines_from_boxscore(_get(session, f"{base_url}/game/{pk}/boxscore"))
+                boxscore_cache[pk] = entry
+            line = entry.get(str(team_id))
+            if line:
+                er += line["er"]
+                outs += line["ip_outs"]
+    if outs == 0:
+        return None
+    return round(9.0 * er / (outs / 3.0), 2)
+
+
+def season_series(session, base_url, team_id, opp_id, season, as_of_date):
+    """This team's Win-Loss record vs one opponent among Final games this season
+    through `as_of_date`. Returns (wins, losses) or None if they haven't met."""
+    sched = _get(
+        session,
+        f"{base_url}/schedule",
+        params={
+            "sportId": 1, "teamId": team_id, "opponentId": opp_id,
+            "startDate": f"{season}-01-01", "endDate": as_of_date,
+        },
+    )
+    wins = losses = 0
+    for d in sched.get("dates", []):
+        for g in d.get("games", []):
+            if g.get("status", {}).get("abstractGameState") != "Final":
+                continue
+            for side in ("away", "home"):
+                tinfo = g.get("teams", {}).get(side, {})
+                if tinfo.get("team", {}).get("id") == team_id:
+                    if tinfo.get("isWinner") is True:
+                        wins += 1
+                    elif tinfo.get("isWinner") is False:
+                        losses += 1
+    if wins + losses == 0:
+        return None
+    return (wins, losses)
+
+
+def pitcher_season_era(session, base_url, pitcher_id, season, cache):
+    """A pitcher's season ERA as the raw API string ("3.20"), cached per id.
+    None if unavailable (best-effort; never fails the build)."""
+    if pitcher_id in cache:
+        return cache[pitcher_id]
+    era = None
+    try:
+        data = _get(
+            session,
+            f"{base_url}/people/{pitcher_id}/stats",
+            params={"stats": "season", "group": "pitching", "season": season},
+        )
+        stats = data.get("stats", [])
+        if stats and stats[0].get("splits"):
+            era = stats[0]["splits"][0].get("stat", {}).get("era")
+    except requests.RequestException:
+        era = None
+    cache[pitcher_id] = era
+    return era
+
+
+def _fmt_ops(v):
+    """.812 style -- fixed 3 decimals, leading zero dropped."""
+    if v is None:
+        return None
+    s = "{:.3f}".format(v)
+    return s[1:] if s.startswith("0.") else s
+
+
+def _fmt_era(v):
+    """2-decimal ERA display from the raw API value, or None if not numeric."""
+    try:
+        return "{:.2f}".format(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_start_et(game_date_utc):
+    """UTC ISO gameDate -> 'H:MM AM/PM ET'. v1 fixes the display to US Eastern
+    (a West Coast game shows ET, not local venue time -- a deliberate v1
+    shortcut; real per-venue timezone can come later). None if unparseable."""
+    if not game_date_utc:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        dt = datetime.datetime.fromisoformat(game_date_utc.replace("Z", "+00:00"))
+        et = dt.astimezone(ZoneInfo("America/New_York"))
+        hour = et.hour % 12 or 12
+        return "{}:{:02d} {} ET".format(hour, et.minute, "AM" if et.hour < 12 else "PM")
+    except Exception:  # noqa: BLE001 -- display nicety, never break the build
+        return None
+
+
+def _game_pulse(framed_ops, framed_bullpen_era, series):
+    """Deterministic notability score for a game (games have no leaderboard rank).
+    First-pass, tunable heuristic: a hot framed offense, a fatigued framed bullpen,
+    and a lopsided season series each bump the score. Same band labels as players."""
+    score = 55
+    if framed_ops is not None:
+        score += 15 if framed_ops >= 0.800 else 8 if framed_ops >= 0.750 else 0
+    if framed_bullpen_era is not None:
+        score += 12 if framed_bullpen_era >= 5.0 else 6 if framed_bullpen_era >= 4.25 else 0
+    if series is not None:
+        diff = abs(series[0] - series[1])
+        score += 8 if diff >= 4 else 4 if diff >= 2 else 0
+    score = max(30, min(100, score))
+    label = ("Scorching" if score >= 85 else "Hot" if score >= 70 else "Warm" if score >= 55 else "Notable")
+    return {"score": score, "label": label}
+
+
+def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, touched, ops_cache, era_cache):
+    import team_meta  # local import: keeps the standalone `python3 fetchers/mlb.py` helper working
+
+    teams = g.get("teams", {})
+    away_t = teams.get("away", {}).get("team", {})
+    home_t = teams.get("home", {}).get("team", {})
+    away_id, home_id = away_t.get("id"), home_t.get("id")
+
+    def teamref(t):
+        meta = team_meta.get_team_meta("mlb", t.get("name")) or {}
+        return {"abbr": meta.get("abbr") or t.get("abbreviation"),
+                "name": t.get("teamName"), "color": meta.get("color")}
+
+    away_ref, home_ref = teamref(away_t), teamref(home_t)
+
+    # OPS: home team's home form, away team's road form (14d, recomputed).
+    home_ops = team_side_ops(session, base_url, home_id, season, True, game_date, ops_cache) if home_id else None
+    away_ops = team_side_ops(session, base_url, away_id, season, False, game_date, ops_cache) if away_id else None
+
+    # Bullpen ERA (7d): true bullpen, boxscore-cached.
+    home_pen = team_bullpen_era(session, base_url, home_id, game_date, boxscore_cache, touched) if home_id else None
+    away_pen = team_bullpen_era(session, base_url, away_id, game_date, boxscore_cache, touched) if away_id else None
+
+    # Season series (counts kept from the away team's perspective).
+    series = season_series(session, base_url, away_id, home_id, season, game_date) if (away_id and home_id) else None
+
+    # Probable starters + season ERA (best-effort; omit an unannounced side).
+    away_pp = teams.get("away", {}).get("probablePitcher")
+    home_pp = teams.get("home", {}).get("probablePitcher")
+    probables = {}
+    away_era = home_era = None
+    if away_pp and away_pp.get("id"):
+        away_era = _fmt_era(pitcher_season_era(session, base_url, away_pp["id"], season, era_cache))
+        probables["away"] = {"name": away_pp.get("fullName"), **({"era": away_era} if away_era else {})}
+    if home_pp and home_pp.get("id"):
+        home_era = _fmt_era(pitcher_season_era(session, base_url, home_pp["id"], season, era_cache))
+        probables["home"] = {"name": home_pp.get("fullName"), **({"era": home_era} if home_era else {})}
+
+    # ---- Team-relative framing: surface the single most-notable side per
+    # one-sided family; keep inherently-paired families combined. Both sides are
+    # always preserved in `context` for the AI (display=standout, AI=complete).
+    signals = []
+    framed_ops = None
+    if home_ops is not None or away_ops is not None:
+        if (away_ops or -1) > (home_ops or -1):
+            framed_ops = away_ops
+            signals.append({"label": f"{away_ref['abbr']} road OPS (14d)", "value": _fmt_ops(away_ops), "tone": "pos"})
+        else:
+            framed_ops = home_ops
+            signals.append({"label": f"{home_ref['abbr']} home OPS (14d)", "value": _fmt_ops(home_ops), "tone": "pos"})
+
+    framed_pen = None
+    if home_pen is not None or away_pen is not None:
+        if (home_pen or -1) > (away_pen or -1):
+            framed_pen = home_pen
+            signals.append({"label": f"{home_ref['abbr']} bullpen ERA (7d)", "value": "{:.2f}".format(home_pen), "tone": "neg"})
+        else:
+            framed_pen = away_pen
+            signals.append({"label": f"{away_ref['abbr']} bullpen ERA (7d)", "value": "{:.2f}".format(away_pen), "tone": "neg"})
+
+    if series is not None:
+        w, l = series  # away team's W-L vs home
+        if w >= l:
+            signals.append({"label": "Season series", "value": f"{away_ref['abbr']} {w}-{l}", "tone": "neutral"})
+        else:
+            signals.append({"label": "Season series", "value": f"{home_ref['abbr']} {l}-{w}", "tone": "neutral"})
+
+    if away_era and home_era:
+        signals.append({"label": "Probables ERA", "value": f"{away_era} vs {home_era}", "tone": "neutral"})
+
+    return {
+        "gamePk": g.get("gamePk"),
+        "status": g.get("status", {}).get("abstractGameState"),
+        "away": away_ref,
+        "home": home_ref,
+        "start": _format_start_et(g.get("gameDate")),
+        "venue": (g.get("venue") or {}).get("name"),
+        "probables": probables or None,
+        "signals": signals,
+        "pulse": _game_pulse(framed_ops, framed_pen, series),
+        # Full both-sides context for the AI payload only -- never shown directly.
+        "context": {
+            "away_team": away_ref["name"], "home_team": home_ref["name"],
+            "away_road_ops_14d": _fmt_ops(away_ops),
+            "home_home_ops_14d": _fmt_ops(home_ops),
+            "away_bullpen_era_7d": "{:.2f}".format(away_pen) if away_pen is not None else None,
+            "home_bullpen_era_7d": "{:.2f}".format(home_pen) if home_pen is not None else None,
+            "season_series": (f"{away_ref['abbr']} {series[0]}-{series[1]}" if series else None),
+            "away_probable_era": away_era,
+            "home_probable_era": home_era,
+        },
+    }
+
+
+def build_game_entities(config, game_date, boxscore_cache):
+    """Build one deterministic Game insight entity for every game on `game_date`'s
+    MLB slate (full slate -- uncapped, since "today's games" is already bounded).
+
+    Returns (entities, pruned_boxscore_cache):
+      - entities: ordered {str(gamePk): entity} in slate order; each entity carries
+        away/home TeamRefs (abbr/name/color), start (ET), venue, probables, framed
+        signals, a deterministic pulse, status, and a both-sides `context` block.
+      - pruned_boxscore_cache: the input cache plus any newly fetched Final-game
+        reliever lines, pruned to just the gamePks referenced this run (games that
+        fall out of every team's 7d window drop off, keeping the file tiny)."""
+    mlb_cfg = config["mlb"]
+    base_url = mlb_cfg["base_url"]
+    season = mlb_cfg["season"]
+    session = requests.Session()
+
+    sched = _get(
+        session,
+        f"{base_url}/schedule",
+        params={"sportId": 1, "date": game_date, "hydrate": "probablePitcher,team,venue"},
+    )
+    touched = set()
+    ops_cache, era_cache = {}, {}
+    entities = {}
+    for d in sched.get("dates", []):
+        for g in d.get("games", []):
+            ent = _build_one_game(
+                session, base_url, season, game_date, g, boxscore_cache, touched, ops_cache, era_cache
+            )
+            entities[str(g.get("gamePk"))] = ent
+
+    pruned_cache = {pk: boxscore_cache[pk] for pk in touched if pk in boxscore_cache}
+    return entities, pruned_cache
+
+
 def fetch(config, game_date=None):
     """Fetch raw (unranked) records for every configured MLB stat category."""
     mlb_cfg = config["mlb"]
