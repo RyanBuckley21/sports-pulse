@@ -41,6 +41,17 @@
     return inner ? '<div class="insight-section">' + inner + "</div>" : "";
   }
 
+  // Probable starters line for the game card: NAMES ONLY (the ERA matchup is
+  // already a "Probables ERA" row in Key Signals, so names are the non-duplicated
+  // info). Degrades to whichever side is announced; omitted when neither is.
+  function probablesLine(pr) {
+    if (!pr) return "";
+    var a = pr.away && pr.away.name, h = pr.home && pr.home.name;
+    if (!a && !h) return "";
+    var names = a && h ? esc(a) + " vs " + esc(h) : esc(a || h);
+    return '<div class="gi-probables">Starters: ' + names + "</div>";
+  }
+
   var Cards = {
     // Pulse Score -- a 0..100 "how notable is this right now" gauge. Reusable
     // standalone or embedded in the identity cards below.
@@ -104,10 +115,11 @@
         (g.start ? '<div class="gi-when">' + esc(g.start) + "</div>" : "") +
         "</div>" +
         (g.venue ? '<div class="gi-venue">' + esc(g.venue) + "</div>" : "") +
+        probablesLine(g.probables) +
         (g.headline ? '<p class="insight-headline">' + esc(g.headline) + "</p>" : "") +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        block(Cards.aiSummary(g.summary)) +
+        block(Cards.aiSummary(g.summary, g.story)) +
         "</article>"
       );
     },
@@ -151,9 +163,9 @@
   if (!root) return; // static pages (e.g. the hub) have no render target
 
   var view = document.body.getAttribute("data-insights-view");
-  // Players render from the live pipeline output (../data.json -> insights.players);
-  // games/teams/components are still the deferred mock.
-  var src = view === "players" ? "../data.json" : "mock-insights.json";
+  // Players and games render from the live pipeline output (../data.json ->
+  // insights.players / insights.games); teams/components are still the deferred mock.
+  var src = (view === "players" || view === "games") ? "../data.json" : "mock-insights.json";
 
   fetch(src, { cache: "no-store" })
     .then(function (r) {
@@ -171,7 +183,7 @@
 
   function renderView(view, data, root) {
     if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
-    else if (view === "games") root.innerHTML = list(data.games, Cards.gameInsight);
+    else if (view === "games") root.innerHTML = list((data.insights && data.insights.games) || [], Cards.gameInsight);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
