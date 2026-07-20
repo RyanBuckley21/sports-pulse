@@ -112,6 +112,7 @@
       '<span class="status-text ' + cls + '" id="statusText">Updated ' + esc(relativeTime(generatedAt)) + "</span>" +
       "</div>" +
       "</div>" +
+      '<a class="app-insights-link" href="insights/players.html">Insights &rarr;</a>' +
       "</header>"
     );
   }
