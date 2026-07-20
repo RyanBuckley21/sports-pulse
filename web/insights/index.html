@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insights — Who's Hot</title>
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<meta name="theme-color" content="#0A0A0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Reuse the main app's design tokens, fonts, and shared component styles. -->
+<link rel="stylesheet" href="../app.css">
+<link rel="stylesheet" href="insights.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <div class="app-icon"><img src="../assets/icon-180.png" alt="Who's Hot app icon"></div>
+    <div>
+      <div class="app-title">Insights</div>
+      <div class="app-status"><span class="status-text">MLB &middot; AI-assisted context</span></div>
+    </div>
+  </header>
+
+  <p class="insights-intro">Plain-language context for today's MLB games, teams, and players &mdash; what matters and why. Not predictions.</p>
+
+  <nav class="insights-cards">
+    <a class="insights-card" href="games.html">
+      <span class="insights-card-title">Today's Games</span>
+      <span class="insights-card-sub">Matchup context &amp; storylines</span>
+      <span class="insights-badge">Coming soon</span>
+    </a>
+    <a class="insights-card" href="teams.html">
+      <span class="insights-card-title">Teams</span>
+      <span class="insights-card-sub">Form, trends &amp; what's driving them</span>
+      <span class="insights-badge">Coming soon</span>
+    </a>
+    <a class="insights-card" href="players.html">
+      <span class="insights-card-title">Players</span>
+      <span class="insights-card-sub">Who's hot, who's due, and why</span>
+      <span class="insights-badge">Coming soon</span>
+    </a>
+  </nav>
+
+  <a class="insights-home-link" href="../index.html">&larr; Back to Who's Hot</a>
+</div>
+<script src="insights.js"></script>
+</body>
+</html>
