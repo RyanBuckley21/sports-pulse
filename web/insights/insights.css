@@ -158,6 +158,9 @@
 }
 .ai-summary-title { font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-tertiary); }
 .ai-summary-text { font: 400 13.5px/1.55 system-ui; color: var(--text-secondary); margin: 0; }
+/* Supporting story paragraph beneath the summary lead (Player Insight); dimmer
+   and slightly smaller so the one-line summary reads as the lead. */
+.ai-summary-story { font: 400 13px/1.55 system-ui; color: var(--text-tertiary); margin: 8px 0 0; }
 .ai-caveat { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0.5px; margin-top: 8px; }
 
 /* ---- component gallery (components.html) ---- */

@@ -81,12 +81,13 @@
     // AI Summary -- a plain-language explanation block. Carries an AI badge and
     // a standing "context, not a prediction" caveat that anchors the section's
     // purpose. (Phase 2: text is mock; Phase 3 wires the real generator.)
-    aiSummary: function (text) {
-      if (!text) return "";
+    aiSummary: function (summary, story) {
+      if (!summary && !story) return "";
       return (
         '<div class="ai-summary">' +
         '<div class="ai-summary-head"><span class="ai-badge">AI</span><span class="ai-summary-title">Summary</span></div>' +
-        '<p class="ai-summary-text">' + esc(text) + "</p>" +
+        (summary ? '<p class="ai-summary-text">' + esc(summary) + "</p>" : "") +
+        (story ? '<p class="ai-summary-story">' + esc(story) + "</p>" : "") +
         '<div class="ai-caveat">Context, not a prediction.</div>' +
         "</div>"
       );
@@ -135,7 +136,7 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        block(Cards.aiSummary(p.summary)) +
+        block(Cards.aiSummary(p.summary, p.story)) +
         "</article>"
       );
     },
@@ -150,15 +151,18 @@
   if (!root) return; // static pages (e.g. the hub) have no render target
 
   var view = document.body.getAttribute("data-insights-view");
+  // Players render from the live pipeline output (../data.json -> insights.players);
+  // games/teams/components are still the deferred mock.
+  var src = view === "players" ? "../data.json" : "mock-insights.json";
 
-  fetch("mock-insights.json", { cache: "no-store" })
+  fetch(src, { cache: "no-store" })
     .then(function (r) {
-      if (!r.ok) throw new Error("mock fetch " + r.status);
+      if (!r.ok) throw new Error("fetch " + src + " " + r.status);
       return r.json();
     })
     .then(function (data) { renderView(view, data, root); })
     .catch(function () {
-      root.innerHTML = '<p class="empty-state">Could not load mock insights.</p>';
+      root.innerHTML = '<p class="empty-state">Could not load insights.</p>';
     });
 
   function list(items, fn) {
@@ -166,9 +170,9 @@
   }
 
   function renderView(view, data, root) {
-    if (view === "games") root.innerHTML = list(data.games, Cards.gameInsight);
+    if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
+    else if (view === "games") root.innerHTML = list(data.games, Cards.gameInsight);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
-    else if (view === "players") root.innerHTML = list(data.players, Cards.playerInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
   }

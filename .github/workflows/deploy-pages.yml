@@ -34,6 +34,9 @@ jobs:
           cp web/index.html web/app.css web/app.js site/
           cp output/data.json site/data.json
           cp -r assets site/assets
+          # Insights section pages (players view reads ../data.json, which
+          # already carries the merged insights from generate_stats.py above).
+          cp -r web/insights site/insights
           # Cache-bust app.css/app.js on every deploy: without this, Safari
           # (especially in "Add to Home Screen" standalone mode) can keep
           # serving a stale cached copy of these files indefinitely even

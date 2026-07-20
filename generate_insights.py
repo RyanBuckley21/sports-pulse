@@ -259,24 +259,46 @@ def _needs_regen(ent, prev):
 
 # ---------------- entry point ----------------
 
-def run(data, generated_at, store_path=STORE_PATH):
-    """Enrich `data` in place with per-player `insight`, maintain the committed
-    store, and return a Markdown addendum (empty string when skipped)."""
-    if os.environ.get("SP_SKIP_INSIGHTS"):
-        print("insights: SP_SKIP_INSIGHTS set -> skipping AI step")
-        return ""
-    if shutil.which("claude") is None:
-        print("insights: `claude` CLI not found -> skipping AI step (data pipeline unaffected)")
-        return ""
+def _carry(prev):
+    """Carry-forward view of a stored record (or None if we have nothing)."""
+    if not prev:
+        return None
+    return {"story": prev.get("story"), "summary": prev.get("summary"),
+            "takeaways": prev.get("takeaways", [])}
 
+
+def run(data, generated_at, store_path=STORE_PATH):
+    """Enrich `data` with per-player insight and return a Markdown addendum.
+
+    The MERGE (writing committed insight text into `data` -- both the per-row
+    `insight` objects and the card-ready `data["insights"]["players"]` section)
+    ALWAYS happens. Only the AI *generation* is skipped when `claude` is
+    unavailable or SP_SKIP_INSIGHTS is set -- that's what lets deployed builds
+    (which never have Claude) still surface the committed insights."""
     entities = build_entities(data)
     store = _load_store(store_path)
     total = len(entities)
-    now_iso = generated_at.isoformat()
-    print("insights: {} unique players; model={}".format(total, MODEL))
 
-    # Only auth/preflight when at least one entity actually needs a model call,
-    # so a fully-cached run stays truly zero-call.
+    skip_generation = bool(os.environ.get("SP_SKIP_INSIGHTS")) or shutil.which("claude") is None
+    if skip_generation:
+        reason = "SP_SKIP_INSIGHTS set" if os.environ.get("SP_SKIP_INSIGHTS") else "`claude` CLI not found"
+        with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
+        print("insights: {} -> merge-only: {} players, {} with committed insight text, no AI calls"
+              .format(reason, total, with_text))
+        insight_map = {k: _carry(store.get(k)) for k in entities}
+    else:
+        print("insights: {} unique players; model={}".format(total, MODEL))
+        insight_map = _generate_all(entities, store, generated_at.isoformat(), total, store_path)
+
+    _write_back(data, insight_map)
+    data["insights"] = _build_players_section(entities, insight_map, generated_at)
+    return _markdown_addendum(data, insight_map)
+
+
+def _generate_all(entities, store, now_iso, total, store_path):
+    """Run the AI generation loop (regenerate changed entities, carry the rest).
+    Returns the insight_map. On auth-preflight failure, aborts loudly and falls
+    back to merge-only (committed text) without spending anything."""
     child_env = None
     if any(_needs_regen(e, store.get(k)) for k, e in entities.items()):
         child_env = _subprocess_env()
@@ -289,8 +311,9 @@ def run(data, generated_at, store_path=STORE_PATH):
             print("  This step runs ONLY on your Claude subscription session. If just an")
             print("  API key is available, log in with `claude`, or deliberately opt into")
             print("  API billing with SP_ALLOW_API_BILLING=1.")
+            print("  -> merging committed insights only (no generation this run).")
             print("!" * 70 + "\n")
-            return ""  # data pipeline already produced its output; simply no insights
+            return {k: _carry(store.get(k)) for k in entities}
 
     gen = carried = failed = 0
     insight_map = {}
@@ -305,14 +328,11 @@ def run(data, generated_at, store_path=STORE_PATH):
                 print("      call failed ({}); {}".format(
                     str(e)[:120], "carrying previous" if prev else "leaving empty"))
                 failed += 1
-                text = {"story": prev.get("story"), "summary": prev.get("summary"),
-                        "takeaways": prev.get("takeaways", [])} if prev else \
-                       {"story": None, "summary": None, "takeaways": []}
+                text = _carry(prev) or {"story": None, "summary": None, "takeaways": []}
         else:
             print("  [{}/{}] {} -- cached".format(i, total, ent.get("entity")))
             carried += 1
-            text = {"story": prev.get("story"), "summary": prev.get("summary"),
-                    "takeaways": prev.get("takeaways", [])}
+            text = _carry(prev)
 
         store[key] = {
             "entity": ent.get("entity"), "team": ent.get("team"),
@@ -325,9 +345,29 @@ def run(data, generated_at, store_path=STORE_PATH):
 
     _save_store(store_path, store)
     print("insights: generated {}, carried forward {}, failed {}".format(gen, carried, failed))
+    return insight_map
 
-    _write_back(data, insight_map)
-    return _markdown_addendum(data, insight_map)
+
+def _build_players_section(entities, insight_map, generated_at):
+    """Card-ready player insights for the UI (data["insights"]["players"]).
+    Reuses the deterministic pulse + signals from build_entities; story/summary
+    come from insight_map. Sorted most-notable first. Always emitted -- in
+    merge-only mode entities without committed text still appear (pulse/signals
+    render; the AI block is simply omitted client-side when empty)."""
+    players = []
+    for key, ent in entities.items():
+        ins = insight_map.get(key) or {}
+        players.append({
+            "name": ent.get("entity"),
+            "team": ent.get("team_abbr"),
+            "pos": ent.get("position"),
+            "pulse": ent.get("pulse"),
+            "signals": ent.get("signals"),
+            "summary": ins.get("summary"),
+            "story": ins.get("story"),
+        })
+    players.sort(key=lambda p: (p.get("pulse") or {}).get("score", 0), reverse=True)
+    return {"generated_at": generated_at.isoformat(), "players": players}
 
 
 def _write_back(data, insight_map):
