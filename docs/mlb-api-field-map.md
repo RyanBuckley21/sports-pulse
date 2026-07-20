@@ -94,10 +94,17 @@ Signals that **are** cleanly derivable from StatsAPI:
 - ✅ Season series / head-to-head → `schedule` filtered to the two teams.
 - ✅ Games back / standings → `/standings`.
 
+## Decision (2026-07-20)
+
+**Stay MLB Stats API only for now. No Baseball Savant / Statcast integration
+yet** — deferred like betting odds (worth revisiting, out of scope now).
+Applied to the schema + mock: wOBA → **OPS**, chase rate / hard-hit % **removed**
+from the signal catalog. See `docs/sports-pulse-schema.md` → "Signal catalog".
+
 ## Takeaways for Phase 3
 
-1. **Drop or substitute Statcast/sabermetric signals** in real data: replace
-   wOBA→OPS; drop chase rate / hard-hit % unless we add Baseball Savant.
+1. **Statcast/sabermetric signals are out** (decision above): wOBA→OPS done;
+   chase rate / hard-hit % removed. Revisit only if a Savant source is added.
 2. **Bullpen and run-diff signals are multi-call derivations**, not fields —
    budget the fetch cost (fits the existing post-rank enrichment pattern).
 3. **`start` and team `name`** need explicit derivation/field-selection, not a

@@ -47,6 +47,26 @@ Signal {
 }
 ```
 
+### Signal catalog (MLB Stats API only)
+
+`Signal` is generic, but real data must draw from **StatsAPI-native** metrics.
+Baseball Savant / Statcast is **deferred** (same status as betting odds — worth
+revisiting, out of scope now), so Statcast and sabermetric-only stats are **not**
+part of the catalog.
+
+Supported (derivable from StatsAPI — see `docs/mlb-api-field-map.md`):
+- Rate/production: **OPS**, AVG, OBP, SLG, HR, XBH, SB, RBI (per-game logs;
+  windowable to N days; splittable home/away via `isHome`).
+- **BABIP** — computed from game-log components (H, HR, AB, K, SF).
+- Pitching: K/9, K rate, walk rate, **WHIP**, opponent AVG (pitching game logs).
+- Team: run differential (Nd), record (Nd), **bullpen ERA** (derived by summing
+  reliever lines across recent box scores), head-to-head series, games back.
+
+Excluded (deferred with Baseball Savant, do **not** use):
+- ❌ **wOBA** — sabermetric, not in StatsAPI → use **OPS** instead.
+- ❌ **Chase rate**, ❌ **Hard-hit %** (and other Statcast plate-discipline /
+  batted-ball metrics).
+
 ## TeamRef
 
 A compact team reference, embedded in `Game.away` / `Game.home`. Rendered by the
@@ -55,7 +75,9 @@ internal `teamTag` helper (reuses `.team-chip`).
 ```
 TeamRef {
   abbr   : string    // required for the chip to render, e.g. "NYY"
-  name?  : string    // full/nickname label (not shown in the game chip today)
+  name?  : string    // team nickname; maps to API team.teamName ("Yankees"),
+                     //   NOT team.name ("New York Yankees"). Not shown in the
+                     //   game chip today (used by Team cards / future use).
   color? : string    // #RRGGBB; defaults to a neutral grey if absent
 }
 ```
@@ -66,10 +88,14 @@ Rendered by `Cards.gameInsight`.
 
 ```
 Game {
-  id?      : string       // stable key; NOT currently read by the component
+  id?      : integer       // API gamePk (integer). Stable key; NOT currently
+                          //   read by the component. If a producer carries it
+                          //   as a string, coerce to integer at the source.
   away     : TeamRef
   home     : TeamRef
-  start?   : string        // display time, e.g. "7:10 PM ET"
+  start?   : string        // DERIVED display string, e.g. "7:10 PM ET". The API
+                          //   supplies only gameDate (UTC ISO); the producer
+                          //   converts it to local/ET for display. Not a raw field.
   venue?   : string        // e.g. "Fenway Park"
   headline?: string        // one-line hook
   pulse?   : PulseScore
@@ -124,3 +150,8 @@ Player {
   table, not from any feed.
 - **`pulse.score`, `headline`, `summary` are derived/generated**, not raw source
   fields (see `docs/mlb-api-field-map.md`).
+- **`Game.start` is derived** (UTC `gameDate` → local/ET display) and **`Game.id`
+  is the integer `gamePk`** — neither is a straight copy from the mock's earlier
+  string values.
+- **Signals are StatsAPI-only** (see the Signal catalog above); wOBA/Statcast
+  metrics are excluded pending a future Baseball Savant source.

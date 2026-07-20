@@ -1,9 +1,9 @@
 {
   "generated_at": "2026-07-19T12:00:00Z",
-  "note": "MOCK DATA for UI development only. Not live, not from any API.",
+  "note": "MOCK DATA for UI development only. Not live. Shapes mirror the StatsAPI-only schema (docs/sports-pulse-schema.md); ids are integer gamePks.",
   "games": [
     {
-      "id": "nyy-bos",
+      "id": 823101,
       "away": { "abbr": "NYY", "name": "Yankees", "color": "#4377D5" },
       "home": { "abbr": "BOS", "name": "Red Sox", "color": "#C94F57" },
       "start": "7:10 PM ET",
@@ -18,7 +18,7 @@
       "summary": "The Yankees come in swinging a hot road bat while Boston's relief corps has leaked runs all week. The middle innings are where the leverage sits — whichever pen blinks first likely decides the tone."
     },
     {
-      "id": "lad-sd",
+      "id": 823102,
       "away": { "abbr": "LAD", "name": "Dodgers", "color": "#3186C4" },
       "home": { "abbr": "SD", "name": "Padres", "color": "#FFC425" },
       "start": "9:40 PM ET",
@@ -33,7 +33,7 @@
       "summary": "Both starters have been missing bats, so run-scoring may be at a premium. Expect the story to hinge on one swing or one defensive miscue rather than a big inning."
     },
     {
-      "id": "sea-hou",
+      "id": 823103,
       "away": { "abbr": "SEA", "name": "Mariners", "color": "#4FC9C9" },
       "home": { "abbr": "HOU", "name": "Astros", "color": "#EB6E1F" },
       "start": "8:10 PM ET",
@@ -99,10 +99,10 @@
       "pulse": { "score": 92, "label": "Scorching" },
       "signals": [
         { "label": "HR (last 8G)", "value": "6", "tone": "pos" },
-        { "label": "wOBA (14d)", "value": ".470", "tone": "pos" },
-        { "label": "Chase rate", "value": "19%", "tone": "pos" }
+        { "label": "OPS (14d)", "value": "1.180", "tone": "pos" },
+        { "label": "Multi-hit games (8G)", "value": "5", "tone": "pos" }
       ],
-      "summary": "Judge is barreling everything and, notably, chasing less — a combination that tends to sustain. The power output is the headline, but the improved plate discipline is what makes this stretch look repeatable."
+      "summary": "Judge is barreling everything, and a 1.180 OPS over the last two weeks shows the on-base and power moving together, not one carrying the other. The home runs are the headline, but the steady multi-hit games are what make this stretch look repeatable."
     },
     {
       "name": "Bobby Witt Jr.",
@@ -128,9 +128,9 @@
       "signals": [
         { "label": "K/9 (last 4 starts)", "value": "11.8", "tone": "pos" },
         { "label": "Walk rate", "value": "4.1%", "tone": "pos" },
-        { "label": "Hard-hit %", "value": "31%", "tone": "pos" }
+        { "label": "WHIP (last 4)", "value": "0.90", "tone": "pos" }
       ],
-      "summary": "Skubal is pairing elite strikeout stuff with pinpoint control and soft contact. When a starter is this far ahead in all three, the recent run of dominant outings reads as skill, not variance."
+      "summary": "Skubal is pairing elite strikeout stuff with pinpoint control — a 0.90 WHIP over his last four starts means almost nobody is reaching base. When a starter misses bats and limits traffic like this, the run of dominant outings reads as skill, not variance."
     }
   ]
 }
