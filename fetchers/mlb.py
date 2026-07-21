@@ -869,6 +869,10 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
                                      away_pen, home_pen, away_era, home_era, series),
         availability={"away_probable_out": away_out, "home_probable_out": home_out},
     )
+    # The single most-notable market (deterministic; None if nothing clears the
+    # standout bar). Drives the AI's one-sentence betting_note downstream.
+    standout = betting_signals.top_market(
+        betting, ((config.get("betting_signals") or {}).get("mlb") or {}).get("standout_threshold", 50))
 
     return {
         "gamePk": g.get("gamePk"),
@@ -881,6 +885,7 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         "signals": signals,
         "pulse": _game_pulse(framed_ops, framed_pen, series),
         "betting_signals": betting,
+        "standout": standout,
         # Full both-sides context for the AI payload only -- never shown directly.
         "context": {
             "away_team": away_ref["name"], "home_team": home_ref["name"],

@@ -28,12 +28,18 @@ import subprocess
 
 from fetchers import mlb
 
-PROMPT_VERSION = "v1"
+# v2: the player call now also returns a one-sentence `matchup_note` (career line
+# vs the next starter, when it clears the player_angle bar) and the general prose
+# gains the betting-tone banned-word list -- output/rules changed, so bump.
+PROMPT_VERSION = "v2"
 STORE_PATH = "data/insights.json"
 # Game insights (full slate every run -- NOT capped like players). Their own
 # committed store (keyed by gamePk), separate from the player store's name|team
 # keys so pruning and change-detection stay clean.
-GAME_PROMPT_VERSION = "v1"
+# v2: the game call now also returns a one-sentence `betting_note` (folded in
+# from the retired separate betting-explanation call). v3: readable market label
+# in the note + the banned-word list extended to the general Story/Summary prose.
+GAME_PROMPT_VERSION = "v3"
 GAMES_STORE_PATH = "data/insights.games.json"
 # Committed per-gamePk boxscore cache (lean reliever lines) backing bullpen ERA
 # (7d). A final game's boxscore is immutable, so it's fetched once and reused
@@ -58,15 +64,46 @@ CALL_TIMEOUT_S = 60
 # paid API billing. Opt into API-key auth deliberately with SP_ALLOW_API_BILLING=1.
 API_KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
 
+# Hard banned-word list (recommendation/action tone) enforced on ALL generated
+# text -- betting_note, matchup_note, AND the general story/summary/takeaways.
+# The prompts instruct against these; this is the belt-and-suspenders check that
+# lets a call self-heal (bounded retry) when the model slips, so the daily job
+# never ships e.g. "series edge" or a "bullpen unit".
+_BANNED_SINGLE = ("bet", "back", "fade", "play", "take", "tail", "hammer", "consider",
+                  "recommend", "pick", "lock", "value", "edge", "unit", "units", "odds",
+                  "cover", "juice", "chalk", "you", "your")
+_BANNED_PHRASES = ("lean into", "the play is", "you should", "+ev")
+_BANNED_RE = re.compile(r"\b(" + "|".join(_BANNED_SINGLE) + r")\b", re.I)
+BANNED_RETRIES = 2  # extra attempts (only spent when a slip actually occurs)
+
+
+def _has_banned(*texts):
+    """True if any banned single-word or phrase appears in any of `texts`."""
+    for t in texts:
+        if not t:
+            continue
+        if _BANNED_RE.search(t):
+            return True
+        low = t.lower()
+        if any(p in low for p in _BANNED_PHRASES):
+            return True
+    return False
+
 PROMPT_TEMPLATE = """You are a baseball analyst writing brief, factual context for a "who's hot" dashboard. You are given ONE player's already-computed recent stats as JSON. Your job is INTERPRETATION ONLY.
 
 Hard rules:
 - Never compute, estimate, round, or invent any number. Use only numbers that appear verbatim in the input. If unsure, omit the number.
 - Never predict outcomes, games, or future performance. No "will", no odds, no projections. Describe what has happened and why it's notable.
 - Plain language, no hype, no cliches.
+- BANNED words anywhere in any field (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood.
+
+matchup_note (one optional sentence about the player's history vs the pitcher they face next):
+- The input MAY include an "angle" object: the player's CAREER line against their next opponent's probable starter -- our system already judged it notable. It has "pitcher_name", integer "ab"/"hits"/"hr"/"rbi", a string "avg", and a "tilt" ("strong" = the hitter has handled this pitcher; "weak" = the pitcher has handled the hitter). It is NOT a prediction and NOT advice.
+- If "angle" is present: matchup_note MUST be a non-empty single sentence -- a present angle with an empty matchup_note is INVALID output. Name the pitcher, cite the career line using the EXACT integers/avg verbatim (e.g. "9-for-22 with 4 home runs"), tie it to the hitter's current form, and reflect the tilt (a favorable history when "strong", a struggle when "weak"). Do NOT predict tonight's result.
+- If "angle" is null or absent: matchup_note MUST be an empty string "". Do not mention the upcoming pitcher or any head-to-head history at all.
 
 Return STRICT JSON only (no prose, no markdown), exactly:
-{ "story": "<2-3 sentences>", "summary": "<1 sentence>", "takeaways": ["<short>", "<short>", "<short>"] }
+{ "story": "<2-3 sentences>", "summary": "<1 sentence>", "takeaways": ["<short>", "<short>", "<short>"], "matchup_note": "<one sentence, or empty string \"\">" }
 
 Player JSON:
 """
@@ -78,9 +115,16 @@ Hard rules:
 - Never predict the outcome, score, or winner. No "will", no odds, no projections. Describe the form and context each side brings in, and why it's notable.
 - Both teams' numbers are provided; write even-handed context, not a pick.
 - Plain language, no hype, no cliches.
+- BANNED words anywhere in any field, including story and summary (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood.
+
+betting_note (one optional sentence about a single pre-computed betting-signal score):
+- The input MAY include a "standout" object: the ONE market our system already scored as most notable, with an exact integer "score" (0-100), a "side", and a readable "market" name. It is NOT a prediction and NOT advice; you are only describing what that computed signal shows.
+- If "standout" is present: betting_note MUST be a non-empty single sentence -- a present standout with an empty betting_note is INVALID output. Name the market (use the readable "market" text verbatim -- never the raw key) and side, cite the score as the EXACT integer verbatim, and attribute it to the driving stat from the context (the relevant ERA, OPS, or bullpen gap). Use this shape: "The signal points to <side> on the <market> at a score of <score>, driven by <driver stat from context>." If "standout" carries a flag naming a scratched/absent probable starter (e.g. "away_probable_out"/"home_probable_out"/"starter_scratched"), you MUST state that scratch in the sentence.
+- If "standout" is null or absent: betting_note MUST be an empty string "". Do not mention betting, markets, signals, or scores at all.
+- betting_note BANNED words anywhere (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood. Say what the signal SHOWS ("the signal points to X because Y"), never what to do about it.
 
 Return STRICT JSON only (no prose, no markdown), exactly:
-{ "story": "<2-3 sentences>", "summary": "<1 sentence>" }
+{ "story": "<2-3 sentences>", "summary": "<1 sentence>", "betting_note": "<one sentence, or empty string \"\">" }
 
 Game JSON:
 """
@@ -111,10 +155,10 @@ def _pulse(best_rank):
     return {"score": score, "label": label}
 
 
-def build_entities(data):
+def build_entities(data, config=None):
     """Collapse the leaderboard (a player may appear in several categories) into
     one entity per player, with deterministic signals + pulse + a compact stats
-    block. Returns {key: entity}."""
+    block (+ a gated vs-pitcher `angle`). Returns {key: entity}."""
     entities = {}
     for sport in data.get("sports", {}).values():
         for cat in sport.get("categories", []):
@@ -157,7 +201,41 @@ def build_entities(data):
                     ent["vs_next_starter"] = p.get("vs_next_starter")
     for ent in entities.values():
         ent["pulse"] = _pulse(ent["best_rank"])
+        ent["angle"] = _player_angle(ent, config)
     return entities
+
+
+def _player_angle(ent, config):
+    """Deterministic parallel to betting_signals.top_market: the player's career
+    line vs the pitcher they face next, returned ONLY when it clears the
+    player_angle bar (enough sample AND lopsided enough to be worth a sentence).
+    Returns {..vs line.., tilt: 'strong'|'weak'} or None. vs_next_starter is
+    MLB-only, so non-MLB players naturally return None."""
+    vs = ent.get("vs_next_starter")
+    if not vs:
+        return None
+    cfg = ((config or {}).get("player_angle") or {}).get("mlb") or {}
+    min_ab_avg = cfg.get("min_ab_avg", 5)
+    hot = cfg.get("hot_avg", 0.350)
+    cold = cfg.get("cold_avg", 0.150)
+    min_ab_hr = cfg.get("min_ab_hr", 3)
+    min_hr = cfg.get("min_hr", 2)
+    ab = int(vs.get("ab") or 0)
+    try:
+        avg = float(vs.get("avg"))
+    except (TypeError, ValueError):
+        avg = None
+    hr = int(vs.get("hr") or 0)
+    # HR path (own lower floor) takes precedence: a 2+ HR line is a loud positive.
+    if ab >= min_ab_hr and hr >= min_hr:
+        return {**vs, "tilt": "strong"}
+    # avg path (needs a real sample).
+    if ab >= min_ab_avg and avg is not None:
+        if avg >= hot:
+            return {**vs, "tilt": "strong"}
+        if avg <= cold:
+            return {**vs, "tilt": "weak"}
+    return None
 
 
 def _prompt_payload(ent):
@@ -170,8 +248,10 @@ def _prompt_payload(ent):
         "signals": ent.get("signals"),
         "stats": ent.get("stats"),
     }
-    if ent.get("vs_next_starter"):
-        payload["vs_next_starter"] = ent["vs_next_starter"]
+    # Only the GATED vs-pitcher angle reaches the model -> the note fires solely
+    # when it clears the bar, and story/summary can't cite an unvetted small sample.
+    if ent.get("angle"):
+        payload["angle"] = ent["angle"]
     return payload
 
 
@@ -233,13 +313,13 @@ def _preflight(env):
         raise _AuthError("claude reported error: {}".format(envelope.get("subtype")))
 
 
-def _invoke_claude(prompt, env):
+def _invoke_claude(prompt, env, timeout=CALL_TIMEOUT_S):
     """Run one `claude -p` headless call and return the parsed JSON object from
     its result envelope. Raises on non-zero exit / error envelope / unparseable
     output (caller decides carry-forward). Shared by the player and game paths."""
     proc = subprocess.run(
         ["claude", "-p", "--output-format", "json", "--model", MODEL],
-        input=prompt, capture_output=True, text=True, timeout=CALL_TIMEOUT_S, env=env,
+        input=prompt, capture_output=True, text=True, timeout=timeout, env=env,
     )
     if proc.returncode != 0:
         raise RuntimeError("claude exit {}: {}".format(proc.returncode, (proc.stderr or "")[:200]))
@@ -249,18 +329,42 @@ def _invoke_claude(prompt, env):
     return _parse_json_object(envelope.get("result", ""))
 
 
+def _matchup_fallback_note(angle):
+    """Deterministic, rule-compliant one-liner used ONLY when the model returns an
+    empty matchup_note for a player that HAS an angle -- enforces "angle present =>
+    note present". Cites the exact career line (no banned words)."""
+    hr = int(angle.get("hr") or 0)
+    hrpart = " with {} HR".format(hr) if hr else ""
+    return "Career line vs {}: {}-for-{}{} ({}).".format(
+        angle.get("pitcher_name"), angle.get("hits"), angle.get("ab"), hrpart, angle.get("avg"))
+
+
 def _call_claude(ent, env):
-    """One headless call for one player entity. Returns {story,summary,takeaways}
-    or raises on any failure (caller decides carry-forward)."""
-    obj = _invoke_claude(PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False), env)
-    takeaways = obj.get("takeaways") or []
-    if not isinstance(takeaways, list):
-        takeaways = [str(takeaways)]
-    return {
-        "story": str(obj.get("story", "")).strip(),
-        "summary": str(obj.get("summary", "")).strip(),
-        "takeaways": [str(t).strip() for t in takeaways][:3],
-    }
+    """One headless call for one player entity. Returns
+    {story,summary,takeaways,matchup_note} or raises (caller decides carry-forward).
+    Enforces the angle=>note invariant with a deterministic fallback, and retries
+    (bounded) if any generated field trips the banned-word check."""
+    prompt = PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False)
+    angle = ent.get("angle")
+    result = None
+    for attempt in range(BANNED_RETRIES + 1):
+        obj = _invoke_claude(prompt, env)
+        takeaways = obj.get("takeaways") or []
+        if not isinstance(takeaways, list):
+            takeaways = [str(takeaways)]
+        takeaways = [str(t).strip() for t in takeaways][:3]
+        story = str(obj.get("story", "")).strip()
+        summary = str(obj.get("summary", "")).strip()
+        note = str(obj.get("matchup_note", "")).strip()
+        if angle and not note:
+            note = _matchup_fallback_note(angle)  # deterministic, always clean
+        elif not angle:
+            note = ""  # no angle -> never carry stray head-to-head prose
+        result = {"story": story, "summary": summary, "takeaways": takeaways, "matchup_note": note}
+        if not _has_banned(story, summary, note, *takeaways):
+            return result
+        print("      banned word in player output; retry {}/{}".format(attempt + 1, BANNED_RETRIES))
+    return result  # best-effort after retries (caller-side scan is the final gate)
 
 
 def _game_prompt_payload(ent):
@@ -274,14 +378,63 @@ def _game_prompt_payload(ent):
         "probables": ent.get("probables"),
         "pulse": ent.get("pulse"),
         "context": ent.get("context"),
+        # The single most-notable market (deterministic) or None -> the model
+        # writes exactly one betting_note sentence, or "" when this is null. A
+        # human-readable `market` label is injected so notes don't echo the raw
+        # snake_case key (e.g. "first five moneyline", not "first_five_moneyline").
+        "standout": _standout_for_prompt(ent.get("standout")),
     }
 
 
+def _standout_for_prompt(standout):
+    if not standout:
+        return None
+    s = dict(standout)
+    s["market"] = _BET_MARKET_LABELS.get(s.get("bet_type"), s.get("bet_type"))
+    return s
+
+
+# Human labels for the betting_note fallback (deterministic path only).
+_BET_MARKET_LABELS = {
+    "moneyline": "moneyline", "run_line": "run line", "game_total": "game total",
+    "first_five_moneyline": "first five moneyline", "first_five_total": "first five total",
+    "nrfi_yrfi": "first-inning runs", "team_total": "team total",
+}
+
+
+def _fallback_betting_note(standout):
+    """Deterministic, rule-compliant one-liner, used ONLY when the model returns an
+    empty betting_note for a game that HAS a standout market -- the invariant is
+    "standout present => note present". Cites the exact market/side/score (no
+    driver attribution, no banned words); a barebones but correct backstop for
+    haiku occasionally dropping the field."""
+    label = _BET_MARKET_LABELS.get(standout.get("bet_type"), standout.get("bet_type") or "signal")
+    return "The {} signal reads {} at a score of {}.".format(
+        label, standout.get("side"), standout.get("score"))
+
+
 def _call_claude_game(ent, env):
-    """One headless call for one game entity. Returns {story,summary} (games carry
-    no takeaways) or raises on any failure (caller decides carry-forward)."""
-    obj = _invoke_claude(PROMPT_TEMPLATE_GAME + json.dumps(_game_prompt_payload(ent), ensure_ascii=False), env)
-    return {"story": str(obj.get("story", "")).strip(), "summary": str(obj.get("summary", "")).strip()}
+    """One headless call for one game entity. Returns {story,summary,betting_note}
+    (games carry no takeaways; betting_note is "" unless a standout market exists)
+    or raises on any failure (caller decides carry-forward). Enforces the
+    standout=>note invariant with a deterministic fallback when the model drops it."""
+    prompt = PROMPT_TEMPLATE_GAME + json.dumps(_game_prompt_payload(ent), ensure_ascii=False)
+    standout = ent.get("standout")
+    result = None
+    for attempt in range(BANNED_RETRIES + 1):
+        obj = _invoke_claude(prompt, env)
+        story = str(obj.get("story", "")).strip()
+        summary = str(obj.get("summary", "")).strip()
+        note = str(obj.get("betting_note", "")).strip()
+        if standout and not note:
+            note = _fallback_betting_note(standout)  # deterministic, always clean
+        elif not standout:
+            note = ""  # no standout -> never carry stray betting prose
+        result = {"story": story, "summary": summary, "betting_note": note}
+        if not _has_banned(story, summary, note):
+            return result
+        print("      banned word in game output; retry {}/{}".format(attempt + 1, BANNED_RETRIES))
+    return result  # best-effort after retries (caller-side scan is the final gate)
 
 
 # ---------------- store I/O ----------------
@@ -332,14 +485,16 @@ def _carry(prev):
     if not prev:
         return None
     return {"story": prev.get("story"), "summary": prev.get("summary"),
-            "takeaways": prev.get("takeaways", [])}
+            "takeaways": prev.get("takeaways", []),
+            "matchup_note": prev.get("matchup_note")}
 
 
 def _carry_game(prev):
     """Carry-forward view of a stored game record (or None if we have nothing)."""
     if not prev:
         return None
-    return {"story": prev.get("story"), "summary": prev.get("summary")}
+    return {"story": prev.get("story"), "summary": prev.get("summary"),
+            "betting_note": prev.get("betting_note")}
 
 
 def _top_n(entities, n):
@@ -393,7 +548,7 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     deterministic game builder itself runs even in CI; only its AI calls are gated.
     A single auth preflight covers both players and games."""
     now_iso = generated_at.isoformat()
-    all_entities = build_entities(data)
+    all_entities = build_entities(data, config)
     entities = _top_n(all_entities, TOP_N)  # cap players to top-N by pulse (games are NOT capped)
     store = _load_store(store_path)
     total = len(entities)
@@ -457,7 +612,7 @@ def _generate_all(entities, store, now_iso, total, store_path, child_env):
                 print("      call failed ({}); {}".format(
                     str(e)[:120], "carrying previous" if prev else "leaving empty"))
                 failed += 1
-                text = _carry(prev) or {"story": None, "summary": None, "takeaways": []}
+                text = _carry(prev) or {"story": None, "summary": None, "takeaways": [], "matchup_note": None}
         else:
             print("  [{}/{}] {} -- cached".format(i, total, ent.get("entity")))
             carried += 1
@@ -469,8 +624,10 @@ def _generate_all(entities, store, now_iso, total, store_path, child_env):
             "template_version": PROMPT_VERSION,
             "generated_at": now_iso if prev is None or _needs_regen(ent, prev) else prev.get("generated_at", now_iso),
             "story": text["story"], "summary": text["summary"], "takeaways": text["takeaways"],
+            "matchup_note": text.get("matchup_note"),
         }
-        insight_map[key] = {"story": text["story"], "summary": text["summary"], "takeaways": text["takeaways"]}
+        insight_map[key] = {"story": text["story"], "summary": text["summary"],
+                            "takeaways": text["takeaways"], "matchup_note": text.get("matchup_note")}
 
     _save_store(store_path, new_store)
     print("insights: generated {}, carried forward {}, failed {} (store pruned to {} entries)"
@@ -495,6 +652,7 @@ def _build_players_section(entities, insight_map, generated_at):
             "signals": ent.get("signals"),
             "summary": ins.get("summary"),
             "story": ins.get("story"),
+            "matchup_note": ins.get("matchup_note"),
         })
     players.sort(key=lambda p: (p.get("pulse") or {}).get("score", 0), reverse=True)
     return {"generated_at": generated_at.isoformat(), "players": players}
@@ -513,14 +671,16 @@ def _generate_games(entities, store, now_iso, store_path, child_env):
         label = "{} @ {}".format((ent.get("away") or {}).get("abbr"), (ent.get("home") or {}).get("abbr"))
         if _needs_regen_game(ent, prev):
             print("  [game {}/{}] {} -- regenerating".format(i, total, label))
+            # One call per game: Story/Summary plus the optional one-sentence
+            # betting_note (folded in). On failure, carry the whole prior text.
             try:
                 text = _call_claude_game(ent, child_env)
                 gen += 1
             except Exception as e:  # noqa: BLE001 -- never let one game break the run
-                print("      call failed ({}); {}".format(
+                print("      game call failed ({}); {}".format(
                     str(e)[:120], "carrying previous" if prev else "leaving empty"))
                 failed += 1
-                text = _carry_game(prev) or {"story": None, "summary": None}
+                text = _carry_game(prev) or {"story": None, "summary": None, "betting_note": None}
         else:
             print("  [game {}/{}] {} -- cached (final)".format(i, total, label))
             carried += 1
@@ -531,12 +691,15 @@ def _generate_games(entities, store, now_iso, store_path, child_env):
             "start": ent.get("start"), "venue": ent.get("venue"),
             "probables": ent.get("probables"), "signals": ent.get("signals"),
             "pulse": ent.get("pulse"), "betting_signals": ent.get("betting_signals"),
+            "standout": ent.get("standout"),
             "status": ent.get("status"),
             "template_version": GAME_PROMPT_VERSION,
             "generated_at": now_iso if (prev is None or _needs_regen_game(ent, prev)) else prev.get("generated_at", now_iso),
             "story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
+            "betting_note": (text or {}).get("betting_note"),
         }
-        text_map[pk] = {"story": (text or {}).get("story"), "summary": (text or {}).get("summary")}
+        text_map[pk] = {"story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
+                        "betting_note": (text or {}).get("betting_note")}
 
     _save_store(store_path, new_store)
     print("insights(games): generated {}, carried forward {}, failed {} (store pruned to {} entries)"
@@ -562,6 +725,8 @@ def _build_games_section(entities, text_map):
             "pulse": ent.get("pulse"),
             "signals": ent.get("signals"),
             "betting_signals": ent.get("betting_signals"),
+            "standout": ent.get("standout"),
+            "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),
         })

@@ -1,11 +1,58 @@
 {
-  "822788": {
+  "822787": {
     "away": {
       "abbr": "TB",
       "color": "#8FBCE6",
       "name": "Rays"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to TB on the moneyline at a score of 80, driven by the Rays' bullpen ERA advantage (2.65 vs 4.50).",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 79,
+        "side": "TB"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 43,
+        "side": "Under"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 43,
+        "side": "Under"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 80,
+        "side": "TB"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 43,
+        "side": "NRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 80,
+        "side": "TB"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "TB",
+          "flags": [],
+          "score": 17,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "TOR",
+          "flags": [],
+          "score": 79,
+          "side": "Under"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:23:24.604793+00:00",
     "home": {
       "abbr": "TOR",
       "color": "#4F86CA",
@@ -13,54 +60,107 @@
     },
     "probables": {
       "away": {
-        "era": "2.65",
-        "name": "Nick Martinez"
+        "era": "3.26",
+        "name": "Drew Rasmussen"
       },
       "home": {
-        "era": "2.56",
-        "name": "Dylan Cease"
+        "era": "4.33",
+        "name": "Kevin Gausman"
       }
     },
     "pulse": {
       "label": "Warm",
-      "score": 63
+      "score": 69
     },
     "signals": [
       {
         "label": "TB road OPS (14d)",
         "tone": "pos",
-        "value": ".634"
+        "value": ".727"
       },
       {
         "label": "TOR bullpen ERA (7d)",
         "tone": "neg",
-        "value": "4.09"
+        "value": "4.50"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "TB 6-2"
+        "value": "TB 7-2"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "2.65 vs 2.56"
+        "value": "3.26 vs 4.33"
       }
     ],
+    "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "score": 80,
+      "side": "TB"
+    },
     "start": "7:07 PM ET",
     "status": "Preview",
-    "story": "The Rays are hitting .634 on the road over 14 days, compared to .543 for the Blue Jays at home in the same span; Tampa Bay's bullpen has a 3.21 ERA versus Toronto's 4.09 over the past week. The Rays lead the season series 6-2. Starting pitchers offer comparable effectiveness, with Martinez at 2.65 ERA and Cease at 2.56.",
-    "summary": "The Rays possess recent offensive and bullpen advantages, though both teams deploy comparably effective starters.",
-    "template_version": "v1",
+    "story": "The Rays have posted strong road numbers over 14 days (.727 OPS) and a 2.65 bullpen ERA over the past week. The Blue Jays have struggled at home with a .539 OPS (14 days) and 4.50 bullpen ERA (same span). Rasmussen (3.26 ERA) faces Gausman (4.33 ERA), and Tampa Bay leads the season series 7-2.",
+    "summary": "The Rays bring road form, bullpen strength, and starting-pitcher advantage against a Blue Jays team struggling at home.",
+    "template_version": "v3",
     "venue": "Rogers Centre"
   },
-  "822874": {
+  "822871": {
     "away": {
       "abbr": "CWS",
       "color": "#C4CED4",
       "name": "White Sox"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to Over on the game total at a score of 74, driven by the bullpen gap, with the Rangers at 10.91 ERA and White Sox at 1.84 ERA.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 65,
+        "side": "TEX"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 66,
+        "side": "Over"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 74,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 15,
+        "side": "TEX"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 66,
+        "side": "YRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 15,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "CWS",
+          "flags": [],
+          "score": 49,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "TEX",
+          "flags": [],
+          "score": 33,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "TEX",
       "color": "#DB3D4A",
@@ -68,12 +168,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.15",
-        "name": "Erick Fedde"
+        "era": "5.60",
+        "name": "Noah Schultz"
       },
       "home": {
-        "era": "3.49",
-        "name": "Jacob deGrom"
+        "era": "4.40",
+        "name": "Kumar Rocker"
       }
     },
     "pulse": {
@@ -84,38 +184,91 @@
       {
         "label": "TEX home OPS (14d)",
         "tone": "pos",
-        "value": ".840"
+        "value": ".822"
       },
       {
         "label": "TEX bullpen ERA (7d)",
         "tone": "neg",
-        "value": "11.12"
+        "value": "10.91"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "CWS 1-1"
+        "value": "CWS 2-1"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.15 vs 3.49"
+        "value": "5.60 vs 4.40"
       }
     ],
+    "standout": {
+      "bet_type": "game_total",
+      "flags": [],
+      "score": 74,
+      "side": "Over"
+    },
     "start": "8:05 PM ET",
     "status": "Preview",
-    "story": "The Rangers have hit .840 at home over the past two weeks, while the White Sox have managed just .645 on the road. A sharp White Sox bullpen (1.86 ERA in the last seven days) faces a Rangers bullpen in serious trouble (11.12 ERA), with Jacob deGrom holding a 3.49 ERA advantage over Erick Fedde's 4.15.",
-    "summary": "Rangers' home dominance meets a White Sox bullpen edge in a tied series.",
-    "template_version": "v1",
+    "story": "The White Sox send Noah Schultz to the mound with a 5.60 ERA, supported by a bullpen that has posted a 1.84 ERA over the past week. The Rangers counter with Kumar Rocker at 4.40 ERA, but their bullpen carries a 10.91 ERA in the same window. The Rangers have been productive at home with .822 OPS in 14 days, while the White Sox have posted .744 OPS on the road.",
+    "summary": "The Rangers' starter outclasses Schultz, but their bullpen struggles sharply against the White Sox's strong relief.",
+    "template_version": "v3",
     "venue": "Globe Life Field"
   },
-  "823112": {
+  "823114": {
     "away": {
       "abbr": "CIN",
       "color": "#E7324D",
       "name": "Reds"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to Reds on the first five moneyline at a score of 77, driven by Burns's 2.54 ERA against Castillo's 4.93.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 77,
+        "side": "CIN"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 6,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 22,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 18,
+        "side": "CIN"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 6,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 18,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "CIN",
+          "flags": [],
+          "score": 35,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "SEA",
+          "flags": [],
+          "score": 27,
+          "side": "Under"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "SEA",
       "color": "#4FC9C9",
@@ -123,54 +276,107 @@
     },
     "probables": {
       "away": {
-        "era": "4.11",
-        "name": "Andrew Abbott"
+        "era": "2.54",
+        "name": "Chase Burns"
       },
       "home": {
-        "era": "3.76",
-        "name": "George Kirby"
+        "era": "4.93",
+        "name": "Luis Castillo"
       }
     },
     "pulse": {
-      "label": "Hot",
-      "score": 74
+      "label": "Scorching",
+      "score": 86
     },
     "signals": [
       {
         "label": "CIN road OPS (14d)",
         "tone": "pos",
-        "value": ".978"
+        "value": ".836"
       },
       {
         "label": "CIN bullpen ERA (7d)",
         "tone": "neg",
-        "value": "4.22"
+        "value": "8.53"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "SEA 2-0"
+        "value": "SEA 3-0"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.11 vs 3.76"
+        "value": "2.54 vs 4.93"
       }
     ],
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "score": 77,
+      "side": "CIN"
+    },
     "start": "9:40 PM ET",
     "status": "Preview",
-    "story": "Cincinnati arrives with a .978 road OPS (14 days) and is 0-2 in this series against Seattle. George Kirby (3.76 ERA) has a pitching edge over Andrew Abbott (4.11 ERA), and the Mariners' bullpen (3.48 ERA, 7 days) outperforms Cincinnati's (4.22 ERA, 7 days). Seattle's home OPS has been .544 over 14 days.",
-    "summary": "The Reds' strong road offense meets better Mariners pitching but a Seattle home team that has struggled offensively.",
-    "template_version": "v1",
+    "story": "The Reds arrive with an 86-pulse scorching streak and Burns on the mound with a 2.54 ERA facing Castillo's 4.93. Cincinnati's road offense has been explosive at .836 OPS in the past 14 days while Seattle's home lineup has sputtered at .639 OPS. A notable contrast: the Reds' bullpen carries an 8.53 ERA over seven days against Seattle's 2.70 ERA, and the Mariners have swept the season series at 3-0.",
+    "summary": "The Reds' 86-pulse streak and Burns's 2.54 ERA oppose a Mariners home team subdued at .639 OPS, though their bullpen carries a 2.70 ERA.",
+    "template_version": "v3",
     "venue": "T-Mobile Park"
   },
-  "823436": {
+  "823437": {
     "away": {
       "abbr": "LAD",
       "color": "#3D98DB",
       "name": "Dodgers"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to PHI on the first_five_moneyline at a score of 57, driven by Wheeler's 2.13 ERA compared to Wrobleski's 2.69.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 57,
+        "side": "PHI"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 33,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 24,
+        "side": "Under"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 42,
+        "side": "PHI"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 33,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 42,
+        "side": "PHI"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "LAD",
+          "flags": [],
+          "score": 52,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "PHI",
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:23:24.604793+00:00",
     "home": {
       "abbr": "PHI",
       "color": "#E43442",
@@ -178,54 +384,107 @@
     },
     "probables": {
       "away": {
-        "era": "4.81",
-        "name": "Emmet Sheehan"
+        "era": "2.69",
+        "name": "Justin Wrobleski"
       },
       "home": {
-        "era": "2.62",
-        "name": "Cristopher S\u00e1nchez"
+        "era": "2.13",
+        "name": "Zack Wheeler"
       }
     },
     "pulse": {
-      "label": "Warm",
-      "score": 55
+      "label": "Hot",
+      "score": 70
     },
     "signals": [
       {
         "label": "PHI home OPS (14d)",
         "tone": "pos",
-        "value": ".694"
+        "value": ".836"
       },
       {
-        "label": "PHI bullpen ERA (7d)",
+        "label": "LAD bullpen ERA (7d)",
         "tone": "neg",
-        "value": "1.50"
+        "value": "3.46"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "LAD 2-1"
+        "value": "LAD 2-2"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.81 vs 2.62"
+        "value": "2.69 vs 2.13"
       }
     ],
-    "start": "7:10 PM ET",
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "score": 57,
+      "side": "PHI"
+    },
+    "start": "6:40 PM ET",
     "status": "Preview",
-    "story": "S\u00e1nchez (2.62 ERA) starts for the Phillies against Sheehan (4.81 ERA), an advantage in starting pitching for Philadelphia. The Dodgers' bullpen has a 0.87 ERA over 7 days, while the Phillies' is at 1.50 ERA. The Phillies have posted .694 OPS at home in 14 days versus the Dodgers' .622 on the road, and the Dodgers lead the season series 2-1.",
-    "summary": "Philadelphia's superior starting pitcher and home hitting meet Los Angeles' bullpen advantage and series lead.",
-    "template_version": "v1",
+    "story": "Zack Wheeler brings a 2.13 ERA to Citizens Bank Park against Justin Wrobleski's 2.69 as the Dodgers visit on the road. The Phillies have posted .836 OPS at home over 14 days while Los Angeles has mustered just .690 away from Dodger Stadium\u2014a significant offensive split. Both bullpens carry nearly identical ERAs (3.45 vs. 3.46), centering the matchup on early starter performance.",
+    "summary": "A Phillies pitching advantage meets a Dodgers offense that has significantly underperformed on the road.",
+    "template_version": "v3",
     "venue": "Citizens Bank Park"
   },
-  "823522": {
+  "823519": {
     "away": {
       "abbr": "PIT",
       "color": "#FDB827",
       "name": "Pirates"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 1,
+        "side": "No clear lean"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 17,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 6,
+        "side": "No clear lean"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 29,
+        "side": "PIT"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 17,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 29,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "PIT",
+          "flags": [],
+          "score": 35,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "NYY",
+          "flags": [],
+          "score": 42,
+          "side": "Under"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:23:24.604793+00:00",
     "home": {
       "abbr": "NYY",
       "color": "#4377D5",
@@ -233,54 +492,102 @@
     },
     "probables": {
       "away": {
-        "era": "3.49",
-        "name": "Braxton Ashcraft"
+        "era": "4.77",
+        "name": "Bubba Chandler"
       },
       "home": {
-        "era": "4.15",
-        "name": "Ryan Weathers"
+        "era": "4.03",
+        "name": "Will Warren"
       }
     },
     "pulse": {
-      "label": "Hot",
-      "score": 82
+      "label": "Warm",
+      "score": 69
     },
     "signals": [
       {
         "label": "PIT road OPS (14d)",
         "tone": "pos",
-        "value": ".808"
+        "value": ".785"
       },
       {
         "label": "NYY bullpen ERA (7d)",
         "tone": "neg",
-        "value": "5.30"
+        "value": "4.30"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "PIT 1-1"
+        "value": "NYY 2-1"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "3.49 vs 4.15"
+        "value": "4.77 vs 4.03"
       }
     ],
+    "standout": null,
     "start": "7:05 PM ET",
     "status": "Preview",
-    "story": "The Pirates' road OPS of .808 over 14 days outpaces the Yankees' .591 home OPS in the same span, and Pittsburgh's bullpen shows a 2.60 ERA versus New York's 5.30 over the last seven days. Ashcraft (3.49 ERA) opposes Weathers (4.15 ERA) with the season series tied 1-1.",
-    "summary": "Pittsburgh brings stronger recent offensive and bullpen numbers to Yankee Stadium.",
-    "template_version": "v1",
+    "story": "Pirates arrive with strong recent road form (.785 OPS over 14 days) against a Yankees team that has struggled at home (.660 OPS over 14 days). The pitching matchup features Will Warren (4.03 ERA) for New York against Bubba Chandler (4.77 ERA) for Pittsburgh. Pittsburgh's bullpen posts a 2.01 ERA over seven days against New York's 4.30 ERA in the same stretch, with the season series standing at 1-2.",
+    "summary": "Pirates bring road-trip momentum and bullpen depth against a Yankees team struggling at home with its relief pitching.",
+    "template_version": "v3",
     "venue": "Yankee Stadium"
   },
-  "823762": {
+  "823760": {
     "away": {
       "abbr": "NYM",
       "color": "#FC611C",
       "name": "Mets"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 19,
+        "side": "No clear lean"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 5,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 19,
+        "side": "Under"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 21,
+        "side": "MIL"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 5,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 21,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "NYM",
+          "flags": [],
+          "score": 21,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "MIL",
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "MIL",
       "color": "#FFC52F",
@@ -288,12 +595,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.66",
-        "name": "Freddy Peralta"
+        "era": "2.60",
+        "name": "Zac Thornton"
       },
       "home": {
-        "era": "1.62",
-        "name": "Jacob Misiorowski"
+        "era": "5.16",
+        "name": "Brandon Sproat"
       }
     },
     "pulse": {
@@ -302,35 +609,88 @@
     },
     "signals": [
       {
-        "label": "NYM road OPS (14d)",
+        "label": "MIL home OPS (14d)",
         "tone": "pos",
-        "value": ".793"
+        "value": ".760"
       },
       {
         "label": "NYM bullpen ERA (7d)",
         "tone": "neg",
-        "value": "3.72"
+        "value": "3.65"
+      },
+      {
+        "label": "Season series",
+        "tone": "neutral",
+        "value": "MIL 1-0"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.66 vs 1.62"
+        "value": "2.60 vs 5.16"
       }
     ],
+    "standout": null,
     "start": "7:40 PM ET",
     "status": "Preview",
-    "story": "Jacob Misiorowski takes the mound with a 1.62 ERA, but the Mets have produced a .793 OPS on the road over the past 14 days. Milwaukee's bullpen carries a 2.25 ERA over the last week, compared to New York's 3.72\u2014a notable advantage if the game stays competitive.",
-    "summary": "Misiorowski's strong form at home faces a Mets team producing in road play, with the Brewers' bullpen edge a potential deciding factor.",
-    "template_version": "v1",
+    "story": "Zac Thornton (2.60 ERA) starts for the visiting Mets against Milwaukee's Brandon Sproat (5.16 ERA). New York has posted a .691 OPS on the road over the last 14 days, while the Brewers have generated a .760 OPS at home in the same span. Milwaukee's bullpen carries a 2.65 ERA over the last seven days compared to New York's 3.65.",
+    "summary": "The Brewers bring home-field offensive and bullpen advantages against a visiting Mets team that has posted limited road scoring.",
+    "template_version": "v3",
     "venue": "American Family Field"
   },
-  "824006": {
+  "824005": {
     "away": {
       "abbr": "STL",
       "color": "#D5435C",
       "name": "Cardinals"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to STL Under on the team total at a score of 75, driven by Ure\u00f1a's 2.88 ERA.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 38,
+        "side": "LAA"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 39,
+        "side": "Under"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 28,
+        "side": "Under"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 47,
+        "side": "LAA"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 39,
+        "side": "NRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 47,
+        "side": "LAA"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "STL",
+          "flags": [],
+          "score": 75,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "LAA",
+          "flags": [],
+          "score": 0,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "LAA",
       "color": "#E43554",
@@ -338,12 +698,12 @@
     },
     "probables": {
       "away": {
-        "era": "3.73",
-        "name": "Kyle Leahy"
+        "era": "5.00",
+        "name": "Matthew Liberatore"
       },
       "home": {
-        "era": "3.49",
-        "name": "Jos\u00e9 Soriano"
+        "era": "2.88",
+        "name": "Walbert Ure\u00f1a"
       }
     },
     "pulse": {
@@ -354,33 +714,91 @@
       {
         "label": "STL road OPS (14d)",
         "tone": "pos",
-        "value": ".720"
+        "value": ".644"
       },
       {
         "label": "STL bullpen ERA (7d)",
         "tone": "neg",
-        "value": "5.59"
+        "value": "6.00"
+      },
+      {
+        "label": "Season series",
+        "tone": "neutral",
+        "value": "LAA 1-0"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "3.73 vs 3.49"
+        "value": "5.00 vs 2.88"
       }
     ],
-    "start": "10:10 PM ET",
+    "standout": {
+      "bet_type": "team_total",
+      "flags": [],
+      "score": 75,
+      "side": "STL Under"
+    },
+    "start": "9:38 PM ET",
     "status": "Preview",
-    "story": "The Cardinals have posted a .720 road OPS over 14 days but arrive with a 5.59 bullpen ERA from the past week. The Angels' .562 home OPS over the same span is offset by a strong 3.00 bullpen ERA over seven days. Probable starters Leahy (3.73 ERA) and Soriano (3.49 ERA) are evenly matched.",
-    "summary": "Cardinal road strength is offset by recent bullpen struggles; the Angels counter with bullpen depth but weaker home offensive form.",
-    "template_version": "v1",
+    "story": "The Cardinals arrive with a hot road offense (.644 OPS over 14 days) but a vulnerable bullpen (6.00 ERA in the last week). The Angels counter with superior bullpen strength (2.57 ERA over 7 days) and a significant advantage in the pitching matchup, where Ure\u00f1a's 2.88 ERA substantially outpaces Liberatore's 5.00.",
+    "summary": "Angels have advantages in starter quality and bullpen strength; Cardinals bring road offensive form.",
+    "template_version": "v3",
     "venue": "Angel Stadium"
   },
-  "824087": {
+  "824085": {
     "away": {
       "abbr": "SF",
       "color": "#FD5A1E",
       "name": "Giants"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 40,
+        "side": "KC"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 42,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 42,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 4,
+        "side": "No clear lean"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 42,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 4,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "SF",
+          "flags": [],
+          "score": 13,
+          "side": "No clear lean"
+        },
+        "home": {
+          "abbr": "KC",
+          "flags": [],
+          "score": 30,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "KC",
       "color": "#438FD5",
@@ -388,54 +806,102 @@
     },
     "probables": {
       "away": {
-        "era": "5.02",
-        "name": "Trevor McDonald"
+        "era": "5.31",
+        "name": "Tyler Mahle"
       },
       "home": {
-        "era": "3.77",
-        "name": "Michael Wacha"
+        "era": "5.08",
+        "name": "Luinder Avila"
       }
     },
     "pulse": {
-      "label": "Scorching",
-      "score": 86
+      "label": "Hot",
+      "score": 75
     },
     "signals": [
       {
         "label": "KC home OPS (14d)",
         "tone": "pos",
-        "value": ".977"
+        "value": ".794"
       },
       {
         "label": "KC bullpen ERA (7d)",
         "tone": "neg",
-        "value": "7.82"
+        "value": "7.47"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "SF 2-0"
+        "value": "SF 2-1"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "5.02 vs 3.77"
+        "value": "5.31 vs 5.08"
       }
     ],
+    "standout": null,
     "start": "7:40 PM ET",
     "status": "Preview",
-    "story": "The Royals are delivering at home with a .977 OPS over 14 days, and Wacha (3.77 ERA) has an edge in the pitching matchup against McDonald (5.02 ERA). The Giants bring a strong bullpen (3.00 ERA in seven days) and a 2-0 season series advantage, but have struggled on the road (.652 OPS, 14 days). Kansas City's bullpen is a notable weakness at 7.82 ERA.",
-    "summary": "The Royals' strong home offense and starting pitching advantage meet the Giants' superior bullpen and recent series success.",
-    "template_version": "v1",
+    "story": "The Giants come with road strength\u2014a .646 OPS over 14 days and a notably sharp bullpen at 2.70 ERA in the past week. The Royals have torched home pitching to a .794 OPS in the same span, but their bullpen (7.47 ERA over seven days) has been a liability. Both probable starters carry inflated marks: Mahle at 5.31 and Avila at 5.08.",
+    "summary": "The Royals' 14-day home output of .794 contrasts with Giants relief depth at 2.70 ERA, while Kansas City's bullpen carries a 7.47 ERA over seven days.",
+    "template_version": "v3",
     "venue": "Kauffman Stadium"
   },
-  "824167": {
+  "824165": {
     "away": {
       "abbr": "MIA",
       "color": "#2AB9EF",
       "name": "Marlins"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 23,
+        "side": "No clear lean"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 1,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 5,
+        "side": "No clear lean"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 24,
+        "side": "HOU"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 1,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 24,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "MIA",
+          "flags": [],
+          "score": 41,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "HOU",
+          "flags": [],
+          "score": 10,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "HOU",
       "color": "#E97730",
@@ -443,11 +909,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.57",
-        "name": "Janson Junk"
+        "era": "3.48",
+        "name": "Tyler Phillips"
       },
       "home": {
-        "name": "Ronel Blanco"
+        "era": "6.06",
+        "name": "Tatsuya Imai"
       }
     },
     "pulse": {
@@ -458,33 +925,86 @@
       {
         "label": "HOU home OPS (14d)",
         "tone": "pos",
-        "value": ".581"
+        "value": ".672"
       },
       {
         "label": "MIA bullpen ERA (7d)",
         "tone": "neg",
-        "value": "6.55"
+        "value": "6.00"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "HOU 4-2"
+        "value": "HOU 5-2"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "3.48 vs 6.06"
       }
     ],
+    "standout": null,
     "start": "8:10 PM ET",
     "status": "Preview",
-    "story": "The Astros enter with a decisive advantage in the bullpen, posting a 2.70 ERA over the past week compared to Miami's 6.55. Houston has also been the stronger offensive team at home (.581 OPS in 14 days) versus the Marlins on the road (.541), and they hold a 2-4 edge in the season series.",
-    "summary": "Houston's bullpen dominance and home offensive strength match up favorably against Miami's recent struggles on the mound.",
-    "template_version": "v1",
+    "story": "Tyler Phillips (3.48 ERA) takes the mound for Miami against Astros starter Tatsuya Imai (6.06 ERA). Over the past 14 days, the Astros have recorded a .672 home OPS compared to the Marlins' .594 road OPS. Houston's bullpen ERA sits at 2.55 over seven days; Miami's is 6.00.",
+    "summary": "The Marlins bring worse recent offensive production and bullpen metrics to a road matchup where they trail 2-5 in the season series.",
+    "template_version": "v3",
     "venue": "Daikin Park"
   },
-  "824328": {
+  "824329": {
     "away": {
       "abbr": "WSH",
       "color": "#E0393C",
       "name": "Nationals"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to Over on the first five total at a score of 90, driven by the Nationals' .937 road OPS over 14 days.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 73,
+        "side": "WSH"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 90,
+        "side": "Over"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 87,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 37,
+        "side": "WSH"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 90,
+        "side": "YRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 37,
+        "side": "WSH"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "WSH",
+          "flags": [],
+          "score": 78,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "COL",
+          "flags": [],
+          "score": 49,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "COL",
       "color": "#7272A6",
@@ -492,12 +1012,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.04",
-        "name": "Andrew Alvarez"
+        "era": "5.53",
+        "name": "Miles Mikolas"
       },
       "home": {
-        "era": "7.36",
-        "name": "Kyle Freeland"
+        "era": "6.22",
+        "name": "Michael Lorenzen"
       }
     },
     "pulse": {
@@ -508,33 +1028,91 @@
       {
         "label": "WSH road OPS (14d)",
         "tone": "pos",
-        "value": ".921"
+        "value": ".937"
       },
       {
         "label": "WSH bullpen ERA (7d)",
         "tone": "neg",
-        "value": "11.57"
+        "value": "6.94"
+      },
+      {
+        "label": "Season series",
+        "tone": "neutral",
+        "value": "WSH 1-0"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.04 vs 7.36"
+        "value": "5.53 vs 6.22"
       }
     ],
+    "standout": {
+      "bet_type": "first_five_total",
+      "flags": [],
+      "score": 90,
+      "side": "Over"
+    },
     "start": "8:40 PM ET",
     "status": "Preview",
-    "story": "The Nationals bring a .921 road OPS balanced against an 11.57 bullpen ERA over 7 days. The Rockies counter with a 3.46 bullpen ERA but a .779 home OPS. Alvarez (4.04 ERA) starts against Freeland (7.36 ERA).",
-    "summary": "Nationals' strong road hitting is offset by bullpen concerns, while Rockies rely on relief strength amid home offensive weakness.",
-    "template_version": "v1",
+    "story": "The Nationals bring strong recent offensive form to Denver\u2014sporting a .937 road OPS over 14 days\u2014while the Rockies' bats have been quieter at home (.723 OPS in the same window). Both projected starters come with inflated ERAs: Mikolas at 5.53 for Washington and Lorenzen at 6.22 for Colorado. The bullpen tilt favors the Rockies, whose 4.50 ERA over the last seven days significantly outpaces the Nationals' 6.94.",
+    "summary": "Nationals' hot road offense faces the Rockies' deeper arms in a matchup tilted between bats and relievers.",
+    "template_version": "v3",
     "venue": "Coors Field"
   },
-  "824410": {
+  "824409": {
     "away": {
       "abbr": "MIN",
       "color": "#E13765",
       "name": "Twins"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 36,
+        "side": "CLE"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 18,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 5,
+        "side": "No clear lean"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 16,
+        "side": "CLE"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 18,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 16,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "MIN",
+          "flags": [],
+          "score": 43,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "CLE",
+          "flags": [],
+          "score": 15,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:23:24.604793+00:00",
     "home": {
       "abbr": "CLE",
       "color": "#E23750",
@@ -542,54 +1120,102 @@
     },
     "probables": {
       "away": {
-        "era": "2.85",
-        "name": "Joe Ryan"
+        "era": "2.79",
+        "name": "Kendry Rojas"
       },
       "home": {
-        "era": "3.90",
-        "name": "Tanner Bibee"
+        "era": "2.73",
+        "name": "Parker Messick"
       }
     },
     "pulse": {
-      "label": "Warm",
-      "score": 59
+      "label": "Hot",
+      "score": 76
     },
     "signals": [
       {
         "label": "CLE home OPS (14d)",
         "tone": "pos",
-        "value": ".651"
+        "value": ".912"
       },
       {
         "label": "CLE bullpen ERA (7d)",
         "tone": "neg",
-        "value": "4.02"
+        "value": "4.34"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "MIN 4-2"
+        "value": "MIN 4-3"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "2.85 vs 3.90"
+        "value": "2.79 vs 2.73"
       }
     ],
+    "standout": null,
     "start": "6:40 PM ET",
     "status": "Preview",
-    "story": "Joe Ryan's 2.85 ERA gives Minnesota a pitching edge over Tanner Bibee's 3.90. The Twins' bullpen has excelled in its recent stretch (0.77 ERA, past 7 days), while Cleveland's has struggled (4.02 ERA), though the Guardians' offense performs better at home (.651 OPS, 14 days) than the Twins manage on the road (.626 OPS).",
-    "summary": "Minnesota's pitching form meets Cleveland's home offensive advantage.",
-    "template_version": "v1",
+    "story": "The Guardians bring a strong home offense (.912 OPS over 14 days) against a Twins team that has struggled on the road (.662 OPS over 14 days). Starting pitchers Rojas and Messick carry comparable ERA marks (2.79 and 2.73 respectively), but the Twins hold a bullpen advantage (3.45 ERA vs. 4.34). The Twins lead the season series 4-3.",
+    "summary": "Guardians' strong home offensive form meets Twins' superior bullpen and season-series advantage in a pitching matchup of similar quality.",
+    "template_version": "v3",
     "venue": "Progressive Field"
   },
-  "824654": {
+  "824652": {
     "away": {
       "abbr": "DET",
       "color": "#F84E21",
       "name": "Tigers"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to Over on the first five total at a score of 71, driven by Peterson's 6.45 ERA.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 32,
+        "side": "DET"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 71,
+        "side": "Over"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 28,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 33,
+        "side": "DET"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 71,
+        "side": "YRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 33,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "DET",
+          "flags": [],
+          "score": 11,
+          "side": "No clear lean"
+        },
+        "home": {
+          "abbr": "CHC",
+          "flags": [],
+          "score": 16,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "CHC",
       "color": "#4E74CB",
@@ -597,12 +1223,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.48",
-        "name": "Jack Flaherty"
+        "era": "4.10",
+        "name": "Framber Valdez"
       },
       "home": {
-        "era": "5.19",
-        "name": "Jameson Taillon"
+        "era": "6.45",
+        "name": "David Peterson"
       }
     },
     "pulse": {
@@ -613,33 +1239,106 @@
       {
         "label": "CHC home OPS (14d)",
         "tone": "pos",
-        "value": ".812"
+        "value": ".831"
       },
       {
         "label": "CHC bullpen ERA (7d)",
         "tone": "neg",
-        "value": "3.38"
+        "value": "3.29"
+      },
+      {
+        "label": "Season series",
+        "tone": "neutral",
+        "value": "DET 1-0"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.48 vs 5.19"
+        "value": "4.10 vs 6.45"
       }
     ],
+    "standout": {
+      "bet_type": "first_five_total",
+      "flags": [],
+      "score": 71,
+      "side": "Over"
+    },
     "start": "8:05 PM ET",
     "status": "Preview",
-    "story": "The Cubs' home offense has produced a .812 OPS over the last 14 days, compared to .660 for the Tigers on the road. The Tigers' bullpen has been sharper over the last seven days (1.80 ERA) than Chicago's (3.38 ERA). Both probable starters carry elevated ERAs\u2014Flaherty 4.48, Taillon 5.19.",
-    "summary": "Cubs' home-field offensive edge is offset by Detroit's bullpen strength, while both starting pitchers show elevated ERAs.",
-    "template_version": "v1",
+    "story": "Valdez (4.10 ERA) takes the mound against Peterson (6.45 ERA) at Wrigley. Detroit has a bullpen operating at 2.25 ERA over the past week and won the season-series opener; the Cubs counter with a home lineup posting a .831 OPS over the same span. The starter disparity is notable, though Chicago's offensive production at home provides a point of strength.",
+    "summary": "The match features a significant starter gap balanced against the Cubs' strong home offensive form.",
+    "template_version": "v3",
     "venue": "Wrigley Field"
   },
-  "824736": {
+  "824735": {
     "away": {
       "abbr": "BAL",
       "color": "#EE672B",
       "name": "Orioles"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to BAL Under on the team total at a score of 76, driven by the Orioles' .655 road OPS over the past 14 days.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [
+          "home_probable_out",
+          "starter_scratched"
+        ],
+        "score": 0,
+        "side": "No clear lean"
+      },
+      "first_five_total": {
+        "flags": [
+          "home_probable_out",
+          "starter_scratched"
+        ],
+        "score": 0,
+        "side": "No clear lean"
+      },
+      "game_total": {
+        "flags": [
+          "home_probable_out"
+        ],
+        "score": 8,
+        "side": "No clear lean"
+      },
+      "moneyline": {
+        "flags": [
+          "home_probable_out"
+        ],
+        "score": 34,
+        "side": "BOS"
+      },
+      "nrfi_yrfi": {
+        "flags": [
+          "home_probable_out",
+          "starter_scratched"
+        ],
+        "score": 0,
+        "side": "No clear lean"
+      },
+      "run_line": {
+        "flags": [
+          "home_probable_out"
+        ],
+        "score": 34,
+        "side": "No clear lean"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "BAL",
+          "flags": [],
+          "score": 76,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "BOS",
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:33:45.712101+00:00",
     "home": {
       "abbr": "BOS",
       "color": "#C94F57",
@@ -647,12 +1346,12 @@
     },
     "probables": {
       "away": {
-        "era": "4.19",
-        "name": "Shane Baz"
+        "era": "3.61",
+        "name": "Kyle Bradish"
       },
       "home": {
-        "era": "3.11",
-        "name": "Payton Tolle"
+        "era": "3.15",
+        "name": "Ranger Suarez"
       }
     },
     "pulse": {
@@ -663,38 +1362,91 @@
       {
         "label": "BOS home OPS (14d)",
         "tone": "pos",
-        "value": ".899"
+        "value": ".869"
       },
       {
         "label": "BAL bullpen ERA (7d)",
         "tone": "neg",
-        "value": "0.77"
+        "value": "1.98"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "BAL 4-3"
+        "value": "BAL 4-4"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.19 vs 3.11"
+        "value": "3.61 vs 3.15"
       }
     ],
+    "standout": {
+      "bet_type": "team_total",
+      "flags": [],
+      "score": 76,
+      "side": "BAL Under"
+    },
     "start": "7:10 PM ET",
     "status": "Preview",
-    "story": "The Red Sox have been highly productive at home over the last two weeks (.899 OPS) while the Orioles have struggled on the road (.577 OPS), setting up a significant offensive mismatch. Red Sox starter Payton Tolle carries a 3.11 ERA against Shane Baz's 4.19, and Boston's bullpen has been sharper (0.54 ERA vs 0.77) over the past week. The Orioles, however, hold a 4-3 advantage in the season series.",
-    "summary": "Red Sox hold pitching and home-field advantages; Orioles bring season-series experience in this matchup.",
-    "template_version": "v1",
+    "story": "Ranger Suarez (3.15 ERA) opposes Kyle Bradish (3.61 ERA) in a matchup where the Red Sox have posted a .869 home OPS over the past 14 days, while the Orioles sit at .655 on the road. Boston's bullpen ERA has reached 0.90 this week compared to Baltimore's 1.98. The season series is tied 4-4.",
+    "summary": "The Red Sox and Orioles meet at Fenway with recent offensive and bullpen metrics favoring Boston.",
+    "template_version": "v3",
     "venue": "Fenway Park"
   },
-  "824898": {
+  "824895": {
     "away": {
       "abbr": "SD",
       "color": "#FFC425",
       "name": "Padres"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to ATL on the first five moneyline at a score of 77, driven by L\u00f3pez's 3.50 ERA.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 77,
+        "side": "ATL"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 60,
+        "side": "Over"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 43,
+        "side": "Over"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 38,
+        "side": "ATL"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 60,
+        "side": "YRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 38,
+        "side": "ATL"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "SD",
+          "flags": [],
+          "score": 36,
+          "side": "Over"
+        },
+        "home": {
+          "abbr": "ATL",
+          "flags": [],
+          "score": 57,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T00:33:45.712101+00:00",
     "home": {
       "abbr": "ATL",
       "color": "#E03963",
@@ -702,54 +1454,107 @@
     },
     "probables": {
       "away": {
-        "era": "5.03",
-        "name": "JP Sears"
+        "era": "5.36",
+        "name": "Walker Buehler"
       },
       "home": {
-        "era": "4.12",
-        "name": "Bryce Elder"
+        "era": "3.50",
+        "name": "Reynaldo L\u00f3pez"
       }
     },
     "pulse": {
-      "label": "Scorching",
-      "score": 86
+      "label": "Hot",
+      "score": 74
     },
     "signals": [
       {
         "label": "ATL home OPS (14d)",
         "tone": "pos",
-        "value": "1.040"
+        "value": "1.010"
       },
       {
         "label": "ATL bullpen ERA (7d)",
         "tone": "neg",
-        "value": "5.11"
+        "value": "4.11"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "SD 3-0"
+        "value": "SD 3-1"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "5.03 vs 4.12"
+        "value": "5.36 vs 3.50"
       }
     ],
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "score": 77,
+      "side": "ATL"
+    },
     "start": "7:15 PM ET",
     "status": "Preview",
-    "story": "The Padres arrive in Atlanta with a 3-0 edge in the season series, but post a .956 road OPS against the Braves' 1.040 home OPS. Sears (5.03 ERA) faces Elder (4.12 ERA), with San Diego holding a bullpen advantage at 3.68 to Atlanta's 5.11.",
-    "summary": "Padres bring series momentum but face Braves' home-field advantage and pitching edge.",
-    "template_version": "v1",
+    "story": "Reynaldo L\u00f3pez (3.50 ERA) provides Atlanta an advantage in the pitching matchup against San Diego's Walker Buehler (5.36 ERA). The Braves' recent home offense (1.010 OPS over 14 days) outpaces the Padres' road production (.894 OPS), though San Diego's bullpen (3.57 ERA in 7 days) is sharper than Atlanta's (4.11 ERA). San Diego leads the season series 3-1.",
+    "summary": "L\u00f3pez's ERA advantage and Atlanta's recent home offensive strength are countered by San Diego's superior bullpen and season-series lead.",
+    "template_version": "v3",
     "venue": "Truist Park"
   },
-  "825058": {
+  "825056": {
     "away": {
       "abbr": "ATH",
       "color": "#5ABFB2",
       "name": "Athletics"
     },
-    "generated_at": "2026-07-20T18:29:33.481721+00:00",
+    "betting_note": "The signal points to ARI Over on the team total at a score of 80, driven by the D-backs' .775 home OPS over the last 14 days.",
+    "betting_signals": {
+      "first_five_moneyline": {
+        "flags": [],
+        "score": 69,
+        "side": "No clear lean"
+      },
+      "first_five_total": {
+        "flags": [],
+        "score": 57,
+        "side": "Under"
+      },
+      "game_total": {
+        "flags": [],
+        "score": 15,
+        "side": "No clear lean"
+      },
+      "moneyline": {
+        "flags": [],
+        "score": 71,
+        "side": "ARI"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 57,
+        "side": "NRFI"
+      },
+      "run_line": {
+        "flags": [],
+        "score": 71,
+        "side": "ARI"
+      },
+      "team_total": {
+        "away": {
+          "abbr": "ATH",
+          "flags": [],
+          "score": 64,
+          "side": "Under"
+        },
+        "home": {
+          "abbr": "ARI",
+          "flags": [],
+          "score": 80,
+          "side": "Over"
+        }
+      }
+    },
+    "generated_at": "2026-07-21T13:22:51.121833+00:00",
     "home": {
       "abbr": "ARI",
       "color": "#CE4A60",
@@ -757,45 +1562,45 @@
     },
     "probables": {
       "away": {
-        "era": "6.08",
-        "name": "Jeffrey Springs"
+        "era": "6.87",
+        "name": "Jack Perkins"
       },
       "home": {
-        "era": "6.00",
-        "name": "Mitch Bratt"
+        "name": "Kohl Drake"
       }
     },
     "pulse": {
       "label": "Hot",
-      "score": 82
+      "score": 75
     },
     "signals": [
       {
         "label": "ARI home OPS (14d)",
         "tone": "pos",
-        "value": ".806"
+        "value": ".775"
       },
       {
         "label": "ATH bullpen ERA (7d)",
         "tone": "neg",
-        "value": "16.34"
+        "value": "12.42"
       },
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "ATH 1-1"
-      },
-      {
-        "label": "Probables ERA",
-        "tone": "neutral",
-        "value": "6.08 vs 6.00"
+        "value": "ATH 2-1"
       }
     ],
+    "standout": {
+      "bet_type": "team_total",
+      "flags": [],
+      "score": 80,
+      "side": "ARI Over"
+    },
     "start": "9:40 PM ET",
     "status": "Preview",
-    "story": null,
-    "summary": null,
-    "template_version": "v1",
+    "story": "Arizona's home hitters are batting .775 over the last 14 days while Oakland's road hitters are batting .577 in the same span. The D-backs' bullpen carries a 3.72 ERA over seven days compared to Oakland's 12.42. Jack Perkins starts for Oakland with a 6.87 ERA; Kohl Drake takes the mound for Arizona.",
+    "summary": "Arizona's home offensive and bullpen metrics show substantial separation from Oakland's road and relief numbers.",
+    "template_version": "v3",
     "venue": "Chase Field"
   }
 }

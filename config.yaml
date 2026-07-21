@@ -168,12 +168,32 @@ worldcup:
 # Sport-keyed: mlb populated, other sports reserved empty. All values are v1,
 # tunable (see the design proposal). `favors` direction per metric is intrinsic
 # and lives in code, not here; this block holds weights, scales, and thresholds.
+# Player matchup_note gate: the player's CAREER line vs the pitcher they face
+# next gets a one-sentence AI note ONLY when it clears this bar (enough sample AND
+# lopsided enough to matter). Provisional v1 -- tuned against a real-data hit-rate
+# check. vs-pitcher history is inherently sparse, so notes fire selectively.
+player_angle:
+  mlb:
+    # Two INDEPENDENT gates; the angle fires if EITHER clears.
+    # avg path -- needs a real sample to trust a rate:
+    min_ab_avg: 5      # at-bats floor for the avg paths
+    hot_avg: 0.350     # "owns this pitcher"
+    cold_avg: 0.150    # "has been overmatched"
+    # hr path -- 2+ career HR is signal even in a small sample, so its own lower floor:
+    min_ab_hr: 3       # at-bats floor for the HR path
+    min_hr: 2
+
 betting_signals:
   mlb:
     # Score below which a bet type reports "No clear lean" instead of a side.
     min_threshold: 15
     # Run Line needs a stronger lean (the favorite must cover 1.5 runs).
     run_line_threshold: 35
+    # A game's single most-notable market must clear THIS (much stricter than the
+    # per-market lean thresholds above) before the AI writes a one-sentence
+    # betting_note about it. Below it, no betting prose is written at all. v1
+    # tunable -- raise to write notes more rarely, lower to write them more often.
+    standout_threshold: 50
     # tanh normalization: `*_gap` = the home-vs-away spread that reads as a
     # meaningful edge; `*_total`/`*_solo` = league baseline + spread for
     # over/under-style magnitudes.

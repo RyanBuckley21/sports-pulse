@@ -2,281 +2,301 @@
   "ben rice|nyy": {
     "entity": "Ben Rice",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Rice's 5 home runs lead his peer group, and his 11-game hitting streak is the longest currently active. He's averaging 3.3 hits, runs, and RBIs per game (3rd among 75) and 3.4 total bases per game (1st among 40).",
-    "summary": "Rice leads in home runs and hit streak length, ranking among the top in per-game production.",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Rice is on a 12-game hit streak and leads peers in total bases per game at 3.1 TB/G. He ranks in the top three for home runs with 4 HR and for H+R+RBI per game at 3.2. His output across both power and contact has reached a sustained high level.",
+    "summary": "Rice's 12-game hit streak and league-leading total bases per game reflect elite production across power and consistency.",
     "takeaways": [
-      "5 home runs, ranks 1st of 42",
-      "11-game hitting streak, ranks 1st of 47",
-      "3.4 total bases per game, ranks 1st of 40"
+      "12-game hit streak ranks first among tracked players",
+      "Leads in total bases per game at 3.1 TB/G",
+      "4 home runs ranks third in peer group"
     ],
     "team": "New York Yankees",
-    "template_version": "v1"
+    "template_version": "v2"
   },
-  "brandon lowe|pit": {
-    "entity": "Brandon Lowe",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-18",
-    "story": "Lowe ranks 3rd among 83 hitters in run production with a 14/20 mark in 2+HRR situations. His history against next starter Ryan Weathers is 0-for-2 with no extra-base hits or RBIs.",
-    "summary": "Strong run-producer ranking, but historically ineffective against Weathers.",
+  "byron buxton|min": {
+    "entity": "Byron Buxton",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Buxton has reached the run-production threshold in 14 of his last 20 games. This places him fourth among all tracked players in this category.",
+    "summary": "His recent run production rate positions him among the league's most consistent performers.",
     "takeaways": [
-      "Ranks 3rd in run production among 83 hitters",
-      "14/20 performance in 2+HRR situations",
-      "0-for-2 lifetime vs. Weathers with no power"
+      "14 of 20 games with run production",
+      "4th-ranked among tracked players",
+      "Sustained output over recent stretch"
     ],
-    "team": "Pittsburgh Pirates",
-    "template_version": "v1"
-  },
-  "braxton ashcraft|pit": {
-    "entity": "Braxton Ashcraft",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-11",
-    "story": "Ashcraft is averaging 7.2 strikeouts per game as a starter, placing him fourth among 28 qualified pitchers. He has recorded 6 strikeouts in 7 of his last 10 games, ranking fourth in that measure as well.",
-    "summary": "Ashcraft's strikeout rates rank fourth among major league starters based on recent performance.",
-    "takeaways": [
-      "7.2 strikeouts per game (4th among 28)",
-      "6+ strikeouts in 7 of last 10 games",
-      "Ranked 4th in both strikeout metrics"
-    ],
-    "team": "Pittsburgh Pirates",
-    "template_version": "v1"
+    "team": "Minnesota Twins",
+    "template_version": "v2"
   },
   "ceddanne rafaela|bos": {
     "entity": "Ceddanne Rafaela",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Rafaela has recorded a hit in 7 consecutive games while ranking 2nd among all players in games with 2+ runs driven in (15/20). He's also reached base in 16 of his last 20 games, which ranks 6th leaguewide.",
-    "summary": "Elite run production sustained across a quality hit streak.",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Rafaela has recorded a hit in 16 of 20 recent games, ranking third among qualified hitters. He has produced runs in 15 of 20 games \u2014 second best in baseball. His 8-game hitting streak demonstrates sustained contact at the plate.",
+    "summary": "Rafaela ranks third in hit rate and second in run production over the last 20 games.",
     "takeaways": [
-      "7-game hit streak (rank 3 of 47 active streaks)",
-      "Run producer in 15/20 recent games (rank 2 of 83 players)",
-      "Hit in 16/20 recent games (rank 6 of 83 players)"
+      "16 of 20 games with at least one hit",
+      "15 of 20 games as a run producer \u2014 2nd in MLB",
+      "8-game hitting streak"
     ],
     "team": "Boston Red Sox",
-    "template_version": "v1"
+    "template_version": "v2"
   },
-  "cristopher s\u00e1nchez|phi": {
-    "entity": "Cristopher S\u00e1nchez",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-11",
-    "story": "S\u00e1nchez is striking out 6.4 batters per game, ranking 6th among starters. He's delivered 6 or more strikeouts in 7 of his last 10 starts, placing 5th in that consistency metric.",
-    "summary": "S\u00e1nchez has paired high strikeout volume with reliable consistency.",
+  "chandler simpson|tb": {
+    "entity": "Chandler Simpson",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "Simpson has a 7-for-12 (.583) career record against Kevin Gausman, a favorable matchup history that pairs with his recent 16-for-20 hit rate.",
+    "story": "Simpson has recorded hits in 16 of his last 20 at-bats, ranking him fourth among 85 qualified players in hit rate. His pulse score stands at 79, with the label 'Hot.'",
+    "summary": "Simpson ranks fourth in hit rate after recording hits in 16 of his last 20 at-bats.",
     "takeaways": [
-      "6.4 K/G ranks 6th among 28 starters",
-      "7 of 10 recent starts with 6+ K (5th among 26)",
-      "Strikeout production has been steady"
+      "16-for-20 recent hit rate",
+      "Ranked fourth in hit rate among 85 qualified players",
+      "Pulse score of 79 labeled 'Hot'"
     ],
-    "team": "Philadelphia Phillies",
-    "template_version": "v1"
+    "team": "Tampa Bay Rays",
+    "template_version": "v2"
+  },
+  "chase burns|cin": {
+    "entity": "Chase Burns",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-08",
+    "matchup_note": "",
+    "story": "Burns has been striking out batters at an elite rate recently. He's averaging 7.0 strikeouts per game, the second-highest rate among starters, and has reached at least 6 strikeouts in 8 of his last 10 starts.",
+    "summary": "Burns is striking out batters at one of baseball's highest recent rates.",
+    "takeaways": [
+      "7.0 K/G ranks 2nd among starters",
+      "6+ strikeouts in 8 of last 10 starts",
+      "Ranked 1st in 6+ strikeout game frequency"
+    ],
+    "team": "Cincinnati Reds",
+    "template_version": "v2"
+  },
+  "cj abrams|wsh": {
+    "entity": "CJ Abrams",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "Abrams carries a 1-for-7 career line with 1 home run (.143 average) against Michael Lorenzen, a matchup history that contrasts with his recent production run.",
+    "story": "CJ Abrams has been one of baseball's most productive recent hitters, generating 4 home runs and 3.0 hits plus runs plus RBIs per game. He's also averaging 2.8 total bases per contest, ranking among the top performers in his position peer group.",
+    "summary": "Abrams is generating power and consistent run production across recent games.",
+    "takeaways": [
+      "4 home runs ranks 4th among qualified peers",
+      "3.0 H+R+RBI/G is top-5 in production rate",
+      "2.8 total bases per game ranks 5th among qualified peers"
+    ],
+    "team": "Washington Nationals",
+    "template_version": "v2"
   },
   "drake baldwin|atl": {
     "entity": "Drake Baldwin",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Drake Baldwin is averaging 3.4 hits, runs, and RBIs per game, which ranks 2nd out of 75. He is currently in a 5-game hit streak.",
-    "summary": "Baldwin is averaging 3.4 H+R+RBI per game while in a 5-game hit streak.",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Baldwin is averaging 3.2 hits, runs, and RBIs combined per game, placing him 4th among 79 players in this metric. This sustained output across multiple offensive categories reflects productive recent at-bats.",
+    "summary": "Baldwin ranks 4th out of 79 players with 3.2 H+R+RBI per game.",
     "takeaways": [
-      "Averaging 3.4 H+R+RBI per game, ranked 2nd of 75",
-      "5-game hit streak, ranked 7th of 47",
-      "Consistent production from catcher position"
+      "Averaging 3.2 H+R+RBI per game",
+      "4th-ranked in combined offensive metric",
+      "Consistent multi-category production"
     ],
     "team": "Atlanta Braves",
-    "template_version": "v1"
+    "template_version": "v2"
   },
-  "dylan cease|tor": {
-    "entity": "Dylan Cease",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-08",
-    "story": "Cease is averaging 9.2 strikeouts per game, the second-highest rate among starting pitchers. Across his last 10 starts, he has recorded at least 6 strikeouts in every single appearance\u2014a perfect streak that leads all starters in consistency.",
-    "summary": "Elite strikeout consistency: 9.2 K/G (2nd) with 6+ strikeouts in all 10 recent starts (1st).",
+  "drew rasmussen|tb": {
+    "entity": "Drew Rasmussen",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-09",
+    "matchup_note": "",
+    "story": "Rasmussen is averaging 5.5 strikeouts per game as a starter, ranking 5th among 28 qualifying pitchers. In his recent starts, he's struck out 6 or more batters in 4 of his last 10 appearances, demonstrating consistency in elevated K production.",
+    "summary": "His strikeout numbers rank in the top tier among starting pitchers.",
     "takeaways": [
-      "9.2 K/G ranks 2nd among starters",
-      "Perfect 10/10 streak of 6+ strikeouts (1st)",
-      "Reliable high-velocity execution in recent outings"
+      "5.5 K/G ranks 5th among starters",
+      "6+ strikeouts in 4 of last 10 starts",
+      "Both metrics place him top-10 among qualifying starters"
     ],
-    "team": "Toronto Blue Jays",
-    "template_version": "v1"
+    "team": "Tampa Bay Rays",
+    "template_version": "v2"
   },
-  "jacob misiorowski|mil": {
-    "entity": "Jacob Misiorowski",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-07",
-    "story": "Jacob Misiorowski leads all starting pitchers with 9.7 K/G. He has recorded 6+ strikeouts in all 10 of his recent starts, a perfect streak that ranks second in K Rate consistency among 26 starters.",
-    "summary": "Misiorowski combines top-ranked strikeout efficiency with flawless consistency across 10 starts.",
+  "jack perkins|ath": {
+    "entity": "Jack Perkins",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-03",
+    "matchup_note": "",
+    "story": "Perkins has reached 6+ strikeouts in four of his last six appearances, ranking 3rd in strikeout rate. His recent output has been sustained at a high level within the league's top performers.",
+    "summary": "Perkins has maintained top-tier strikeout production over his recent appearances.",
     "takeaways": [
-      "Leads starters in K/G (9.7 of 28)",
-      "6+ strikeouts in 10 consecutive starts",
-      "Ranks 2nd in K Rate (10/10)"
+      "4 of 6 recent appearances with 6+ strikeouts",
+      "Ranks 3rd in K Rate",
+      "Consistent high-volume production"
     ],
-    "team": "Milwaukee Brewers",
-    "template_version": "v1"
+    "team": "Athletics",
+    "template_version": "v2"
+  },
+  "jake mccarthy|col": {
+    "entity": "Jake McCarthy",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "McCarthy is 1-for-7 against Miles Mikolas (.143 average, 1 RBI), a historical matchup that favors the pitcher.",
+    "story": "McCarthy is riding a 7-game hit streak, ranked fifth among active streaks. This run of consistent contact has elevated his recent profile to 'Hot' status.",
+    "summary": "McCarthy's 7-game hit streak places him among the league's hottest hitters.",
+    "takeaways": [
+      "7-game hit streak",
+      "Ranked 5th among all active streaks",
+      "Recent pulse score: 72 ('Hot')"
+    ],
+    "team": "Colorado Rockies",
+    "template_version": "v2"
   },
   "james wood|wsh": {
     "entity": "James Wood",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "James Wood is ranked 1st in hits, runs, and RBIs per game with 3.5, while holding 2nd-place finishes in both home runs (5 HR) and total bases per game (2.7 TB/G). He has produced in 13 of his last 20 games with at least 2 hits, runs, or RBIs.",
-    "summary": "Wood leads in offensive efficiency while maintaining top-tier power output.",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "James Wood has 5 home runs while averaging 3.7 hits, runs, and RBIs per game\u2014both elite outputs. He ranks first among qualified hitters in combined H+R+RBI and fourth in total bases per game at 2.8. Over his past 20 games, Wood has produced at least two home runs or RBIs in 14 contests.",
+    "summary": "Wood is generating runs at an elite rate through consistent power and production.",
     "takeaways": [
-      "Ranked 1st in H+R+RBI/G (3.5)",
-      "2nd in home runs (5 HR) and TB/G (2.7)",
-      "0-for-2 career vs Kyle Freeland"
+      "5 HR rank first in the panel",
+      "3.7 H+R+RBI/G leads all hitters",
+      "2+HRR in 14 of past 20 games"
     ],
     "team": "Washington Nationals",
-    "template_version": "v1"
-  },
-  "joe ryan|min": {
-    "entity": "Joe Ryan",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-11",
-    "story": "Joe Ryan is averaging 7.6 strikeouts per game as a starter, which ranks 3rd among 28 qualified starters. In his last 10 starts, he has recorded 6 or more strikeouts in 8 of them, ranking him 3rd of 26 pitchers in this consistency metric.",
-    "summary": "Ryan is striking out batters at a top-tier rate with consistency across recent outings.",
-    "takeaways": [
-      "7.6 K/G ranks 3rd among starting pitchers",
-      "8 of 10 recent starts with 6+ strikeouts",
-      "Both strikeout metrics place him in the top 3"
-    ],
-    "team": "Minnesota Twins",
-    "template_version": "v1"
+    "template_version": "v2"
   },
   "jordan walker|stl": {
     "entity": "Jordan Walker",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Walker is hitting safely in 18 of his last 20 games and recording multiple extra-base contributions in 15 of them. He's in a 10-game hit streak and averaging 3.0 combined hits, runs, and RBIs per game.",
-    "summary": "Walker ranks first in hit rate and run production while maintaining a 10-game hit streak.",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Walker has extended an 11-game hit streak, recording at least one hit in 18 of his last 20 games and two or more combined hits, runs, and RBIs in 16 of those 20. Over this stretch he is averaging 2.8 H+R+RBI per game.",
+    "summary": "Walker is producing at elite rates across hitting, run-scoring, and RBI categories on an 11-game streak.",
     "takeaways": [
-      "18/20 games with a hit, ranked first among qualified players",
-      "15/20 games producing multiple extra-base runs, ranked first",
-      "10-game hit streak, currently second-longest active"
+      "11-game hit streak (rank 2 of 57)",
+      "18-of-20 games with 1+ hit (rank 1 of 85)",
+      "16-of-20 games with 2+ H+R+RBI (rank 1 of 85)"
     ],
     "team": "St. Louis Cardinals",
-    "template_version": "v1"
+    "template_version": "v2"
   },
-  "liam hicks|mia": {
-    "entity": "Liam Hicks",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Hicks has recorded a hit in 16 of his last 20 games. Over the same span, he's produced 2+ home runs or RBIs in 14 of those contests, ranking him 4th league-wide in run production.",
-    "summary": "Consistent hitting paired with elite run production.",
+  "justin wrobleski|lad": {
+    "entity": "Justin Wrobleski",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-07",
+    "matchup_note": "",
+    "story": "Wrobleski is striking out batters at an elite rate, posting 5.8 strikeouts per game and ranking 4th among qualified starters. In his last 10 starts, he's recorded 6 or more strikeouts in 4 games, demonstrating sustained high-volume performance in the strikeout column.",
+    "summary": "His strikeout production ranks among the league's top starters, with frequent performances reaching 6+ K.",
     "takeaways": [
-      "Hit in 16 of 20 recent games",
-      "Ranked 4th among 83 players in run production",
-      "2+ home runs or RBIs in 14 of 20 games"
+      "5.8 K/G ranks 4th among starters",
+      "Reached 6+ K in 4 of 10 recent starts",
+      "Sustained elite strikeout volume"
     ],
-    "team": "Miami Marlins",
-    "template_version": "v1"
+    "team": "Los Angeles Dodgers",
+    "template_version": "v2"
   },
-  "luis arraez|sf": {
-    "entity": "Luis Arraez",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Arraez has recorded at least one hit in 16 of his last 20 at-bats, ranking him 3rd among 83 players in hit rate. In 16 career at-bats against his next opponent's starter Michael Wacha, Arraez has a .375 average with 2 home runs and 5 RBIs.",
-    "summary": "Arraez is one of the league's most consistent hitters and has historically dominated against Wacha.",
+  "kevin gausman|tor": {
+    "entity": "Kevin Gausman",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-12",
+    "matchup_note": "",
+    "story": "Gausman ranks third among starters in strikeouts per game at 6.3, and has recorded 6 or more strikeouts in 6 of his last 10 starts. That 6-of-10 frequency places him fourth among starters, reflecting reliable high-strikeout output fueling his elevated pulse score.",
+    "summary": "Gausman has been consistently striking out hitters at an elevated rate among major league starters.",
     "takeaways": [
-      "16/20 1+H rate (3rd among 83 players)",
-      ".375 average vs. Wacha with 2 home runs",
-      "5 RBIs in career matchup with Kansas City starter"
+      "6.3 K/G ranks 3rd among starters",
+      "6 strikeouts in 6 of last 10 starts (4th-ranked frequency)",
+      "Consistent high-strikeout production"
     ],
-    "team": "San Francisco Giants",
-    "template_version": "v1"
+    "team": "Toronto Blue Jays",
+    "template_version": "v2"
   },
-  "matt olson|atl": {
-    "entity": "Matt Olson",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Olson has 4 home runs, ranking 3rd of 42, and averages 2.4 total bases per game (7th of 40). He faces Padres starter JP Sears today, whom he hits .300 against (3-for-10).",
-    "summary": "Olson ranks among league leaders in home runs and total bases per game.",
+  "kevin mcgonigle|det": {
+    "entity": "Kevin McGonigle",
+    "generated_at": "2026-07-21T13:01:29.982727+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "McGonigle has recorded at least one hit in 16 of his last 20 games. He ranks second among shortstops in hit rate. His 93 pulse score reflects this exceptional consistency.",
+    "summary": "McGonigle has hit in 16 of his last 20 games and ranks second in hit rate among shortstops.",
     "takeaways": [
-      "4 HR ranks 3rd",
-      "2.4 TB/G ranks 7th",
-      ".300 average vs JP Sears"
+      "16 hits in 20 games",
+      "2nd in hit rate among 85 shortstops",
+      "Elite 93 pulse score"
     ],
-    "team": "Atlanta Braves",
-    "template_version": "v1"
+    "team": "Detroit Tigers",
+    "template_version": "v2"
   },
   "sal stewart|cin": {
     "entity": "Sal Stewart",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Stewart has recorded at least one hit in 17 of his last 20 games, the second-best rate among 83 qualified batters. He has also driven in multiple runs or hit multiple home runs in 13 of those 20 games. Across this stretch, he is averaging 2.2 total bases per game.",
-    "summary": "Stewart has maintained a high hit rate and consistent run production over his last 20 games.",
+    "generated_at": "2026-07-21T13:11:22.811243+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Stewart has hit safely in 16 of his last 20 at-bats, ranking fifth among 85 measured players in hit frequency. This sustained contact productivity explains his elevated pulse score.",
+    "summary": "Stewart has hits in 16 of 20 recent at-bats, ranking fifth in hit frequency.",
     "takeaways": [
-      "Hit rate of 17/20 games (rank 2 of 83)",
-      "2+ home runs or RBIs in 13/20 games (rank 7 of 83)",
-      "Averaging 2.2 total bases per game (rank 10 of 40 at first base)"
+      "16 hits in 20 at-bats",
+      "Ranked 5th among 85 players",
+      "Sustained contact consistency"
     ],
     "team": "Cincinnati Reds",
-    "template_version": "v1"
-  },
-  "shohei ohtani|lad": {
-    "entity": "Shohei Ohtani",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Ohtani's recent performance shows strong production across multiple offensive metrics. He has 4 home runs, ranking 5th among players tracked, and is averaging 2.8 hits, runs, and RBIs per game (7th). His 2.6 total bases per game ranks 4th, indicating consistent power generation.",
-    "summary": "Ohtani's recent power and run production place him among the league's top performers.",
-    "takeaways": [
-      "4 HR (5th)",
-      "2.8 H+R+RBI/G (7th of 75)",
-      "2.6 TB/G (4th of 40)"
-    ],
-    "team": "Los Angeles Dodgers",
-    "template_version": "v1"
+    "template_version": "v2"
   },
   "willson contreras|bos": {
     "entity": "Willson Contreras",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Contreras ranks 4th in home runs (4 HR) and 5th in H+R+RBI/G (2.9) in his recent stretch, accumulating 2.4 TB/G. He's been a run producer in 13 of his last 20 games. However, he's 0-for-4 career against Shane Baz, his opponent on 2026-07-20.",
-    "summary": "Ranks 5th in run production recently, but carries no success history against Baz.",
+    "generated_at": "2026-07-21T13:11:22.811243+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "Contreras has handled Bradish well historically \u2014 2-for-4 with 2 home runs and 3 RBIs for a .500 average \u2014 entering today during a hot streak.",
+    "story": "Contreras has posted 4 home runs and is averaging 3.5 hits, runs, and RBIs per game \u2014 the second-best rate among qualified hitters. Over his last 20 games, 14 have featured two or more runs scored or a home run.",
+    "summary": "Contreras is in an elite run-production stretch defined by power and consistency.",
     "takeaways": [
-      "4 HR (rank 4) and 2.9 H+R+RBI/G (rank 5) in current stretch",
-      "Run producer in 13 of 20 games at 2.4 TB/G (rank 8)",
-      "0-for-4 lifetime vs. Shane Baz"
+      "4 HR, 5th-best rate",
+      "3.5 H+R+RBI/G, 2nd among qualified hitters",
+      "14/20 games with 2+ R or HR"
     ],
     "team": "Boston Red Sox",
-    "template_version": "v1"
+    "template_version": "v2"
   },
   "wilyer abreu|bos": {
     "entity": "Wilyer Abreu",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Abreu is producing 2.7 total bases per game, ranking 3rd among 40 qualified batters. Against Shane Baz, he's 2-for-10 with a .200 average.",
-    "summary": "Elite offensive pace despite minimal success against this pitcher historically.",
+    "generated_at": "2026-07-21T13:11:22.811243+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Abreu is producing at high volume and high quality, averaging 3.0 hits-plus-runs-plus-RBIs per game (ranking sixth among outfielders) and 3.0 total bases per game (ranking third). The dual elite ranking indicates consistent offensive contributions.",
+    "summary": "Abreu has produced elite offensive output across both counting stats and power metrics.",
     "takeaways": [
-      "Ranks 3rd in total bases per game (2.7 TB/G) among 40 qualifiers",
-      ".200 average in 10 at-bats vs. Shane Baz",
-      "Pulse of 86 reflects strong recent production"
+      "Combining hits with runs produced at a 3.0-per-game rate",
+      "Generating extra bases at 3.0 per game (3rd-ranked among peers)",
+      "High-volume productivity paired with power output"
     ],
     "team": "Boston Red Sox",
-    "template_version": "v1"
-  },
-  "xavier edwards|mia": {
-    "entity": "Xavier Edwards",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Edwards has recorded at least one hit in 16 of his last 20 at-bats, ranking him 4th in MLB for hit rate among 83 qualified players. This recent stretch has earned him a pulse score of 79 and a \"Hot\" designation. In three previous matchups against Ronel Blanco, Edwards is 0-for-3.",
-    "summary": "Edwards ranks 4th in MLB hit rate at 16/20 over his last 20 at-bats.",
-    "takeaways": [
-      "16/20 hit rate ranks 4th in MLB",
-      "Pulse score of 79 indicates \"Hot\" status",
-      "Career 0-for-3 vs. Ronel Blanco"
-    ],
-    "team": "Miami Marlins",
-    "template_version": "v1"
+    "template_version": "v2"
   },
   "yordan alvarez|hou": {
     "entity": "Yordan Alvarez",
-    "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-19",
-    "story": "Alvarez is in a 6-game hit streak and ranks 4th among all qualifying players. In his previous at-bats against Janson Junk, he went 1-for-2 with a home run and 2 RBIs.",
-    "summary": "Six-game hot streak with a proven track record against Miami's Janson Junk.",
+    "generated_at": "2026-07-21T13:11:22.811243+00:00",
+    "last_game_date": "2026-07-20",
+    "matchup_note": "",
+    "story": "Alvarez has been productive at the plate over his recent stretch, with 4 home runs and 3.0 total bases per game ranking him among the top performers in the sample. His 7-game hitting streak demonstrates the consistency behind those numbers.",
+    "summary": "Alvarez has been hitting for both power and average during a hot stretch.",
     "takeaways": [
-      "6-game hit streak, 4th of 47 players",
-      "1 HR, 2 RBIs in 2 ABs vs. Junk",
-      "Pulse score 79 reflects sustained production"
+      "4 home runs ranks 2nd in the sample",
+      "3.0 total bases per game ranks 2nd in the sample",
+      "7-game hit streak shows consistent production"
     ],
     "team": "Houston Astros",
-    "template_version": "v1"
+    "template_version": "v2"
+  },
+  "zack wheeler|phi": {
+    "entity": "Zack Wheeler",
+    "generated_at": "2026-07-21T13:11:22.811243+00:00",
+    "last_game_date": "2026-07-12",
+    "matchup_note": "",
+    "story": "Wheeler ranks first among MLB starters with 7.8 strikeouts per game. In his last 10 starts, he has achieved six or more strikeouts seven times, placing him second among starters in that frequency.",
+    "summary": "Wheeler has the highest strikeout rate among MLB starters and maintains elite consistency in 6+ strikeout performances.",
+    "takeaways": [
+      "1st in K/G among starters (7.8 K/G)",
+      "7 of last 10 starts with 6+ strikeouts",
+      "2nd-ranked in K Rate among qualifying starters"
+    ],
+    "team": "Philadelphia Phillies",
+    "template_version": "v2"
   }
 }

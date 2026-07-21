@@ -247,6 +247,42 @@ def _lean_of(entry, labels):
     return 0.0
 
 
+# Precedence for tie-breaking the standout pick when two markets share the top
+# score (rare). Earlier = preferred: the cleaner single-number markets first, the
+# noisier one-run markets (run line, NRFI) last.
+_MARKET_PRECEDENCE = (
+    "moneyline", "first_five_moneyline", "game_total", "first_five_total",
+    "team_total", "run_line", "nrfi_yrfi",
+)
+
+
+def top_market(scored, threshold):
+    """Deterministically pick a game's single most-notable market: the highest
+    Signal Score among markets that carry a real lean (side != 'No clear lean')
+    AND clear `threshold`. team_total contributes BOTH sides as separate
+    candidates. Ties break by _MARKET_PRECEDENCE (rarely reached). Returns
+    {bet_type, side, score, flags} or None when nothing clears the bar."""
+    prec = {k: i for i, k in enumerate(_MARKET_PRECEDENCE)}
+    candidates = []  # (bet_type, side, score, flags)
+    for bt, entry in (scored or {}).items():
+        if bt == "team_total" and isinstance(entry, dict):
+            for side_key in ("away", "home"):
+                e = entry.get(side_key) or {}
+                side = e.get("side")
+                if side and side != "No clear lean":
+                    label = "{} {}".format(e.get("abbr"), side) if e.get("abbr") else side
+                    candidates.append((bt, label, e.get("score", 0), e.get("flags") or []))
+        elif isinstance(entry, dict):
+            side = entry.get("side")
+            if side and side != "No clear lean":
+                candidates.append((bt, side, entry.get("score", 0), entry.get("flags") or []))
+    material = [c for c in candidates if c[2] >= threshold]
+    if not material:
+        return None
+    bt, side, score, flags = max(material, key=lambda c: (c[2], -prec.get(c[0], 99)))
+    return {"bet_type": bt, "side": side, "score": score, "flags": list(flags)}
+
+
 def build_inputs(away_ref, home_ref, away_ops, home_ops, away_bullpen, home_bullpen,
                  away_era, home_era, series):
     """Assemble the deterministic input dict from the Game builder's already-
