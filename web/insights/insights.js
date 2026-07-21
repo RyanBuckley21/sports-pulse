@@ -91,14 +91,18 @@
 
     // AI Summary -- a plain-language explanation block. Carries an AI badge and
     // a standing "context, not a prediction" caveat that anchors the section's
-    // purpose. (Phase 2: text is mock; Phase 3 wires the real generator.)
-    aiSummary: function (summary, story) {
-      if (!summary && !story) return "";
+    // purpose. Optional `note` ({label, text}) renders a small labeled line
+    // beneath the story (game betting_note / player matchup_note) -- shown only
+    // when non-empty, and sitting inside this block so the caveat covers it too.
+    aiSummary: function (summary, story, note) {
+      var hasNote = note && note.text;
+      if (!summary && !story && !hasNote) return "";
       return (
         '<div class="ai-summary">' +
         '<div class="ai-summary-head"><span class="ai-badge">AI</span><span class="ai-summary-title">Summary</span></div>' +
         (summary ? '<p class="ai-summary-text">' + esc(summary) + "</p>" : "") +
         (story ? '<p class="ai-summary-story">' + esc(story) + "</p>" : "") +
+        (hasNote ? '<div class="ai-note"><span class="ai-note-label">' + esc(note.label) + "</span>" + esc(note.text) + "</div>" : "") +
         '<div class="ai-caveat">Context, not a prediction.</div>' +
         "</div>"
       );
@@ -119,7 +123,7 @@
         (g.headline ? '<p class="insight-headline">' + esc(g.headline) + "</p>" : "") +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        block(Cards.aiSummary(g.summary, g.story)) +
+        block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
         "</article>"
       );
     },
@@ -148,7 +152,7 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        block(Cards.aiSummary(p.summary, p.story)) +
+        block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"
       );
     },

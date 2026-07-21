@@ -163,6 +163,16 @@
 /* Supporting story paragraph beneath the summary lead (Player Insight); dimmer
    and slightly smaller so the one-line summary reads as the lead. */
 .ai-summary-story { font: 400 13px/1.55 system-ui; color: var(--text-tertiary); margin: 8px 0 0; }
+/* Optional labeled note under the story (game betting_note / player matchup_note).
+   Separated by a hairline; the mono accent label matches the AI badge treatment. */
+.ai-note {
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-chip);
+  font: 400 12.5px/1.5 system-ui; color: var(--text-secondary);
+}
+.ai-note-label {
+  font: 600 9px 'JetBrains Mono'; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--accent); margin-right: 7px;
+}
 .ai-caveat { font: 500 10px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0.5px; margin-top: 8px; }
 
 /* ---- component gallery (components.html) ---- */

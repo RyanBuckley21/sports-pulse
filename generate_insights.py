@@ -387,11 +387,16 @@ def _game_prompt_payload(ent):
 
 
 def _standout_for_prompt(standout):
+    """Shape the standout for the model: send ONLY the readable `market` label
+    (never the raw snake_case bet_type key), so a note can't echo an underscore."""
     if not standout:
         return None
-    s = dict(standout)
-    s["market"] = _BET_MARKET_LABELS.get(s.get("bet_type"), s.get("bet_type"))
-    return s
+    return {
+        "market": _BET_MARKET_LABELS.get(standout.get("bet_type"), standout.get("bet_type")),
+        "side": standout.get("side"),
+        "score": standout.get("score"),
+        "flags": standout.get("flags", []),
+    }
 
 
 # Human labels for the betting_note fallback (deterministic path only).
