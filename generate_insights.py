@@ -177,6 +177,7 @@ def build_entities(data, config=None):
                         "entity": p.get("entity"),
                         "team": p.get("team"),
                         "team_abbr": p.get("team_abbr"),
+                        "team_color": p.get("team_color"),  # for team-colored player UI
                         "position": p.get("position"),
                         "signals": [],
                         "stats": [],
@@ -669,6 +670,7 @@ def _build_players_section(entities, insight_map, generated_at):
             "name": ent.get("entity"),
             "sport": ent.get("sport"),
             "team": ent.get("team_abbr"),
+            "team_color": ent.get("team_color"),
             "pos": ent.get("position"),
             "pulse": ent.get("pulse"),
             "signals": ent.get("signals"),

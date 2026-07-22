@@ -69,6 +69,28 @@
   };
   function icon(name) { return ICONS[name] || ICONS._default; }
 
+  // The single neutral accent (used for totals / non-team-specific markets and
+  // any element with no one clear associated team).
+  var GOLD = "#f0a83a";
+
+  // Resolve a Signal Score / Best Angle row to a team color: markets tied to one
+  // team (moneyline "SEA", team_total "TB Over", first-five "TOR") take that
+  // team's color; totals / first-five totals / NRFI-YRFI have no single team, so
+  // they get the neutral gold. Matching is on the leading token of `side`.
+  function sideColor(side, away, home) {
+    if (!side) return GOLD;
+    var tok = String(side).split(" ")[0];
+    if (away && away.abbr === tok && away.color) return away.color;
+    if (home && home.abbr === tok && home.color) return home.color;
+    return GOLD;
+  }
+
+  // "2026-07-07" -> "7/7" for the recent-form bar labels.
+  function fmtDate(iso) {
+    var m = /^\d{4}-(\d{2})-(\d{2})/.exec(String(iso || ""));
+    return m ? Number(m[1]) + "/" + Number(m[2]) : "";
+  }
+
   var Cards = {
     // Pulse Score -- a 0..100 "how notable is this right now" gauge. Reusable
     // standalone or embedded in the identity cards below.
@@ -129,27 +151,54 @@
     // Generic: renders whatever {market, side, score} rows it's handed (already
     // ranked by the build). The row matching `bestAngle` is flagged. Empty when
     // there are no material signals.
-    signalScores: function (scores, bestAngle) {
+    signalScores: function (scores, bestAngle, away, home) {
       if (!scores || !scores.length) return "";
       var baKey = bestAngle ? bestAngle.market + "|" + bestAngle.side : null;
+      var rank = 0;
       var rows = scores
+        .filter(function (s) { return !(baKey && s.market + "|" + s.side === baKey); })
         .map(function (s) {
+          rank += 1;
           var pct = Math.max(0, Math.min(100, Number(s.score) || 0));
-          var isBest = baKey && s.market + "|" + s.side === baKey;
+          var color = sideColor(s.side, away, home);
           return (
-            '<div class="ss-row' + (isBest ? " ss-best" : "") + '">' +
-            '<div class="ss-line">' +
-            '<span class="ss-market">' + esc(s.market) +
-              (isBest ? ' <span class="ss-badge">Best Angle</span>' : "") + "</span>" +
-            '<span class="ss-side">' + esc(s.side) + "</span>" +
-            '<span class="ss-score">' + pct + "</span>" +
+            '<div class="ss-row" style="--row-color:' + esc(color) + '">' +
+            '<span class="ss-rank">' + rank + "</span>" +
+            '<div class="ss-main">' +
+            '<div class="ss-market">' + esc(s.market) + "</div>" +
+            '<div class="ss-side">' + esc(s.side) + "</div>" +
             "</div>" +
-            '<div class="ss-bar"><div class="ss-fill" style="width:' + pct + '%"></div></div>' +
+            '<div class="ss-scorebox"><div class="ss-score">' + pct + "</div>" +
+            '<div class="ss-scorelabel">Score</div></div>' +
             "</div>"
           );
         })
         .join("");
-      return '<div class="signal-scores">' + rows + "</div>";
+      if (!rows) return "";
+      return (
+        '<div class="signal-scores">' + rows +
+        '<div class="disclaimer">Computed indicators (0–100) from recent form &amp; matchup — not win probabilities.</div>' +
+        "</div>"
+      );
+    },
+
+    // Best Angle -- the single standout market, promoted out of the ranked list
+    // into a larger tinted card (market's team color if it has one, else gold).
+    bestAngle: function (ba, away, home) {
+      if (!ba) return "";
+      var pct = Math.max(0, Math.min(100, Number(ba.score) || 0));
+      var color = sideColor(ba.side, away, home);
+      return (
+        '<div class="best-angle" style="--ba-color:' + esc(color) + '">' +
+        '<span class="ba-tag">Best Angle</span>' +
+        '<div class="ba-row">' +
+        "<div><div class=\"ba-market\">" + esc(ba.market || "") + "</div>" +
+        '<div class="ba-side">' + esc(ba.side || "") + "</div></div>" +
+        '<div class="ba-scorebox"><div class="ba-score">' + pct + "</div>" +
+        '<div class="ba-scorelabel">Score</div></div>' +
+        "</div>" +
+        "</div>"
+      );
     },
 
     // Compare Metrics -- a generic "compare N metrics between two entities" table.
@@ -179,19 +228,32 @@
       return '<div class="compare-table">' + head + rows + "</div>";
     },
 
-    // Sparkline -- a label-less bar series for recent form. Generic: renders any
-    // array of {value} into height-scaled bars. Empty when there's no series.
-    sparkline: function (series) {
+    // Recent Form -- a HORIZONTAL bar chart (leaderboard convention): one bar per
+    // data point, proportional width, value at the end, date beneath. Bar fill is
+    // the entity's team color. Generic over any [{value, date}] series; empty when
+    // there's no series.
+    formBars: function (series, color) {
       if (!series || !series.length) return "";
       var vals = series.map(function (s) { return Number(s && s.value) || 0; });
       var max = Math.max.apply(null, vals.concat([1])); // guard divide-by-zero
-      var bars = vals
-        .map(function (v) {
-          var h = Math.max(8, Math.round((v / max) * 100));
-          return '<span class="spark-bar" style="height:' + h + '%"></span>';
+      var fill = color || GOLD;
+      var rows = series
+        .map(function (s) {
+          var v = Number(s && s.value) || 0;
+          var w = Math.max(2, Math.round((v / max) * 100));
+          var d = fmtDate(s && s.date);
+          return (
+            '<div class="fb-item">' +
+            '<div class="fb-row">' +
+            '<div class="fb-track"><div class="fb-bar" style="width:' + w + "%;--fb-color:" + esc(fill) + '"></div></div>' +
+            '<span class="fb-val">' + v + "</span>" +
+            "</div>" +
+            (d ? '<div class="fb-date">' + esc(d) + "</div>" : "") +
+            "</div>"
+          );
         })
         .join("");
-      return '<div class="sparkline">' + bars + "</div>";
+      return '<div class="form-bars">' + rows + "</div>";
     },
 
     // Run Estimate -- a deterministic implied game-total. NOT AI and NOT a market
@@ -201,17 +263,17 @@
     // estimate (unannounced starter) -- same empty-state discipline as the notes.
     estTotal: function (e) {
       if (!e || e.point == null) return "";
+      var unit = e.unit || "";
       var hasBand = e.low != null && e.high != null && e.low !== e.high;
-      var band = hasBand ? esc(e.low) + "–" + esc(e.high) + " runs" : "";
+      var band = hasBand ? esc(e.low) + "–" + esc(e.high) + (unit ? " " + esc(unit) : "") : "";
       return (
         '<div class="est-total">' +
-        '<div class="est-headline">Est. ' + esc(e.point) + ' <span class="est-unit">' + esc(e.unit || "") + "</span></div>" +
-        (band || e.note
-          ? '<div class="est-range">' +
-              (band ? '<span class="est-band">Range ' + band + "</span>" : "") +
-              (e.note ? '<span class="est-note">' + esc(e.note) + "</span>" : "") +
-            "</div>"
-          : "") +
+        '<div class="est-headline">Est. ' + esc(e.point) + ' <span class="est-unit">' + esc(unit) + "</span></div>" +
+        '<div class="est-range">' +
+        (band ? '<span class="est-band">Range ' + band + "</span>" : "") +
+        (e.note ? '<button class="info-btn" type="button" data-toggle aria-label="About this estimate">i</button>' : "") +
+        (e.note ? '<span class="est-note" hidden>' + esc(e.note) + "</span>" : "") +
+        "</div>" +
         "</div>"
       );
     },
@@ -225,10 +287,11 @@
       var hasNote = note && note.text;
       if (!summary && !story && !hasNote) return "";
       return (
-        '<div class="ai-summary">' +
-        '<div class="ai-summary-head"><span class="ai-badge">AI</span><span class="ai-summary-title">Summary</span></div>' +
+        '<div class="ai-summary' + (story ? " clamp" : "") + '">' +
+        '<div class="ai-summary-head"><span class="ai-badge">AI Note</span></div>' +
         (summary ? '<p class="ai-summary-text">' + esc(summary) + "</p>" : "") +
         (story ? '<p class="ai-summary-story">' + esc(story) + "</p>" : "") +
+        (story ? '<button class="ai-readmore" type="button" data-readmore>Read full note →</button>' : "") +
         (hasNote ? '<div class="ai-note"><span class="ai-note-label">' + esc(note.label) + "</span>" + esc(note.text) + "</div>" : "") +
         '<div class="ai-caveat">Context, not a prediction.</div>' +
         "</div>"
@@ -254,7 +317,8 @@
         Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        section("Signal Scores", Cards.signalScores(g.signal_scores, g.best_angle)) +
+        Cards.bestAngle(g.best_angle, away, home) +
+        section("Signal Scores", Cards.signalScores(g.signal_scores, g.best_angle, away, home)) +
         section((g.compare && g.compare.title) || "Comparison", Cards.compareMetrics(g.compare)) +
         section((g.est_total && g.est_total.label) || "Estimate", Cards.estTotal(g.est_total)) +
         block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
@@ -279,14 +343,15 @@
     // Player Insight -- player identity + the three sub-cards.
     playerInsight: function (p) {
       if (!p) return "";
-      var sub = esc(p.team || "") + (p.pos ? " &middot; " + esc(p.pos) : "");
+      var color = p.team_color || GOLD;
+      var sub = '<span class="pi-team">' + esc(p.team || "") + "</span>" + (p.pos ? " &middot; " + esc(p.pos) : "");
       return (
-        '<article class="insight-card">' +
+        '<article class="insight-card" style="--pi-color:' + esc(color) + '">' +
         '<div class="ic-head pi-head"><div class="pi-name">' + esc(p.name) + '</div><div class="pi-sub">' + sub + "</div></div>" +
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        section("Recent Form", Cards.sparkline(p.series)) +
+        section("Recent Form", Cards.formBars(p.series, p.team_color)) +
         block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"
       );
@@ -300,6 +365,20 @@
   // ---- page bootstrap: load mock data, render the current view ----
   var root = document.getElementById("insightsRoot");
   if (!root) return; // static pages (e.g. the hub) have no render target
+
+  // Light affordances (delegated, survives re-render): "i" reveals a hidden
+  // disclaimer sibling; "Read full note" un-clamps the AI story.
+  root.addEventListener("click", function (ev) {
+    var t = ev.target.closest && ev.target.closest("[data-toggle],[data-readmore]");
+    if (!t) return;
+    if (t.hasAttribute("data-readmore")) {
+      var card = t.closest(".ai-summary");
+      if (card) t.textContent = card.classList.toggle("clamp") ? "Read full note →" : "Show less ←";
+    } else {
+      var tgt = t.nextElementSibling;
+      if (tgt) tgt.hidden = !tgt.hidden;
+    }
+  });
 
   var view = document.body.getAttribute("data-insights-view");
   // Players and games render from the live pipeline output (../data.json ->
