@@ -89,6 +89,28 @@
       return '<div class="signals">' + rows + "</div>";
     },
 
+    // Run Estimate -- a deterministic implied game-total. NOT AI and NOT a market
+    // line: `point` (nearest whole run) is the headline number; the +/-1sigma
+    // `low`-`high` band renders smaller beneath, and the not-a-line `note` stays
+    // attached to that range (never the headline). Empty string when there's no
+    // estimate (unannounced starter) -- same empty-state discipline as the notes.
+    estTotal: function (e) {
+      if (!e || e.point == null) return "";
+      var hasBand = e.low != null && e.high != null && e.low !== e.high;
+      var band = hasBand ? esc(e.low) + "–" + esc(e.high) + " runs" : "";
+      return (
+        '<div class="est-total">' +
+        '<div class="est-headline">Est. ' + esc(e.point) + ' <span class="est-unit">runs</span></div>' +
+        (band || e.note
+          ? '<div class="est-range">' +
+              (band ? '<span class="est-band">Range ' + band + "</span>" : "") +
+              (e.note ? '<span class="est-note">' + esc(e.note) + "</span>" : "") +
+            "</div>"
+          : "") +
+        "</div>"
+      );
+    },
+
     // AI Summary -- a plain-language explanation block. Carries an AI badge and
     // a standing "context, not a prediction" caveat that anchors the section's
     // purpose. Optional `note` ({label, text}) renders a small labeled line
@@ -123,6 +145,7 @@
         (g.headline ? '<p class="insight-headline">' + esc(g.headline) + "</p>" : "") +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
+        section("Run Estimate", Cards.estTotal(g.est_total)) +
         block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
         "</article>"
       );

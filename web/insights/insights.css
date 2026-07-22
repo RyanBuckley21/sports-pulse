@@ -152,6 +152,16 @@
 .signal-neg { color: var(--critical); }
 .signal-neutral { color: var(--text-tertiary); }
 
+/* ---- Run Estimate (deterministic implied total; NOT a market line) ----
+   Headline number reads as a stat (Space Grotesk, between a key-signal value
+   and the pulse score in weight); the band + qualifier sit smaller beneath. */
+.est-total { margin-top: 4px; }
+.est-headline { font: 700 22px 'Space Grotesk'; letter-spacing: -0.5px; color: var(--text); }
+.est-unit { font: 600 12px 'JetBrains Mono'; color: var(--text-tertiary); letter-spacing: 0; }
+.est-range { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.est-band { font: 600 12px 'JetBrains Mono'; color: var(--text-secondary); }
+.est-note { font: 400 11px/1.4 system-ui; color: var(--text-tertiary); }
+
 /* ---- AI Summary ---- */
 .ai-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .ai-badge {
