@@ -55,14 +55,85 @@ def get_season_leaders(session, base_url, season, category, group, limit):
     return leaders
 
 
-def build_candidate_pool(session, base_url, season, seed_categories, group, pool_size):
-    """Union of season leaders across seed categories, deduped by player id."""
+def get_recent_leaders(session, base_url, season, stat, start_date, end_date, group, limit):
+    """League-wide leaders in `stat` over a DATE range (byDateRange endpoint),
+    used to seed the candidate pool with recently-hot players the season boards
+    miss (a rookie/light hitter on a heater ranks here but not in season totals).
+    `/stats/leaders` ignores date params, so byDateRange is the only date-scoped
+    path. Same output shape as get_season_leaders."""
+    data = _get(
+        session,
+        f"{base_url}/stats",
+        params={
+            "stats": "byDateRange",
+            "group": group,
+            "season": season,
+            "sportId": 1,
+            "startDate": start_date,
+            "endDate": end_date,
+            "sortStat": stat,
+            "limit": limit,
+        },
+    )
+    leaders = []
+    for block in data.get("stats", []):
+        for split in block.get("splits", []):
+            person = split.get("player", {})
+            team = split.get("team", {})
+            leaders.append(
+                {
+                    "id": person.get("id"),
+                    "name": person.get("fullName"),
+                    "team": team.get("name"),
+                    "team_id": team.get("id"),
+                }
+            )
+    return leaders
+
+
+def build_candidate_pool(session, base_url, season, seed_categories, group, pool_size,
+                         recent_seed_categories=None, recent_window=None,
+                         recent_pool_size=None, recent_cache=None):
+    """Union of season leaders across seed categories, deduped by player id.
+
+    When `recent_seed_categories` + `recent_window` (start, end) are given, ALSO
+    union the recent-window (byDateRange) leaders for those stats, so players who
+    are hot over the last ~20 games but light on season totals (rookies,
+    call-ups, light hitters on a heater) enter the pool and get re-ranked on
+    their actual rolling window. `recent_cache` dedupes the recent-leader calls
+    across the several categories that share the same window+stat."""
     pool = {}
     for category in seed_categories:
         for player in get_season_leaders(session, base_url, season, category, group, pool_size):
             if player["id"] is not None:
                 pool[player["id"]] = player
+    if recent_seed_categories and recent_window:
+        start, end = recent_window
+        limit = recent_pool_size or pool_size
+        for stat in recent_seed_categories:
+            key = (stat, group, start, end, limit)
+            leaders = recent_cache.get(key) if recent_cache is not None else None
+            if leaders is None:
+                leaders = get_recent_leaders(session, base_url, season, stat, start, end, group, limit)
+                if recent_cache is not None:
+                    recent_cache[key] = leaders
+            for player in leaders:
+                if player["id"] is not None:
+                    pool.setdefault(player["id"], player)  # season entry wins on dup
     return pool
+
+
+def get_game_log_cached(session, base_url, person_id, season, group, cache, limit=None):
+    """get_game_log with a per-run cache keyed by (person_id, group, limit). The
+    hitting threshold + hit-streak categories share one candidate pool, so
+    without this each re-walks the same players' full logs; caching collapses
+    those to one fetch per player and pays for the recent-seed's extra players."""
+    if cache is None:
+        return get_game_log(session, base_url, person_id, season, group, limit=limit)
+    key = (person_id, group, limit)
+    if key not in cache:
+        cache[key] = get_game_log(session, base_url, person_id, season, group, limit=limit)
+    return cache[key]
 
 
 def get_roster_index(session, base_url):
@@ -211,9 +282,13 @@ def compute_category_value(stat, cat_cfg):
     return round(total / games_played, 2)
 
 
-def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids):
+def fetch_rolling_sum_category(session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, recent=None):
+    recent = recent or {}
     pool = build_candidate_pool(
-        session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size
+        session, base_url, season, cat_cfg["seed_leaderboards"], cat_cfg["group"], pool_size,
+        recent_seed_categories=cat_cfg.get("recent_seed_leaderboards"),
+        recent_window=recent.get("window"), recent_pool_size=recent.get("pool_size"),
+        recent_cache=recent.get("cache"),
     )
     records = []
     for person_id, player in pool.items():
@@ -275,9 +350,13 @@ def fetch_probable_starters_category(session, base_url, season, window_games, ca
     return records
 
 
-def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids):
+def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, recent=None, game_log_cache=None):
+    recent = recent or {}
     pool = build_candidate_pool(
-        session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size
+        session, base_url, season, cat_cfg["seed_leaderboards"], "hitting", pool_size,
+        recent_seed_categories=cat_cfg.get("recent_seed_leaderboards"),
+        recent_window=recent.get("window"), recent_pool_size=recent.get("pool_size"),
+        recent_cache=recent.get("cache"),
     )
     records = []
     for person_id, player in pool.items():
@@ -285,7 +364,7 @@ def fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, inj
             continue
         if playing_team_ids and player.get("team_id") not in playing_team_ids:
             continue
-        game_log = get_game_log(session, base_url, person_id, season, "hitting")
+        game_log = get_game_log_cached(session, base_url, person_id, season, "hitting", game_log_cache)
         if not game_log:
             continue
         streak, last_game_date = compute_hit_streak(game_log)
@@ -344,7 +423,8 @@ def compute_threshold_rate(game_log, fields, threshold, window_games, starts_onl
 
 
 def fetch_threshold_rate_category(
-    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date
+    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date,
+    recent=None, game_log_cache=None,
 ):
     """Rank players by how often they clear a per-game threshold within a
     recent window. Pool source mirrors the two rolling_sum paths: a
@@ -363,11 +443,17 @@ def fetch_threshold_rate_category(
     min_games = cat_cfg["min_games"]
     starts_only = bool(cat_cfg.get("window_starts_only"))
 
+    recent = recent or {}
     if cat_cfg.get("starters_only"):
         pool = get_probable_starters(session, base_url, game_date)
         pool_is_starters = True
     else:
-        pool = build_candidate_pool(session, base_url, season, cat_cfg["seed_leaderboards"], group, pool_size)
+        pool = build_candidate_pool(
+            session, base_url, season, cat_cfg["seed_leaderboards"], group, pool_size,
+            recent_seed_categories=cat_cfg.get("recent_seed_leaderboards"),
+            recent_window=recent.get("window"), recent_pool_size=recent.get("pool_size"),
+            recent_cache=recent.get("cache"),
+        )
         pool_is_starters = False
 
     records = []
@@ -376,7 +462,7 @@ def fetch_threshold_rate_category(
             continue
         if not pool_is_starters and playing_team_ids and player.get("team_id") not in playing_team_ids:
             continue
-        game_log = get_game_log(session, base_url, person_id, season, group)
+        game_log = get_game_log_cached(session, base_url, person_id, season, group, game_log_cache)
         if not game_log:
             continue
         result = compute_threshold_rate(game_log, fields, threshold, window_games, starts_only)
@@ -1023,6 +1109,18 @@ def fetch(config, game_date=None):
     pool_size = mlb_cfg["candidate_pool_size"]
     game_date = game_date or datetime.date.today().isoformat()
 
+    # Recent-form pool seed: a date window (~20 games) whose byDateRange leaders
+    # are unioned into the season pool so recently-hot low-season-volume hitters
+    # get evaluated. `cache` dedupes recent-leader calls across the hitting
+    # categories that share the same window+stat; game_log_cache collapses their
+    # shared full-log fetches to one per player.
+    recent_days = mlb_cfg.get("recent_seed_days", 24)
+    recent_start = (datetime.date.fromisoformat(game_date) - datetime.timedelta(days=recent_days)).isoformat()
+    recent = {"window": (recent_start, game_date),
+              "pool_size": mlb_cfg.get("recent_pool_size", pool_size),
+              "cache": {}}
+    game_log_cache = {}
+
     session = requests.Session()
     injured_ids, positions = get_roster_index(session, base_url)
     # Empty on an off-day (no games scheduled): the category fetchers treat
@@ -1041,17 +1139,22 @@ def fetch(config, game_date=None):
         elif cat_cfg["mode"] == "rolling_sum":
             records.extend(
                 fetch_rolling_sum_category(
-                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids
+                    session, base_url, season, window_games, cat_cfg, pool_size, injured_ids, positions, playing_team_ids,
+                    recent=recent,
                 )
             )
         elif cat_cfg["mode"] == "hit_streak":
             records.extend(
-                fetch_hit_streak_category(session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids)
+                fetch_hit_streak_category(
+                    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids,
+                    recent=recent, game_log_cache=game_log_cache,
+                )
             )
         elif cat_cfg["mode"] == "threshold_rate":
             records.extend(
                 fetch_threshold_rate_category(
-                    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date
+                    session, base_url, season, cat_cfg, pool_size, injured_ids, positions, playing_team_ids, game_date,
+                    recent=recent, game_log_cache=game_log_cache,
                 )
             )
         else:

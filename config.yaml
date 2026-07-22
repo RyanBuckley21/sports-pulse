@@ -15,6 +15,8 @@ mlb:
   season: 2026
   window_games: 10        # rolling window size for counting stats
   candidate_pool_size: 40 # season leaders pulled per seed category before re-ranking on the rolling window
+  recent_seed_days: 24    # date window (~20 games) for the recent-form pool seed
+  recent_pool_size: 40    # top-N recent leaders unioned into the season pool
 
   stat_categories:
     - key: home_runs
@@ -25,6 +27,7 @@ mlb:
       mode: rolling_sum
       fields: [homeRuns]
       seed_leaderboards: [homeRuns]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     - key: total_bases
       label: Total Bases per Game (last 10 G, true avg)
@@ -35,6 +38,7 @@ mlb:
       fields: [totalBases]
       per_game: true
       seed_leaderboards: [totalBases]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     - key: hits_runs_rbi
       label: Hits + Runs + RBI per Game (last 10 G, true avg)
@@ -45,6 +49,7 @@ mlb:
       fields: [hits, runs, rbi]
       per_game: true
       seed_leaderboards: [hits, runs, runsBattedIn]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     - key: strikeouts
       label: "Strikeouts per Game (last 10 G, today's starters only, true avg)"
@@ -64,6 +69,7 @@ mlb:
       group: hitting
       mode: hit_streak
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     # threshold_rate: how often a player clears a per-game bar within a
     # recent window. `fields` are summed per game, compared to `threshold`;
@@ -80,6 +86,7 @@ mlb:
       window_games: 20
       min_games: 16
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     - key: run_producer_rate
       label: Run Producer Rate (games with 2+ H/R/RBI, last 20 G)
@@ -92,6 +99,7 @@ mlb:
       window_games: 20
       min_games: 16
       seed_leaderboards: [hits, runs, runsBattedIn, homeRuns, totalBases]
+      recent_seed_leaderboards: [hits, totalBases]  # union recent-form leaders so hot low-volume hitters qualify
 
     # window_starts_only: the window counts a pitcher's actual starts (games
     # with gamesStarted >= 1), not calendar games, so relief cameos don't
