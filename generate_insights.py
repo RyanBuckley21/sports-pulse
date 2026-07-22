@@ -732,6 +732,7 @@ def _build_games_section(entities, text_map):
             "signals": ent.get("signals"),
             "betting_signals": ent.get("betting_signals"),
             "standout": ent.get("standout"),
+            "est_total": ent.get("est_total"),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),

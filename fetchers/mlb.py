@@ -789,6 +789,7 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
                     ops_cache, era_cache, config, injured_ids):
     import team_meta  # local import: keeps the standalone `python3 fetchers/mlb.py` helper working
     import betting_signals
+    import implied_total
 
     teams = g.get("teams", {})
     away_t = teams.get("away", {}).get("team", {})
@@ -874,6 +875,12 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     standout = betting_signals.top_market(
         betting, ((config.get("betting_signals") or {}).get("mlb") or {}).get("standout_threshold", 50))
 
+    # Deterministic implied game-total estimate from the SAME inputs (14d OPS,
+    # probable ERA, 7d bullpen ERA). No AI, no odds, no park/weather/lineup data.
+    # A rough heuristic point + propagated +/-1sigma band -- NOT a market line and
+    # never to be shown as one. None when any input is missing (unannounced SP).
+    est_total = implied_total.estimate(away_ops, home_ops, away_era, home_era, away_pen, home_pen)
+
     return {
         "gamePk": g.get("gamePk"),
         "status": g.get("status", {}).get("abstractGameState"),
@@ -886,6 +893,7 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         "pulse": _game_pulse(framed_ops, framed_pen, series),
         "betting_signals": betting,
         "standout": standout,
+        "est_total": est_total,
         # Full both-sides context for the AI payload only -- never shown directly.
         "context": {
             "away_team": away_ref["name"], "home_team": home_ref["name"],
