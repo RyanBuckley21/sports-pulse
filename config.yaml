@@ -241,3 +241,46 @@ betting_signals:
         opp_starter_era: 0.25
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
+
+# ---------------------------------------------------------------------------
+# Insights UI presentation, sport-keyed (mirrors betting_signals / player_angle).
+# The Python build resolves these into data.json so the JS components stay
+# sport-blind -- MLB fills its set now; NFL/NBA/CFB/PL get their own later
+# WITHOUT touching component code. An empty/missing sport block simply means the
+# config-driven affordances (category strip, comparison table) don't render for
+# that sport; the generic pieces (pulse, signals, AI note) still do.
+insights_ui:
+  mlb:
+    # Static category strip (icon names resolve to inline SVGs in the component's
+    # registry -- config carries names/labels, never markup).
+    signal_categories:
+      - { key: starting_pitching, label: "Starting Pitching", icon: mound }
+      - { key: bullpen,           label: "Bullpen Fatigue",    icon: relief }
+      - { key: offense,           label: "Offense Form",       icon: bat }
+    # Readable market names for the Signal Score list / Best Angle (replaces the
+    # old hardcoded _BET_MARKET_LABELS in generate_insights.py). Keys match
+    # betting_signals bet_types.
+    market_labels:
+      moneyline: "Moneyline"
+      run_line: "Run Line"
+      game_total: "Game Total"
+      first_five_moneyline: "First Five Moneyline"
+      first_five_total: "First Five Total"
+      nrfi_yrfi: "First-Inning Runs"
+      team_total: "Team Total"
+    # Generic "compare N metrics between two entities" tables. `better` is the
+    # winning direction; the build resolves which side wins per row. Metrics whose
+    # data isn't in the pipeline yet are simply absent (K%/BB%/WHIP this phase).
+    compare_sets:
+      probable_starters:
+        title: "Probable Starters"
+        metrics:
+          - { key: era, label: "ERA", format: era, better: low }
+    # Implied-total label wording (the number/units the UI shows). Sport-specific
+    # phrasing lives here, not in the JS.
+    est_total:
+      label: "Run Estimate"
+      unit: "runs"
+      note: "Rough model estimate from team form & pitching — not a betting line. No park, weather, or lineup data."
+  # Reserved for future sports; empty = no config-driven affordances render.
+  worldcup: {}

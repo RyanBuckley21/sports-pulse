@@ -785,6 +785,46 @@ def _game_pulse(framed_ops, framed_bullpen_era, series):
     return {"score": score, "label": label}
 
 
+def _label_markets(markets, labels):
+    """Apply readable sport market labels to betting_signals.list_markets() rows.
+    The label map is sport config (insights_ui.<sport>.market_labels); this keeps
+    the UI's ranked Signal Score list free of raw snake_case bet_type keys."""
+    return [{"market": labels.get(m["bet_type"], m["bet_type"]),
+             "side": m["side"], "score": m["score"]} for m in markets]
+
+
+def _build_compare(probables, compare_sets):
+    """Resolve a config compare_set ("compare N metrics between two entities")
+    against this game's probable starters. Sport-specific field extraction lives
+    HERE (Python build), so the JS component only ever sees resolved rows. Only
+    rows whose data is in the pipeline render -- a missing metric (K%/BB%/WHIP
+    this phase) or an unannounced starter drops the row/table (same empty-state
+    discipline as the notes). Returns None when nothing usable remains."""
+    probables = probables or {}
+    ap, hp = probables.get("away") or {}, probables.get("home") or {}
+    cs = (compare_sets or {}).get("probable_starters")
+    if not cs or not (ap.get("name") and hp.get("name")):
+        return None
+    rows = []
+    for metric in cs.get("metrics", []):
+        key = metric.get("key")
+        av, bv = ap.get(key), hp.get(key)  # e.g. era lives directly on the probable
+        if av is None or bv is None:
+            continue  # metric not fetched yet -> omit this row, keep the rest
+        better = None
+        try:
+            fa, fb = float(av), float(bv)
+            if fa != fb:
+                better = "a" if ((fa < fb) == (metric.get("better") == "low")) else "b"
+        except (TypeError, ValueError):
+            better = None
+        rows.append({"label": metric.get("label", key), "a": av, "b": bv, "better": better})
+    if not rows:
+        return None
+    return {"set": "probable_starters", "title": cs.get("title", "Compare"),
+            "a": {"name": ap.get("name")}, "b": {"name": hp.get("name")}, "rows": rows}
+
+
 def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, touched,
                     ops_cache, era_cache, config, injured_ids):
     import team_meta  # local import: keeps the standalone `python3 fetchers/mlb.py` helper working
@@ -875,14 +915,32 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     standout = betting_signals.top_market(
         betting, ((config.get("betting_signals") or {}).get("mlb") or {}).get("standout_threshold", 50))
 
+    # Resolve the UI presentation structures here (sport-aware Python build) so
+    # the JS components stay sport-blind: the ranked Signal Score list, the Best
+    # Angle (standout + readable label, also reused by the AI note), and the
+    # generic comparison table. Labels/metrics come from insights_ui config.
+    ui_cfg = ((config.get("insights_ui") or {}).get("mlb") or {})
+    market_labels = ui_cfg.get("market_labels") or {}
+    signal_scores = _label_markets(betting_signals.list_markets(betting), market_labels)
+    if standout:
+        standout = {**standout,
+                    "market": market_labels.get(standout.get("bet_type"), standout.get("bet_type"))}
+    compare = _build_compare(probables, ui_cfg.get("compare_sets"))
+
     # Deterministic implied game-total estimate from the SAME inputs (14d OPS,
     # probable ERA, 7d bullpen ERA). No AI, no odds, no park/weather/lineup data.
     # A rough heuristic point + propagated +/-1sigma band -- NOT a market line and
     # never to be shown as one. None when any input is missing (unannounced SP).
-    est_total = implied_total.estimate(away_ops, home_ops, away_era, home_era, away_pen, home_pen)
+    # Unit/label wording comes from sport config (insights_ui), never hardcoded.
+    _est_cfg = ((config.get("insights_ui") or {}).get("mlb") or {}).get("est_total") or {}
+    est_total = implied_total.estimate(
+        away_ops, home_ops, away_era, home_era, away_pen, home_pen,
+        unit=_est_cfg.get("unit", "runs"), note=_est_cfg.get("note", implied_total.NOTE),
+        label=_est_cfg.get("label", "Estimate"))
 
     return {
         "gamePk": g.get("gamePk"),
+        "sport": "mlb",
         "status": g.get("status", {}).get("abstractGameState"),
         "away": away_ref,
         "home": home_ref,
@@ -893,6 +951,9 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         "pulse": _game_pulse(framed_ops, framed_pen, series),
         "betting_signals": betting,
         "standout": standout,
+        "best_angle": standout,       # the standout, semantic name for the UI
+        "signal_scores": signal_scores,
+        "compare": compare,
         "est_total": est_total,
         # Full both-sides context for the AI payload only -- never shown directly.
         "context": {

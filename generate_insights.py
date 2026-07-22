@@ -160,7 +160,7 @@ def build_entities(data, config=None):
     one entity per player, with deterministic signals + pulse + a compact stats
     block (+ a gated vs-pitcher `angle`). Returns {key: entity}."""
     entities = {}
-    for sport in data.get("sports", {}).values():
+    for sport_key, sport in data.get("sports", {}).items():
         for cat in sport.get("categories", []):
             kind = cat.get("kind")
             short_label = cat.get("short_label") or cat.get("label")
@@ -173,6 +173,7 @@ def build_entities(data, config=None):
                 if ent is None:
                     ent = {
                         "key": key,
+                        "sport": sport_key,
                         "entity": p.get("entity"),
                         "team": p.get("team"),
                         "team_abbr": p.get("team_abbr"),
@@ -180,6 +181,9 @@ def build_entities(data, config=None):
                         "signals": [],
                         "stats": [],
                         "best_rank": p.get("rank") or 99,
+                        # recent-form series from the best-rank category (updated
+                        # below) -> feeds the player card sparkline.
+                        "series": p.get("series"),
                         "last_game_date": p.get("last_game_date"),
                         "vs_next_starter": p.get("vs_next_starter"),
                     }
@@ -193,6 +197,7 @@ def build_entities(data, config=None):
                 })
                 if (p.get("rank") or 99) < ent["best_rank"]:
                     ent["best_rank"] = p.get("rank")
+                    ent["series"] = p.get("series")  # track the driving category's form
                 # newest game across appearances (ISO YYYY-MM-DD sorts lexically)
                 lgd = p.get("last_game_date")
                 if lgd and (ent["last_game_date"] is None or lgd > ent["last_game_date"]):
@@ -388,23 +393,17 @@ def _game_prompt_payload(ent):
 
 def _standout_for_prompt(standout):
     """Shape the standout for the model: send ONLY the readable `market` label
-    (never the raw snake_case bet_type key), so a note can't echo an underscore."""
+    (resolved from sport config at build time -- never the raw snake_case key), so
+    a note can't echo an underscore. Lowercased for natural mid-sentence prose."""
     if not standout:
         return None
+    market = (standout.get("market") or standout.get("bet_type") or "").lower()
     return {
-        "market": _BET_MARKET_LABELS.get(standout.get("bet_type"), standout.get("bet_type")),
+        "market": market,
         "side": standout.get("side"),
         "score": standout.get("score"),
         "flags": standout.get("flags", []),
     }
-
-
-# Human labels for the betting_note fallback (deterministic path only).
-_BET_MARKET_LABELS = {
-    "moneyline": "moneyline", "run_line": "run line", "game_total": "game total",
-    "first_five_moneyline": "first five moneyline", "first_five_total": "first five total",
-    "nrfi_yrfi": "first-inning runs", "team_total": "team total",
-}
 
 
 def _fallback_betting_note(standout):
@@ -412,8 +411,9 @@ def _fallback_betting_note(standout):
     empty betting_note for a game that HAS a standout market -- the invariant is
     "standout present => note present". Cites the exact market/side/score (no
     driver attribution, no banned words); a barebones but correct backstop for
-    haiku occasionally dropping the field."""
-    label = _BET_MARKET_LABELS.get(standout.get("bet_type"), standout.get("bet_type") or "signal")
+    haiku occasionally dropping the field. The market label is the sport-config
+    one resolved onto the standout at build time."""
+    label = (standout.get("market") or standout.get("bet_type") or "signal").lower()
     return "The {} signal reads {} at a score of {}.".format(
         label, standout.get("side"), standout.get("score"))
 
@@ -596,7 +596,23 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
     if game_entities:
         data["insights"]["games"] = _build_games_section(game_entities, game_text)
+    data["insights"]["ui"] = _ui_meta(config)
     return _markdown_addendum(data, insight_map)
+
+
+def _ui_meta(config):
+    """Sport-level presentation config the UI needs once per sport (the static
+    category strip). Per-entity display data (market labels, compare rows,
+    est_total wording) is resolved onto each entity, not here. A missing/empty
+    sport block contributes nothing -> the strip just doesn't render for it,
+    which is exactly how an unconfigured future sport should degrade."""
+    ui = (config or {}).get("insights_ui") or {}
+    out = {}
+    for sport_key, block in ui.items():
+        cats = (block or {}).get("signal_categories")
+        if cats:
+            out[sport_key] = {"signal_categories": cats}
+    return out
 
 
 def _generate_all(entities, store, now_iso, total, store_path, child_env):
@@ -651,10 +667,12 @@ def _build_players_section(entities, insight_map, generated_at):
         ins = insight_map.get(key) or {}
         players.append({
             "name": ent.get("entity"),
+            "sport": ent.get("sport"),
             "team": ent.get("team_abbr"),
             "pos": ent.get("position"),
             "pulse": ent.get("pulse"),
             "signals": ent.get("signals"),
+            "series": ent.get("series"),
             "summary": ins.get("summary"),
             "story": ins.get("story"),
             "matchup_note": ins.get("matchup_note"),
@@ -723,6 +741,7 @@ def _build_games_section(entities, text_map):
         t = text_map.get(pk) or {}
         games.append({
             "id": ent.get("gamePk"),
+            "sport": ent.get("sport"),
             "away": ent.get("away"),
             "home": ent.get("home"),
             "start": ent.get("start"),
@@ -732,6 +751,10 @@ def _build_games_section(entities, text_map):
             "signals": ent.get("signals"),
             "betting_signals": ent.get("betting_signals"),
             "standout": ent.get("standout"),
+            # Resolved presentation structures (sport-neutral; built sport-aware).
+            "signal_scores": ent.get("signal_scores"),
+            "best_angle": ent.get("best_angle"),
+            "compare": ent.get("compare"),
             "est_total": ent.get("est_total"),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),

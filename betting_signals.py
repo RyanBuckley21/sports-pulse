@@ -256,12 +256,13 @@ _MARKET_PRECEDENCE = (
 )
 
 
-def top_market(scored, threshold):
-    """Deterministically pick a game's single most-notable market: the highest
-    Signal Score among markets that carry a real lean (side != 'No clear lean')
-    AND clear `threshold`. team_total contributes BOTH sides as separate
-    candidates. Ties break by _MARKET_PRECEDENCE (rarely reached). Returns
-    {bet_type, side, score, flags} or None when nothing clears the bar."""
+def list_markets(scored):
+    """Every market carrying a real lean (side != 'No clear lean'), as
+    [{bet_type, side, score, flags}] sorted by Signal Score desc with
+    _MARKET_PRECEDENCE as a stable tiebreak. team_total contributes BOTH sides as
+    separate rows (side pre-labeled with the team abbr). This is the UI's ranked
+    Signal Score list; top_market() picks the single standout from the same set,
+    so the two never disagree."""
     prec = {k: i for i, k in enumerate(_MARKET_PRECEDENCE)}
     candidates = []  # (bet_type, side, score, flags)
     for bt, entry in (scored or {}).items():
@@ -276,11 +277,21 @@ def top_market(scored, threshold):
             side = entry.get("side")
             if side and side != "No clear lean":
                 candidates.append((bt, side, entry.get("score", 0), entry.get("flags") or []))
-    material = [c for c in candidates if c[2] >= threshold]
-    if not material:
-        return None
-    bt, side, score, flags = max(material, key=lambda c: (c[2], -prec.get(c[0], 99)))
-    return {"bet_type": bt, "side": side, "score": score, "flags": list(flags)}
+    candidates.sort(key=lambda c: (-c[2], prec.get(c[0], 99)))
+    return [{"bet_type": bt, "side": side, "score": score, "flags": list(flags)}
+            for bt, side, score, flags in candidates]
+
+
+def top_market(scored, threshold):
+    """Deterministically pick a game's single most-notable market: the highest
+    Signal Score among markets that carry a real lean AND clear `threshold`.
+    Returns {bet_type, side, score, flags} or None when nothing clears the bar.
+    Drawn from list_markets() (already ranked), so the standout is just the first
+    candidate that meets the bar."""
+    for m in list_markets(scored):
+        if m["score"] >= threshold:
+            return dict(m)
+    return None
 
 
 def build_inputs(away_ref, home_ref, away_ops, home_ops, away_bullpen, home_bullpen,

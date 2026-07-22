@@ -152,6 +152,54 @@
 .signal-neg { color: var(--critical); }
 .signal-neutral { color: var(--text-tertiary); }
 
+/* ---- Category strip (sport-configured signal categories: icon + label) ---- */
+.category-strip { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
+.cat-item { display: flex; align-items: center; gap: 6px; }
+.cat-icon { width: 18px; height: 18px; color: var(--accent); display: inline-flex; }
+.cat-icon svg { width: 100%; height: 100%; }
+.cat-label {
+  font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-tertiary);
+}
+
+/* ---- Signal Scores (ranked computed market scores; Best Angle flagged) ---- */
+.signal-scores { margin-top: 4px; display: flex; flex-direction: column; gap: 11px; }
+.ss-line { display: flex; align-items: baseline; gap: 8px; }
+.ss-market { font: 600 12.5px 'Space Grotesk'; color: var(--text); flex: 1; min-width: 0; }
+.ss-side { font: 500 11px 'JetBrains Mono'; color: var(--text-secondary); white-space: nowrap; }
+.ss-score { font: 700 13px 'JetBrains Mono'; color: var(--text); width: 26px; text-align: right; }
+.ss-bar {
+  height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.08);
+  overflow: hidden; margin-top: 5px;
+}
+.ss-fill { height: 100%; border-radius: 2px; background: var(--text-tertiary); }
+.ss-best .ss-fill { background: var(--accent); }
+.ss-best .ss-score { color: var(--accent); }
+.ss-badge {
+  font: 600 8px 'JetBrains Mono'; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--border-chip); border-radius: 4px;
+  padding: 1px 4px; margin-left: 6px; vertical-align: middle;
+}
+
+/* ---- Compare table (generic two-entity metric comparison) ---- */
+.compare-table { margin-top: 4px; }
+.cmp-row {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
+  padding: 8px 2px; border-bottom: 1px solid var(--hairline);
+}
+.cmp-row:last-child { border-bottom: none; }
+.cmp-metric { font: 400 12.5px system-ui; color: var(--text-secondary); }
+.cmp-val { font: 600 13px 'JetBrains Mono'; color: var(--text-secondary); min-width: 64px; text-align: right; }
+.cmp-head .cmp-val {
+  font: 600 10px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+}
+.cmp-win { color: var(--good); }
+
+/* ---- Sparkline (recent-form bars) ---- */
+.sparkline { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-top: 6px; }
+.spark-bar { flex: 1; min-width: 3px; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.85; }
+
 /* ---- Run Estimate (deterministic implied total; NOT a market line) ----
    Headline number reads as a stat (Space Grotesk, between a key-signal value
    and the pulse score in weight); the band + qualifier sit smaller beneath. */

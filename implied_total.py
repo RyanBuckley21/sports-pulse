@@ -85,23 +85,27 @@ def implied_total(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp):
     return mu, sigma
 
 
-def estimate(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp):
+def estimate(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp,
+             unit="runs", note=NOTE, label="Estimate"):
     """Entity-ready dict, or None when any input is missing.
 
     Shape is display-hierarchy aware: `point` is the headline ("Est. 7 runs");
     `low`/`high` are the +/-1sigma band meant to render smaller/secondary (or in
     a tooltip); `note` is the not-a-line qualifier that must accompany the
     range, not the headline. `point` always sits within [low, high] because
-    rounding is monotonic."""
+    rounding is monotonic. `unit`/`note` are supplied by the caller (sport
+    config) so the wording isn't hardcoded here -- the math is sport-neutral."""
     r = implied_total(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp)
     if r is None:
         return None
     mu, sigma = r
     return {
+        "label": label,
         "point": _round_half_up(mu),
         "low": _round_half_up(mu - Z * sigma),
         "high": _round_half_up(mu + Z * sigma),
-        "note": NOTE,
+        "unit": unit,
+        "note": note,
     }
 
 

@@ -52,6 +52,23 @@
     return '<div class="gi-probables">Starters: ' + names + "</div>";
   }
 
+  // Sport-level presentation config (data.insights.ui), populated at render time.
+  // Card builders look up UI[entity.sport]; nothing sport-specific is hardcoded.
+  var UI = {};
+
+  // Icon registry: name -> inline SVG (CSP-safe, no external assets). Sport
+  // config chooses which named icon each category uses -- this is only the glyph
+  // library, it carries no labels and no logic. A future sport adds glyphs here
+  // and references them by name from its own config. Unknown names fall back to a
+  // neutral dot, so an unconfigured icon never breaks the strip.
+  var ICONS = {
+    mound: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15h16M4 15c1.5-3 4-5 6-5s4.5 2 6 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    relief: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8a5 5 0 0 1 9-2M15 12a5 5 0 0 1-9 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 3v3h-3M6 17v-3h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bat: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16l9-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14.5" cy="5.5" r="2" fill="currentColor"/></svg>',
+    _default: '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>',
+  };
+  function icon(name) { return ICONS[name] || ICONS._default; }
+
   var Cards = {
     // Pulse Score -- a 0..100 "how notable is this right now" gauge. Reusable
     // standalone or embedded in the identity cards below.
@@ -89,6 +106,94 @@
       return '<div class="signals">' + rows + "</div>";
     },
 
+    // Category strip -- a compact icon+label row of the signal categories a sport
+    // tracks. Fully data-driven from data.insights.ui[sport].signal_categories;
+    // the component supplies only the glyph library (ICONS). Empty when a sport
+    // has no configured categories (e.g. an unconfigured future sport).
+    categoryStrip: function (cats) {
+      if (!cats || !cats.length) return "";
+      var items = cats
+        .map(function (c) {
+          return (
+            '<div class="cat-item">' +
+            '<span class="cat-icon">' + icon(c.icon) + "</span>" +
+            '<span class="cat-label">' + esc(c.label) + "</span>" +
+            "</div>"
+          );
+        })
+        .join("");
+      return '<div class="category-strip">' + items + "</div>";
+    },
+
+    // Signal Scores -- a ranked list of 0-100 computed signal scores per market.
+    // Generic: renders whatever {market, side, score} rows it's handed (already
+    // ranked by the build). The row matching `bestAngle` is flagged. Empty when
+    // there are no material signals.
+    signalScores: function (scores, bestAngle) {
+      if (!scores || !scores.length) return "";
+      var baKey = bestAngle ? bestAngle.market + "|" + bestAngle.side : null;
+      var rows = scores
+        .map(function (s) {
+          var pct = Math.max(0, Math.min(100, Number(s.score) || 0));
+          var isBest = baKey && s.market + "|" + s.side === baKey;
+          return (
+            '<div class="ss-row' + (isBest ? " ss-best" : "") + '">' +
+            '<div class="ss-line">' +
+            '<span class="ss-market">' + esc(s.market) +
+              (isBest ? ' <span class="ss-badge">Best Angle</span>' : "") + "</span>" +
+            '<span class="ss-side">' + esc(s.side) + "</span>" +
+            '<span class="ss-score">' + pct + "</span>" +
+            "</div>" +
+            '<div class="ss-bar"><div class="ss-fill" style="width:' + pct + '%"></div></div>' +
+            "</div>"
+          );
+        })
+        .join("");
+      return '<div class="signal-scores">' + rows + "</div>";
+    },
+
+    // Compare Metrics -- a generic "compare N metrics between two entities" table.
+    // Knows nothing about what the metrics are: it renders resolved rows
+    // ({label, a, b, better}) and bolds the winning side per row. The metric list
+    // and which side wins are decided by the sport-aware build. Empty when there
+    // are no rows (e.g. an unannounced entity, or no metric data yet).
+    compareMetrics: function (c) {
+      if (!c || !c.rows || !c.rows.length) return "";
+      var a = (c.a && c.a.name) || "", b = (c.b && c.b.name) || "";
+      var head =
+        '<div class="cmp-row cmp-head">' +
+        '<span class="cmp-metric"></span>' +
+        '<span class="cmp-val">' + esc(a) + "</span>" +
+        '<span class="cmp-val">' + esc(b) + "</span></div>";
+      var rows = c.rows
+        .map(function (r) {
+          return (
+            '<div class="cmp-row">' +
+            '<span class="cmp-metric">' + esc(r.label) + "</span>" +
+            '<span class="cmp-val' + (r.better === "a" ? " cmp-win" : "") + '">' + esc(r.a) + "</span>" +
+            '<span class="cmp-val' + (r.better === "b" ? " cmp-win" : "") + '">' + esc(r.b) + "</span>" +
+            "</div>"
+          );
+        })
+        .join("");
+      return '<div class="compare-table">' + head + rows + "</div>";
+    },
+
+    // Sparkline -- a label-less bar series for recent form. Generic: renders any
+    // array of {value} into height-scaled bars. Empty when there's no series.
+    sparkline: function (series) {
+      if (!series || !series.length) return "";
+      var vals = series.map(function (s) { return Number(s && s.value) || 0; });
+      var max = Math.max.apply(null, vals.concat([1])); // guard divide-by-zero
+      var bars = vals
+        .map(function (v) {
+          var h = Math.max(8, Math.round((v / max) * 100));
+          return '<span class="spark-bar" style="height:' + h + '%"></span>';
+        })
+        .join("");
+      return '<div class="sparkline">' + bars + "</div>";
+    },
+
     // Run Estimate -- a deterministic implied game-total. NOT AI and NOT a market
     // line: `point` (nearest whole run) is the headline number; the +/-1sigma
     // `low`-`high` band renders smaller beneath, and the not-a-line `note` stays
@@ -100,7 +205,7 @@
       var band = hasBand ? esc(e.low) + "–" + esc(e.high) + " runs" : "";
       return (
         '<div class="est-total">' +
-        '<div class="est-headline">Est. ' + esc(e.point) + ' <span class="est-unit">runs</span></div>' +
+        '<div class="est-headline">Est. ' + esc(e.point) + ' <span class="est-unit">' + esc(e.unit || "") + "</span></div>" +
         (band || e.note
           ? '<div class="est-range">' +
               (band ? '<span class="est-band">Range ' + band + "</span>" : "") +
@@ -130,10 +235,13 @@
       );
     },
 
-    // Game Insight -- composes matchup identity + the three sub-cards.
+    // Game Insight -- composes matchup identity + the sub-cards. The category
+    // strip + comparison title come from sport config (via data), so nothing
+    // sport-specific is named in this component.
     gameInsight: function (g) {
       if (!g) return "";
       var away = g.away || {}, home = g.home || {};
+      var ui = UI[g.sport] || {};
       return (
         '<article class="insight-card">' +
         '<div class="ic-head gi-head">' +
@@ -143,9 +251,12 @@
         (g.venue ? '<div class="gi-venue">' + esc(g.venue) + "</div>" : "") +
         probablesLine(g.probables) +
         (g.headline ? '<p class="insight-headline">' + esc(g.headline) + "</p>" : "") +
+        Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        section("Run Estimate", Cards.estTotal(g.est_total)) +
+        section("Signal Scores", Cards.signalScores(g.signal_scores, g.best_angle)) +
+        section((g.compare && g.compare.title) || "Comparison", Cards.compareMetrics(g.compare)) +
+        section((g.est_total && g.est_total.label) || "Estimate", Cards.estTotal(g.est_total)) +
         block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
         "</article>"
       );
@@ -175,6 +286,7 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
+        section("Recent Form", Cards.sparkline(p.series)) +
         block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"
       );
@@ -209,6 +321,8 @@
   }
 
   function renderView(view, data, root) {
+    // Load sport-level presentation config once, before rendering any card.
+    UI = (data.insights && data.insights.ui) || {};
     if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
     else if (view === "games") root.innerHTML = list((data.insights && data.insights.games) || [], Cards.gameInsight);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
