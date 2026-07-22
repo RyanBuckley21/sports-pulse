@@ -206,6 +206,12 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 .fb-val { font: 600 12px 'Space Grotesk'; color: var(--text-secondary); width: 22px; text-align: right; }
 .fb-date { font: 500 9px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 3px; }
 
+/* ---- Vs Next Starter (career line vs today's probable; mirrors main app,
+   restyled to the insights type system) ---- */
+.vs-starter-section { margin-top: 18px; }
+.vs-starter-line { font: 600 15px 'Space Grotesk'; color: var(--text); letter-spacing: -0.01em; padding: 4px 0 2px; }
+.vs-starter-caveat { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; letter-spacing: 0.4px; }
+
 /* ---- Run Estimate (deterministic implied total; NOT a market line) ---- */
 .est-total { margin-top: 4px; }
 .est-headline { font: 800 30px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.03em; color: var(--text); }

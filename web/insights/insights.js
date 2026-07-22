@@ -91,6 +91,23 @@
     return m ? Number(m[1]) + "/" + Number(m[2]) : "";
   }
 
+  // "2026-07-22" -> "Jul 22" (matches the main app's vs-next-starter title).
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function fmtGameDateLong(iso) {
+    var parts = String(iso || "").split("-");
+    if (parts.length !== 3) return "";
+    var m = Number(parts[1]), day = Number(parts[2]);
+    return MONTHS[m - 1] && day ? MONTHS[m - 1] + " " + day : "";
+  }
+
+  // Recent-form eyebrow: "{STAT} · Last n G" (CSS uppercases it), matching the
+  // main app. STAT is the label of the same best-rank category the series came
+  // from. Falls back to a plain label if the category label or series is missing.
+  function formEyebrow(p) {
+    var n = (p.series || []).length;
+    return p.series_label && n ? p.series_label + " · Last " + n + " G" : "Recent Form";
+  }
+
   var Cards = {
     // Pulse Score -- a 0..100 "how notable is this right now" gauge. Reusable
     // standalone or embedded in the identity cards below.
@@ -256,6 +273,30 @@
       return '<div class="form-bars">' + rows + "</div>";
     },
 
+    // Vs Next Starter -- the player's career line against today's probable
+    // pitcher, mirroring the main app's block. Null (no starter announced yet, or
+    // no head-to-head history) renders nothing. Small-sample caveat under 10 AB.
+    vsStarter: function (vs) {
+      if (!vs) return "";
+      var date = fmtGameDateLong(vs.game_date);
+      var title = "Vs next starter — " + esc(vs.pitcher_name) + (date ? " (" + esc(date) + ")" : "");
+      var line =
+        Number(vs.hits) + "-" + Number(vs.ab) +
+        " · " + Number(vs.hr) + " HR" +
+        " · " + Number(vs.rbi) + " RBI" +
+        (vs.avg ? " · " + esc(vs.avg) + " AVG" : "");
+      var caveat = Number(vs.ab) < 10
+        ? '<div class="vs-starter-caveat">Small sample · ' + Number(vs.ab) + " career AB</div>"
+        : "";
+      return (
+        '<div class="vs-starter-section">' +
+        '<div class="breakdown-label">' + title + "</div>" +
+        '<div class="vs-starter-line">' + line + "</div>" +
+        caveat +
+        "</div>"
+      );
+    },
+
     // Run Estimate -- a deterministic implied game-total. NOT AI and NOT a market
     // line: `point` (nearest whole run) is the headline number; the +/-1sigma
     // `low`-`high` band renders smaller beneath, and the not-a-line `note` stays
@@ -351,7 +392,8 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        section("Recent Form", Cards.formBars(p.series, p.team_color)) +
+        section(formEyebrow(p), Cards.formBars(p.series, p.team_color)) +
+        Cards.vsStarter(p.vs_next_starter) +
         block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"
       );

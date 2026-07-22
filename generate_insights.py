@@ -182,9 +182,11 @@ def build_entities(data, config=None):
                         "signals": [],
                         "stats": [],
                         "best_rank": p.get("rank") or 99,
-                        # recent-form series from the best-rank category (updated
-                        # below) -> feeds the player card sparkline.
+                        # recent-form series + its category label, from the
+                        # best-rank category (updated below) -> feeds the player
+                        # card's bar chart and its "{STAT} · LAST n G" eyebrow.
                         "series": p.get("series"),
+                        "series_label": short_label,
                         "last_game_date": p.get("last_game_date"),
                         "vs_next_starter": p.get("vs_next_starter"),
                     }
@@ -198,7 +200,8 @@ def build_entities(data, config=None):
                 })
                 if (p.get("rank") or 99) < ent["best_rank"]:
                     ent["best_rank"] = p.get("rank")
-                    ent["series"] = p.get("series")  # track the driving category's form
+                    ent["series"] = p.get("series")        # track the driving category's form
+                    ent["series_label"] = short_label      # ...and its label, in lockstep
                 # newest game across appearances (ISO YYYY-MM-DD sorts lexically)
                 lgd = p.get("last_game_date")
                 if lgd and (ent["last_game_date"] is None or lgd > ent["last_game_date"]):
@@ -675,6 +678,8 @@ def _build_players_section(entities, insight_map, generated_at):
             "pulse": ent.get("pulse"),
             "signals": ent.get("signals"),
             "series": ent.get("series"),
+            "series_label": ent.get("series_label"),
+            "vs_next_starter": ent.get("vs_next_starter"),
             "summary": ins.get("summary"),
             "story": ins.get("story"),
             "matchup_note": ins.get("matchup_note"),
