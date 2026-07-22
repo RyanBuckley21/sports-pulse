@@ -14,8 +14,9 @@
   --text-secondary: #8b909c;
   --text-tertiary: #565a64;
   --gold: #f0a83a;                       /* single consistent accent, site-wide */
-  --accent: #f0a83a;                     /* insights default accent = gold */
-  --heat: linear-gradient(90deg, #f6c65e, #f0a83a 62%, #d98a1f);
+  /* --accent and --heat are intentionally NOT overridden: the Pulse gauge keeps
+     the app's distinct orange heat so Pulse Score and the gold Signal Score /
+     Best Angle system stay visually separable when they share a card. */
   --hairline: rgba(255, 255, 255, 0.06);
 }
 
@@ -113,7 +114,7 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 }
 .pulse-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
 .pulse-fill { height: 100%; border-radius: 999px; }
-.pulse-hot .pulse-score { color: var(--gold); }
+.pulse-hot .pulse-score { color: var(--accent); }
 .pulse-hot .pulse-fill { background: var(--heat); }
 .pulse-warm .pulse-score { color: var(--warning); }
 .pulse-warm .pulse-fill { background: var(--warning); }
