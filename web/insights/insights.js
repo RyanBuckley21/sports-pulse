@@ -464,9 +464,53 @@
   var root = document.getElementById("insightsRoot");
   if (!root) return; // static pages (e.g. the hub) have no render target
 
-  // Light affordances (delegated, survives re-render): "i" reveals a hidden
-  // disclaimer sibling; "Read full note" un-clamps the AI story.
+  // Games list state: the rendered slate, keyed by id, so a row can build its
+  // expanded card on demand without re-fetching data.json.
+  var gamesById = {};
+
+  // One game in the list: the compact row plus its (initially empty) detail
+  // panel. The wrapper -- not Cards.gameRow -- owns the id and the panel, so
+  // the row component stays the pure standalone function it was built as.
+  function gameItem(g) {
+    return (
+      '<div class="gr-item" data-game-id="' + esc(g && g.id) + '">' +
+      Cards.gameRow(g) +
+      '<div class="gr-detail"><div class="gr-detail-inner"></div></div>' +
+      "</div>"
+    );
+  }
+
+  function closeItem(item) {
+    item.classList.remove("is-open");
+    var r = item.querySelector(".gr-row");
+    if (r) r.setAttribute("aria-expanded", "false");
+  }
+
+  // Accordion: opening a row closes whichever was open, so the list always
+  // collapses back to a scannable column instead of stacking several full
+  // cards. The expanded card is rendered once, on first open, and kept.
+  function toggleGame(row) {
+    var item = row.parentNode;
+    var isOpen = item.classList.contains("is-open");
+    var cur = root.querySelector(".gr-item.is-open");
+    if (cur && cur !== item) closeItem(cur);
+    if (isOpen) return closeItem(item);
+    var inner = item.querySelector(".gr-detail-inner");
+    if (inner && !inner.firstChild) {
+      inner.innerHTML = Cards.gameInsight(gamesById[item.getAttribute("data-game-id")]);
+    }
+    item.classList.add("is-open");
+    row.setAttribute("aria-expanded", "true");
+  }
+
+  // Light affordances (delegated, survives re-render): a game row expands its
+  // full card; "i" reveals a hidden disclaimer sibling; "Read full note"
+  // un-clamps the AI story. The row check is first and returns early -- the
+  // data-toggle controls all live inside .gr-detail, never inside .gr-row, so
+  // the two never contend for the same click.
   root.addEventListener("click", function (ev) {
+    var row = ev.target.closest && ev.target.closest(".gr-row");
+    if (row) return toggleGame(row);
     var t = ev.target.closest && ev.target.closest("[data-toggle],[data-readmore]");
     if (!t) return;
     if (t.hasAttribute("data-readmore")) {
@@ -476,6 +520,16 @@
       var tgt = t.nextElementSibling;
       if (tgt) tgt.hidden = !tgt.hidden;
     }
+  });
+
+  // Rows are exposed as buttons (see renderView), so honour the keys a button
+  // responds to. preventDefault stops Space from page-scrolling instead.
+  root.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
+    var row = ev.target.closest && ev.target.closest(".gr-row");
+    if (!row) return;
+    ev.preventDefault();
+    toggleGame(row);
   });
 
   var view = document.body.getAttribute("data-insights-view");
@@ -501,10 +555,27 @@
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
     if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
-    else if (view === "games") root.innerHTML = list((data.insights && data.insights.games) || [], Cards.gameInsight);
+    else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
+  }
+
+  // Games render as compact rows that expand in place. Every visit starts fully
+  // collapsed by design: the slate turns over daily, so a remembered open row
+  // would not be resuming anything -- you are re-scanning fresh games.
+  function renderGames(games, root) {
+    gamesById = {};
+    games.forEach(function (g) { if (g && g.id != null) gamesById[String(g.id)] = g; });
+    root.innerHTML = list(games, gameItem);
+    // Interactive rows, exposed to keyboard and assistive tech here rather than
+    // inside Cards.gameRow -- the component stays presentational, and only the
+    // wiring that actually makes rows clickable claims they are buttons.
+    [].forEach.call(root.querySelectorAll(".gr-row"), function (r) {
+      r.setAttribute("role", "button");
+      r.setAttribute("tabindex", "0");
+      r.setAttribute("aria-expanded", "false");
+    });
   }
 
   // Component gallery: each of the six card types shown in isolation so they're

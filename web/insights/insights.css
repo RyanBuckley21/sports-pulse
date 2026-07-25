@@ -260,6 +260,42 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 .gr-pulse-warm { color: var(--warning); }
 .gr-pulse-cool { color: var(--good); }
 
+/* ---- Game Row: expand/collapse ----
+   The row stays put as a persistent header and the full game card opens
+   beneath it, so you never lose your place in the list. Spacing moves from the
+   row to the wrapper; otherwise the row's own margin would sit between it and
+   its panel. */
+.gr-item { margin-bottom: 10px; }
+.gr-item .gr-row { margin-bottom: 0; }
+/* Open rows square off where the panel meets them, so the two read as one
+   object rather than a row with a card floating under it. */
+.gr-item.is-open .gr-row {
+  border-color: var(--border-chip);
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+/* 0fr -> 1fr animates to the content's natural height: no JS measuring and no
+   max-height guess that would clip a long card (these carry AI text of varying
+   length). The inner element does the clipping while collapsed. */
+.gr-detail {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+.gr-item.is-open .gr-detail { grid-template-rows: 1fr; }
+.gr-detail-inner { overflow: hidden; min-height: 0; }
+/* Inside the panel the game card is content, not a card: it drops its own
+   surface/border so it doesn't nest a panel inside a panel. Its matchup header
+   is suppressed because the row directly above it already says the same thing. */
+.gr-detail .insight-card {
+  background: none; border: 0; border-radius: 0; margin: 0;
+  padding: 4px 2px 2px;
+}
+.gr-detail .gi-head { display: none; }
+/* The row is keyboard-reachable (role=button, tabindex=0 from the wiring). */
+.gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .gr-detail { transition: none; }
+}
+
 /* ---- Compare table (generic two-entity metric comparison) ---- */
 .compare-table { margin-top: 6px; }
 .cmp-row {
