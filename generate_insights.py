@@ -846,9 +846,13 @@ def _build_games_section(entities, text_map):
     Deterministic signals/pulse from the builder; story/summary from text_map
     (omitted client-side when empty).
 
-    Pulse is still computed and attached to every game (and still rendered on the
-    card) -- it is simply no longer the sort key. Games whose best_angle is None
-    (no market cleared the standout bar) score 0 and sort to the bottom."""
+    Ordering is a two-level fallback: Best Angle score first, then Pulse, then
+    the away@home matchup string for determinism. A missing/None score at either
+    level counts as 0, so games whose best_angle is None (no market cleared the
+    standout bar) sort to the bottom -- but among themselves they rank by Pulse
+    rather than alphabetically. Pulse is therefore still both computed and
+    attached to every game (and still rendered on the card); it is just the
+    secondary sort key rather than the primary one."""
     games = []
     for pk, ent in entities.items():
         t = text_map.get(pk) or {}
@@ -873,12 +877,15 @@ def _build_games_section(entities, text_map):
             "summary": t.get("summary"),
             "story": t.get("story"),
         })
-    # Rank by Best Angle score, highest first; abbr matchup as a deterministic
-    # tiebreak so equal-scoring games don't reorder between runs. best_angle is
-    # the top_market() standout and is None whenever no market clears the bar --
-    # `or 0` covers both that and an explicitly null score, so those games sort
-    # to the bottom rather than the top.
+    # Rank by Best Angle score, then Pulse, then the abbr matchup as a
+    # deterministic final tiebreak so equal-scoring games don't reorder between
+    # runs. best_angle is the top_market() standout and is None whenever no
+    # market clears the bar; `or 0` covers both that and an explicitly null
+    # score (same rule applied to pulse), so unscored games sort to the bottom
+    # rather than the top -- and once there, Pulse orders them by relevance
+    # instead of leaving the tail alphabetical.
     games.sort(key=lambda g: (-((g.get("best_angle") or {}).get("score") or 0),
+                              -((g.get("pulse") or {}).get("score") or 0),
                               "{}@{}".format((g.get("away") or {}).get("abbr"),
                                              (g.get("home") or {}).get("abbr"))))
     return games
