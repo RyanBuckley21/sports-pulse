@@ -879,31 +879,56 @@ def _label_markets(markets, labels):
              "side": m["side"], "score": m["score"]} for m in markets]
 
 
-def _attach_est_total(signal_scores, raw_markets, standout, est_total):
-    """Give the game_total market the actual estimated number behind its score.
+def _est_fields(est):
+    """The display subset of an estimate dict -- what actually rides along on a
+    market row. `label`/`note` stay behind: the row shows "Est. N unit (low-high)"
+    inline, and the not-a-line qualifier is carried by the Run Estimate card."""
+    if not est:
+        return None
+    return {k: est[k] for k in ("point", "low", "high", "unit") if k in est}
 
-    The Game Total row otherwise shows only a 0-100 Signal Score and an
-    Over/Under lean with no magnitude -- the run estimate is computed from the
-    same inputs and already known, it just was not connected to the market it
-    describes.
+
+def _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests):
+    """Give the total markets the actual estimated numbers behind their scores.
+
+    A total row otherwise shows only a 0-100 Signal Score and an Over/Under
+    lean with no magnitude, while the estimates are computed from the same
+    inputs a few lines away. game_total takes the combined number; each
+    team_total side takes that team's own. first_five_total is not covered --
+    it would need a different (partial-game) estimate, not this one.
 
     Mutates in place. `raw_markets` is list_markets()' output, carried alongside
     `signal_scores` purely because _label_markets drops `bet_type` (it emits
     {market, side, score}); the two lists are 1:1 and same-ordered, so zip
     recovers each row's bet_type without widening the emitted shape.
     `standout` is the same dict object the entity exposes as `best_angle`, so
-    attaching here covers both. A None est_total (missing input, e.g. an
-    unannounced starter) attaches nothing at all -- no key, no placeholder --
-    leaving those rows exactly as they render today.
+    attaching here covers both.
+
+    `team_ests` is {abbr: estimate-or-None}. A team_total side is matched by the
+    leading token of its `side` ("KC Under" -> "KC"), the same prefix rule
+    sideColor() uses client-side. Anything with no estimate -- a None
+    est_total, or one team missing an input while the other has it -- gets
+    nothing attached at all: no key, no placeholder, rendering exactly as it
+    does today.
     """
-    if not est_total:
-        return
-    fields = {k: est_total[k] for k in ("point", "low", "high", "unit") if k in est_total}
+    game_fields = _est_fields(est_total)
+    team_fields = {abbr: _est_fields(e) for abbr, e in (team_ests or {}).items()}
+
+    def fields_for(bet_type, side):
+        if bet_type == "game_total":
+            return game_fields
+        if bet_type == "team_total":
+            return team_fields.get(str(side or "").split(" ")[0])
+        return None
+
     for raw, row in zip(raw_markets, signal_scores):
-        if raw.get("bet_type") == "game_total":
-            row.update(fields)
-    if standout and standout.get("bet_type") == "game_total":
-        standout.update(fields)
+        f = fields_for(raw.get("bet_type"), raw.get("side"))
+        if f:
+            row.update(f)
+    if standout:
+        f = fields_for(standout.get("bet_type"), standout.get("side"))
+        if f:
+            standout.update(f)
 
 
 def _build_compare(probables, compare_sets):
@@ -1053,9 +1078,24 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         away_ops, home_ops, away_era, home_era, away_pen, home_pen,
         unit=_est_cfg.get("unit", "runs"), note=_est_cfg.get("note", implied_total.NOTE),
         label=_est_cfg.get("label", "Estimate"))
-    # Connect the estimate to the market it actually describes (game_total only
-    # in this piece -- team_total and first_five_total are untouched).
-    _attach_est_total(signal_scores, raw_markets, standout, est_total)
+    # Per-team estimates for the Team Total market -- each side is its own bet,
+    # so each gets its own number rather than a share of the combined total.
+    # Same matchup pairing betting_signals uses for team_total (a team's offense
+    # against the OPPONENT's staff), but note the argument order differs:
+    # team_estimate takes (ops, opp_STARTER, opp_BULLPEN) while _team_total
+    # takes (ops, opp_bullpen, opp_starter). Unit/note reuse the est_total
+    # config; the label comes from the configured market label.
+    _team_est_label = market_labels.get("team_total", "Team Total")
+    team_ests = {
+        away_ref["abbr"]: implied_total.team_estimate(
+            away_ops, home_era, home_pen, unit=_est_cfg.get("unit", "runs"),
+            note=_est_cfg.get("note", implied_total.NOTE), label=_team_est_label),
+        home_ref["abbr"]: implied_total.team_estimate(
+            home_ops, away_era, away_pen, unit=_est_cfg.get("unit", "runs"),
+            note=_est_cfg.get("note", implied_total.NOTE), label=_team_est_label),
+    }
+    # Connect each estimate to the market it actually describes.
+    _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests)
 
     return {
         "gamePk": g.get("gamePk"),

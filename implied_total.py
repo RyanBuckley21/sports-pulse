@@ -57,6 +57,25 @@ def _round_half_up(x):
     return int(math.floor(x + 0.5))
 
 
+def _team_runs(team_ops, opp_sp, opp_bp):
+    """One team's expected runs and propagated 1-sigma, scoring against the
+    OPPONENT's staff. Inputs must already be floats (callers coerce via _f).
+
+    This is the per-team half of the combined estimate, lifted out of
+    implied_total() unchanged so a single team's number can be produced on its
+    own for the Team Total market. Same formula, same sigma terms."""
+    k = team_ops / LEAGUE_OPS
+    blend = W_SP * opp_sp + W_BP * opp_bp
+    runs = blend * k
+    # propagated 1-sigma on this team's expected runs
+    s_sp = k * W_SP * SIGMA_SP
+    s_bp = k * W_BP * SIGMA_BP
+    s_depth = k * (DELTA_IP / 9.0) * abs(opp_sp - opp_bp)
+    s_ops = blend * (SIGMA_OPS / LEAGUE_OPS)
+    sigma = math.sqrt(s_sp**2 + s_bp**2 + s_depth**2 + s_ops**2)
+    return runs, sigma
+
+
 def implied_total(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp):
     """Returns (mu, sigma) or None if any required input is missing (e.g. an
     unannounced/scratched starter) -- we never estimate around a hole."""
@@ -66,20 +85,8 @@ def implied_total(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp):
     if None in (ao, ho, asp, hsp, abp, hbp):
         return None
 
-    def team(team_ops, opp_sp, opp_bp):
-        k = team_ops / LEAGUE_OPS
-        blend = W_SP * opp_sp + W_BP * opp_bp
-        runs = blend * k
-        # propagated 1-sigma on this team's expected runs
-        s_sp = k * W_SP * SIGMA_SP
-        s_bp = k * W_BP * SIGMA_BP
-        s_depth = k * (DELTA_IP / 9.0) * abs(opp_sp - opp_bp)
-        s_ops = blend * (SIGMA_OPS / LEAGUE_OPS)
-        sigma = math.sqrt(s_sp**2 + s_bp**2 + s_depth**2 + s_ops**2)
-        return runs, sigma
-
-    ar, asig = team(ao, hsp, hbp)   # away scores vs HOME staff
-    hr, hsig = team(ho, asp, abp)   # home scores vs AWAY staff
+    ar, asig = _team_runs(ao, hsp, hbp)   # away scores vs HOME staff
+    hr, hsig = _team_runs(ho, asp, abp)   # home scores vs AWAY staff
     mu = ar + hr
     sigma = math.sqrt(asig**2 + hsig**2)
     return mu, sigma
@@ -104,6 +111,33 @@ def estimate(away_ops, home_ops, away_sp, home_sp, away_bp, home_bp,
         "point": _round_half_up(mu),
         "low": _round_half_up(mu - Z * sigma),
         "high": _round_half_up(mu + Z * sigma),
+        "unit": unit,
+        "note": note,
+    }
+
+
+def team_estimate(team_ops, opp_sp, opp_bp, unit="runs", note=NOTE, label="Team Total"):
+    """One team's own run estimate, same entity-ready shape as estimate().
+
+    The Team Total market is two separately-placeable bets, so each side gets
+    its own number rather than a share of the combined total. Returns None when
+    any of the three inputs is missing -- same never-estimate-around-a-hole rule
+    as estimate(), just over 3 inputs instead of 6, so one team can have a
+    number while the other has none.
+
+    NOTE the argument order: `opp_sp` is the opponent's STARTER ERA and `opp_bp`
+    their BULLPEN ERA (matching _team_runs / implied_total). betting_signals'
+    _team_total takes the same two values in the opposite order, so the two call
+    sites do not look alike even though they describe the same matchup."""
+    t, sp, bp = _f(team_ops), _f(opp_sp), _f(opp_bp)
+    if None in (t, sp, bp):
+        return None
+    runs, sigma = _team_runs(t, sp, bp)
+    return {
+        "label": label,
+        "point": _round_half_up(runs),
+        "low": _round_half_up(runs - Z * sigma),
+        "high": _round_half_up(runs + Z * sigma),
         "unit": unit,
         "note": note,
     }
