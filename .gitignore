@@ -3,3 +3,8 @@ __pycache__/
 output/*.md
 output/*.html
 output/*.json
+# Local-preview mirror only: `cp output/data.json web/data.json` lets the site
+# be served from web/ without a backend. Generated, never committed. Matched by
+# exact path rather than web/*.json so a future real file under web/ (like the
+# tracked web/insights/mock-insights.json) can't be hidden by accident.
+web/data.json
