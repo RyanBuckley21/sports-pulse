@@ -339,6 +339,62 @@
       );
     },
 
+    // Game Row -- the compact COLLAPSED-state row for the games list: matchup +
+    // start time, up to three ranked market chips, and a small Pulse number.
+    // Deliberately much lighter than gameInsight (no gauge, no sub-cards, no AI
+    // text); the two are siblings, not variants -- gameInsight stays the
+    // expanded view. Pure function, not yet wired into the games view.
+    //
+    // Class names are all "gr-" prefixed hooks for the follow-up CSS piece, so
+    // this row carries no dependency on the existing gi-/ss-/ba- styles and the
+    // two can be restyled independently.
+    gameRow: function (g) {
+      if (!g) return "";
+      var away = g.away || {}, home = g.home || {};
+      var ba = g.best_angle;
+      // Best Angle leads; the ranked signal_scores fill the remaining slots.
+      // Same market+side dedupe key Cards.signalScores uses, so the Best Angle
+      // never also appears as a plain chip. (best_angle carries both bet_type
+      // and the readable `market` label; signal_scores rows carry `market` --
+      // so `market` is the field the two genuinely share.)
+      var baKey = ba ? ba.market + "|" + ba.side : null;
+      var picks = (ba ? [ba] : []).concat(
+        (g.signal_scores || []).filter(function (s) {
+          return !(baKey && s.market + "|" + s.side === baKey);
+        })
+      ).slice(0, 3);
+      // No chips at all when a game has neither -- no placeholder by design.
+      var chips = picks
+        .map(function (s) {
+          var pct = Math.max(0, Math.min(100, Number(s.score) || 0));
+          return (
+            '<span class="gr-chip" style="--chip-color:' + esc(sideColor(s.side, away, home)) + '">' +
+            '<span class="gr-chip-market">' + esc(s.market || "") + "</span>" +
+            '<span class="gr-chip-side">' + esc(s.side || "") + "</span>" +
+            '<span class="gr-chip-score">' + pct + "</span>" +
+            "</span>"
+          );
+        })
+        .join("");
+      // Secondary Pulse: the number and its band color only. Reuses pulseBand()
+      // rather than Cards.pulseScore() -- the gauge belongs to the expanded card.
+      var pulse = "";
+      if (g.pulse && g.pulse.score != null) {
+        var ps = Math.max(0, Math.min(100, Number(g.pulse.score) || 0));
+        pulse = '<span class="gr-pulse gr-pulse-' + pulseBand(ps) + '">' + ps + "</span>";
+      }
+      return (
+        '<div class="gr-row">' +
+        '<div class="gr-head">' +
+        '<div class="gr-teams">' + teamTag(away) + '<span class="gr-at">@</span>' + teamTag(home) + "</div>" +
+        (g.start ? '<div class="gr-when">' + esc(g.start) + "</div>" : "") +
+        "</div>" +
+        (chips ? '<div class="gr-chips">' + chips + "</div>" : "") +
+        pulse +
+        "</div>"
+      );
+    },
+
     // Game Insight -- composes matchup identity + the sub-cards. The category
     // strip + comparison title come from sport config (via data), so nothing
     // sport-specific is named in this component.
