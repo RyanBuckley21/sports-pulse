@@ -184,6 +184,82 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 .ss-score { font: 700 22px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em; color: var(--text); }
 .ss-scorelabel { font: 600 9px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 2px; }
 
+/* ---- Game Row: the compact COLLAPSED row for the games list ----
+   A lighter sibling of .insight-card, not a variant of it: denser padding and a
+   tighter 14px radius because these repeat down a list. Class names are all
+   gr-* so this component owns its styling outright rather than half-inheriting
+   from the gauge/matchup rules above, which were sized for the expanded card.
+   Two grid rows: [head | pulse] over full-width chips, so the Pulse number sits
+   on the identity line and the chips get the whole width beneath it. Both the
+   chips and the pulse are optional in the markup -- their tracks simply
+   collapse when Cards.gameRow omits them. */
+.gr-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "head pulse" "chips chips";
+  align-items: center; gap: 10px 12px;
+  padding: 14px 16px; border-radius: 14px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  margin-bottom: 10px; cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+/* Reads as tappable before the click handler exists. The lift is a --hairline
+   wash layered over the surface rather than a swap to another surface token:
+   --surface is DARKER than --surface-2, so swapping would read as a press, not
+   a hover. :active included so touch gets the same feedback. */
+.gr-row:hover, .gr-row:active {
+  border-color: var(--border-chip);
+  background-image: linear-gradient(var(--hairline), var(--hairline));
+}
+
+.gr-head {
+  grid-area: head; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; min-width: 0;
+}
+.gr-teams { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Same values as .gi-at / .gi-when -- matched deliberately, not inherited. */
+.gr-at { font: 600 12px 'Space Grotesk'; color: var(--text-tertiary); }
+.gr-when { font: 600 11px 'Space Grotesk'; color: var(--text-secondary); white-space: nowrap; }
+
+/* Chips wrap rather than scroll: three market labels ("First Five Moneyline")
+   cannot honestly fit one phone-width line, and wrapping keeps every chip
+   visible instead of hiding some off-screen. Sized to content (flex: 0 1 auto)
+   with an ellipsis as the last resort, so there are no fixed pixel widths. */
+.gr-chips { grid-area: chips; display: flex; flex-wrap: wrap; gap: 7px; min-width: 0; }
+.gr-chip {
+  position: relative; overflow: hidden; flex: 0 1 auto; min-width: 0;
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 6px 10px 6px 13px; border-radius: 9px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+/* Same left-accent convention as .ss-row::before, at 3px for the smaller chip.
+   NOTE: the custom property is --chip-color (what Cards.gameRow sets on each
+   chip), not .ss-row's --row-color; the gold is the no-single-team fallback. */
+.gr-chip::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--chip-color, var(--gold));
+}
+.gr-chip-market {
+  font: 600 11px 'Space Grotesk'; color: var(--text);
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gr-chip-side { font: 500 11px 'Space Grotesk'; color: var(--text-secondary); white-space: nowrap; }
+.gr-chip-score {
+  font: 700 13px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
+  color: var(--text); white-space: nowrap;
+}
+
+/* Compact Pulse: the number alone. Namespaced away from .pulse-hot etc (whose
+   rules are descendant selectors keyed to the gauge markup) but deliberately
+   the SAME semantic colors, so a band means the same thing in both views. */
+.gr-pulse {
+  grid-area: pulse; justify-self: end;
+  font: 700 15px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
+}
+.gr-pulse-hot { color: var(--accent); }
+.gr-pulse-warm { color: var(--warning); }
+.gr-pulse-cool { color: var(--good); }
+
 /* ---- Compare table (generic two-entity metric comparison) ---- */
 .compare-table { margin-top: 6px; }
 .cmp-row {
