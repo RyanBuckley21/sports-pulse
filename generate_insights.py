@@ -322,10 +322,15 @@ def _preflight(env):
         raise _AuthError("claude reported error: {}".format(envelope.get("subtype")))
 
 
-def _invoke_claude(prompt, env, timeout=CALL_TIMEOUT_S):
+def _invoke_claude(prompt, env, timeout=CALL_TIMEOUT_S, usage_log=None):
     """Run one `claude -p` headless call and return the parsed JSON object from
     its result envelope. Raises on non-zero exit / error envelope / unparseable
-    output (caller decides carry-forward). Shared by the player and game paths."""
+    output (caller decides carry-forward). Shared by the player and game paths.
+
+    When `usage_log` is a list, one record of the call's REAL cost/token usage
+    (straight off the envelope -- never estimated) is appended to it. Recorded
+    before the is_error check, because a failed call still spends tokens, and
+    wrapped in try/except so accounting can never break a real run."""
     proc = subprocess.run(
         ["claude", "-p", "--output-format", "json", "--model", MODEL],
         input=prompt, capture_output=True, text=True, timeout=timeout, env=env,
@@ -333,6 +338,18 @@ def _invoke_claude(prompt, env, timeout=CALL_TIMEOUT_S):
     if proc.returncode != 0:
         raise RuntimeError("claude exit {}: {}".format(proc.returncode, (proc.stderr or "")[:200]))
     envelope = json.loads(proc.stdout)
+    if usage_log is not None:
+        try:
+            usage = envelope.get("usage") or {}
+            usage_log.append({
+                "cost_usd": envelope.get("total_cost_usd"),
+                "input_tokens": usage.get("input_tokens"),
+                "output_tokens": usage.get("output_tokens"),
+                "cache_read_input_tokens": usage.get("cache_read_input_tokens"),
+                "cache_creation_input_tokens": usage.get("cache_creation_input_tokens"),
+            })
+        except Exception:  # noqa: BLE001 -- accounting must never break generation
+            pass
     if envelope.get("is_error"):
         raise RuntimeError("claude reported error: {}".format(envelope.get("subtype")))
     return _parse_json_object(envelope.get("result", ""))
@@ -348,16 +365,17 @@ def _matchup_fallback_note(angle):
         angle.get("pitcher_name"), angle.get("hits"), angle.get("ab"), hrpart, angle.get("avg"))
 
 
-def _call_claude(ent, env):
+def _call_claude(ent, env, usage_log=None):
     """One headless call for one player entity. Returns
     {story,summary,takeaways,matchup_note} or raises (caller decides carry-forward).
     Enforces the angle=>note invariant with a deterministic fallback, and retries
-    (bounded) if any generated field trips the banned-word check."""
+    (bounded) if any generated field trips the banned-word check.
+    `usage_log` is passed straight through to _invoke_claude (see there)."""
     prompt = PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False)
     angle = ent.get("angle")
     result = None
     for attempt in range(BANNED_RETRIES + 1):
-        obj = _invoke_claude(prompt, env)
+        obj = _invoke_claude(prompt, env, usage_log=usage_log)
         takeaways = obj.get("takeaways") or []
         if not isinstance(takeaways, list):
             takeaways = [str(takeaways)]
@@ -422,16 +440,17 @@ def _fallback_betting_note(standout):
         label, standout.get("side"), standout.get("score"))
 
 
-def _call_claude_game(ent, env):
+def _call_claude_game(ent, env, usage_log=None):
     """One headless call for one game entity. Returns {story,summary,betting_note}
     (games carry no takeaways; betting_note is "" unless a standout market exists)
     or raises on any failure (caller decides carry-forward). Enforces the
-    standout=>note invariant with a deterministic fallback when the model drops it."""
+    standout=>note invariant with a deterministic fallback when the model drops it.
+    `usage_log` is passed straight through to _invoke_claude (see there)."""
     prompt = PROMPT_TEMPLATE_GAME + json.dumps(_game_prompt_payload(ent), ensure_ascii=False)
     standout = ent.get("standout")
     result = None
     for attempt in range(BANNED_RETRIES + 1):
-        obj = _invoke_claude(prompt, env)
+        obj = _invoke_claude(prompt, env, usage_log=usage_log)
         story = str(obj.get("story", "")).strip()
         summary = str(obj.get("summary", "")).strip()
         note = str(obj.get("betting_note", "")).strip()
@@ -462,6 +481,30 @@ def _save_store(path, store):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w") as f:
         json.dump(store, f, indent=2, sort_keys=True)
+
+
+def _report_usage(usage_log):
+    """Summarize real cost/token usage for this run (player + game calls combined)
+    and write the full per-call detail to output/usage_report.json. No-op on an
+    empty log (e.g. everything was cached, nothing needed regen). The file write
+    is guarded so a disk/permissions issue can never interrupt a real run -- same
+    principle as the try/except around capturing usage in _invoke_claude."""
+    if not usage_log:
+        return
+    calls = len(usage_log)
+    cost = sum(r.get("cost_usd") or 0 for r in usage_log)
+    in_tok = sum(r.get("input_tokens") or 0 for r in usage_log)
+    out_tok = sum(r.get("output_tokens") or 0 for r in usage_log)
+    cache_r = sum(r.get("cache_read_input_tokens") or 0 for r in usage_log)
+    cache_w = sum(r.get("cache_creation_input_tokens") or 0 for r in usage_log)
+    print("insights: usage -- {} calls, ${:.4f}, {} in / {} out tokens, {} cache-read / {} cache-write"
+          .format(calls, cost, in_tok, out_tok, cache_r, cache_w))
+    try:
+        os.makedirs("output", exist_ok=True)
+        with open("output/usage_report.json", "w") as f:
+            json.dump(usage_log, f, indent=2)
+    except OSError as e:
+        print("insights: usage report not written ({})".format(e))
 
 
 def _needs_regen(ent, prev):
@@ -592,9 +635,14 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
         else:
             print("insights: top {} of {} players; {} games; model={}"
                   .format(total, len(all_entities), len(game_entities), MODEL))
-            insight_map = _generate_all(entities, store, now_iso, total, store_path, child_env)
-            game_text = (_generate_games(game_entities, games_store, now_iso, GAMES_STORE_PATH, child_env)
+            # One log shared by both loops -> the report covers the whole run.
+            usage_log = []
+            insight_map = _generate_all(entities, store, now_iso, total, store_path, child_env,
+                                        usage_log=usage_log)
+            game_text = (_generate_games(game_entities, games_store, now_iso, GAMES_STORE_PATH, child_env,
+                                         usage_log=usage_log)
                          if game_entities else {})
+            _report_usage(usage_log)
 
     _write_back(data, insight_map)
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
@@ -619,10 +667,11 @@ def _ui_meta(config):
     return out
 
 
-def _generate_all(entities, store, now_iso, total, store_path, child_env):
+def _generate_all(entities, store, now_iso, total, store_path, child_env, usage_log=None):
     """Run the player AI generation loop (regenerate changed entities, carry the
     rest). Returns the insight_map. Auth preflight is handled once by run(), so
-    child_env is already validated (or None when nothing needs regen)."""
+    child_env is already validated (or None when nothing needs regen).
+    `usage_log` is passed straight through to the per-entity call."""
     gen = carried = failed = 0
     insight_map = {}
     new_store = {}  # rebuilt from the current (top-N) entity set -> prunes stale entries
@@ -631,7 +680,7 @@ def _generate_all(entities, store, now_iso, total, store_path, child_env):
         if _needs_regen(ent, prev):
             print("  [{}/{}] {} -- regenerating".format(i, total, ent.get("entity")))
             try:
-                text = _call_claude(ent, child_env)
+                text = _call_claude(ent, child_env, usage_log=usage_log)
                 gen += 1
             except Exception as e:  # noqa: BLE001 -- never let one entity break the run
                 print("      call failed ({}); {}".format(
@@ -688,10 +737,11 @@ def _build_players_section(entities, insight_map, generated_at):
     return {"generated_at": generated_at.isoformat(), "players": players}
 
 
-def _generate_games(entities, store, now_iso, store_path, child_env):
+def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=None):
     """Game AI generation loop: regenerate non-final games each run, carry final
     ones. Mirrors _generate_all -- rebuilds the store pruned to today's gamePks
-    (yesterday's slate drops off). Returns {gamePk: {story, summary}}."""
+    (yesterday's slate drops off). Returns {gamePk: {story, summary}}.
+    `usage_log` is passed straight through to the per-game call."""
     gen = carried = failed = 0
     text_map = {}
     new_store = {}  # rebuilt from today's slate -> prunes yesterday's games
@@ -704,7 +754,7 @@ def _generate_games(entities, store, now_iso, store_path, child_env):
             # One call per game: Story/Summary plus the optional one-sentence
             # betting_note (folded in). On failure, carry the whole prior text.
             try:
-                text = _call_claude_game(ent, child_env)
+                text = _call_claude_game(ent, child_env, usage_log=usage_log)
                 gen += 1
             except Exception as e:  # noqa: BLE001 -- never let one game break the run
                 print("      game call failed ({}); {}".format(
