@@ -840,11 +840,15 @@ def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=N
 
 
 def _build_games_section(entities, text_map):
-    """Card-ready game insights for the UI, ranked by Pulse score (highest first,
-    no cap). Returns a bare list assigned to data["insights"]["games"] -- mirroring
-    data["insights"]["players"] (also a bare list, pulse-sorted). Deterministic
-    signals/pulse from the builder; story/summary from text_map (omitted client-
-    side when empty)."""
+    """Card-ready game insights for the UI, ranked by Best Angle score (highest
+    first, no cap). Returns a bare list assigned to data["insights"]["games"] --
+    mirroring data["insights"]["players"] (also a bare list, pulse-sorted).
+    Deterministic signals/pulse from the builder; story/summary from text_map
+    (omitted client-side when empty).
+
+    Pulse is still computed and attached to every game (and still rendered on the
+    card) -- it is simply no longer the sort key. Games whose best_angle is None
+    (no market cleared the standout bar) score 0 and sort to the bottom."""
     games = []
     for pk, ent in entities.items():
         t = text_map.get(pk) or {}
@@ -869,9 +873,12 @@ def _build_games_section(entities, text_map):
             "summary": t.get("summary"),
             "story": t.get("story"),
         })
-    # Rank by Pulse score, highest first; abbr matchup as a deterministic tiebreak
-    # so equal-pulse games don't reorder between runs.
-    games.sort(key=lambda g: (-((g.get("pulse") or {}).get("score", 0)),
+    # Rank by Best Angle score, highest first; abbr matchup as a deterministic
+    # tiebreak so equal-scoring games don't reorder between runs. best_angle is
+    # the top_market() standout and is None whenever no market clears the bar --
+    # `or 0` covers both that and an explicitly null score, so those games sort
+    # to the bottom rather than the top.
+    games.sort(key=lambda g: (-((g.get("best_angle") or {}).get("score") or 0),
                               "{}@{}".format((g.get("away") or {}).get("abbr"),
                                              (g.get("home") or {}).get("abbr"))))
     return games
