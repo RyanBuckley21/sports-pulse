@@ -184,6 +184,12 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 .ss-score { font: 700 22px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em; color: var(--text); }
 .ss-scorelabel { font: 600 9px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 2px; }
 
+/* Attached run estimate ("Est. 8 runs (7-10)"). Same 500 weight as the side
+   line it sits under, a step smaller and in tertiary ink: it is context for
+   the Signal Score, so it must never compete with the big score number. */
+.ba-est { font: 500 11px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; }
+.ss-est { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 2px; }
+
 /* ---- Game Row: the compact COLLAPSED row for the games list ----
    A lighter sibling of .insight-card, not a variant of it: denser padding and a
    tighter 14px radius because these repeat down a list. Class names are all

@@ -85,6 +85,16 @@
     return GOLD;
   }
 
+  // "Est. 8 runs (7-10)" -- the deterministic estimate the build attaches to
+  // the market it describes (today: game_total). Supplementary context for the
+  // Signal Score, never a replacement for it, and never a market line. Empty
+  // string when no estimate was attached, so callers render nothing at all.
+  function estText(o) {
+    if (!o || o.point == null) return "";
+    var band = o.low != null && o.high != null ? " (" + o.low + "–" + o.high + ")" : "";
+    return "Est. " + o.point + (o.unit ? " " + o.unit : "") + band;
+  }
+
   // "2026-07-07" -> "7/7" for the recent-form bar labels.
   function fmtDate(iso) {
     var m = /^\d{4}-(\d{2})-(\d{2})/.exec(String(iso || ""));
@@ -184,6 +194,7 @@
             '<div class="ss-main">' +
             '<div class="ss-market">' + esc(s.market) + "</div>" +
             '<div class="ss-side">' + esc(s.side) + "</div>" +
+            (estText(s) ? '<div class="ss-est">' + esc(estText(s)) + "</div>" : "") +
             "</div>" +
             '<div class="ss-scorebox"><div class="ss-score">' + pct + "</div>" +
             '<div class="ss-scorelabel">Score</div></div>' +
@@ -210,7 +221,9 @@
         '<span class="ba-tag">Best Angle</span>' +
         '<div class="ba-row">' +
         "<div><div class=\"ba-market\">" + esc(ba.market || "") + "</div>" +
-        '<div class="ba-side">' + esc(ba.side || "") + "</div></div>" +
+        '<div class="ba-side">' + esc(ba.side || "") + "</div>" +
+        (estText(ba) ? '<div class="ba-est">' + esc(estText(ba)) + "</div>" : "") +
+        "</div>" +
         '<div class="ba-scorebox"><div class="ba-score">' + pct + "</div>" +
         '<div class="ba-scorelabel">Score</div></div>' +
         "</div>" +

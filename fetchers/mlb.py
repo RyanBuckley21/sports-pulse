@@ -879,6 +879,33 @@ def _label_markets(markets, labels):
              "side": m["side"], "score": m["score"]} for m in markets]
 
 
+def _attach_est_total(signal_scores, raw_markets, standout, est_total):
+    """Give the game_total market the actual estimated number behind its score.
+
+    The Game Total row otherwise shows only a 0-100 Signal Score and an
+    Over/Under lean with no magnitude -- the run estimate is computed from the
+    same inputs and already known, it just was not connected to the market it
+    describes.
+
+    Mutates in place. `raw_markets` is list_markets()' output, carried alongside
+    `signal_scores` purely because _label_markets drops `bet_type` (it emits
+    {market, side, score}); the two lists are 1:1 and same-ordered, so zip
+    recovers each row's bet_type without widening the emitted shape.
+    `standout` is the same dict object the entity exposes as `best_angle`, so
+    attaching here covers both. A None est_total (missing input, e.g. an
+    unannounced starter) attaches nothing at all -- no key, no placeholder --
+    leaving those rows exactly as they render today.
+    """
+    if not est_total:
+        return
+    fields = {k: est_total[k] for k in ("point", "low", "high", "unit") if k in est_total}
+    for raw, row in zip(raw_markets, signal_scores):
+        if raw.get("bet_type") == "game_total":
+            row.update(fields)
+    if standout and standout.get("bet_type") == "game_total":
+        standout.update(fields)
+
+
 def _build_compare(probables, compare_sets):
     """Resolve a config compare_set ("compare N metrics between two entities")
     against this game's probable starters. Sport-specific field extraction lives
@@ -1007,7 +1034,10 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     # generic comparison table. Labels/metrics come from insights_ui config.
     ui_cfg = ((config.get("insights_ui") or {}).get("mlb") or {})
     market_labels = ui_cfg.get("market_labels") or {}
-    signal_scores = _label_markets(betting_signals.list_markets(betting), market_labels)
+    # Kept alongside the labelled rows so _attach_est_total can recover each
+    # row's bet_type (labelling drops it); the two lists stay 1:1 and ordered.
+    raw_markets = betting_signals.list_markets(betting)
+    signal_scores = _label_markets(raw_markets, market_labels)
     if standout:
         standout = {**standout,
                     "market": market_labels.get(standout.get("bet_type"), standout.get("bet_type"))}
@@ -1023,6 +1053,9 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         away_ops, home_ops, away_era, home_era, away_pen, home_pen,
         unit=_est_cfg.get("unit", "runs"), note=_est_cfg.get("note", implied_total.NOTE),
         label=_est_cfg.get("label", "Estimate"))
+    # Connect the estimate to the market it actually describes (game_total only
+    # in this piece -- team_total and first_five_total are untouched).
+    _attach_est_total(signal_scores, raw_markets, standout, est_total)
 
     return {
         "gamePk": g.get("gamePk"),
