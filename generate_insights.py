@@ -63,6 +63,25 @@ CALL_TIMEOUT_S = 60
 # authenticates via the logged-in Claude *subscription* session, never against
 # paid API billing. Opt into API-key auth deliberately with SP_ALLOW_API_BILLING=1.
 API_KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
+# Second auth gap, same principle: stripping API keys only guarantees a
+# subscription session when the ONLY other option is a local login. In a
+# host-managed or remote environment the CLI authenticates through a credential
+# this script never sees (an injected token and/or a redirected endpoint), so
+# there is nothing to strip and the API-key check passes while calls still spend
+# against someone else's provisioning. Detect those environments and abort.
+#
+# Deliberately narrow. Running generation from inside a LOCAL Claude Code
+# session is a supported workflow (it's the documented same-day regen pattern),
+# and that sets CLAUDECODE / assorted CLAUDE_CODE_* vars -- so those must NOT
+# trigger. Only unambiguous "not your local subscription" markers belong here:
+# a redirected API endpoint, an explicitly remote environment, or cloud-provider
+# routing (which is paid billing by definition).
+MANAGED_AUTH_VARS = (
+    "ANTHROPIC_BASE_URL",     # calls redirected off the default endpoint
+    "CLAUDE_CODE_REMOTE",     # remote/hosted container, not this user's machine
+    "CLAUDE_CODE_USE_BEDROCK",
+    "CLAUDE_CODE_USE_VERTEX",
+)
 
 # Hard banned-word list (recommendation/action tone) enforced on ALL generated
 # text -- betting_note, matchup_note, AND the general story/summary/takeaways.
@@ -284,6 +303,22 @@ class _AuthError(RuntimeError):
     """Auth could not be established via the subscription session."""
 
 
+class _ManagedAuthError(_AuthError):
+    """The environment authenticates `claude` through a host-managed credential
+    (remote container, redirected endpoint, cloud provider) rather than this
+    user's local subscription session. Raised BEFORE any call is made."""
+
+
+def _managed_auth_reason(env):
+    """Return a human-readable reason if this environment would authenticate the
+    `claude` subprocess through something other than a local subscription
+    session, else None. Pure inspection -- makes no calls."""
+    present = [v for v in MANAGED_AUTH_VARS if env.get(v)]
+    if not present:
+        return None
+    return "host-managed auth environment detected ({} set)".format(", ".join(present))
+
+
 def _subprocess_env():
     """Env for the `claude` subprocess. By default removes any API-key vars so
     the CLI must use the logged-in Claude subscription session -- this guarantees
@@ -306,7 +341,17 @@ def _preflight(env):
     """One tiny call to confirm the session authenticates before the loop. Raises
     _AuthError (loud abort) rather than letting the run limp on -- and because the
     API key is already stripped, a failure here means only an API key was
-    available, which we refuse to use silently."""
+    available, which we refuse to use silently.
+
+    Gated first on the environment itself: a host-managed/remote context is
+    rejected without making any call at all, since there the CLI would
+    authenticate through a credential we never see and cannot strip."""
+    managed = _managed_auth_reason(env)
+    if managed and not os.environ.get("SP_ALLOW_MANAGED_AUTH"):
+        raise _ManagedAuthError(managed)
+    if managed:
+        print("insights: SP_ALLOW_MANAGED_AUTH=1 -> {}; proceeding anyway, so calls "
+              "spend against that environment's provisioning.".format(managed))
     proc = subprocess.run(
         ["claude", "-p", "--output-format", "json", "--model", MODEL],
         input="Reply with exactly: ok", capture_output=True, text=True,
@@ -562,9 +607,16 @@ def _print_auth_abort(e):
     print("\n" + "!" * 70)
     print("insights: AUTH PREFLIGHT FAILED -- making no AI calls this run.")
     print("  reason: {}".format(str(e)[:220]))
-    print("  This step runs ONLY on your Claude subscription session. If just an")
-    print("  API key is available, log in with `claude`, or deliberately opt into")
-    print("  API billing with SP_ALLOW_API_BILLING=1.")
+    if isinstance(e, _ManagedAuthError):
+        print("  This step runs ONLY on your local Claude subscription session.")
+        print("  Here `claude` would authenticate through a credential supplied by")
+        print("  the environment, so generation would spend against that instead.")
+        print("  -> run generation locally, or set SP_ALLOW_MANAGED_AUTH=1 to")
+        print("     deliberately spend this environment's provisioning.")
+    else:
+        print("  This step runs ONLY on your Claude subscription session. If just an")
+        print("  API key is available, log in with `claude`, or deliberately opt into")
+        print("  API billing with SP_ALLOW_API_BILLING=1.")
     print("  -> merging committed insights only (no generation this run).")
     print("!" * 70 + "\n")
 
