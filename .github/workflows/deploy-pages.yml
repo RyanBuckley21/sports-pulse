@@ -31,27 +31,32 @@ jobs:
       - run: python3 generate_stats.py
       - run: |
           mkdir -p site
-          cp web/index.html web/app.css web/app.js site/
+          # The navigation shell is one document: index.html plus the three
+          # stylesheet/script pairs it loads. The five standalone insights pages
+          # it replaced are gone, so there are no other HTML files to publish.
+          cp web/index.html web/app.css web/app.js web/shell.css web/shell.js site/
           cp output/data.json site/data.json
           cp -r assets site/assets
-          # Insights section pages (players view reads ../data.json, which
-          # already carries the merged insights from generate_stats.py above).
+          # insights.css and insights.js are loaded by the shell from here, and
+          # the teams + components views fetch mock-insights.json from here too.
           cp -r web/insights site/insights
-          # Cache-bust app.css/app.js on every deploy: without this, Safari
-          # (especially in "Add to Home Screen" standalone mode) can keep
-          # serving a stale cached copy of these files indefinitely even
-          # after a hard refresh or app relaunch, since nothing about their
-          # URL ever changes from one deploy to the next.
-          sed -i "s/app.css\"/app.css?v=${GITHUB_SHA}\"/" site/index.html
-          sed -i "s/app.js\"/app.js?v=${GITHUB_SHA}\"/" site/index.html
-          # Same cache-bust for the insights pages' CSS/JS references (../app.css,
-          # insights.css, insights.js) so hub/insights style + logic updates land
-          # without a hard refresh. Applied to every insights/*.html page.
-          for f in site/insights/*.html; do
-            sed -i "s/app.css\"/app.css?v=${GITHUB_SHA}\"/" "$f"
-            sed -i "s/insights.css\"/insights.css?v=${GITHUB_SHA}\"/" "$f"
-            sed -i "s/insights.js\"/insights.js?v=${GITHUB_SHA}\"/" "$f"
+          # Cache-bust every local stylesheet and script on each deploy: without
+          # this, Safari (especially in "Add to Home Screen" standalone mode) can
+          # keep serving a stale cached copy indefinitely even after a hard
+          # refresh or app relaunch, since nothing about the URL ever changes
+          # from one deploy to the next.
+          for ref in app.css shell.css insights.css app.js shell.js insights.js; do
+            sed -i "s|${ref}\"|${ref}?v=${GITHUB_SHA}\"|" site/index.html
           done
+          # Fail the build rather than publish an app that cannot be busted. The
+          # sed above matches on filename, so renaming a file would silently stop
+          # it matching and ship a permanently stale app to exactly the
+          # standalone users this whole block exists to protect. Any local .css
+          # or .js reference still lacking the query string is that bug.
+          if grep -nE '(href|src)="[^"]*\.(css|js)"' site/index.html; then
+            echo "::error::cache-bust missed the reference(s) listed above"
+            exit 1
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design tokens &mdash; Phase 1 proposal</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c0d10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* GENERATED FILE -- edit tools/tokens/tokens.py and re-run
+   `python3 -m tools.tokens.render_preview`. Hand edits here will be lost.
+
+   Deliberately SELF-CONTAINED: links neither app.css nor insights.css, so
+   reviewing it cannot be confounded by the live styles and editing it cannot
+   affect them. */
+:root {
+  /* surfaces */
+  --bg: #0c0d10;
+  --surface: #16181d;
+  --surface-2: #1c1f26;
+
+  /* borders */
+  --hairline: rgba(255, 255, 255, 0.06);
+  --border: #262932;
+  --border-chip: #2c303a;
+
+  /* text */
+  --text: #f4f5f7;
+  --text-secondary: #8b909c;
+  --text-tertiary: #676b75;
+
+  /* accents -- BOTH PERMANENT, DO NOT MERGE.
+     --accent is Pulse Score (the deterministic heat metric); --gold is
+     Signal Score / Best Angle. Both numbers appear on the same card, so
+     collapsing these two tokens would read as removing a duplicate and
+     would in fact make the two scores indistinguishable. */
+  --accent: #FF7A2E;
+  --gold: #f0a83a;
+  --heat: radial-gradient(circle at 35% 30%, #FFD9A0, #FF7A2E 55%, #E8480E);
+
+  /* status */
+  --good: #3FD07A;
+  --warning: #e7da5e;
+  --critical: #F87171;
+
+  /* type -- two faces only, every stack ending in a generic family.
+     No --font-mono: of the 18 monospace selectors in app.css only two were
+     numeric columns, and tabular figures cover those. Numeric columns use
+     `font-variant-numeric: tabular-nums` instead -- see NUMERIC_SELECTORS. */
+  --font-body: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-head: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+}
+:root {
+  --r-xs: 3px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-pill: 999px;
+}
+:root {
+  /* Documentation chrome only -- NOT a product token. This page displays hex
+     values and selector names, which read better monospaced; the design
+     system itself ships two faces and no mono. System stack, no webfont. */
+  --font-code: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-body); -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+h1 { font: 800 28px var(--font-head); letter-spacing: -0.02em; margin: 0 0 6px; }
+.sub { color: var(--text-secondary); font-size: 14px; line-height: 1.55; margin: 0 0 10px; }
+.stamp { display: inline-block; font: 500 11px var(--font-code); color: var(--text-tertiary);
+  border: 1px solid var(--border); border-radius: var(--r-pill, 999px); padding: 5px 11px; margin-bottom: 30px; }
+h2 { font: 700 17px var(--font-head); letter-spacing: -0.01em;
+  margin: 40px 0 4px; padding-top: 22px; border-top: 1px solid var(--hairline); }
+h2:first-of-type { border-top: 0; }
+.lede { color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin: 0 0 18px; }
+code { font-family: var(--font-code); }
+
+.trow { display: flex; gap: 14px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--hairline); }
+.trow:last-child { border-bottom: 0; }
+.tchip { width: 46px; height: 46px; flex: none; border-radius: 10px; border: 1px solid var(--border); }
+.tmeta { min-width: 0; }
+.tname { font: 600 13px var(--font-code); color: var(--text); }
+.tval { font: 400 12px var(--font-code); color: var(--text-secondary); margin-left: 8px; word-break: break-all; }
+.prov { display: inline-block; font: 700 9px var(--font-body); letter-spacing: 0.8px;
+  text-transform: uppercase; border-radius: 999px; padding: 3px 8px; margin-left: 8px; vertical-align: 2px; }
+.prov-app { color: var(--accent); border: 1px solid rgba(255,122,46,0.35); }
+.prov-ins { color: var(--gold); border: 1px solid rgba(240,168,58,0.35); }
+.prov-both { color: var(--good); border: 1px solid rgba(63,208,122,0.35); }
+.prov-changed { color: var(--warning); border: 1px solid rgba(231,218,94,0.45); }
+.tnote { font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); margin: 5px 0 0; }
+
+.callout { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; margin: 16px 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.callout strong { color: var(--text); }
+.callout.stop { border-color: rgba(248,113,113,0.45); }
+.callout.fixed { border-color: rgba(63,208,122,0.4); }
+
+.demo { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin: 16px 0; }
+.demo-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.demo-title { font: 700 15px var(--font-head); }
+.demo-sub { font: 500 11px var(--font-body); color: var(--text-tertiary); }
+.demo-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.demo-cell { background: var(--surface-2); border-radius: 14px; padding: 14px; text-align: center; }
+.demo-label { font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase; color: var(--text-tertiary); }
+.gauge { width: 54px; height: 54px; border-radius: 50%; background: var(--heat); margin: 10px auto 8px; }
+.pulse-num { font: 800 34px/1 var(--font-head); letter-spacing: -0.03em; color: var(--text); }
+.gold-num { font: 800 34px/1 var(--font-head); letter-spacing: -0.03em; color: var(--gold); margin: 18px 0 8px; }
+.ba-pill { display: inline-block; font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gold); border: 1px solid rgba(240,168,58,0.35); border-radius: 999px; padding: 5px 11px; }
+.staleness { display: flex; align-items: center; gap: 6px; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+.stale-text { font: 500 11px var(--font-code); color: var(--warning); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 700 10px var(--font-body); letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--text-tertiary); padding: 0 8px 9px 0; border-bottom: 1px solid var(--border); }
+td { padding: 9px 8px 9px 0; border-bottom: 1px solid var(--hairline); color: var(--text-secondary); }
+td code { font: 500 12px var(--font-code); color: var(--text); }
+td.num { font: 500 12px var(--font-code); color: var(--text-secondary); }
+td.dim { color: var(--text-tertiary); }
+.vs { color: var(--text-tertiary); font-size: 11px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.chg { font: 700 8px var(--font-body); letter-spacing: 0.6px; text-transform: uppercase; color: var(--warning);
+  border: 1px solid rgba(231,218,94,0.45); border-radius: 999px; padding: 2px 6px; margin-left: 6px; }
+.verdict { font: 700 9px var(--font-body); letter-spacing: 0.7px; text-transform: uppercase; border-radius: 999px; padding: 3px 8px; }
+.verdict.ok { color: var(--good); border: 1px solid rgba(63,208,122,0.35); }
+.verdict.warn { color: var(--warning); border: 1px solid rgba(231,218,94,0.45); }
+.verdict.bad { color: var(--critical); border: 1px solid rgba(248,113,113,0.4); }
+
+.chgrow { display: flex; gap: 18px; align-items: flex-start; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.chgswatches { display: flex; align-items: center; gap: 10px; flex: none; }
+.chgswatches > div { text-align: center; }
+.chgchip { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); }
+.chghex { display: block; font: 400 10px var(--font-code); color: var(--text-secondary); margin-top: 5px; }
+.chgtag { display: block; font: 700 8px var(--font-body); letter-spacing: 0.7px; text-transform: uppercase;
+  color: var(--text-tertiary); margin-top: 2px; }
+.chgtag.now { color: var(--good); }
+.arrow { color: var(--text-tertiary); font-size: 17px; }
+
+.teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 9px; margin-top: 14px; }
+.team { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+.team.clash { border-color: rgba(231,218,94,0.5); }
+.team.toodark { border-color: rgba(139,144,156,0.4); }
+.tbar { height: 4px; border-radius: 3px; margin-bottom: 9px; }
+.tabbr { font: 700 14px var(--font-body); }
+.thex { font: 400 10px var(--font-code); color: var(--text-secondary); margin-top: 2px; }
+.thsl { font: 400 10px var(--font-code); color: var(--text-tertiary); }
+.tflag { display: inline-block; margin-top: 6px; font: 700 8px var(--font-body); letter-spacing: 0.4px;
+  color: var(--warning); border: 1px solid rgba(231,218,94,0.4); border-radius: 999px; padding: 2px 6px; }
+.tflag.dim { color: var(--text-secondary); border-color: var(--border); }
+
+.tyrow { display: flex; align-items: baseline; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--hairline); }
+.tysize { font: 500 11px var(--font-code); color: var(--text-tertiary); width: 52px; flex: none; }
+.tysample { font-family: var(--font-body); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.tysample.disp { font-family: var(--font-head); font-weight: 800; letter-spacing: -0.03em; }
+.radii { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+.rad { text-align: center; }
+.radbox { width: 62px; height: 62px; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 7px; }
+.rad code { display: block; font: 500 11px var(--font-code); color: var(--text); }
+.rad span { font: 400 10px var(--font-code); color: var(--text-tertiary); }
+
+pre.tokens { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px; overflow-x: auto; font: 400 11.5px/1.6 var(--font-code); color: var(--text-secondary); }
+ol.decisions { padding-left: 20px; margin: 14px 0 0; }
+ol.decisions li { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); margin-bottom: 13px; }
+ol.decisions strong { color: var(--text); }
+ol.decisions li.done { color: var(--text-tertiary); }
+ol.decisions li.done strong { color: var(--text-secondary); }
+@media (max-width: 520px) { .demo-split { grid-template-columns: 1fr; } .chgrow { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Design tokens &mdash; Phase 1 proposal</h1>
+  <p class="sub">One consolidated token set for <code>app.css</code> + <code>insights.css</code>, on the confirmed Insights v6 base. Nothing here is wired into the live site yet &mdash; this page links neither stylesheet, so it can be reviewed without touching a component.</p>
+  <div class="stamp">generated by tools/tokens/render_preview.py &middot; no production CSS modified</div>
+
+  <h2>1. Surfaces</h2>
+  <p class="lede">Insights' three-level ramp over app.css's two, lifted off pure black so <code>--surface</code> reads as a distinct layer without OLED crush.</p>
+  
+      <div class="trow">
+        <div class="tchip" style="background:#0c0d10"></div>
+        <div class="tmeta">
+          <code class="tname">--bg</code>
+          <span class="tval">#0c0d10</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">app.css used #0A0A0B, near-black enough to clip on OLED.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#16181d"></div>
+        <div class="tmeta">
+          <code class="tname">--surface</code>
+          <span class="tval">#16181d</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">Cards, rows, the resting panel level.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#1c1f26"></div>
+        <div class="tmeta">
+          <code class="tname">--surface-2</code>
+          <span class="tval">#1c1f26</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">Lifted panels: expanded rows, pill cells, AI note. No app.css equivalent.</p>
+        </div>
+      </div>
+
+  <h2>2. Borders</h2>
+  
+      <div class="trow">
+        <div class="tchip" style="background:rgba(255, 255, 255, 0.06)"></div>
+        <div class="tmeta">
+          <code class="tname">--hairline</code>
+          <span class="tval">rgba(255, 255, 255, 0.06)</span>
+          <span class="prov prov-both">both, unchanged</span>
+          <p class="tnote">Already byte-identical in both files.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#262932"></div>
+        <div class="tmeta">
+          <code class="tname">--border</code>
+          <span class="tval">#262932</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">app.css used rgba(255,255,255,0.08); solid hex renders predictably on all three surfaces.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#2c303a"></div>
+        <div class="tmeta">
+          <code class="tname">--border-chip</code>
+          <span class="tval">#2c303a</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">app.css used rgba(255,255,255,0.09). Same reasoning.</p>
+        </div>
+      </div>
+
+  <h2>3. Text</h2>
+  
+      <div class="trow">
+        <div class="tchip" style="background:#f4f5f7"></div>
+        <div class="tmeta">
+          <code class="tname">--text</code>
+          <span class="tval">#f4f5f7</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">app.css used pure #ffffff, which glares on dark.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#8b909c"></div>
+        <div class="tmeta">
+          <code class="tname">--text-secondary</code>
+          <span class="tval">#8b909c</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">app.css used rgba white 0.5.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#676b75"></div>
+        <div class="tmeta">
+          <code class="tname">--text-tertiary</code>
+          <span class="tval">#676b75</span>
+          <span class="prov prov-changed">changed</span>
+          <p class="tnote">Lifted from insights.css's #565a64 to clear WCAG 3:1.</p>
+        </div>
+      </div>
+
+  <h2>4. Accents &mdash; both permanent</h2>
+  
+      <div class="trow">
+        <div class="tchip" style="background:#FF7A2E"></div>
+        <div class="tmeta">
+          <code class="tname">--accent</code>
+          <span class="tval">#FF7A2E</span>
+          <span class="prov prov-both">both, unchanged</span>
+          <p class="tnote">Pulse Score + heat gauge. Permanent; see the module comment.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:radial-gradient(circle at 35% 30%, #FFD9A0, #FF7A2E 55%, #E8480E)"></div>
+        <div class="tmeta">
+          <code class="tname">--heat</code>
+          <span class="tval">radial-gradient(circle at 35% 30%, #FFD9A0, #FF7A2E 55%, #E8480E)</span>
+          <span class="prov prov-app">app.css</span>
+          <p class="tnote">The Pulse gauge fill. Tied to --accent.</p>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tchip" style="background:#f0a83a"></div>
+        <div class="tmeta">
+          <code class="tname">--gold</code>
+          <span class="tval">#f0a83a</span>
+          <span class="prov prov-ins">insights.css</span>
+          <p class="tnote">Signal Score / Best Angle. Permanent; see the module comment.</p>
+        </div>
+      </div>
+  <div class="callout stop">
+    <strong>This comment ships in the token file verbatim.</strong> A future session will see an orange and a gold 17.8 &Delta;E apart and try to &ldquo;clean up the duplication.&rdquo; They encode <em>different scores</em> &mdash; <code>--accent</code> is Pulse (the deterministic heat metric), <code>--gold</code> is Signal Score / Best Angle. They appear on the same card, so collapsing them destroys the reader's ability to tell which number they are looking at. Not a redundancy. Do not merge.
+  </div>
+  <div class="demo">
+    <div class="demo-head">
+      <div><div class="demo-title">Yankees @ Red Sox</div><div class="demo-sub">7:10 PM ET</div></div>
+      <span class="ba-pill">Best Angle</span>
+    </div>
+    <div class="demo-split">
+      <div class="demo-cell"><div class="demo-label">Pulse</div><div class="gauge"></div><div class="pulse-num">82</div></div>
+      <div class="demo-cell"><div class="demo-label">Signal Score</div><div class="gold-num">74</div><div class="demo-sub">Team Total Over</div></div>
+    </div>
+  </div>
+
+  <h2>5. Changed from the inherited values</h2>
+  <p class="lede">Two tokens were deliberately altered during consolidation. Both are recorded in <code>tools/tokens/tokens.py</code> so the reason survives without archaeology.</p>
+  
+      <div class="chgrow">
+        <div class="chgswatches">
+          <div><div class="chgchip" style="background:#FBBF24"></div><span class="chghex">#FBBF24</span><span class="chgtag">was</span></div>
+          <div class="arrow">&rarr;</div>
+          <div><div class="chgchip" style="background:#e7da5e"></div><span class="chghex">#e7da5e</span><span class="chgtag now">now</span></div>
+        </div>
+        <div class="chgbody"><code class="tname">--warning</code><p class="tnote">Inherited from app.css. Measured only 8.4 CIEDE2000 from --gold (vs 17.8 for the --accent/--gold pair we already consider tight), so a staleness indicator and a Signal Score read as the same colour meaning two unrelated things. Harmless while staleness lived only in a per-page header, but Phase 2's persistent shell puts them on screen together. Shifted to CIELAB hue ~100 to clear a real margin from --gold and --accent at once, while holding separation from --good so it does not drift into 'healthy' territory.</p></div>
+      </div>
+      <div class="chgrow">
+        <div class="chgswatches">
+          <div><div class="chgchip" style="background:#565a64"></div><span class="chghex">#565a64</span><span class="chgtag">was</span></div>
+          <div class="arrow">&rarr;</div>
+          <div><div class="chgchip" style="background:#676b75"></div><span class="chghex">#676b75</span><span class="chgtag now">now</span></div>
+        </div>
+        <div class="chgbody"><code class="tname">--text-tertiary</code><p class="tnote">Inherited from insights.css, where it measured 2.39:1 against --surface-2 — under the WCAG 3.0 floor even for large text. Lightness raised in CIELAB (hue and chroma preserved) until it cleared 3.0:1 on the worst-case surface. Still 14.3 CIEDE2000 below --text-secondary, so the three-level text hierarchy is intact.</p></div>
+      </div>
+  <div class="callout fixed">
+    <strong><code>--warning</code> is fixed, not deferred.</strong> The old <code>#FBBF24</code> sat <strong>8.4 &Delta;E</strong> from <code>--gold</code> &mdash; less than half the <code>--accent</code>/<code>--gold</code> separation of 17.8 that the design already treats as its tightest acceptable pair. The replacement clears <strong>19.3</strong> from <code>--gold</code> and <strong>37.3</strong> from <code>--accent</code>, so it is a real margin from both rather than a fix aimed at gold alone. It also holds <strong>26.9</strong> from <code>--good</code>, which is the constraint that kept it from drifting into lime and reading as &ldquo;healthy&rdquo;.
+    <div class="staleness" style="margin-top:14px">
+      <span class="live-dot"></span><span class="stale-text">Updated 3h ago</span>
+      <span style="margin:0 10px;color:var(--text-tertiary)">beside</span>
+      <span class="gold-num" style="font-size:19px;margin:0">74</span>
+      <span class="demo-sub">Signal Score</span>
+    </div>
+  </div>
+
+  <h2>6. Contrast</h2>
+  <p class="lede">WCAG ratios against all three surface levels; the verdict uses the worst of the three. <code>--text-tertiary</code> moved from 2.39:1 to 3.09:1 worst-case, clearing the 3.0 floor it previously failed.</p>
+  <table>
+    <thead><tr><th>Token</th><th>on bg</th><th>surface</th><th>surface-2</th><th>Verdict</th></tr></thead>
+    <tbody>
+        <tr>
+          <td><span class="dot" style="background:#f4f5f7"></span><code>--text</code></td>
+          <td class="num">17.81</td><td class="num">16.28</td><td class="num">15.12</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#8b909c"></span><code>--text-secondary</code></td>
+          <td class="num">6.08</td><td class="num">5.55</td><td class="num">5.16</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#676b75"></span><code>--text-tertiary</code> <span class="chg">changed</span></td>
+          <td class="num">3.64</td><td class="num">3.33</td><td class="num">3.09</td>
+          <td><span class="verdict warn">AA large only</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#FF7A2E"></span><code>--accent</code></td>
+          <td class="num">7.47</td><td class="num">6.83</td><td class="num">6.34</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f0a83a"></span><code>--gold</code></td>
+          <td class="num">9.59</td><td class="num">8.77</td><td class="num">8.14</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#3FD07A"></span><code>--good</code></td>
+          <td class="num">9.73</td><td class="num">8.89</td><td class="num">8.26</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#e7da5e"></span><code>--warning</code> <span class="chg">changed</span></td>
+          <td class="num">13.50</td><td class="num">12.34</td><td class="num">11.46</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#F87171"></span><code>--critical</code></td>
+          <td class="num">7.02</td><td class="num">6.42</td><td class="num">5.96</td>
+          <td><span class="verdict ok">AA</span></td>
+        </tr></tbody>
+  </table>
+
+  <h2>7. Semantic separation</h2>
+  <p class="lede">Every pair of meaning-carrying tokens, in CIEDE2000. HSL hue degrees are shown for readability but decisions are made on &Delta;E &mdash; HSL compresses the orange-to-yellow region badly, which is exactly where this palette lives. Floor is 17.5, anchored to the <code>--accent</code>/<code>--gold</code> pair.</p>
+  <table>
+    <thead><tr><th>Pair</th><th>&Delta;E 2000</th><th>hue gap</th><th>Verdict</th></tr></thead>
+    <tbody>
+        <tr>
+          <td><span class="dot" style="background:#FF7A2E"></span><span class="dot" style="background:#f0a83a"></span>
+              <code>--accent</code> <span class="vs">vs</span> <code>--gold</code></td>
+          <td class="num">17.78</td>
+          <td class="num dim">14&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#FF7A2E"></span><span class="dot" style="background:#F87171"></span>
+              <code>--accent</code> <span class="vs">vs</span> <code>--critical</code></td>
+          <td class="num">18.75</td>
+          <td class="num dim">22&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f0a83a"></span><span class="dot" style="background:#e7da5e"></span>
+              <code>--gold</code> <span class="vs">vs</span> <code>--warning</code></td>
+          <td class="num">19.33</td>
+          <td class="num dim">18&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#3FD07A"></span><span class="dot" style="background:#e7da5e"></span>
+              <code>--good</code> <span class="vs">vs</span> <code>--warning</code></td>
+          <td class="num">26.88</td>
+          <td class="num dim">90&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f0a83a"></span><span class="dot" style="background:#F87171"></span>
+              <code>--gold</code> <span class="vs">vs</span> <code>--critical</code></td>
+          <td class="num">32.79</td>
+          <td class="num dim">36&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#FF7A2E"></span><span class="dot" style="background:#e7da5e"></span>
+              <code>--accent</code> <span class="vs">vs</span> <code>--warning</code></td>
+          <td class="num">37.28</td>
+          <td class="num dim">32&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f0a83a"></span><span class="dot" style="background:#3FD07A"></span>
+              <code>--gold</code> <span class="vs">vs</span> <code>--good</code></td>
+          <td class="num">41.91</td>
+          <td class="num dim">108&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#e7da5e"></span><span class="dot" style="background:#F87171"></span>
+              <code>--warning</code> <span class="vs">vs</span> <code>--critical</code></td>
+          <td class="num">49.08</td>
+          <td class="num dim">54&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#FF7A2E"></span><span class="dot" style="background:#3FD07A"></span>
+              <code>--accent</code> <span class="vs">vs</span> <code>--good</code></td>
+          <td class="num">59.92</td>
+          <td class="num dim">122&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#3FD07A"></span><span class="dot" style="background:#F87171"></span>
+              <code>--good</code> <span class="vs">vs</span> <code>--critical</code></td>
+          <td class="num">70.16</td>
+          <td class="num dim">144&deg;</td>
+          <td><span class="verdict ok">clear</span></td>
+        </tr></tbody>
+  </table>
+  <p class="lede" style="margin-top:14px">Reference: &Delta;E under 1 is invisible, 1&ndash;2 needs side-by-side inspection, over 10 is unambiguous.</p>
+
+  <h2>8. There is no rainbow category palette</h2>
+  <p class="lede">The scoping doc lists &ldquo;per-category rainbow accent bars (red/pink/gold/blue/purple)&rdquo; as something to tokenize. No such palette exists anywhere in <code>web/</code> or <code>config.yaml</code>.</p>
+  <p class="lede">Those leaderboard bars are <strong>team brand colour</strong>: <code>team_meta.py</code> holds an <code>(abbr, hex)</code> pair per club, <code>generate_stats.py:200</code> attaches it as <code>team_color</code>, and <code>app.js</code> writes it inline per row (<code>app.js:173/179/215/313</code>). It varies by who is ranked, not by category, so there is nothing to tokenize. All 30, sorted by hue:</p>
+  <div class="teams">
+        <div class="team clash">
+          <div class="tbar" style="background:#FA4616"></div>
+          <div class="tabbr" style="color:#FA4616">DET</div>
+          <div class="thex">#FA4616</div>
+          <div class="thsl">H13 L53%</div>
+          <span class="tflag">accent 11, critical 16</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#FD5A1E"></div>
+          <div class="tabbr" style="color:#FD5A1E">SF</div>
+          <div class="thex">#FD5A1E</div>
+          <div class="thsl">H16 L55%</div>
+          <span class="tflag">accent 7, critical 16</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#FF5910"></div>
+          <div class="tabbr" style="color:#FF5910">NYM</div>
+          <div class="thex">#FF5910</div>
+          <div class="thsl">H18 L53%</div>
+          <span class="tflag">accent 7, critical 17</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#DF4601"></div>
+          <div class="tabbr" style="color:#DF4601">BAL</div>
+          <div class="thex">#DF4601</div>
+          <div class="thsl">H19 L44%</div>
+          <span class="tflag">accent 13</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#EB6E1F"></div>
+          <div class="tabbr" style="color:#EB6E1F">HOU</div>
+          <div class="thex">#EB6E1F</div>
+          <div class="thsl">H23 L52%</div>
+          <span class="tflag">accent 5</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#FDB827"></div>
+          <div class="tabbr" style="color:#FDB827">PIT</div>
+          <div class="thex">#FDB827</div>
+          <div class="thsl">H41 L57%</div>
+          <span class="tflag">gold 6, warning 16</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#FFC52F"></div>
+          <div class="tabbr" style="color:#FFC52F">MIL</div>
+          <div class="thex">#FFC52F</div>
+          <div class="thsl">H43 L59%</div>
+          <span class="tflag">gold 9, warning 12</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#FFC425"></div>
+          <div class="tabbr" style="color:#FFC425">SD</div>
+          <div class="thex">#FFC425</div>
+          <div class="thsl">H44 L57%</div>
+          <span class="tflag">gold 10, warning 12</span>
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#003831"></div>
+          <div class="tabbr" style="color:#003831">ATH</div>
+          <div class="thex">#003831</div>
+          <div class="thsl">H172 L11%</div>
+          <span class="tflag dim">1.26:1</span>
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#005C5C"></div>
+          <div class="tabbr" style="color:#005C5C">SEA</div>
+          <div class="thex">#005C5C</div>
+          <div class="thsl">H180 L18%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#00A3E0"></div>
+          <div class="tabbr" style="color:#00A3E0">MIA</div>
+          <div class="thex">#00A3E0</div>
+          <div class="thsl">H196 L44%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#C4CED4"></div>
+          <div class="tabbr" style="color:#C4CED4">CWS</div>
+          <div class="thex">#C4CED4</div>
+          <div class="thsl">H202 L80%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#005A9C"></div>
+          <div class="tabbr" style="color:#005A9C">LAD</div>
+          <div class="thex">#005A9C</div>
+          <div class="thsl">H205 L31%</div>
+          
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#004687"></div>
+          <div class="tabbr" style="color:#004687">KC</div>
+          <div class="thex">#004687</div>
+          <div class="thsl">H209 L26%</div>
+          <span class="tflag dim">1.75:1</span>
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#8FBCE6"></div>
+          <div class="tabbr" style="color:#8FBCE6">TB</div>
+          <div class="thex">#8FBCE6</div>
+          <div class="thsl">H209 L73%</div>
+          
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#134A8E"></div>
+          <div class="tabbr" style="color:#134A8E">TOR</div>
+          <div class="thex">#134A8E</div>
+          <div class="thsl">H213 L32%</div>
+          <span class="tflag dim">1.88:1</span>
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#003087"></div>
+          <div class="tabbr" style="color:#003087">NYY</div>
+          <div class="thex">#003087</div>
+          <div class="thsl">H219 L26%</div>
+          <span class="tflag dim">1.39:1</span>
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#0E3386"></div>
+          <div class="tabbr" style="color:#0E3386">CHC</div>
+          <div class="thex">#0E3386</div>
+          <div class="thsl">H221 L29%</div>
+          <span class="tflag dim">1.44:1</span>
+        </div>
+        <div class="team toodark">
+          <div class="tbar" style="background:#333366"></div>
+          <div class="tabbr" style="color:#333366">COL</div>
+          <div class="thex">#333366</div>
+          <div class="thsl">H240 L30%</div>
+          <span class="tflag dim">1.42:1</span>
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#D31145"></div>
+          <div class="tabbr" style="color:#D31145">MIN</div>
+          <div class="thex">#D31145</div>
+          <div class="thsl">H344 L45%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#CE1141"></div>
+          <div class="tabbr" style="color:#CE1141">ATL</div>
+          <div class="thex">#CE1141</div>
+          <div class="thsl">H345 L44%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#BA0021"></div>
+          <div class="tabbr" style="color:#BA0021">LAA</div>
+          <div class="thex">#BA0021</div>
+          <div class="thsl">H349 L36%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#A71930"></div>
+          <div class="tabbr" style="color:#A71930">ARI</div>
+          <div class="thex">#A71930</div>
+          <div class="thsl">H350 L38%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#C41E3A"></div>
+          <div class="tabbr" style="color:#C41E3A">STL</div>
+          <div class="thex">#C41E3A</div>
+          <div class="thsl">H350 L44%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#C6011F"></div>
+          <div class="tabbr" style="color:#C6011F">CIN</div>
+          <div class="thex">#C6011F</div>
+          <div class="thsl">H351 L39%</div>
+          
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#E31937"></div>
+          <div class="tabbr" style="color:#E31937">CLE</div>
+          <div class="thex">#E31937</div>
+          <div class="thsl">H351 L49%</div>
+          <span class="tflag">critical 16</span>
+        </div>
+        <div class="team clash">
+          <div class="tbar" style="background:#E81828"></div>
+          <div class="tabbr" style="color:#E81828">PHI</div>
+          <div class="thex">#E81828</div>
+          <div class="thsl">H355 L50%</div>
+          <span class="tflag">critical 16</span>
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#C0111F"></div>
+          <div class="tabbr" style="color:#C0111F">TEX</div>
+          <div class="thex">#C0111F</div>
+          <div class="thsl">H355 L41%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#BD3039"></div>
+          <div class="tabbr" style="color:#BD3039">BOS</div>
+          <div class="thex">#BD3039</div>
+          <div class="thsl">H356 L46%</div>
+          
+        </div>
+        <div class="team">
+          <div class="tbar" style="background:#AB0003"></div>
+          <div class="tabbr" style="color:#AB0003">WSH</div>
+          <div class="thex">#AB0003</div>
+          <div class="thsl">H359 L34%</div>
+          
+        </div></div>
+  <div class="callout">
+    <strong>Left as a Phase 3 finding, per your call.</strong> These hexes bypass the token system entirely, and <strong>10 of 30</strong> land within &Delta;E 17.5 of a semantic token: HOU (accent 4.6), PIT (gold 5.7), NYM (accent 6.9), SF (accent 7.5), MIL (gold 9.5), SD (gold 9.6), DET (accent 11.4), BAL (accent 13.4), CLE (critical 15.5), PHI (critical 15.9). A further 6 fall under 2:1 against <code>--surface</code> and nearly vanish: ATH 1.26:1, NYY 1.39:1, COL 1.42:1, CHC 1.44:1, KC 1.75:1, TOR 1.88:1. The fix is a placement rule &mdash; team colour confined to identity slots (abbr chip, rank bar), semantic tokens never sharing a hue band with it &mdash; not a change to this file. <code>python3 -m tools.tokens.audit --teams</code> reproduces this list.
+  </div>
+
+  <h2>9. Type</h2>
+  <p class="lede">Every stack now terminates in a generic family. insights.css ended its Bricolage stacks at <code>'Space Grotesk'</code> with no generic, so a failed webfont request dropped headings to the browser's default <em>serif</em> &mdash; which is what happens when this page is opened offline.</p>
+  <p class="lede"><strong>Monospace is dropped.</strong> app.css used JetBrains Mono in 18 selectors. Auditing what each one actually contains: only <strong>two</strong> are numeric columns where vertical alignment is even possible &mdash; <code>.row-rank</code> and <code>.breakdown-row-value</code>. Two more hold digits (<code>.bar-label</code>, <code>.bar-sublabel</code>) but sit in a horizontal flex row, each centred in its own column, so nothing lines up vertically by construction. The other <strong>14 are text</strong>: uppercase section labels, category chips, team abbreviations, breadcrumbs, the literal string &ldquo;vs leader&rdquo;. Mono was supplying texture there, not alignment.</p>
+  <p class="lede">The alignment case is covered by tabular figures. Measured advances for Space Grotesk at 200px, per 1000em:</p>
+  <table>
+    <thead><tr><th>Treatment</th><th>digit advance range</th><th>spread</th><th>Aligns?</th></tr></thead>
+    <tbody>
+      <tr><td><code>Space Grotesk</code> default</td><td class="num">430 &ndash; 645</td><td class="num">215</td><td><span class="verdict bad">ragged</span></td></tr>
+      <tr><td><code>Space Grotesk</code> + <code>tabular-nums</code></td><td class="num">615 &ndash; 620</td><td class="num">5</td><td><span class="verdict ok">aligns</span></td></tr>
+      <tr><td><code>JetBrains Mono</code></td><td class="num">600 &ndash; 600</td><td class="num">0</td><td><span class="verdict ok">aligns</span></td></tr>
+    </tbody>
+  </table>
+  <p class="lede" style="margin-top:14px">The <code>1</code> is the culprit: 215/1000em narrower than <code>0</code> in the default figures. Since <code>app.js</code> zero-pads ranks (<code>padStart(2,&quot;0&quot;)</code>), ranks 01&ndash;09 lead with the widest digit and 10+ lead with the narrowest, which is the worst case for a stacked column. <code>tnum</code> closes the gap to 5/1000em &mdash; 0.07px at 13px.</p>
+  <div class="callout">
+    <strong>The decisive evidence against &ldquo;mono is load-bearing&rdquo;:</strong> <code>.row-value</code>, the leaderboard's most prominent numeric column at 20px, has been <em>Space Grotesk with proportional figures</em> this whole time (<code>app.css:97</code>) &mdash; as have <code>.key-value</code> and the 68px <code>.hero-value</code>. Every big number on the site already renders without mono. It was never doing consistent alignment work.
+    <br><br>
+    The cost is real and worth stating: those 14 label selectors lose a distinctly technical, wide-tracked character and get tighter. That is a visible design change, not a swap, and it was reviewed on a rendered before/after rather than decided on the numbers alone. It also removes a ~31KB webfont from the critical path and settles the two-face/three-face conflict in favour of insights.css's stated rule.
+  </div>
+  <div class="tyrow"><span class="tysize">9px</span><span class="tysample" style="font-size:9px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">11px</span><span class="tysample" style="font-size:11px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">12px</span><span class="tysample" style="font-size:12px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">13px</span><span class="tysample" style="font-size:13px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">14px</span><span class="tysample" style="font-size:14px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">16px</span><span class="tysample" style="font-size:16px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">18px</span><span class="tysample" style="font-size:18px">Signal Score 74</span></div><div class="tyrow"><span class="tysize">22px</span><span class="tysample" style="font-size:22px">Signal Score 74</span></div>
+  <p class="lede" style="margin-top:16px">Display scale &mdash; collapses today's 30/34/38px near-duplicates to 34:</p>
+  <div class="tyrow"><span class="tysize">28px</span><span class="tysample disp" style="font-size:28px">74</span></div><div class="tyrow"><span class="tysize">34px</span><span class="tysample disp" style="font-size:34px">74</span></div><div class="tyrow"><span class="tysize">68px</span><span class="tysample disp" style="font-size:68px">74</span></div>
+  <p class="lede" style="margin-top:18px">Selectors Phase 3 must give <code>font-variant-numeric: tabular-nums</code>. The last three are not mono today &mdash; they are numeric columns that have been running proportional figures all along, so this is an improvement on current behaviour rather than a like-for-like port:</p>
+  <table>
+    <thead><tr><th>Selector</th><th>Why</th></tr></thead>
+    <tbody><tr><td><code>.row-rank</code></td><td>was mono; zero-padded ranks stacked in a 22px box</td></tr><tr><td><code>.breakdown-row-value</code></td><td>was mono; values right-aligned in a stacked list</td></tr><tr><td><code>.row-value</code></td><td>already Space Grotesk; 20px stat column, right-aligned</td></tr><tr><td><code>.key-value</code></td><td>already Space Grotesk; three-up stat cells</td></tr><tr><td><code>.hero-value</code></td><td>already Space Grotesk; 68px hero number</td></tr></tbody>
+  </table>
+
+  <h2>10. Radii</h2>
+  <p class="lede">Current values: 3, 6, 7, 9, 10, 13, 14, 16, 18, 999. The pill is Insights-only &mdash; 8 uses there, zero in app.css &mdash; and is a large part of why the two sections read as different products.</p>
+  <div class="radii"><div class="rad"><div class="radbox" style="border-radius:3px"></div><code>--r-xs</code><span>3px</span></div><div class="rad"><div class="radbox" style="border-radius:7px"></div><code>--r-sm</code><span>7px</span></div><div class="rad"><div class="radbox" style="border-radius:10px"></div><code>--r-md</code><span>10px</span></div><div class="rad"><div class="radbox" style="border-radius:14px"></div><code>--r-lg</code><span>14px</span></div><div class="rad"><div class="radbox" style="border-radius:18px"></div><code>--r-xl</code><span>18px</span></div><div class="rad"><div class="radbox" style="border-radius:999px"></div><code>--r-pill</code><span>999px</span></div></div>
+
+  <h2>11. The token block</h2>
+  <p class="lede">What Phase 3 will land in the stylesheets, verbatim from <code>tools/tokens/tokens.py</code>.</p>
+  <pre class="tokens">:root {
+  /* surfaces */
+  --bg: #0c0d10;
+  --surface: #16181d;
+  --surface-2: #1c1f26;
+
+  /* borders */
+  --hairline: rgba(255, 255, 255, 0.06);
+  --border: #262932;
+  --border-chip: #2c303a;
+
+  /* text */
+  --text: #f4f5f7;
+  --text-secondary: #8b909c;
+  --text-tertiary: #676b75;
+
+  /* accents -- BOTH PERMANENT, DO NOT MERGE.
+     --accent is Pulse Score (the deterministic heat metric); --gold is
+     Signal Score / Best Angle. Both numbers appear on the same card, so
+     collapsing these two tokens would read as removing a duplicate and
+     would in fact make the two scores indistinguishable. */
+  --accent: #FF7A2E;
+  --gold: #f0a83a;
+  --heat: radial-gradient(circle at 35% 30%, #FFD9A0, #FF7A2E 55%, #E8480E);
+
+  /* status */
+  --good: #3FD07A;
+  --warning: #e7da5e;
+  --critical: #F87171;
+
+  /* type -- two faces only, every stack ending in a generic family.
+     No --font-mono: of the 18 monospace selectors in app.css only two were
+     numeric columns, and tabular figures cover those. Numeric columns use
+     `font-variant-numeric: tabular-nums` instead -- see NUMERIC_SELECTORS. */
+  --font-body: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-head: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+}</pre>
+
+  <h2>12. Status</h2>
+  <ol class="decisions">
+    <li class="done"><strong>Visual language &mdash; confirmed.</strong> Insights v6 extended onto the leaderboard.</li>
+    <li class="done"><strong><code>--warning</code> collision &mdash; fixed.</strong> 8.4 &rarr; 19.3 &Delta;E from <code>--gold</code>, and 37.3 from <code>--accent</code>.</li>
+    <li class="done"><strong><code>--text-tertiary</code> contrast &mdash; fixed.</strong> 2.39:1 &rarr; 3.09:1 worst-case.</li>
+    <li class="done"><strong>Font fallbacks &mdash; fixed.</strong> All three stacks terminate in a generic family.</li>
+    <li class="done"><strong>Mono &mdash; dropped.</strong> Section 9. Two numeric columns move to <code>tabular-nums</code>; 14 label selectors move to <code>--font-body</code>.</li>
+    <li class="done"><strong>Team-colour collisions &mdash; noted for Phase 3.</strong> No action this phase, per your call.</li>
+    <li class="done"><strong>Icon registry rename &mdash; deferred.</strong> Kept out of this diff.</li>
+  </ol>
+
+</div>
+</body>
+</html>

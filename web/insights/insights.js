@@ -549,20 +549,90 @@
     toggleGame(row);
   });
 
-  var view = document.body.getAttribute("data-insights-view");
-  // Players and games render from the live pipeline output (../data.json ->
-  // insights.players / insights.games); teams/components are still the deferred mock.
-  var src = (view === "players" || view === "games") ? "../data.json" : "mock-insights.json";
+  // ---------------- re-entry point ----------------
+  // Everything above binds once, at load. mount() only fetches and re-renders,
+  // so this section can be entered any number of times without re-running the
+  // module or re-binding the delegated click/keydown handlers above.
 
-  fetch(src, { cache: "no-store" })
-    .then(function (r) {
-      if (!r.ok) throw new Error("fetch " + src + " " + r.status);
-      return r.json();
-    })
-    .then(function (data) { renderView(view, data, root); })
-    .catch(function () {
-      root.innerHTML = '<p class="empty-state">Could not load insights.</p>';
-    });
+  // Sources are resolved against THIS SCRIPT's URL, not the document's.
+  //
+  // The old "../data.json" / "mock-insights.json" were document-relative and so
+  // only correct while the document itself sat in /insights/. Under the shell
+  // there is one document at the site root, which would break them. Rewriting
+  // them document-relative for the shell would instead break the standalone
+  // pages that still ship. Root-absolute ("/data.json") would break both: this
+  // deploys to a GitHub Pages *project* site, so everything is served under
+  // /<repo>/, not /.
+  //
+  // insights.js always lives at <base>/insights/insights.js in every layout, so
+  // anchoring to it resolves correctly from the shell, from the standalone
+  // pages, from a local server rooted at web/, and under the Pages sub-path --
+  // without the shell having to sit at the root.
+  var SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
+
+  // Players and games render from the live pipeline output (data.json ->
+  // insights.players / insights.games); teams/components are still the deferred mock.
+  function sourceFor(view) {
+    var rel = (view === "players" || view === "games") ? "../data.json" : "mock-insights.json";
+    return new URL(rel, SCRIPT_URL).href;
+  }
+
+  // Keyed by SOURCE URL, not by view -- games and players share one data.json
+  // read, teams and components share one mock read. So the four views cost two
+  // requests, and switching between two views backed by the same file costs
+  // none. Same 10-minute ceiling as app.js, for the same reason: it outlasts
+  // any tab switch but not a session resumed the next day. (The mock is a
+  // committed fixture that never changes at runtime, so its entry never
+  // meaningfully expires -- one rule is simpler than special-casing it.)
+  //
+  // Known cost: app.js keeps its own copy of data.json, so a session that
+  // visits both sections fetches it twice. Sharing one cache would mean
+  // reaching into loadData()'s internals, which this refactor deliberately
+  // leaves untouched. One extra request per session is the price.
+  var DATA_MAX_AGE_MS = 10 * 60 * 1000;
+  var cache = {};
+
+  function fetchSource(src) {
+    var hit = cache[src];
+    if (hit && Date.now() - hit.at < DATA_MAX_AGE_MS) return Promise.resolve(hit.data);
+    return fetch(src, { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("fetch " + src + " " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        cache[src] = { data: data, at: Date.now() };
+        return data;
+      });
+  }
+
+  function mount(view) {
+    // See the note on renderGames below: every visit starts fully collapsed.
+    // That holds only because mount() always re-renders -- caching the DOM and
+    // re-showing it would silently keep a row open across navigations.
+    window.scrollTo(0, 0);
+    return fetchSource(sourceFor(view))
+      .then(function (data) { renderView(view, data, root); })
+      .catch(function () {
+        root.innerHTML = '<p class="empty-state">Could not load insights.</p>';
+      });
+  }
+
+  // Nothing to tear down: the open row lives in the DOM as .gr-item.is-open and
+  // goes away with the next mount()'s re-render, and gamesById / UI are both
+  // reassigned on every render.
+  function unmount() {}
+
+  window.SP.views = window.SP.views || {};
+  window.SP.views.insights = { mount: mount, unmount: unmount };
+
+  // Without the shell (the five standalone pages that still ship today), there
+  // is no router to call mount(), so self-start from the body attribute. The
+  // shell marks its document with data-shell and drives mount()/unmount().
+  if (!document.body.hasAttribute("data-shell")) {
+    var legacyView = document.body.getAttribute("data-insights-view");
+    if (legacyView) mount(legacyView);
+  }
 
   function list(items, fn) {
     return items && items.length ? items.map(fn).join("") : '<p class="empty-state">Nothing to show right now.</p>';
