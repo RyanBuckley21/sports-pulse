@@ -26,6 +26,11 @@
      attribute (the standalone pages that still ship) they bootstrap as before. -->
 <body data-shell>
 
+<!-- Opaque strip over the safe area, so scrolled content is not visible behind
+     the status bar. See .status-scrim in shell.css for why padding cannot do
+     this job. Collapses to zero height wherever there is no inset. -->
+<div class="status-scrim" aria-hidden="true"></div>
+
 <main class="shell-main">
   <!-- Both containers are permanent: the router hides and empties them, never
        removes them. That is what lets app.js and insights.js bind their

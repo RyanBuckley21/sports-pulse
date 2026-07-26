@@ -19,6 +19,31 @@
   padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 }
 
+/* ---------- status-bar scrim ---------- */
+/* Masks the safe-area strip so scrolled content cannot be seen behind the
+   clock and battery.
+
+   This is a genuinely different problem from insetting the header, and padding
+   cannot solve it. apple-mobile-web-app-status-bar-style: black-translucent
+   makes the web view full-height, so EVERYTHING passes under the status bar
+   once it scrolls -- the games list's market chips were the reported case, but
+   they are ordinary flex items in normal flow, not anchored to anything.
+   padding-top only sets where content starts; it has no effect on where
+   content ends up after scrolling. An opaque strip is what actually stops it.
+
+   Height collapses to 0 where there is no inset (any non-notched device, and
+   every browser tab), so this costs nothing outside standalone mode.
+   pointer-events: none keeps the masked area tappable-through. z-index sits
+   above content but the tab bar is at the opposite edge, so they never meet. */
+.status-scrim {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  z-index: 30;
+  pointer-events: none;
+}
+
 /* ---------- tab bar ---------- */
 .tabbar {
   position: fixed;

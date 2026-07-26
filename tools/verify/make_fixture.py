@@ -28,6 +28,28 @@ ROSTER = [
 ]
 
 
+def _with_signals(game, i):
+    """Attach a best angle and ranked signal scores to a mock game.
+
+    Cards.gameRow renders up to three chips from best_angle + signal_scores,
+    deduped on market|side. Long market labels on purpose: they are what makes
+    the strip wrap to a second line, which is the case worth rendering.
+    """
+    away = (game.get("away") or {}).get("abbr") or "AWY"
+    home = (game.get("home") or {}).get("abbr") or "HME"
+    game = dict(game)
+    game["best_angle"] = {
+        "market": "First Five Moneyline", "side": away,
+        "bet_type": "f5_moneyline", "score": 78 - i * 4,
+    }
+    game["signal_scores"] = [
+        {"market": "Team Total Over", "side": home, "score": 71 - i * 3},
+        {"market": "Run Line", "side": away, "score": 64 - i * 2},
+        {"market": "Game Total Under", "side": None, "score": 58 - i},
+    ]
+    return game
+
+
 def build():
     with open(MOCK) as fh:
         mock = json.load(fh)
@@ -61,7 +83,11 @@ def build():
         # from the committed mock instead.
         "insights": {
             "players": mock["players"],
-            "games": mock["games"],
+            # The committed mock predates signal scores, so its games render no
+            # market chips at all -- which meant the suite could never see the
+            # chip strip that only appears with real pipeline data. Synthesised
+            # here so the games view under test matches what actually ships.
+            "games": [_with_signals(g, i) for i, g in enumerate(mock["games"])],
             "ui": {},
         },
     }

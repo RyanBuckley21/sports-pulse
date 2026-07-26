@@ -102,8 +102,14 @@ body {
   /* Sticky within the scrolling detail view. Solid page-background fill +
      negative margins let it bleed over .wrap's 24px top / 18px side
      padding, so content scrolling underneath is fully covered instead of
-     peeking through the container's gutters. */
-  position: sticky; top: 0; z-index: 10;
+     peeking through the container's gutters.
+
+     top is the safe-area inset, not 0. A sticky element pins relative to the
+     SCROLLPORT -- the viewport here -- so .shell-main's padding-top does not
+     move it: with top:0 this row parked under the Dynamic Island every time
+     the detail view was scrolled, which is a different failure from the
+     static header one and needed a different fix. */
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
   background: var(--bg);
   margin: -24px -18px 0; padding: 24px 18px 12px;
 }
