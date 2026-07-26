@@ -62,8 +62,11 @@
 
 /* ---------------- reusable insight cards ---------------- */
 .insight-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 18px; padding: 18px; margin-bottom: 14px;
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-lift);
+  border-radius: var(--r-xl); padding: 18px; margin-bottom: 14px;
 }
 .ic-head { display: flex; align-items: center; gap: 10px; }
 
@@ -99,7 +102,7 @@ body.insights-scope .breakdown-label {
 
 /* ---- Pulse Score ---- */
 .pulse { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
-.pulse-score { font: 800 38px/1 var(--font-head); letter-spacing: -0.03em; flex: none; }
+.pulse-score { font: 800 38px/1 var(--font-head); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; flex: none; }
 .pulse-max { font: 600 13px var(--font-body); color: var(--text-tertiary); letter-spacing: 0; margin-left: 2px; }
 .pulse-meta { flex: 1; min-width: 0; }
 .pulse-label {
@@ -123,7 +126,7 @@ body.insights-scope .breakdown-label {
 }
 .signal-row:last-child { border-bottom: none; }
 .signal-label { font: 400 13px var(--font-body); color: var(--text-secondary); }
-.signal-value { font: 600 13px var(--font-body); color: var(--text); display: flex; align-items: center; gap: 7px; }
+.signal-value { font: 600 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--text); display: flex; align-items: center; gap: 7px; }
 .signal-mark { font-size: 9px; line-height: 1; }
 .signal-pos { color: var(--good); }
 .signal-neg { color: var(--critical); }
@@ -193,22 +196,20 @@ body.insights-scope .breakdown-label {
    on the identity line and the chips get the whole width beneath it. Both the
    chips and the pulse are optional in the markup -- their tracks simply
    collapse when Cards.gameRow omits them. */
+/* THE SURFACE LIVES ON .gr-item, NOT HERE -- see the expand/collapse block
+   below for why. This row is now pure layout over its parent's glass. */
 .gr-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "head pulse" "chips chips";
   align-items: center; gap: 10px 12px;
-  padding: 14px 16px; border-radius: 14px;
-  background: var(--surface-2); border: 1px solid var(--border);
-  margin-bottom: 10px; cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  padding: 14px 16px; cursor: pointer;
 }
 /* Reads as tappable before the click handler exists. The lift is a --hairline
-   wash layered over the surface rather than a swap to another surface token:
-   --surface is DARKER than --surface-2, so swapping would read as a press, not
-   a hover. :active included so touch gets the same feedback. */
+   wash layered over the glass rather than a swap to another fill: the fills
+   differ by opacity, so swapping would read as the row opening, not as a
+   hover. :active included so touch gets the same feedback. */
 .gr-row:hover, .gr-row:active {
-  border-color: var(--border-chip);
   background-image: linear-gradient(var(--hairline), var(--hairline));
 }
 
@@ -230,7 +231,12 @@ body.insights-scope .breakdown-label {
   position: relative; overflow: hidden; flex: 0 1 auto; min-width: 0;
   display: inline-flex; align-items: baseline; gap: 6px;
   padding: 6px 10px 6px 13px; border-radius: 9px;
-  background: var(--surface); border: 1px solid var(--border);
+  /* A wash, not an opaque fill. --surface here was correct while .gr-row was
+     itself opaque; on glass it reads as a solid tile floating on a translucent
+     panel -- the one element in the row that is not made of the same material.
+     Reuses --glass-inset (the AI-note wash) rather than introducing a second
+     near-identical alpha: both are "an inset panel on top of glass". */
+  background: var(--glass-inset); border: 1px solid var(--glass-border-lift);
 }
 /* Same left-accent convention as .ss-row::before, at 3px for the smaller chip.
    NOTE: the custom property is --chip-color (what Cards.gameRow sets on each
@@ -245,8 +251,8 @@ body.insights-scope .breakdown-label {
 }
 .gr-chip-side { font: 500 11px var(--font-body); color: var(--text-secondary); white-space: nowrap; }
 .gr-chip-score {
-  font: 700 13px/1 var(--font-head); letter-spacing: -0.02em;
-  color: var(--text); white-space: nowrap;
+  font: 700 13px/1 var(--font-head); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; color: var(--text); white-space: nowrap;
 }
 
 /* Compact Pulse: the number alone. Namespaced away from .pulse-hot etc (whose
@@ -254,7 +260,8 @@ body.insights-scope .breakdown-label {
    the SAME semantic colors, so a band means the same thing in both views. */
 .gr-pulse {
   grid-area: pulse; justify-self: end;
-  font: 700 15px/1 var(--font-head); letter-spacing: -0.02em;
+  font: 700 15px/1 var(--font-head); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 .gr-pulse-hot { color: var(--accent); }
 .gr-pulse-warm { color: var(--warning); }
@@ -265,13 +272,39 @@ body.insights-scope .breakdown-label {
    beneath it, so you never lose your place in the list. Spacing moves from the
    row to the wrapper; otherwise the row's own margin would sit between it and
    its panel. */
-.gr-item { margin-bottom: 10px; }
-.gr-item .gr-row { margin-bottom: 0; }
-/* Open rows square off where the panel meets them, so the two read as one
-   object rather than a row with a card floating under it. */
-.gr-item.is-open .gr-row {
-  border-color: var(--border-chip);
-  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+/* THE GLASS SURFACE MOVED UP FROM .gr-row TO .gr-item, and that is the whole
+   trick for making an open row read as ONE object.
+
+   Previously the row owned a background and border, and the open state squared
+   off the row's bottom corners so the detail panel below could butt against
+   it. Two stacked surfaces pretending to be one. With a translucent material
+   that pretence stops working: two overlapping glass fills double up their
+   alpha along the seam and draw a visible band exactly where the join is
+   supposed to disappear.
+
+   So the item owns one continuous surface and the row is layout only. Open and
+   closed then differ by fill/blur/radius on a single element -- no seam to
+   hide, and no JS change: .is-open is the same class insights.js already
+   toggles. */
+.gr-item {
+  margin-bottom: 10px;
+  border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  backdrop-filter: blur(var(--glass-blur-soft));
+  -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--glass-border);
+  /* Clips the row's hover wash to the rounded corners. */
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+/* Open is the primary surface on the screen, so it takes the heavier rung of
+   every ladder: more fill, more blur, a brighter edge, a wider radius. */
+.gr-item.is-open {
+  border-radius: var(--r-xl);
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border-color: var(--glass-border-lift);
 }
 /* 0fr -> 1fr animates to the content's natural height: no JS measuring and no
    max-height guess that would clip a long card (these carry AI text of varying
@@ -285,13 +318,22 @@ body.insights-scope .breakdown-label {
 /* Inside the panel the game card is content, not a card: it drops its own
    surface/border so it doesn't nest a panel inside a panel. Its matchup header
    is suppressed because the row directly above it already says the same thing. */
+/* Inside the panel the game card is content, not a card: it drops its own
+   surface, border AND BLUR so it doesn't nest a glass panel inside a glass
+   panel -- stacking two backdrop-filters would darken the card against the
+   row that owns it, which is the opposite of reading as one object. */
 .gr-detail .insight-card {
   background: none; border: 0; border-radius: 0; margin: 0;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
   padding: 4px 2px 2px;
 }
 .gr-detail .gi-head { display: none; }
-/* The row is keyboard-reachable (role=button, tabindex=0 from the wiring). */
-.gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* The row is keyboard-reachable (role=button, tabindex=0 from the wiring).
+   outline-offset is NEGATIVE, drawing the ring just inside the row: .gr-item
+   now clips to its rounded corners, and a +2px offset would put the ring
+   outside that clip where it is invisible. Losing a focus ring is a real
+   accessibility regression, not a cosmetic one, so it is drawn inward. */
+.gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
   .gr-detail { transition: none; }
 }
@@ -336,7 +378,13 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 .est-note { flex-basis: 100%; font: 400 11px/1.45 var(--font-body); color: var(--text-tertiary); margin-top: 4px; }
 
 /* ---- AI Note: its own inset card, distinct from computed sections ---- */
-.ai-summary { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+/* An inset panel INSIDE an already-glass card, so it is a flat white wash and
+   carries no blur of its own: a second backdrop-filter nested in the first has
+   nothing new to blur (only its parent sits behind it) and would cost a second
+   compositing layer per card for no visible difference. Dropping the border
+   too -- the wash alone separates it, and a bordered panel inside a bordered
+   card reads as clutter at this size. */
+.ai-summary { background: var(--glass-inset); border: 0; border-radius: var(--r-md); padding: 14px 16px; }
 .ai-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .ai-badge {
   font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
@@ -375,4 +423,22 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 .gallery-tag {
   font: 700 10px var(--font-body); text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--gold); margin: 0 2px 8px;
+}
+
+/* ---- glass fallback ----
+   Blur is what sells the material, not the alpha. With backdrop-filter
+   unsupported a 0.45-0.6 fill does not read as translucent -- it reads as a
+   washed-out panel over whatever happens to be behind it, and on the games
+   list the collapsed rows lose their edges entirely. So these go honestly
+   opaque instead of pretending. Same surfaces, near-full opacity.
+
+   Grouped at the end rather than beside each rule: this is one decision about
+   one capability, and splitting it across the file would mean four @supports
+   blocks that have to be kept in agreement. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .insight-card { background: var(--glass-fallback); }
+  .gr-item { background: var(--glass-fallback); }
+  .gr-item.is-open { background: var(--glass-fallback); }
+  /* .ai-summary is a wash inside a now-opaque card, so it needs no fallback --
+     it never carried a blur in the first place. */
 }

@@ -458,7 +458,17 @@
     playerInsight: function (p) {
       if (!p) return "";
       var color = p.team_color || GOLD;
-      var sub = '<span class="pi-team">' + esc(p.team || "") + "</span>" + (p.pos ? " &middot; " + esc(p.pos) : "");
+      // POSITION FIRST, then the team chip: "RF · NYY". The two used to be the
+      // other way round. Position is the weaker identifier -- it narrows what
+      // kind of player this is, where the team says who they play for -- so it
+      // reads as a qualifier leading into the identity, not a label after it.
+      // It also puts the one team-coloured element in the sub-line at the END,
+      // where it lines up with nothing else competing for the eye.
+      //
+      // Ordering only. Same two fields, same markup, same classes; `pos` is
+      // rendered in exactly one place in this file and appears on no other
+      // entity type, so there is no sibling screen to fall out of step with.
+      var sub = (p.pos ? esc(p.pos) + " &middot; " : "") + '<span class="pi-team">' + esc(p.team || "") + "</span>";
       return (
         '<article class="insight-card" style="--pi-color:' + esc(color) + '">' +
         '<div class="ic-head pi-head"><div class="pi-name">' + esc(p.name) + '</div><div class="pi-sub">' + sub + "</div></div>" +
