@@ -10,6 +10,16 @@ built-in static server, and maps `/assets/...` back to the repo root so the
 served tree matches what the deploy workflow assembles (it copies `web/*` and
 `assets/*` side by side into the site root).
 
+To verify a built artefact rather than the source tree:
+
+```
+VERIFY_ROOT=/path/to/site node tools/verify/run.js
+```
+
+That runs everything against the real deployed layout with the cache-busted
+`?v=` URLs in place — the only way to catch breakage that exists solely after
+the workflow assembles things.
+
 Google Fonts requests are blocked, so the suite is offline-deterministic. That
 means it verifies behaviour and layout, not the webfonts themselves.
 

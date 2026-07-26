@@ -2,20 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Who's Hot</title>
+<link rel="icon" href="assets/icon-180.png">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
+<!-- The single standalone-mode declaration for the whole site. The bug this
+     replaces was five separate pages each having to declare it, where one
+     missing tag dropped you out of the home-screen app into Safari. With one
+     document there is one tag and nothing to keep in sync. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Who's Hot">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0A0A0B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="insights/insights.css">
+<link rel="stylesheet" href="shell.css">
 </head>
-<body>
-<div id="app"></div>
+<!-- data-shell tells app.js and insights.js that a router owns mounting, so
+     they register their views and wait instead of self-starting. Without the
+     attribute (the standalone pages that still ship) they bootstrap as before. -->
+<body data-shell>
+
+<main class="shell-main">
+  <!-- Both containers are permanent: the router hides and empties them, never
+       removes them. That is what lets app.js and insights.js bind their
+       delegated listeners once, at load, and never rebind. -->
+  <div id="app"></div>
+
+  <div id="insightsView" hidden>
+    <div class="wrap">
+      <h1 class="insights-h1" id="insightsTitle"></h1>
+      <p class="insights-note" id="insightsNote"></p>
+      <div id="insightsRoot"><p class="empty-state">Loading&hellip;</p></div>
+    </div>
+  </div>
+</main>
+
+<nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+
+<!-- Order matters: both view modules must have registered on window.SP.views
+     before shell.js starts routing. -->
 <script src="app.js"></script>
+<script src="insights/insights.js"></script>
+<script src="shell.js"></script>
 </body>
 </html>

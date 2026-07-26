@@ -34,7 +34,15 @@ const fs = require("fs");
 const path = require("path");
 
 const REPO = path.resolve(__dirname, "..", "..");
-const WEB = path.join(REPO, "web");
+// Defaults to the source tree. Point it at a built site/ directory to verify
+// the actual deploy artefact instead -- cache-busted URLs, assets in their
+// shipped position -- which is the only way to catch breakage that exists only
+// after the workflow assembles things:
+//     VERIFY_ROOT=/path/to/site node tools/verify/run.js
+const WEB = process.env.VERIFY_ROOT
+  ? path.resolve(process.env.VERIFY_ROOT)
+  : path.join(REPO, "web");
+const IS_SOURCE_TREE = WEB === path.join(REPO, "web");
 
 let chromium;
 for (const candidate of ["playwright", "/opt/node22/lib/node_modules/playwright"]) {
@@ -55,8 +63,9 @@ function serve(root) {
     // The deploy copies web/* and assets/* side by side into the site root, so
     // /assets/... resolves there but not under a bare web/ root. Mapping it back
     // to the repo root reproduces the deployed layout rather than tolerating
-    // 404s that would be real in production.
-    const base = rel.startsWith("/assets/") ? REPO : root;
+    // 404s that would be real in production. A built site/ already has assets
+    // in place, so it needs no mapping.
+    const base = (IS_SOURCE_TREE && rel.startsWith("/assets/")) ? REPO : root;
     const file = path.join(base, rel === "/" ? "/index.html" : rel);
     if (!file.startsWith(base)) { res.writeHead(403).end(); return; }
     fs.readFile(file, (err, buf) => {
@@ -173,7 +182,7 @@ async function reEntryChecks(browser, base) {
   const p = await newPage(browser);
   let json = [];
   p.on("request", (r) => { if (/\.json/.test(r.url())) json.push(r.url().replace(base, "")); });
-  await p.goto(base + "/shell.html", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(700);
 
   ok("leaderboard renders on load", (await p.$$eval(".player-row", (e) => e.length)) > 0);
@@ -216,7 +225,7 @@ async function reEntryChecks(browser, base) {
   await p.evaluate(() => { delete Date.now; });
 
   // Insights cache is keyed by source file, not by view.
-  await p.goto(base + "/shell.html", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(700);
   json = [];
   await p.evaluate(() => SP.views.insights.mount("games"));
@@ -264,7 +273,7 @@ async function routerChecks(browser, base) {
 
   // Cold launch with no hash.
   let p = await newPage(browser);
-  await p.goto(base + "/shell.html", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
   ok("no hash -> normalises to #/", (await p.evaluate(() => location.hash)) === "#/");
   ok("Who's Hot container visible", await p.evaluate(() => !document.getElementById("app").hidden));
@@ -276,7 +285,7 @@ async function routerChecks(browser, base) {
   // Cold launch on a *valid* inner route must still normalise -- the unknown-hash
   // fallback would happily honour it, so this needs its own check.
   p = await newPage(browser);
-  await p.goto(base + "/shell.html#/games", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html#/games", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
   ok("cold launch on a saved #/games -> #/", (await p.evaluate(() => location.hash)) === "#/",
      await p.evaluate(() => location.hash));
@@ -285,7 +294,7 @@ async function routerChecks(browser, base) {
 
   // The dev route is exempt: direct URL is its only access path.
   p = await newPage(browser);
-  await p.goto(base + "/shell.html#/components", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html#/components", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(700);
   ok("cold launch on #/components is honoured",
      (await p.evaluate(() => location.hash)) === "#/components");
@@ -297,7 +306,7 @@ async function routerChecks(browser, base) {
 
   // Unknown hash.
   p = await newPage(browser);
-  await p.goto(base + "/shell.html#/nope", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html#/nope", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
   ok("unknown hash -> #/", (await p.evaluate(() => location.hash)) === "#/");
   await p.close();
@@ -305,7 +314,7 @@ async function routerChecks(browser, base) {
   // Navigation, tab state, and the single-document guarantee.
   p = await newPage(browser);
   const problems = collectProblems(p, base);
-  await p.goto(base + "/shell.html", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
   // Pin a value to the window: it survives any same-document navigation and is
   // wiped by a real page load. (framenavigated is no good here -- Playwright
@@ -370,7 +379,7 @@ async function routerChecks(browser, base) {
 async function standaloneChecks(browser, base) {
   heading("standalone");
   const p = await newPage(browser);
-  await p.goto(base + "/shell.html", { waitUntil: "domcontentloaded" });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   const meta = await p.evaluate(() => ({
     capable: document.querySelectorAll('meta[name="apple-mobile-web-app-capable"]').length,
     capableValue: (document.querySelector('meta[name="apple-mobile-web-app-capable"]') || {}).content,
@@ -392,6 +401,33 @@ async function standaloneChecks(browser, base) {
     getComputedStyle(document.querySelector(".tabbar")).paddingBottom !== "");
   ok("tab bar reserves safe-area padding", padded);
   await p.close();
+
+  // Repo-wide, not just this document. The original bug was five pages each
+  // having to declare standalone capability, where one missing tag dropped the
+  // user out of the home-screen app into Safari. A single shell means a single
+  // declaration -- and the way that regresses is someone adding another HTML
+  // entry point, which only a filesystem check can see.
+  const shipped = htmlFilesUnder(path.join(REPO, "web")).filter((f) => !EXCLUDED_HTML.has(path.basename(f)));
+  const declaring = shipped.filter((f) =>
+    /apple-mobile-web-app-capable/.test(fs.readFileSync(f, "utf8")));
+  ok("exactly one shipped HTML entry point",
+     shipped.length === 1, shipped.map((f) => path.relative(REPO, f)).join(", ") || "none");
+  ok("exactly one apple-mobile-web-app-capable in the repo",
+     declaring.length === 1, declaring.map((f) => path.relative(REPO, f)).join(", ") || "none");
+}
+
+// Neither of these is a shipped entry point: tokens.html is a Phase 1 review
+// artefact absent from the workflow's copy list, and __leak.html is this
+// suite's own scratch page. Excluded by name so they cannot quietly satisfy or
+// break the count -- anything else appearing under web/ is a real new entry
+// point and should fail until it is deliberately accounted for.
+const EXCLUDED_HTML = new Set(["tokens.html", "__leak.html"]);
+function htmlFilesUnder(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) return htmlFilesUnder(full);
+    return e.name.endsWith(".html") ? [full] : [];
+  });
 }
 
 // ------------------------------------------------------------------- fixtures
@@ -410,7 +446,8 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
 
 (async () => {
   if (!fs.existsSync(path.join(WEB, "data.json"))) {
-    console.error("web/data.json missing -- run: python3 -m tools.verify.make_fixture");
+    console.error(path.join(WEB, "data.json") + " missing" +
+      (IS_SOURCE_TREE ? " -- run: python3 -m tools.verify.make_fixture" : ""));
     process.exit(2);
   }
   const leakPath = path.join(WEB, "__leak.html");
