@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Refuse commits made directly on the deploy branch.
+#
+# `main` is the deploy target: pushing to it triggers the Pages workflow, so it
+# should only ever advance by fast-forward from a reviewed working branch. The
+# failure this guards against is mundane -- merging leaves you checked out on
+# `main`, and the next piece of work lands its commit there by accident. It has
+# happened; this makes it mechanical rather than a thing to remember.
+#
+# Tracked in the repo and wired up via core.hooksPath (see README), so it
+# survives a fresh clone -- .git/hooks does not.
+#
+# Deliberate commits on main (resolving a merge conflict, an emergency fix) opt
+# in explicitly, matching the SP_ALLOW_* convention used elsewhere in this
+# project:
+#     SP_ALLOW_MAIN_COMMIT=1 git commit ...
+set -euo pipefail
+
+DEPLOY_BRANCH="main"
+branch="$(git branch --show-current)"
+
+# Detached HEAD (rebase, bisect) reports empty -- not a branch commit, allow it.
+[ -z "$branch" ] && exit 0
+[ "$branch" != "$DEPLOY_BRANCH" ] && exit 0
+[ -n "${SP_ALLOW_MAIN_COMMIT:-}" ] && exit 0
+
+cat >&2 <<EOF
+
+$(printf '!%.0s' {1..70})
+pre-commit: refusing to commit directly on '$DEPLOY_BRANCH'.
+
+  '$DEPLOY_BRANCH' is the deploy branch -- pushing to it publishes the site. It
+  should only advance by fast-forwarding from a working branch.
+
+  You are probably here because a merge left you on '$DEPLOY_BRANCH'. To move
+  this work onto a branch (nothing is lost -- the changes are still staged):
+
+      git checkout -b <branch>        # or: git checkout <existing-branch>
+      git commit ...
+
+  If committing on '$DEPLOY_BRANCH' is genuinely what you want:
+
+      SP_ALLOW_MAIN_COMMIT=1 git commit ...
+
+$(printf '!%.0s' {1..70})
+
+EOF
+exit 1
