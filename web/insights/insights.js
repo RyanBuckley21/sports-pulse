@@ -91,7 +91,11 @@
   // string when no estimate was attached, so callers render nothing at all.
   function estText(o) {
     if (!o || o.point == null) return "";
-    var band = o.low != null && o.high != null ? " (" + o.low + "–" + o.high + ")" : "";
+    // Drop a degenerate range: "(3–3)" says nothing "Est. 3" hasn't already
+    // said. Same guard Cards.estTotal applies to the Run Estimate card, so a
+    // collapsed band reads the same in both places.
+    var band = o.low != null && o.high != null && o.low !== o.high
+      ? " (" + o.low + "–" + o.high + ")" : "";
     return "Est. " + o.point + (o.unit ? " " + o.unit : "") + band;
   }
 

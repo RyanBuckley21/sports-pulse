@@ -290,5 +290,12 @@ insights_ui:
       label: "Run Estimate"
       unit: "runs"
       note: "Rough model estimate from team form & pitching — not a betting line. No park, weather, or lineup data."
+    # First five innings is its own, cruder model (starters only, no bullpen),
+    # so it gets its own wording: the note names the assumption that actually
+    # limits it rather than repeating the full-game caveats.
+    first_five_total:
+      label: "First Five Estimate"
+      unit: "runs"
+      note: "Rough model estimate from the probable starters — not a betting line. Assumes both starters work the first five; no bullpen, park, weather, or lineup data."
   # Reserved for future sports; empty = no config-driven affordances render.
   worldcup: {}

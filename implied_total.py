@@ -27,6 +27,17 @@ Point   = round(mu)                    (nearest whole run -- the headline number
 Range   = [round(mu - Z*sigma), round(mu + Z*sigma)]   (Z = 1 propagated sigma)
 No confidence score is ever attached -- the range is the honest statement of
 uncertainty on its own. No park, weather, lineup, or umpire input exists here.
+
+Two models live here, not one
+-----------------------------
+`estimate` / `team_estimate` use the full-game model above (starter + bullpen
+blend, starter-depth uncertainty). `first_five_estimate` is a SEPARATE and
+cruder model for the first-five market: starter only, no bullpen, no depth
+term, scaled to a 5-inning window. It assumes both starters go the distance of
+that window, so it cannot see an early hook, an opener, or a reliever inside
+the first five -- all things a real first-five total does include. The two
+models share inputs and constants but are not derived from each other, and
+their numbers are not expected to reconcile arithmetically.
 """
 import math
 
@@ -38,6 +49,7 @@ SIGMA_BP = 1.60      # 7-day bullpen ERA: small sample -> much noisier
 SIGMA_OPS = 0.030    # 14-day team OPS: rough 1-sigma sampling noise
 DELTA_IP = 1.0       # starter-depth uncertainty (+/- innings)
 Z = 1.0              # range = +/- 1 propagated sigma
+F5_INNINGS = 5.0 / 9.0   # first five innings as a share of a 9-inning ERA rate
 
 # Fixed qualifier that must travel with the range/tooltip so the number is never
 # read as a market line. Deliberately NOT required beside the headline value.
@@ -138,6 +150,54 @@ def team_estimate(team_ops, opp_sp, opp_bp, unit="runs", note=NOTE, label="Team 
         "point": _round_half_up(runs),
         "low": _round_half_up(runs - Z * sigma),
         "high": _round_half_up(runs + Z * sigma),
+        "unit": unit,
+        "note": note,
+    }
+
+
+def _first_five_team_runs(team_ops, opp_sp):
+    """One team's expected runs through five innings, and the propagated
+    1-sigma. Starter only, scaled from the per-9 ERA rate to a 5-inning window.
+
+    Deliberately NOT the full-game model with a smaller multiplier. There is no
+    bullpen blend, because relievers rarely appear in the first five (the same
+    reason first_five_total's config carries no bullpen weight), and no
+    starter-depth term, because DELTA_IP models uncertainty in WHERE the
+    starter hands off to the pen -- a handoff this window assumes does not
+    happen. That leaves two noise sources: the starter's ERA and the team's
+    OPS."""
+    k = team_ops / LEAGUE_OPS
+    runs = opp_sp * F5_INNINGS * k
+    s_sp = k * F5_INNINGS * SIGMA_SP
+    s_ops = opp_sp * F5_INNINGS * (SIGMA_OPS / LEAGUE_OPS)
+    return runs, math.sqrt(s_sp**2 + s_ops**2)
+
+
+def first_five_estimate(away_ops, home_ops, away_sp, home_sp,
+                        unit="runs", note=NOTE, label="First Five Estimate"):
+    """Combined first-five run estimate, same entity-ready shape as estimate().
+    None when any of the four inputs is missing.
+
+    A CRUDER heuristic than the full-game model, and worth reading as such: it
+    assumes both starters actually work the full five innings. It cannot see a
+    starter pulled in the third, an opener, or a bullpen inning inside the
+    window -- all of which real first-five totals do include. When a starter
+    exits early the true number drifts toward the (unmodelled) bullpen, and
+    this estimate will read low or high accordingly. The band comes only from
+    ERA and OPS sampling noise, so it does NOT widen to cover that risk."""
+    ao, ho = _f(away_ops), _f(home_ops)
+    asp, hsp = _f(away_sp), _f(home_sp)
+    if None in (ao, ho, asp, hsp):
+        return None
+    ar, asig = _first_five_team_runs(ao, hsp)   # away scores vs HOME starter
+    hr, hsig = _first_five_team_runs(ho, asp)   # home scores vs AWAY starter
+    mu = ar + hr
+    sigma = math.sqrt(asig**2 + hsig**2)
+    return {
+        "label": label,
+        "point": _round_half_up(mu),
+        "low": _round_half_up(mu - Z * sigma),
+        "high": _round_half_up(mu + Z * sigma),
         "unit": unit,
         "note": note,
     }

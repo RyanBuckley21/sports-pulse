@@ -888,14 +888,15 @@ def _est_fields(est):
     return {k: est[k] for k in ("point", "low", "high", "unit") if k in est}
 
 
-def _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests):
+def _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests, f5_total=None):
     """Give the total markets the actual estimated numbers behind their scores.
 
     A total row otherwise shows only a 0-100 Signal Score and an Over/Under
     lean with no magnitude, while the estimates are computed from the same
-    inputs a few lines away. game_total takes the combined number; each
-    team_total side takes that team's own. first_five_total is not covered --
-    it would need a different (partial-game) estimate, not this one.
+    inputs a few lines away. game_total takes the combined number, each
+    team_total side takes that team's own, and first_five_total takes the
+    separate starters-only estimate (a different model, not a scaled-down
+    game_total -- see implied_total).
 
     Mutates in place. `raw_markets` is list_markets()' output, carried alongside
     `signal_scores` purely because _label_markets drops `bet_type` (it emits
@@ -912,11 +913,14 @@ def _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests
     does today.
     """
     game_fields = _est_fields(est_total)
+    f5_fields = _est_fields(f5_total)
     team_fields = {abbr: _est_fields(e) for abbr, e in (team_ests or {}).items()}
 
     def fields_for(bet_type, side):
         if bet_type == "game_total":
             return game_fields
+        if bet_type == "first_five_total":
+            return f5_fields
         if bet_type == "team_total":
             return team_fields.get(str(side or "").split(" ")[0])
         return None
@@ -1094,8 +1098,17 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
             home_ops, away_era, away_pen, unit=_est_cfg.get("unit", "runs"),
             note=_est_cfg.get("note", implied_total.NOTE), label=_team_est_label),
     }
+    # First five innings: its own starters-only model with its own wording, not
+    # a scaled-down game total. Needs only the two starter ERAs, so it can
+    # survive a missing bullpen number that would sink est_total -- and dies on
+    # an unannounced starter that est_total might survive.
+    _f5_cfg = ((config.get("insights_ui") or {}).get("mlb") or {}).get("first_five_total") or {}
+    f5_total = implied_total.first_five_estimate(
+        away_ops, home_ops, away_era, home_era,
+        unit=_f5_cfg.get("unit", "runs"), note=_f5_cfg.get("note", implied_total.NOTE),
+        label=_f5_cfg.get("label", "First Five Estimate"))
     # Connect each estimate to the market it actually describes.
-    _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests)
+    _attach_estimates(signal_scores, raw_markets, standout, est_total, team_ests, f5_total)
 
     return {
         "gamePk": g.get("gamePk"),
