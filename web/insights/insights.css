@@ -1,10 +1,22 @@
-/* Insights section styles. This file loads ONLY on the insights pages (never on
-   the main Who's Hot app), so the :root token overrides below re-theme the
-   insights UI without touching the rest of the site. Typography is two faces
-   only: Bricolage Grotesque for headlines + hero numbers, Space Grotesk for
-   everything else. No monospace, no serif. */
+/* Insights section styles. Typography is two faces only: Bricolage Grotesque
+   for headlines + hero numbers, Space Grotesk for everything else. No
+   monospace, no serif.
 
-:root {
+   SCOPING: this file used to load only on the insights pages, so a bare :root
+   override was safe. The Phase 2 navigation shell puts every section in ONE
+   document, where app.css and this file are both permanently live -- so an
+   unscoped override would re-theme the Who's Hot leaderboard too. Everything
+   below that could reach outside the section is therefore scoped to
+   `body.insights-scope`, a class the router toggles per route.
+
+   The class goes on <body>, not on an inner container, because app.css styles
+   `body { background: var(--bg) }`. Scoping to a descendant would leave the
+   page background on the app's darker value while the container rendered the
+   insights value -- a visible seam in the overscroll area and below short
+   content. On <body> the background re-evaluates against the scoped token,
+   and since nothing styles <html>, it propagates to the canvas as well. */
+
+body.insights-scope {
   --bg: #0c0d10;
   --surface: #16181d;
   --surface-2: #1c1f26;                 /* lifted panels: rows, pill cells, AI note */
@@ -20,10 +32,12 @@
   --hairline: rgba(255, 255, 255, 0.06);
 }
 
-/* Two-face system. `--font-head` = hero/headline; body inherits Space Grotesk. */
-body { font-family: 'Space Grotesk', system-ui, sans-serif; }
-
-[hidden] { display: none !important; }
+/* `body { font-family }` and `[hidden] { display: none !important }` used to be
+   declared here too. Both were exact duplicates of app.css (lines 20 and 30),
+   which is loaded first on every page, so they have been deleted rather than
+   scoped. [hidden] in particular MUST stay global and unscoped in app.css: the
+   est-note disclaimer toggle (insights.js:333 renders it, :538 flips it) lives
+   inside the insights subtree and depends on that rule applying there. */
 
 .insights-intro {
   font: 400 14px/1.5 'Space Grotesk';
@@ -98,7 +112,10 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 
 .insight-headline { font: 500 14px/1.4 'Space Grotesk'; color: var(--text); margin: 12px 0 0; }
 .insight-section { margin-top: 18px; }
-.breakdown-label {
+/* Scoped: app.css:153 also defines .breakdown-label, for the Who's Hot player
+   detail. Without the scope this restyle would win there too (this file loads
+   second), silently swapping that view's type. */
+body.insights-scope .breakdown-label {
   font: 600 10px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--text-tertiary); margin-bottom: 10px;
 }
@@ -326,9 +343,12 @@ body { font-family: 'Space Grotesk', system-ui, sans-serif; }
 
 /* ---- Vs Next Starter (career line vs today's probable; mirrors main app,
    restyled to the insights type system) ---- */
-.vs-starter-section { margin-top: 18px; }
-.vs-starter-line { font: 600 15px 'Space Grotesk'; color: var(--text); letter-spacing: -0.01em; padding: 4px 0 2px; }
-.vs-starter-caveat { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; letter-spacing: 0.4px; }
+/* Scoped for the same reason as .breakdown-label above: app.css:150-152 defines
+   all three for the Who's Hot player detail, which renders them via
+   renderVsNextStarter (app.js:354-356). */
+body.insights-scope .vs-starter-section { margin-top: 18px; }
+body.insights-scope .vs-starter-line { font: 600 15px 'Space Grotesk'; color: var(--text); letter-spacing: -0.01em; padding: 4px 0 2px; }
+body.insights-scope .vs-starter-caveat { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; letter-spacing: 0.4px; }
 
 /* ---- Run Estimate (deterministic implied total; NOT a market line) ---- */
 .est-total { margin-top: 4px; }
