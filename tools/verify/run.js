@@ -375,6 +375,60 @@ async function routerChecks(browser, base) {
   await p.close();
 }
 
+
+// ---------------------------------------------------------------- safe area
+// viewport-fit=cover only makes env(safe-area-inset-*) resolve to non-zero
+// values; it insets nothing by itself. This group emulates a notched device via
+// CDP so env() resolves for real, then asserts both ends actually apply it --
+// the top was missing at first and put the header under the Dynamic Island,
+// with nothing to signal it on any non-notched device or in a browser tab.
+const INSET_TOP = 59;      // iPhone 15 Pro Dynamic Island
+const INSET_BOTTOM = 34;   // home indicator
+
+async function safeAreaChecks(browser, base) {
+  heading("safe-area");
+  // iPhone 15 Pro logical viewport.
+  const p = await newPage(browser, { viewport: { width: 393, height: 852 } });
+  const cdp = await p.context().newCDPSession(p);
+  await cdp.send("Emulation.setSafeAreaInsetsOverride", {
+    insets: { top: INSET_TOP, left: 0, bottom: INSET_BOTTOM, right: 0 },
+  });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(700);
+
+  const pad = await p.evaluate(() => ({
+    mainTop: getComputedStyle(document.querySelector(".shell-main")).paddingTop,
+    mainBottom: getComputedStyle(document.querySelector(".shell-main")).paddingBottom,
+    tabbarBottom: getComputedStyle(document.querySelector(".tabbar")).paddingBottom,
+  }));
+  ok("shell-main applies the top inset", pad.mainTop === INSET_TOP + "px", pad.mainTop);
+  ok("shell-main clears tab bar + bottom inset",
+     pad.mainBottom === (60 + INSET_BOTTOM) + "px", pad.mainBottom);
+  ok("tab bar applies the bottom inset",
+     pad.tabbarBottom === INSET_BOTTOM + "px", pad.tabbarBottom);
+
+  // Geometry, not just declarations: nothing may render inside either strip.
+  for (const hash of ROUTES) {
+    await goRoute(p, hash);
+    const g = await p.evaluate(() => {
+      const visible = document.querySelector("#app:not([hidden]), #insightsView:not([hidden])");
+      const first = visible && visible.querySelector(".wrap > *");
+      const tab = document.querySelector(".tab");
+      return {
+        firstTop: first ? Math.round(first.getBoundingClientRect().top) : null,
+        tabBottom: Math.round(tab.getBoundingClientRect().bottom),
+        viewportH: window.innerHeight,
+      };
+    });
+    ok("top content clears the island on " + hash,
+       g.firstTop !== null && g.firstTop >= INSET_TOP, "y=" + g.firstTop + " vs inset " + INSET_TOP);
+    ok("  tab labels clear the home indicator",
+       g.tabBottom <= g.viewportH - INSET_BOTTOM,
+       "bottom=" + g.tabBottom + " vs limit " + (g.viewportH - INSET_BOTTOM));
+  }
+  await p.close();
+}
+
 // ---------------------------------------------------------------- standalone
 async function standaloneChecks(browser, base) {
   heading("standalone");
@@ -459,6 +513,7 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
     await scopeLeakCheck(browser, base);
     await reEntryChecks(browser, base);
     await routerChecks(browser, base);
+    await safeAreaChecks(browser, base);
     await standaloneChecks(browser, base);
   } finally {
     await browser.close();

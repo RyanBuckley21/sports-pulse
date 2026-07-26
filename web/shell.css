@@ -2,9 +2,20 @@
    Loaded only by the shell document, after app.css and insights.css. */
 
 .shell-main {
+  /* Keep content out of the notch / Dynamic Island. viewport-fit=cover (set in
+     index.html) only makes env(safe-area-inset-*) resolve to non-zero values --
+     it does not inset anything by itself, so without this the first row of
+     content sits at .wrap's 24px and renders under the island in standalone
+     mode, where there is no browser chrome to push it down.
+
+     Deliberately additive rather than a replacement: .wrap keeps its own 24px
+     top padding, so the header lands 24px BELOW the safe area rather than
+     flush against it. */
+  padding-top: env(safe-area-inset-top, 0px);
+
   /* Clear the fixed tab bar so the last row of content is never trapped
      underneath it. env() adds the iOS home-indicator strip in standalone mode,
-     where there is no browser chrome to absorb it. */
+     for the same reason as above. */
   padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 }
 
