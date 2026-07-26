@@ -57,16 +57,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--surface);
   border-top: 1px solid var(--border);
-
-  /* Chrome is pinned to the main app's palette rather than inheriting.
-     body.insights-scope re-themes its descendants, and the tab bar is a
-     descendant -- without this it would change colour every time you switched
-     to an insights tab, which reads as a rendering bug on persistent chrome.
-     Phase 3 collapses both palettes into one token set and deletes this block. */
-  --surface: #0E0E10;
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #ffffff;
-  --text-tertiary: rgba(255, 255, 255, 0.35);
 }
 
 .tab {
