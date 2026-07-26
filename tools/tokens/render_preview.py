@@ -187,6 +187,46 @@ def build():
     numeric_rows = "".join(
         '<tr><td><code>%s</code></td><td>%s</td></tr>' % (sel, why)
         for sel, why in T.NUMERIC_SELECTORS)
+    # Live panels rather than flat swatches: a glass fill is meaningless as a
+    # colour chip, because what it looks like depends entirely on what is
+    # behind it. Each panel sits over the same busy strip so the four levels
+    # can be compared as material, which is the only way to review them.
+    glass_levels = (
+        ("--glass-fill-soft", T.GLASS_FILL_SOFT, T.GLASS_BLUR_SOFT,
+         T.GLASS_BORDER, "collapsed game rows"),
+        ("--glass-fill", T.GLASS_FILL, T.GLASS_BLUR,
+         T.GLASS_BORDER, "the leaderboard panel"),
+        ("--glass-fill-strong", T.GLASS_FILL_STRONG, T.GLASS_BLUR_STRONG,
+         T.GLASS_BORDER_LIFT, "player cards, expanded game rows"),
+        ("--glass-chrome", T.GLASS_CHROME, T.GLASS_BLUR_CHROME,
+         T.GLASS_BORDER_CHROME, "the floating tab bar"),
+    )
+    glass_panels = "".join(
+        '<div class="gpanel" style="background:%s;backdrop-filter:blur(%s);'
+        '-webkit-backdrop-filter:blur(%s);border:1px solid %s">'
+        '<code>%s</code><span>blur %s</span><span class="gwhere">%s</span></div>'
+        % (fill, blur, blur, border, name, blur, where)
+        for name, fill, blur, border, where in glass_levels)
+    glass_rows = "".join(
+        '<tr><td><code>%s</code></td><td class="num">%s</td><td>%s</td></tr>' % (n, v, w)
+        for n, v, w in (
+            ("--glass-fill-soft", T.GLASS_FILL_SOFT, "collapsed game rows"),
+            ("--glass-fill", T.GLASS_FILL, "the leaderboard panel"),
+            ("--glass-fill-strong", T.GLASS_FILL_STRONG, "player cards, expanded game rows"),
+            ("--glass-chrome", T.GLASS_CHROME, "the floating tab bar"),
+            ("--glass-border", T.GLASS_BORDER, "list-level panels"),
+            ("--glass-border-lift", T.GLASS_BORDER_LIFT, "the primary/expanded surface"),
+            ("--glass-border-chrome", T.GLASS_BORDER_CHROME, "the tab bar, plus its inset top highlight"),
+            ("--glass-blur-soft", T.GLASS_BLUR_SOFT, "collapsed rows"),
+            ("--glass-blur", T.GLASS_BLUR, "the leaderboard panel"),
+            ("--glass-blur-strong", T.GLASS_BLUR_STRONG, "cards"),
+            ("--glass-blur-chrome", T.GLASS_BLUR_CHROME, "the tab bar &mdash; the most blurred thing on screen"),
+            ("--glass-active", T.GLASS_ACTIVE, "the active tab pill (selection, not status)"),
+            ("--glass-active-soft", T.GLASS_ACTIVE_SOFT, "the active sport pill"),
+            ("--glass-inset", T.GLASS_INSET, "the AI-note panel inside a card"),
+            ("--glass-fallback", T.GLASS_FALLBACK, "@supports fallback for the card fills"),
+            ("--glass-fallback-chrome", T.GLASS_FALLBACK_CHROME, "@supports fallback for the tab bar"),
+        ))
     radii_rows = "".join(
         '<div class="rad"><div class="radbox" style="border-radius:%dpx"></div>'
         '<code>%s</code><span>%dpx</span></div>' % (v, n, v)
@@ -316,6 +356,25 @@ td.dim {{ color: var(--text-tertiary); }}
 .radii {{ display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }}
 .rad {{ text-align: center; }}
 .radbox {{ width: 62px; height: 62px; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 7px; }}
+/* Glass has to be shown OVER something or the swatch is a lie: the whole
+   point of the material is what the blur does to the content behind it. The
+   strip below is deliberately busy and high-contrast for that reason. */
+.glassdemo {{
+  position: relative; display: flex; flex-wrap: wrap; gap: 14px;
+  padding: 22px; margin-top: 14px; border-radius: 18px; overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 30%, #FF7A2E 0 60px, transparent 61px),
+    radial-gradient(circle at 42% 75%, #3FD07A 0 44px, transparent 45px),
+    radial-gradient(circle at 72% 22%, #f0a83a 0 52px, transparent 53px),
+    repeating-linear-gradient(115deg, #1c1f26 0 16px, #0c0d10 16px 32px);
+}}
+.gpanel {{
+  flex: 1 1 190px; display: flex; flex-direction: column; gap: 5px;
+  padding: 15px 16px; border-radius: 18px;
+}}
+.gpanel code {{ font-size: 12px; color: #f4f5f7; }}
+.gpanel span {{ font-size: 11px; color: #8b909c; }}
+.gwhere {{ font-style: italic; }}
 .rad code {{ display: block; font: 500 11px var(--font-code); color: var(--text); }}
 .rad span {{ font: 400 10px var(--font-code); color: var(--text-tertiary); }}
 
@@ -429,11 +488,22 @@ ol.decisions li.done strong {{ color: var(--text-secondary); }}
   <p class="lede">Current values: 3, 6, 7, 9, 10, 13, 14, 16, 18, 999. The pill is Insights-only &mdash; 8 uses there, zero in app.css &mdash; and is a large part of why the two sections read as different products.</p>
   <div class="radii">{RADII_ROWS}</div>
 
-  <h2>11. The token block</h2>
+  <h2>11. Glass &mdash; the Phase 3 surfaces</h2>
+  <p class="lede">The fills are <code>--surface-2</code> and <code>--surface</code> <em>at alpha</em>, not new greys &mdash; <code>rgb(28,31,38)</code> is <code>#1c1f26</code> and <code>rgb(22,24,29)</code> is <code>#16181d</code>. That identity is the whole trick: a glass panel reads as the same material as the opaque surface beside it. Three ladders, because prominence ranks the surfaces rather than one flat treatment being applied everywhere.</p>
+  <div class="glassdemo">{GLASS_PANELS}</div>
+  <table>
+    <thead><tr><th>Token</th><th>Value</th><th>Where it lands</th></tr></thead>
+    <tbody>{GLASS_ROWS}</tbody>
+  </table>
+  <div class="callout">
+    <strong>Blur is not decoration here, it is what sells the material.</strong> A 0.45&ndash;0.6 alpha fill with <code>backdrop-filter</code> unsupported reads as a weak, muddy panel rather than as glass &mdash; so the stylesheets carry an <code>@supports not (backdrop-filter: blur(1px))</code> block that swaps in <code>--glass-fallback</code> / <code>--glass-fallback-chrome</code>, the same surfaces at near-full opacity. That is the honest fallback: opaque, not pretend-translucent.
+  </div>
+
+  <h2>12. The token block</h2>
   <p class="lede">What Phase 3 will land in the stylesheets, verbatim from <code>tools/tokens/tokens.py</code>.</p>
   <pre class="tokens">{ROOT_ESCAPED}</pre>
 
-  <h2>12. Status</h2>
+  <h2>13. Status</h2>
   <ol class="decisions">
     <li class="done"><strong>Visual language &mdash; confirmed.</strong> Insights v6 extended onto the leaderboard.</li>
     <li class="done"><strong><code>--warning</code> collision &mdash; fixed.</strong> {DE_GW_OLD:.1f} &rarr; {DE_GW_NEW:.1f} &Delta;E from <code>--gold</code>, and {DE_AW_NEW:.1f} from <code>--accent</code>.</li>
@@ -464,6 +534,7 @@ ol.decisions li.done strong {{ color: var(--text-secondary); }}
         SEPARATION_ROWS=separation_rows(),
         TEAM_SWATCHES=team_swatches(warm, dim),
         TYPE_ROWS=type_rows, DISP_ROWS=disp_rows, RADII_ROWS=radii_rows,
+        GLASS_PANELS=glass_panels, GLASS_ROWS=glass_rows,
         NUMERIC_ROWS=numeric_rows,
         DE_AG=de_ag, DE_GW_OLD=de_gw_old, DE_GW_NEW=de_gw_new,
         DE_AW_NEW=de_aw_new, DE_GOOD_W=de_good_w,

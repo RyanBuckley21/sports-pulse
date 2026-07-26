@@ -62,6 +62,53 @@ HAIRLINE = "rgba(255, 255, 255, 0.06)"
 BORDER = "#262932"
 BORDER_CHIP = "#2c303a"
 
+# --------------------------------------------------------------------------
+# glass  (Phase 3, the "Liquid Glass" direction)
+# --------------------------------------------------------------------------
+# THE FILLS ARE THE SURFACE TOKENS AT ALPHA, NOT NEW GREYS. GLASS_FILL* is
+# SURFACE_2 (#1c1f26 = rgb(28,31,38)); GLASS_CHROME is SURFACE (#16181d =
+# rgb(22,24,29)). That is why a glass panel reads as the same material as the
+# opaque surface it sits next to. If SURFACE or SURFACE_2 ever moves, these
+# move with it -- they are not independent values to be re-picked by eye.
+#
+# Three ladders, because the direction uses prominence to rank surfaces rather
+# than one flat treatment: a collapsed list row is lighter and less blurred
+# than the expanded card it opens into, and the tab bar -- the only surface
+# that floats over scrolling content -- is the most blurred thing on screen.
+# Naming each rung keeps that ranking legible in the stylesheets instead of
+# scattering bare alphas across three files.
+GLASS_FILL_SOFT = "rgba(28, 31, 38, 0.45)"      # collapsed list rows
+GLASS_FILL = "rgba(28, 31, 38, 0.55)"           # the leaderboard panel
+GLASS_FILL_STRONG = "rgba(28, 31, 38, 0.6)"     # primary / expanded card
+GLASS_CHROME = "rgba(22, 24, 29, 0.55)"         # the floating tab bar
+
+GLASS_BORDER = "rgba(255, 255, 255, 0.08)"
+GLASS_BORDER_LIFT = "rgba(255, 255, 255, 0.1)"
+GLASS_BORDER_CHROME = "rgba(255, 255, 255, 0.14)"
+
+GLASS_BLUR_SOFT = "10px"
+GLASS_BLUR = "12px"
+GLASS_BLUR_STRONG = "14px"
+GLASS_BLUR_CHROME = "22px"
+
+#: Active-state fills. Deliberately white-at-alpha rather than --accent: the
+#: active tab and the active sport pill are SELECTION, not status, and tinting
+#: them accent would put the Pulse Score's colour on a navigation surface.
+GLASS_ACTIVE = "rgba(255, 255, 255, 0.12)"      # active tab
+GLASS_ACTIVE_SOFT = "rgba(255, 255, 255, 0.1)"  # active sport pill
+
+#: The AI-note panel, inset INSIDE an already-glass card. A second backdrop
+#: filter nested in the first buys nothing (there is no page content behind it
+#: to blur, only its parent), so this is a flat white wash and no blur.
+GLASS_INSET = "rgba(255, 255, 255, 0.05)"
+
+#: Opaque stand-ins for `@supports not (backdrop-filter: ...)`. Without blur,
+#: a 0.45-0.6 alpha fill just looks like a weak, muddy panel -- the material
+#: reads as translucent only because the blur sells it. These are the same
+#: surfaces at near-full opacity, which is the honest fallback.
+GLASS_FALLBACK = "rgba(28, 31, 38, 0.92)"
+GLASS_FALLBACK_CHROME = "rgba(22, 24, 29, 0.94)"
+
 
 #: Foreground tokens whose contrast is audited. (name, value)
 FOREGROUNDS = (
@@ -193,6 +240,15 @@ NUMERIC_SELECTORS = (
     (".row-value", "already Space Grotesk; 20px stat column, right-aligned"),
     (".key-value", "already Space Grotesk; three-up stat cells"),
     (".hero-value", "already Space Grotesk; 68px hero number"),
+    # Added in Phase 3. The insights section was never audited for this in
+    # Phase 1 because the list above came out of the mono inventory, which was
+    # app.css-only -- insights.css has always been mono-free. These are the
+    # same kind of column: same-position digits that a reader compares down a
+    # list or watches change in place.
+    (".pulse-score", "38px 0-100 gauge number, compared card to card down the list"),
+    (".signal-value", "stat values in a stacked label/value list, right-aligned"),
+    (".gr-pulse", "the game row's compact 0-100 score, one per row down the slate"),
+    (".gr-chip-score", "0-100 market score, repeated across chips on one line"),
 )
 
 #: Text sizes, in px. Consolidated from 21 distinct values across the two
@@ -248,6 +304,38 @@ def css_root_block():
   --warning: %s;
   --critical: %s;
 
+  /* glass -- the Phase 3 "Liquid Glass" surfaces. The fills are --surface-2
+     and --surface AT ALPHA, not new greys: that is what makes a glass panel
+     read as the same material as the opaque surface beside it. Three ladders
+     (fill / border / blur) because prominence ranks the surfaces -- a
+     collapsed row is lighter and less blurred than the card it opens into,
+     and the tab bar, the only surface floating over scrolling content, is
+     the most blurred thing on screen. */
+  --glass-fill-soft: %s;
+  --glass-fill: %s;
+  --glass-fill-strong: %s;
+  --glass-chrome: %s;
+
+  --glass-border: %s;
+  --glass-border-lift: %s;
+  --glass-border-chrome: %s;
+
+  --glass-blur-soft: %s;
+  --glass-blur: %s;
+  --glass-blur-strong: %s;
+  --glass-blur-chrome: %s;
+
+  /* Selection, not status -- hence white-at-alpha rather than --accent. */
+  --glass-active: %s;
+  --glass-active-soft: %s;
+
+  /* Inset panel inside an already-glass card: flat wash, no second blur. */
+  --glass-inset: %s;
+
+  /* @supports fallbacks. Alpha alone without blur reads as a muddy panel. */
+  --glass-fallback: %s;
+  --glass-fallback-chrome: %s;
+
   /* type -- two faces only, every stack ending in a generic family.
      No --font-mono: of the 18 monospace selectors in app.css only two were
      numeric columns, and tabular figures cover those. Numeric columns use
@@ -260,5 +348,11 @@ def css_root_block():
         TEXT, TEXT_SECONDARY, TEXT_TERTIARY,
         ACCENT, GOLD, HEAT,
         GOOD, WARNING, CRITICAL,
+        GLASS_FILL_SOFT, GLASS_FILL, GLASS_FILL_STRONG, GLASS_CHROME,
+        GLASS_BORDER, GLASS_BORDER_LIFT, GLASS_BORDER_CHROME,
+        GLASS_BLUR_SOFT, GLASS_BLUR, GLASS_BLUR_STRONG, GLASS_BLUR_CHROME,
+        GLASS_ACTIVE, GLASS_ACTIVE_SOFT,
+        GLASS_INSET,
+        GLASS_FALLBACK, GLASS_FALLBACK_CHROME,
         FONT_BODY, FONT_HEAD,
     )

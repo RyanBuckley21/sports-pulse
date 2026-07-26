@@ -47,6 +47,38 @@
   --warning: #e7da5e;
   --critical: #F87171;
 
+  /* glass -- the Phase 3 "Liquid Glass" surfaces. The fills are --surface-2
+     and --surface AT ALPHA, not new greys: that is what makes a glass panel
+     read as the same material as the opaque surface beside it. Three ladders
+     (fill / border / blur) because prominence ranks the surfaces -- a
+     collapsed row is lighter and less blurred than the card it opens into,
+     and the tab bar, the only surface floating over scrolling content, is
+     the most blurred thing on screen. */
+  --glass-fill-soft: rgba(28, 31, 38, 0.45);
+  --glass-fill: rgba(28, 31, 38, 0.55);
+  --glass-fill-strong: rgba(28, 31, 38, 0.6);
+  --glass-chrome: rgba(22, 24, 29, 0.55);
+
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-lift: rgba(255, 255, 255, 0.1);
+  --glass-border-chrome: rgba(255, 255, 255, 0.14);
+
+  --glass-blur-soft: 10px;
+  --glass-blur: 12px;
+  --glass-blur-strong: 14px;
+  --glass-blur-chrome: 22px;
+
+  /* Selection, not status -- hence white-at-alpha rather than --accent. */
+  --glass-active: rgba(255, 255, 255, 0.12);
+  --glass-active-soft: rgba(255, 255, 255, 0.1);
+
+  /* Inset panel inside an already-glass card: flat wash, no second blur. */
+  --glass-inset: rgba(255, 255, 255, 0.05);
+
+  /* @supports fallbacks. Alpha alone without blur reads as a muddy panel. */
+  --glass-fallback: rgba(28, 31, 38, 0.92);
+  --glass-fallback-chrome: rgba(22, 24, 29, 0.94);
+
   /* type -- two faces only, every stack ending in a generic family.
      No --font-mono: of the 18 monospace selectors in app.css only two were
      numeric columns, and tabular figures cover those. Numeric columns use
@@ -166,6 +198,25 @@ td.dim { color: var(--text-tertiary); }
 .radii { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
 .rad { text-align: center; }
 .radbox { width: 62px; height: 62px; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 7px; }
+/* Glass has to be shown OVER something or the swatch is a lie: the whole
+   point of the material is what the blur does to the content behind it. The
+   strip below is deliberately busy and high-contrast for that reason. */
+.glassdemo {
+  position: relative; display: flex; flex-wrap: wrap; gap: 14px;
+  padding: 22px; margin-top: 14px; border-radius: 18px; overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 30%, #FF7A2E 0 60px, transparent 61px),
+    radial-gradient(circle at 42% 75%, #3FD07A 0 44px, transparent 45px),
+    radial-gradient(circle at 72% 22%, #f0a83a 0 52px, transparent 53px),
+    repeating-linear-gradient(115deg, #1c1f26 0 16px, #0c0d10 16px 32px);
+}
+.gpanel {
+  flex: 1 1 190px; display: flex; flex-direction: column; gap: 5px;
+  padding: 15px 16px; border-radius: 18px;
+}
+.gpanel code { font-size: 12px; color: #f4f5f7; }
+.gpanel span { font-size: 11px; color: #8b909c; }
+.gwhere { font-style: italic; }
 .rad code { display: block; font: 500 11px var(--font-code); color: var(--text); }
 .rad span { font: 400 10px var(--font-code); color: var(--text-tertiary); }
 
@@ -716,14 +767,25 @@ ol.decisions li.done strong { color: var(--text-secondary); }
   <p class="lede" style="margin-top:18px">Selectors Phase 3 must give <code>font-variant-numeric: tabular-nums</code>. The last three are not mono today &mdash; they are numeric columns that have been running proportional figures all along, so this is an improvement on current behaviour rather than a like-for-like port:</p>
   <table>
     <thead><tr><th>Selector</th><th>Why</th></tr></thead>
-    <tbody><tr><td><code>.row-rank</code></td><td>was mono; zero-padded ranks stacked in a 22px box</td></tr><tr><td><code>.breakdown-row-value</code></td><td>was mono; values right-aligned in a stacked list</td></tr><tr><td><code>.row-value</code></td><td>already Space Grotesk; 20px stat column, right-aligned</td></tr><tr><td><code>.key-value</code></td><td>already Space Grotesk; three-up stat cells</td></tr><tr><td><code>.hero-value</code></td><td>already Space Grotesk; 68px hero number</td></tr></tbody>
+    <tbody><tr><td><code>.row-rank</code></td><td>was mono; zero-padded ranks stacked in a 22px box</td></tr><tr><td><code>.breakdown-row-value</code></td><td>was mono; values right-aligned in a stacked list</td></tr><tr><td><code>.row-value</code></td><td>already Space Grotesk; 20px stat column, right-aligned</td></tr><tr><td><code>.key-value</code></td><td>already Space Grotesk; three-up stat cells</td></tr><tr><td><code>.hero-value</code></td><td>already Space Grotesk; 68px hero number</td></tr><tr><td><code>.pulse-score</code></td><td>38px 0-100 gauge number, compared card to card down the list</td></tr><tr><td><code>.signal-value</code></td><td>stat values in a stacked label/value list, right-aligned</td></tr><tr><td><code>.gr-pulse</code></td><td>the game row's compact 0-100 score, one per row down the slate</td></tr><tr><td><code>.gr-chip-score</code></td><td>0-100 market score, repeated across chips on one line</td></tr></tbody>
   </table>
 
   <h2>10. Radii</h2>
   <p class="lede">Current values: 3, 6, 7, 9, 10, 13, 14, 16, 18, 999. The pill is Insights-only &mdash; 8 uses there, zero in app.css &mdash; and is a large part of why the two sections read as different products.</p>
   <div class="radii"><div class="rad"><div class="radbox" style="border-radius:3px"></div><code>--r-xs</code><span>3px</span></div><div class="rad"><div class="radbox" style="border-radius:7px"></div><code>--r-sm</code><span>7px</span></div><div class="rad"><div class="radbox" style="border-radius:10px"></div><code>--r-md</code><span>10px</span></div><div class="rad"><div class="radbox" style="border-radius:14px"></div><code>--r-lg</code><span>14px</span></div><div class="rad"><div class="radbox" style="border-radius:18px"></div><code>--r-xl</code><span>18px</span></div><div class="rad"><div class="radbox" style="border-radius:999px"></div><code>--r-pill</code><span>999px</span></div></div>
 
-  <h2>11. The token block</h2>
+  <h2>11. Glass &mdash; the Phase 3 surfaces</h2>
+  <p class="lede">The fills are <code>--surface-2</code> and <code>--surface</code> <em>at alpha</em>, not new greys &mdash; <code>rgb(28,31,38)</code> is <code>#1c1f26</code> and <code>rgb(22,24,29)</code> is <code>#16181d</code>. That identity is the whole trick: a glass panel reads as the same material as the opaque surface beside it. Three ladders, because prominence ranks the surfaces rather than one flat treatment being applied everywhere.</p>
+  <div class="glassdemo"><div class="gpanel" style="background:rgba(28, 31, 38, 0.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255, 255, 255, 0.08)"><code>--glass-fill-soft</code><span>blur 10px</span><span class="gwhere">collapsed game rows</span></div><div class="gpanel" style="background:rgba(28, 31, 38, 0.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255, 255, 255, 0.08)"><code>--glass-fill</code><span>blur 12px</span><span class="gwhere">the leaderboard panel</span></div><div class="gpanel" style="background:rgba(28, 31, 38, 0.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255, 255, 255, 0.1)"><code>--glass-fill-strong</code><span>blur 14px</span><span class="gwhere">player cards, expanded game rows</span></div><div class="gpanel" style="background:rgba(22, 24, 29, 0.55);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255, 255, 255, 0.14)"><code>--glass-chrome</code><span>blur 22px</span><span class="gwhere">the floating tab bar</span></div></div>
+  <table>
+    <thead><tr><th>Token</th><th>Value</th><th>Where it lands</th></tr></thead>
+    <tbody><tr><td><code>--glass-fill-soft</code></td><td class="num">rgba(28, 31, 38, 0.45)</td><td>collapsed game rows</td></tr><tr><td><code>--glass-fill</code></td><td class="num">rgba(28, 31, 38, 0.55)</td><td>the leaderboard panel</td></tr><tr><td><code>--glass-fill-strong</code></td><td class="num">rgba(28, 31, 38, 0.6)</td><td>player cards, expanded game rows</td></tr><tr><td><code>--glass-chrome</code></td><td class="num">rgba(22, 24, 29, 0.55)</td><td>the floating tab bar</td></tr><tr><td><code>--glass-border</code></td><td class="num">rgba(255, 255, 255, 0.08)</td><td>list-level panels</td></tr><tr><td><code>--glass-border-lift</code></td><td class="num">rgba(255, 255, 255, 0.1)</td><td>the primary/expanded surface</td></tr><tr><td><code>--glass-border-chrome</code></td><td class="num">rgba(255, 255, 255, 0.14)</td><td>the tab bar, plus its inset top highlight</td></tr><tr><td><code>--glass-blur-soft</code></td><td class="num">10px</td><td>collapsed rows</td></tr><tr><td><code>--glass-blur</code></td><td class="num">12px</td><td>the leaderboard panel</td></tr><tr><td><code>--glass-blur-strong</code></td><td class="num">14px</td><td>cards</td></tr><tr><td><code>--glass-blur-chrome</code></td><td class="num">22px</td><td>the tab bar &mdash; the most blurred thing on screen</td></tr><tr><td><code>--glass-active</code></td><td class="num">rgba(255, 255, 255, 0.12)</td><td>the active tab pill (selection, not status)</td></tr><tr><td><code>--glass-active-soft</code></td><td class="num">rgba(255, 255, 255, 0.1)</td><td>the active sport pill</td></tr><tr><td><code>--glass-inset</code></td><td class="num">rgba(255, 255, 255, 0.05)</td><td>the AI-note panel inside a card</td></tr><tr><td><code>--glass-fallback</code></td><td class="num">rgba(28, 31, 38, 0.92)</td><td>@supports fallback for the card fills</td></tr><tr><td><code>--glass-fallback-chrome</code></td><td class="num">rgba(22, 24, 29, 0.94)</td><td>@supports fallback for the tab bar</td></tr></tbody>
+  </table>
+  <div class="callout">
+    <strong>Blur is not decoration here, it is what sells the material.</strong> A 0.45&ndash;0.6 alpha fill with <code>backdrop-filter</code> unsupported reads as a weak, muddy panel rather than as glass &mdash; so the stylesheets carry an <code>@supports not (backdrop-filter: blur(1px))</code> block that swaps in <code>--glass-fallback</code> / <code>--glass-fallback-chrome</code>, the same surfaces at near-full opacity. That is the honest fallback: opaque, not pretend-translucent.
+  </div>
+
+  <h2>12. The token block</h2>
   <p class="lede">What Phase 3 will land in the stylesheets, verbatim from <code>tools/tokens/tokens.py</code>.</p>
   <pre class="tokens">:root {
   /* surfaces */
@@ -755,6 +817,38 @@ ol.decisions li.done strong { color: var(--text-secondary); }
   --warning: #e7da5e;
   --critical: #F87171;
 
+  /* glass -- the Phase 3 "Liquid Glass" surfaces. The fills are --surface-2
+     and --surface AT ALPHA, not new greys: that is what makes a glass panel
+     read as the same material as the opaque surface beside it. Three ladders
+     (fill / border / blur) because prominence ranks the surfaces -- a
+     collapsed row is lighter and less blurred than the card it opens into,
+     and the tab bar, the only surface floating over scrolling content, is
+     the most blurred thing on screen. */
+  --glass-fill-soft: rgba(28, 31, 38, 0.45);
+  --glass-fill: rgba(28, 31, 38, 0.55);
+  --glass-fill-strong: rgba(28, 31, 38, 0.6);
+  --glass-chrome: rgba(22, 24, 29, 0.55);
+
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-lift: rgba(255, 255, 255, 0.1);
+  --glass-border-chrome: rgba(255, 255, 255, 0.14);
+
+  --glass-blur-soft: 10px;
+  --glass-blur: 12px;
+  --glass-blur-strong: 14px;
+  --glass-blur-chrome: 22px;
+
+  /* Selection, not status -- hence white-at-alpha rather than --accent. */
+  --glass-active: rgba(255, 255, 255, 0.12);
+  --glass-active-soft: rgba(255, 255, 255, 0.1);
+
+  /* Inset panel inside an already-glass card: flat wash, no second blur. */
+  --glass-inset: rgba(255, 255, 255, 0.05);
+
+  /* @supports fallbacks. Alpha alone without blur reads as a muddy panel. */
+  --glass-fallback: rgba(28, 31, 38, 0.92);
+  --glass-fallback-chrome: rgba(22, 24, 29, 0.94);
+
   /* type -- two faces only, every stack ending in a generic family.
      No --font-mono: of the 18 monospace selectors in app.css only two were
      numeric columns, and tabular figures cover those. Numeric columns use
@@ -763,7 +857,7 @@ ol.decisions li.done strong { color: var(--text-secondary); }
   --font-head: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
 }</pre>
 
-  <h2>12. Status</h2>
+  <h2>13. Status</h2>
   <ol class="decisions">
     <li class="done"><strong>Visual language &mdash; confirmed.</strong> Insights v6 extended onto the leaderboard.</li>
     <li class="done"><strong><code>--warning</code> collision &mdash; fixed.</strong> 8.4 &rarr; 19.3 &Delta;E from <code>--gold</code>, and 37.3 from <code>--accent</code>.</li>
