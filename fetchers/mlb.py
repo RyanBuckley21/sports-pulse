@@ -968,10 +968,11 @@ def _build_compare(probables, compare_sets):
 
 
 def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, touched,
-                    ops_cache, era_cache, config, injured_ids):
+                    ops_cache, era_cache, config, injured_ids, training_rows=None):
     import team_meta  # local import: keeps the standalone `python3 fetchers/mlb.py` helper working
     import betting_signals
     import implied_total
+    import training_capture
 
     teams = g.get("teams", {})
     away_t = teams.get("away", {}).get("team", {})
@@ -1046,12 +1047,26 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     # materially changes the ML/first-five/total markets -- see betting_signals.
     away_out = bool(away_pp and away_pp.get("id") in injured_ids)
     home_out = bool(home_pp and home_pp.get("id") in injured_ids)
-    betting = betting_signals.score_game(
-        config, "mlb",
-        betting_signals.build_inputs(away_ref, home_ref, away_ops, home_ops,
-                                     away_pen, home_pen, away_era, home_era, series),
-        availability={"away_probable_out": away_out, "home_probable_out": home_out},
-    )
+    signal_inputs = betting_signals.build_inputs(away_ref, home_ref, away_ops, home_ops,
+                                                 away_pen, home_pen, away_era, home_era, series)
+    availability = {"away_probable_out": away_out, "home_probable_out": home_out}
+    betting = betting_signals.score_game(config, "mlb", signal_inputs, availability=availability)
+
+    # Training-data capture (Phase 1): snapshot the SAME deterministic inputs for
+    # EVERY game on the slate -- not just ones with a standout -- into the
+    # append-only training store. Read-only against betting_signals: the dict
+    # above is passed through verbatim. training_capture applies the pre-game
+    # leakage gates and returns None (with a skip log) for any game already
+    # under way. Guarded: capture must never break the game build.
+    if training_rows is not None:
+        try:
+            row = training_capture.build_feature_row(g, signal_inputs, availability, game_date)
+            if row is not None:
+                training_rows.append(row)
+        except Exception as e:  # noqa: BLE001 -- capture is strictly additive
+            print("training: feature row failed for gamePk {} ({})"
+                  .format(g.get("gamePk"), str(e)[:120]))
+
     # The single most-notable market (deterministic; None if nothing clears the
     # standout bar). Drives the AI's one-sentence betting_note downstream.
     standout = betting_signals.top_market(
@@ -1145,13 +1160,18 @@ def build_game_entities(config, game_date, boxscore_cache):
     """Build one deterministic Game insight entity for every game on `game_date`'s
     MLB slate (full slate -- uncapped, since "today's games" is already bounded).
 
-    Returns (entities, pruned_boxscore_cache):
+    Returns (entities, pruned_boxscore_cache, training_rows):
       - entities: ordered {str(gamePk): entity} in slate order; each entity carries
         away/home TeamRefs (abbr/name/color), start (ET), venue, probables, framed
         signals, a deterministic pulse, status, and a both-sides `context` block.
       - pruned_boxscore_cache: the input cache plus any newly fetched Final-game
         reliever lines, pruned to just the gamePks referenced this run (games that
-        fall out of every team's 7d window drop off, keeping the file tiny)."""
+        fall out of every team's 7d window drop off, keeping the file tiny).
+      - training_rows: pre-game feature snapshots for the append-only training
+        store (Phase 1), one per game that passed training_capture's leakage
+        gates. Returned rather than written here so store I/O stays with the
+        caller, matching how the boxscore cache is handled. Callers that don't
+        want them can ignore the third element."""
     mlb_cfg = config["mlb"]
     base_url = mlb_cfg["base_url"]
     season = mlb_cfg["season"]
@@ -1174,16 +1194,17 @@ def build_game_entities(config, game_date, boxscore_cache):
     touched = set()
     ops_cache, era_cache = {}, {}
     entities = {}
+    training_rows = []
     for d in sched.get("dates", []):
         for g in d.get("games", []):
             ent = _build_one_game(
                 session, base_url, season, game_date, g, boxscore_cache, touched,
-                ops_cache, era_cache, config, injured_ids,
+                ops_cache, era_cache, config, injured_ids, training_rows=training_rows,
             )
             entities[str(g.get("gamePk"))] = ent
 
     pruned_cache = {pk: boxscore_cache[pk] for pk in touched if pk in boxscore_cache}
-    return entities, pruned_cache
+    return entities, pruned_cache, training_rows
 
 
 def fetch(config, game_date=None):
