@@ -16,8 +16,11 @@ Deliberately read-only outside data/training/: the boxscore cache is loaded to
 serve bullpen-ERA lookups but its pruned copy is discarded rather than saved, so
 this entrypoint's only writes are the two append-only training stores.
 
-Exit status is 0 unless BOTH steps fail -- a partial capture is a normal day
-(e.g. nothing pending to resolve), not a workflow failure.
+Exit status is 0 only when BOTH steps succeed. Either one failing exits 1 so the
+Action goes red: a store whose value is unbroken daily accumulation cannot
+afford a missed day hiding behind a green check. Note that "nothing to do" is
+success, not failure -- no pending outcomes to resolve, or a slate whose rows
+are all already on file, are both normal days.
 """
 
 import datetime
@@ -48,6 +51,16 @@ def _load_boxscore_cache():
         return {}
 
 
+def _fail(step, exc):
+    """Report a failed step. Under GitHub Actions this also emits a ::warning::
+    annotation, which surfaces the failing step name on the run summary page so
+    a red run can be diagnosed without opening the logs."""
+    detail = str(exc)[:200]
+    print("capture: {} failed ({})".format(step, detail))
+    if os.environ.get("GITHUB_ACTIONS"):
+        print("::warning title=Training capture step failed::{} failed: {}".format(step, detail))
+
+
 def main():
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f)
@@ -57,15 +70,15 @@ def main():
     print("capture: MLB training data for {} (run at {})"
           .format(today.isoformat(), training_capture._iso(now)))
 
-    ok = 0
+    failed = []
 
     # 1. Outcomes first -- label completed prior games before today's slate is
     #    touched, so labels are always resolved from a finished game's own record.
     try:
         training_capture.resolve_outcomes(schedule_fetcher(config), today)
-        ok += 1
     except Exception as e:  # noqa: BLE001
-        print("capture: outcome resolution failed ({})".format(str(e)[:200]))
+        failed.append("outcome resolution")
+        _fail("outcome resolution", e)
 
     # 2. Pre-game features for today's slate. build_game_entities applies the
     #    leakage gates per game via training_capture.build_feature_row.
@@ -76,12 +89,17 @@ def main():
         print("capture: {} games on slate, {} rows passed the pre-game gates, "
               "{} written, {} already on file"
               .format(len(entities), len(training_rows), written, skipped))
-        ok += 1
     except Exception as e:  # noqa: BLE001
-        print("capture: feature capture failed ({})".format(str(e)[:200]))
+        failed.append("feature capture")
+        _fail("feature capture", e)
 
-    if ok == 0:
-        print("capture: both steps failed")
+    # Fail on ANY step failure, not just both. The store's whole value is
+    # unbroken daily accumulation, so a day silently missing its capture behind
+    # a green check is exactly the failure mode that must not be possible: a
+    # feature-capture failure is a lost day of training data even if outcome
+    # resolution succeeded, and vice versa.
+    if failed:
+        print("capture: FAILED -- {}".format(", ".join(failed)))
         return 1
     return 0
 

@@ -46,9 +46,26 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Capture features and resolve outcomes
+        id: capture
         run: python3 capture_training_data.py
 
+      # capture_training_data.py annotates the specific step that failed, but a
+      # hard crash (or a non-zero exit before it can print) would leave nothing
+      # on the summary. This backstop always annotates, so a red run is always
+      # diagnosable without opening the logs. `if: failure()` means it costs
+      # nothing on a normal run.
+      - name: Annotate capture failure
+        if: failure() && steps.capture.outcome == 'failure'
+        run: |
+          echo "::warning title=Training capture failed::No training data was committed for $(date -u +%Y-%m-%d). The store has a gap for this date unless a later run backfills it -- see the Capture step logs."
+
+      # Runs even when the capture step failed. Anything already written to the
+      # store is a genuine, gate-passed capture, and throwing it away because
+      # the OTHER step failed would open exactly the gap this workflow exists to
+      # prevent. The job still ends red -- the failure stays visible, the real
+      # rows still land. Skipped only on cancellation.
       - name: Commit the training store
+        if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           mkdir -p data/training
