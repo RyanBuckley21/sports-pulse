@@ -1,0 +1,59 @@
+/* Navigation shell: the persistent frame around every section.
+   Loaded only by the shell document, after app.css and insights.css. */
+
+.shell-main {
+  /* Clear the fixed tab bar so the last row of content is never trapped
+     underneath it. env() adds the iOS home-indicator strip in standalone mode,
+     where there is no browser chrome to absorb it. */
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ---------- tab bar ---------- */
+.tabbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  max-width: 430px;                 /* matches .wrap, so it tracks the content column */
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+
+  /* Chrome is pinned to the main app's palette rather than inheriting.
+     body.insights-scope re-themes its descendants, and the tab bar is a
+     descendant -- without this it would change colour every time you switched
+     to an insights tab, which reads as a rendering bug on persistent chrome.
+     Phase 3 collapses both palettes into one token set and deletes this block. */
+  --surface: #0E0E10;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #ffffff;
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 6px 4px;
+  font: 600 11px 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.2px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-tertiary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover { color: var(--text); }
+
+/* Active state is derived from the current route on every navigation -- the
+   router sets aria-current, and the styling hangs off that rather than a
+   separate class, so there is only ever one source of truth for which tab is
+   selected (and screen readers get it for free). */
+.tab[aria-current="page"] {
+  color: var(--text);
+  box-shadow: inset 0 2px 0 var(--accent);
+}

@@ -132,7 +132,9 @@
       '<span class="status-text ' + cls + '" id="statusText">Updated ' + esc(relativeTime(generatedAt)) + "</span>" +
       "</div>" +
       "</div>" +
-      '<a class="app-insights-link" href="insights/index.html">Insights &rarr;</a>' +
+      // The "Insights →" link that used to sit here is gone: Insights is a tab
+      // now, so a link from one section into another duplicated the tab bar and
+      // was the only cross-document navigation left in the app.
       "</header>"
     );
   }

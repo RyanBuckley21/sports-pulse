@@ -8,3 +8,7 @@ output/*.json
 # exact path rather than web/*.json so a future real file under web/ (like the
 # tracked web/insights/mock-insights.json) can't be hidden by accident.
 web/data.json
+
+# Scratch page written by tools/verify/run.js; removed on a clean exit,
+# ignored so an interrupted run cannot leave a committable artifact.
+web/__leak.html
