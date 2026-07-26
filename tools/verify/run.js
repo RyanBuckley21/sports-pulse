@@ -408,6 +408,7 @@ async function safeAreaChecks(browser, base) {
      pad.tabbarBottom === INSET_BOTTOM + "px", pad.tabbarBottom);
 
   // Geometry, not just declarations: nothing may render inside either strip.
+  const tops = {};
   for (const hash of ROUTES) {
     await goRoute(p, hash);
     const g = await p.evaluate(() => {
@@ -420,11 +421,69 @@ async function safeAreaChecks(browser, base) {
         viewportH: window.innerHeight,
       };
     });
+    tops[hash] = g.firstTop;
     ok("top content clears the island on " + hash,
        g.firstTop !== null && g.firstTop >= INSET_TOP, "y=" + g.firstTop + " vs inset " + INSET_TOP);
     ok("  tab labels clear the home indicator",
        g.tabBottom <= g.viewportH - INSET_BOTTOM,
        "bottom=" + g.tabBottom + " vs limit " + (g.viewportH - INSET_BOTTOM));
+  }
+
+  // Every route must START AT THE SAME HEIGHT. Clearing the inset is necessary
+  // but not sufficient: the insights routes once sat 22px lower than Who's Hot
+  // because .insights-h1 kept a top margin meant to separate it from a back link
+  // the shell had already removed. Each route passed its own check in isolation,
+  // so only comparing them catches it -- switching tabs made the content jump.
+  const uniq = [...new Set(Object.values(tops))];
+  ok("all routes share the same top offset", uniq.length === 1,
+     Object.entries(tops).map(([h, y]) => h + "=" + y).join("  "));
+
+  // The scrim masks the strip so SCROLLED content is not visible behind the
+  // status bar. Padding cannot do this -- it only sets where content starts.
+  const scrim = await p.evaluate(() => {
+    const el = document.querySelector(".status-scrim");
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    return { height: cs.height, position: cs.position, zIndex: cs.zIndex,
+             opaque: cs.backgroundColor !== "rgba(0, 0, 0, 0)" };
+  });
+  ok("status scrim exists", scrim !== null);
+  if (scrim) {
+    ok("  covers exactly the top inset", scrim.height === INSET_TOP + "px", scrim.height);
+    ok("  is fixed and opaque", scrim.position === "fixed" && scrim.opaque,
+       scrim.position + " opaque=" + scrim.opaque);
+    // Z-order proof: with hit-testing temporarily enabled the scrim must be the
+    // topmost element in the strip, which is what "masks" actually means.
+    // pointer-events is none in production so the area stays tappable-through.
+    await goRoute(p, "#/games");
+    const top = await p.evaluate(() => {
+      const el = document.querySelector(".status-scrim");
+      el.style.pointerEvents = "auto";
+      const hit = document.elementFromPoint(Math.round(window.innerWidth / 2), 30);
+      el.style.pointerEvents = "";
+      return hit ? hit.className : "(none)";
+    });
+    ok("  paints above scrolled content", String(top).includes("status-scrim"), String(top));
+  }
+
+  // A sticky element pins to the SCROLLPORT, so the container padding above
+  // does not move it -- it needs the inset on its own `top`.
+  await goRoute(p, "#/");
+  await p.evaluate(() => { const r = document.querySelector(".player-row"); if (r) r.click(); });
+  await p.waitForTimeout(400);
+  await p.evaluate(() => window.scrollTo(0, 400));
+  await p.waitForTimeout(300);
+  const back = await p.evaluate(() => {
+    const el = document.querySelector(".detail-back-row");
+    if (!el) return null;
+    return { cssTop: getComputedStyle(el).top,
+             pinnedAt: Math.round(el.getBoundingClientRect().top) };
+  });
+  ok("sticky detail back row exists once scrolled", back !== null);
+  if (back) {
+    ok("  sticky offset is the inset, not 0", back.cssTop === INSET_TOP + "px", back.cssTop);
+    ok("  pins clear of the island", back.pinnedAt >= INSET_TOP,
+       "y=" + back.pinnedAt + " vs inset " + INSET_TOP);
   }
   await p.close();
 }

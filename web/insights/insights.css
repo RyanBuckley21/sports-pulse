@@ -47,9 +47,14 @@ body.insights-scope {
    chrome, from the title/note fields on the route table. */
 
 /* Per-view title + transparency note. */
+/* No top margin: the 22px that used to be here separated this heading from
+   .detail-back-row, the back link the standalone pages carried above it. The
+   shell retired those pages and the tab bar replaced the back link, so the
+   heading is now the first child of .wrap and that margin only pushed every
+   insights route 22px lower than Who's Hot. */
 .insights-h1 {
   font: 800 28px 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
-  color: var(--text); margin: 22px 2px 8px;
+  color: var(--text); margin: 0 2px 8px;
 }
 .insights-note {
   font: 500 11px 'Space Grotesk'; color: var(--text-tertiary);
