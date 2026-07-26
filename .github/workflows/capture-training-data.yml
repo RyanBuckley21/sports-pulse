@@ -1,0 +1,74 @@
+name: Capture MLB training data
+
+# Phase 1 of the predictive-model initiative (docs/mlb-training-data-phase-1-plan.md):
+# deterministic daily capture of pre-game features and post-game outcomes into
+# the append-only training store. No model, no training, no inference.
+#
+# Deliberately its OWN workflow rather than a step bolted onto deploy-pages.yml:
+#   * deploy-pages.yml keeps `permissions: contents: read` and gains no write
+#     path -- it is not modified by this initiative at all;
+#   * `contents: write` here is scoped to this workflow alone, and is used for
+#     nothing but committing the two data/training/ files;
+#   * if this workflow fails, the site deploy is entirely unaffected.
+#
+# Runs 20 minutes after the deploy workflow's 14:00 UTC cron so the two never
+# contend, while still landing ~1h45m before the earliest typical first pitch
+# (~16:05-16:15 UTC). Games that start before this run are correctly SKIPPED by
+# training_capture's clock gate rather than captured after the fact.
+
+on:
+  schedule:
+    # 14:20 UTC = 10:20 AM US Eastern (EDT, UTC-4). Same daylight-saving caveat
+    # as deploy-pages.yml: shift to 15:20 UTC in the fall to hold the wall-clock
+    # time. Capture timing only affects how much margin there is before first
+    # pitch -- it can never cause a post-start capture, which the clock gate
+    # blocks regardless.
+    - cron: "20 14 * * *"
+  workflow_dispatch: {}
+
+# Scoped to this workflow only. deploy-pages.yml is unchanged and still read-only.
+permissions:
+  contents: write
+
+# Never let two capture runs race on the same append-only files.
+concurrency:
+  group: capture-training-data
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Capture features and resolve outcomes
+        run: python3 capture_training_data.py
+
+      - name: Commit the training store
+        run: |
+          set -euo pipefail
+          mkdir -p data/training
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data/training
+          if git diff --staged --quiet; then
+            echo "No new training rows this run -- nothing to commit."
+            exit 0
+          fi
+          git commit -m "Capture MLB training data for $(date -u +%Y-%m-%d)"
+          # Rebase-and-retry: the store is append-only, so a concurrent commit
+          # on the branch is additive and rebases cleanly.
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push failed (attempt $attempt); rebasing and retrying"
+            sleep $((attempt * 4))
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          echo "push failed after 3 attempts"
+          exit 1

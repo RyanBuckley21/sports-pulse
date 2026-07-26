@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 
+import training_capture
 from fetchers import mlb
 
 # v2: the player call now also returns a one-sentence `matchup_note` (career line
@@ -630,15 +631,58 @@ def _build_game_entities(config, generated_at):
     game_date = generated_at.date().isoformat()
     try:
         box_cache = _load_store(BOXSCORE_CACHE_PATH)
-        game_entities, box_cache = mlb.build_game_entities(config, game_date, box_cache)
+        game_entities, box_cache, training_rows = mlb.build_game_entities(config, game_date, box_cache)
         _save_store(BOXSCORE_CACHE_PATH, box_cache)
         games_store = _load_store(GAMES_STORE_PATH)
         print("insights(games): built {} games for {} (boxscore cache: {} final games)"
               .format(len(game_entities), game_date, len(box_cache)))
+        # Phase 1 training capture: append-only, never pruned, separately
+        # guarded so a capture failure can't take the games section down with
+        # it. Skip-if-present makes a second run of the day a no-op.
+        try:
+            written, skipped = training_capture.capture_features(training_rows)
+            print("training(features): captured {} of {} games for {} ({} already on file)"
+                  .format(written, len(game_entities), game_date, skipped))
+        except Exception as e:  # noqa: BLE001 -- capture is strictly additive
+            print("training(features): capture failed ({}); games section unaffected"
+                  .format(str(e)[:160]))
         return game_entities, games_store, game_date
     except Exception as e:  # noqa: BLE001 -- never let the games path break the pipeline
         print("insights(games): builder failed ({}); games section skipped".format(str(e)[:160]))
         return {}, {}, game_date
+
+
+def schedule_fetcher(config):
+    """A `fetch_schedule(date_str)` callable over the MLB schedule endpoint,
+    hydrated with the linescore (needed for the per-inning NRFI / first-five
+    labels). Built here rather than in training_capture so that module stays
+    free of HTTP concerns."""
+    import requests  # local import: only the outcome resolver needs a session
+
+    base_url = config["mlb"]["base_url"]
+    session = requests.Session()
+
+    def fetch_schedule(date_str):
+        return mlb._get(session, f"{base_url}/schedule",
+                        params={"sportId": 1, "date": date_str, "hydrate": "linescore"})
+
+    return fetch_schedule
+
+
+def _resolve_training_outcomes(config, generated_at):
+    """Phase 1 outcome capture: label YESTERDAY's (and any older still-pending)
+    captured games from the MLB Stats API before today's features are built.
+
+    Runs first so a game is always labelled from its own completed record, and
+    never from anything today's build computes. Fully guarded -- the resolver is
+    additive and must never break the pipeline."""
+    if config is None:
+        return
+    try:
+        training_capture.resolve_outcomes(schedule_fetcher(config), generated_at.date())
+    except Exception as e:  # noqa: BLE001 -- capture is strictly additive
+        print("training(outcomes): resolver failed ({}); labels retried next run"
+              .format(str(e)[:160]))
 
 
 def run(data, generated_at, config=None, store_path=STORE_PATH):
@@ -652,6 +696,10 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     deterministic game builder itself runs even in CI; only its AI calls are gated.
     A single auth preflight covers both players and games."""
     now_iso = generated_at.isoformat()
+    # Phase 1 outcome capture runs BEFORE anything else: yesterday's labels are
+    # resolved from completed games first, so today's feature capture can never
+    # be influenced by (or confused with) outcome data.
+    _resolve_training_outcomes(config, generated_at)
     all_entities = build_entities(data, config)
     entities = _top_n(all_entities, TOP_N)  # cap players to top-N by pulse (games are NOT capped)
     store = _load_store(store_path)
