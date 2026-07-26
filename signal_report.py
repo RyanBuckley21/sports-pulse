@@ -332,8 +332,14 @@ def grade(pick, game, assume_lines):
         point = pick.get("point")
         if point is not None:
             text = "{} vs est {}".format(text, point)
+            # Landing exactly on the estimate counts AGAINST the pick: the lean
+            # said the actual would finish on one side of this number and it did
+            # not, so the row is a MISS and stays in the denominator. The tie is
+            # still shown plainly rather than hidden behind the verdict. This
+            # convention is scoped to estimate-graded totals -- a first-five
+            # moneyline tie is a genuine no-result and remains a PUSH.
             if actual == point:
-                return text + " (tie)", "PUSH", "estimate"
+                return text + " (tie)", "MISS", "estimate"
             return text, ("HIT" if (actual > point) == over else "MISS"), "estimate"
 
         if not assume_lines:
@@ -416,8 +422,12 @@ def collect_picks(store, config, min_score, all_markets):
 # rendering
 # --------------------------------------------------------------------------- #
 
-ROW = "{:<5}  {:<17} {:<8} {:<17} {:<11} {:<31} {:<10}{}"
-RESULT_WIDTH = 31
+# Picks render as stacked blocks, not a fixed-width table: the report is read as
+# often in a chat client on a phone as in a terminal, and a wide monospace block
+# is unreadable on a narrow screen no matter how wide the terminal is. Every line
+# is written to fit a ~40-character code block, indent included.
+INDENT = "    "
+RESULT_WIDTH = 36
 
 
 def short_start(start):
@@ -425,9 +435,9 @@ def short_start(start):
 
 
 def fit(text, width=RESULT_WIDTH):
-    """Keep a long status string from pushing the VERDICT column out of
-    alignment. Every result string is written to fit; this is the backstop for
-    an unanticipated one (a novel detailedState, a long postponement reason)."""
+    """Keep a long status string on one line at phone width. Every result string
+    is written to fit; this is the backstop for an unanticipated one (a novel
+    detailedState, a long postponement reason)."""
     text = text or ""
     return text if len(text) <= width else text[:width - 1] + "…"
 
@@ -456,13 +466,14 @@ def render(date, picks, rows, store_size, assume_lines, out=sys.stdout):
               ASSUMED_LINES["game_total"], ASSUMED_LINES["team_total"],
               ASSUMED_LINES["first_five_total"], ASSUMED_RUN_LINE))
         w("Those are conventional round numbers, NOT real market lines — no line data exists in this project.")
-    w()
-    w(ROW.format("SCORE", "MATCHUP", "START", "MARKET", "PICK", "RESULT", "VERDICT", ""))
     for pick, game, result, verdict, basis in rows:
         flags = "  ⚑ " + ",".join(pick["flags"]) if pick["flags"] else ""
-        w(ROW.format(pick["score"], matchup(pick, game), short_start(pick["start"]),
-                     pick["market"], pick["side"], fit(result),
-                     verdict + BASIS_SUFFIX.get(basis, ""), flags))
+        w()
+        w("{:<3} {}  {}".format(pick["score"], matchup(pick, game),
+                                short_start(pick["start"])))
+        w("{}{}: {}".format(INDENT, pick["market"], pick["side"]))
+        w("{}{}".format(INDENT, fit(result)))
+        w("{}{}{}".format(INDENT, verdict + BASIS_SUFFIX.get(basis, ""), flags))
     w()
     for line in summary_lines(date, rows):
         w(line)
