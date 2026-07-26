@@ -13,6 +13,26 @@
 
   var appEl = document.getElementById("app");
 
+  // True while this section is the one on screen. Set by mount()/unmount();
+  // read only by the freshness ticker, which must not do work for a hidden view.
+  var mounted = false;
+
+  // When data.json was last read, and how old a copy may be before re-entering
+  // this section refetches it.
+  //
+  // 10 minutes. The publish cadence sets the ceiling: the deploy workflow runs
+  // on a daily cron (plus pushes), and the app itself does not call data stale
+  // until 24h (freshnessClass above), so anything under an hour is already far
+  // more eager than the data changes. The floor is what this guards against --
+  // a standalone home-screen app stays resident for hours, so a session resumed
+  // the next day must not sit on yesterday's payload. 10 minutes clears both:
+  // no tab switch takes that long, so ordinary navigation never refetches and
+  // the "persist" decision holds in practice, while a resumed session refreshes
+  // within ten minutes of coming back. It also bounds the cost -- however many
+  // times the section is re-entered, at most one refetch per ten minutes.
+  var DATA_MAX_AGE_MS = 10 * 60 * 1000;
+  var fetchedAt = 0;
+
   // Max pixel height of a recent-form bar itself, independent of the
   // row's total height -- keeps a fixed amount of headroom above the
   // tallest bar for its value label, no matter the value.
@@ -578,8 +598,14 @@
 
   // Keep the relative "Updated X ago" text and freshness color live without
   // a full re-render (avoids disrupting scroll position / open detail view).
+  //
+  // Created once, never cleared. Under the navigation shell this script is
+  // loaded exactly once and #app is never removed, so there is no second
+  // interval to leak -- `mounted` just stops it doing work while another
+  // section is on screen. Returning to this view re-renders anyway, which
+  // recomputes the timestamp from scratch.
   setInterval(function () {
-    if (!state.data) return;
+    if (!mounted || !state.data) return;
     var dot = document.getElementById("liveDot");
     var text = document.getElementById("statusText");
     if (!dot || !text) return;
@@ -594,6 +620,7 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         state.data = data;
+        fetchedAt = Date.now();
         if (!state.sport || !state.data.sports[state.sport]) {
           state.sport = Object.keys(state.data.sports)[0];
         }
@@ -605,5 +632,46 @@
       });
   }
 
-  loadData();
+  // ---------------- re-entry point ----------------
+  // Everything above binds once, at load. mount()/unmount() only touch content
+  // and state, so this section can be entered any number of times without
+  // re-running the module, re-binding listeners, or duplicating the interval.
+
+  function mount() {
+    mounted = true;
+    // [hidden] resets descendant scroll (the chip row) but not the document's.
+    // Without this, arriving from a long list leaves the new view scrolled --
+    // this is what actually makes the listScroll:0 reset below true on screen.
+    window.scrollTo(0, 0);
+    if (!state.data || Date.now() - fetchedAt > DATA_MAX_AGE_MS) return loadData();
+    render();
+    return Promise.resolve();
+  }
+
+  function unmount() {
+    mounted = false;
+    // Reset policy, decided per field (persisted fields are absent by design):
+    //   data, sport, statBySport  PERSIST -- data avoids a refetch per switch;
+    //     sport and statBySport are user selections, and statBySport exists
+    //     precisely to remember the chosen category per sport.
+    //   view, selected            RESET -- returning to this section lands on
+    //     the leaderboard, never a stale player detail. Matches what a full
+    //     page load does today.
+    //   listScroll, chipScroll    RESET -- return to the top, as today. Per-tab
+    //     scroll restoration is more app-like and is a deliberate follow-up,
+    //     not an oversight.
+    state.view = "list";
+    state.selected = null;
+    state.listScroll = 0;
+    state.chipScroll = 0;
+  }
+
+  window.SP = window.SP || {};
+  window.SP.views = window.SP.views || {};
+  window.SP.views.whosHot = { mount: mount, unmount: unmount };
+
+  // Without the shell (the five standalone pages that still ship today), there
+  // is no router to call mount(), so self-start. The shell marks its document
+  // with data-shell and drives mount()/unmount() itself.
+  if (!document.body.hasAttribute("data-shell")) mount();
 })();
