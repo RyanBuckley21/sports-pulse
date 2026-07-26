@@ -12,3 +12,9 @@ web/data.json
 # Scratch page written by tools/verify/run.js; removed on a clean exit,
 # ignored so an interrupted run cannot leave a committable artifact.
 web/__leak.html
+
+# Playwright for tools/verify/run.js, which resolves it from ./node_modules if
+# present (see tools/verify/README.md). The repo intentionally ships no
+# package.json, so nothing else would ever mark this directory as generated --
+# and an `npm install` before a `git add -A` otherwise commits ~500 files.
+node_modules/
