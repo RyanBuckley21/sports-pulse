@@ -15,8 +15,13 @@
 
   /* Clear the fixed tab bar so the last row of content is never trapped
      underneath it. env() adds the iOS home-indicator strip in standalone mode,
-     for the same reason as above. */
-  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+     for the same reason as above.
+
+     90px = the bar's 62px height + the 14px it floats above the bottom edge +
+     14px of breathing room, so the last row clears the bar rather than ending
+     flush against it. Was 60px, when the bar was edge-to-edge and its own
+     padding absorbed the inset. */
+  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ---------- status-bar scrim ---------- */
@@ -45,31 +50,57 @@
 }
 
 /* ---------- tab bar ---------- */
+/* A floating frosted pill, not an edge-to-edge bar. The bar is the one surface
+   that sits over CONTENT rather than beside it, which is why it gets the
+   heaviest blur in the ladder (--glass-blur-chrome, 22px): it has the most to
+   do, and it is the surface a reader is most likely to be looking through. */
 .tabbar {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 14px; right: 14px;
   z-index: 20;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  max-width: 430px;                 /* matches .wrap, so it tracks the content column */
+  /* 430px (.wrap) minus the 14px inset on each side, so the pill still tracks
+     the content column on wide screens instead of stretching past it. */
+  max-width: 402px;
   margin: 0 auto;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  height: 62px;
+  padding: 6px;
+  border-radius: 22px;
+
+  /* The safe-area inset moved from padding-bottom into the bottom OFFSET, and
+     that is not a refactor -- it is the only thing that works now. An
+     edge-to-edge bar sat on the bottom edge and padded its content up clear of
+     the home indicator. A floating pill has to move the WHOLE element up
+     instead: padding would leave the pill's own rounded bottom edge sitting
+     under the indicator, with a 34px band of dead glass below the labels. */
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+
+  background: var(--glass-chrome);
+  backdrop-filter: blur(var(--glass-blur-chrome)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur-chrome)) saturate(160%);
+  border: 1px solid var(--glass-border-chrome);
+  /* Drop shadow to lift it off the content; inset top highlight to catch a
+     light source, which is what stops the pill reading as a flat grey slab. */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .tab {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  border-radius: 16px;
   padding: 6px 4px;
-  font: 600 11px 'Space Grotesk', system-ui, sans-serif;
+  font: 500 11px var(--font-body);
   letter-spacing: 0.2px;
   text-align: center;
   text-decoration: none;
-  color: var(--text-tertiary);
+  /* Not --text-tertiary: inactive labels sit on the pill's own translucent
+     fill, not on the page, so they are matched to that surface rather than to
+     the page's text ramp. */
+  color: rgba(255, 255, 255, 0.4);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -78,8 +109,21 @@
 /* Active state is derived from the current route on every navigation -- the
    router sets aria-current, and the styling hangs off that rather than a
    separate class, so there is only ever one source of truth for which tab is
-   selected (and screen readers get it for free). */
+   selected (and screen readers get it for free).
+
+   The indicator changes shape, not just colour: a soft glass pill fills in
+   behind the label, replacing the `inset 0 2px 0 var(--accent)` top line. The
+   top line depended on the bar having a straight top edge to draw on, which a
+   22px-radius floating pill no longer has. It also frees --accent from the
+   navigation chrome, so the only orange on screen is a Pulse Score. */
 .tab[aria-current="page"] {
   color: var(--text);
-  box-shadow: inset 0 2px 0 var(--accent);
+  font-weight: 600;
+  background: var(--glass-active);
+}
+
+/* Blur is what sells the material; alpha alone reads as a muddy panel. Where
+   backdrop-filter is unsupported the bar goes honestly opaque instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tabbar { background: var(--glass-fallback-chrome); }
 }

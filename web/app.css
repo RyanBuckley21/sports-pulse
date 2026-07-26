@@ -45,6 +45,38 @@
   --warning: #e7da5e;
   --critical: #F87171;
 
+  /* glass -- the Phase 3 "Liquid Glass" surfaces. The fills are --surface-2
+     and --surface AT ALPHA, not new greys: that is what makes a glass panel
+     read as the same material as the opaque surface beside it. Three ladders
+     (fill / border / blur) because prominence ranks the surfaces -- a
+     collapsed row is lighter and less blurred than the card it opens into,
+     and the tab bar, the only surface floating over scrolling content, is
+     the most blurred thing on screen. */
+  --glass-fill-soft: rgba(28, 31, 38, 0.45);
+  --glass-fill: rgba(28, 31, 38, 0.55);
+  --glass-fill-strong: rgba(28, 31, 38, 0.6);
+  --glass-chrome: rgba(22, 24, 29, 0.55);
+
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-lift: rgba(255, 255, 255, 0.1);
+  --glass-border-chrome: rgba(255, 255, 255, 0.14);
+
+  --glass-blur-soft: 10px;
+  --glass-blur: 12px;
+  --glass-blur-strong: 14px;
+  --glass-blur-chrome: 22px;
+
+  /* Selection, not status -- hence white-at-alpha rather than --accent. */
+  --glass-active: rgba(255, 255, 255, 0.12);
+  --glass-active-soft: rgba(255, 255, 255, 0.1);
+
+  /* Inset panel inside an already-glass card: flat wash, no second blur. */
+  --glass-inset: rgba(255, 255, 255, 0.05);
+
+  /* @supports fallbacks. Alpha alone without blur reads as a muddy panel. */
+  --glass-fallback: rgba(28, 31, 38, 0.92);
+  --glass-fallback-chrome: rgba(22, 24, 29, 0.94);
+
   /* type -- two faces only, every stack ending in a generic family.
      No --font-mono: of the 18 monospace selectors this file used to carry only
      two were numeric columns, and tabular figures cover those. Numeric columns
