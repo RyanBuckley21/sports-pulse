@@ -408,6 +408,7 @@ async function safeAreaChecks(browser, base) {
      pad.tabbarBottom === INSET_BOTTOM + "px", pad.tabbarBottom);
 
   // Geometry, not just declarations: nothing may render inside either strip.
+  const tops = {};
   for (const hash of ROUTES) {
     await goRoute(p, hash);
     const g = await p.evaluate(() => {
@@ -420,12 +421,22 @@ async function safeAreaChecks(browser, base) {
         viewportH: window.innerHeight,
       };
     });
+    tops[hash] = g.firstTop;
     ok("top content clears the island on " + hash,
        g.firstTop !== null && g.firstTop >= INSET_TOP, "y=" + g.firstTop + " vs inset " + INSET_TOP);
     ok("  tab labels clear the home indicator",
        g.tabBottom <= g.viewportH - INSET_BOTTOM,
        "bottom=" + g.tabBottom + " vs limit " + (g.viewportH - INSET_BOTTOM));
   }
+
+  // Every route must START AT THE SAME HEIGHT. Clearing the inset is necessary
+  // but not sufficient: the insights routes once sat 22px lower than Who's Hot
+  // because .insights-h1 kept a top margin meant to separate it from a back link
+  // the shell had already removed. Each route passed its own check in isolation,
+  // so only comparing them catches it -- switching tabs made the content jump.
+  const uniq = [...new Set(Object.values(tops))];
+  ok("all routes share the same top offset", uniq.length === 1,
+     Object.entries(tops).map(([h, y]) => h + "=" + y).join("  "));
   await p.close();
 }
 
