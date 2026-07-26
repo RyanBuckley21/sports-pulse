@@ -148,7 +148,52 @@ CHANGED_NOTES = {
 # this palette, and easy to miss because it only shows up offline.
 FONT_BODY = "'Space Grotesk', system-ui, -apple-system, sans-serif"
 FONT_HEAD = "'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif"
-FONT_MONO = "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace"
+
+# There is deliberately no --font-mono. app.css used JetBrains Mono in 18
+# selectors; auditing what each one actually contains showed that only two are
+# numeric columns where digit alignment is even possible:
+#
+#     .row-rank             zero-padded ranks, stacked, 22px box
+#     .breakdown-row-value  values right-aligned by justify-content
+#
+# Two more (.bar-label, .bar-sublabel) hold digits but sit in a horizontal
+# flex row, each centred in its own column, so nothing ever lines up
+# vertically. The remaining 14 are text: uppercase section labels, category
+# chips, team abbreviations, breadcrumbs, "vs leader". Mono was supplying
+# texture there, not alignment.
+#
+# The alignment case is fully covered by tabular figures. Measured advances
+# for Space Grotesk at 200px, expressed per 1000em:
+#
+#     default        430 - 645   (the "1" is 215 units narrower than "0")
+#     tabular-nums   615 - 620
+#     JetBrains Mono 600 - 600
+#
+# So --font-mono is not carried into the consolidated set, and the two real
+# numeric columns get NUMERIC_ALIGNMENT instead. This also drops a ~31KB
+# webfont from the critical path and settles the two-face/three-face conflict
+# in favour of insights.css's stated "no monospace, no serif" rule.
+#
+# The cost is real and is a design change, not a swap: those 14 label
+# selectors lose their telemetry-ish character and get tighter. That was
+# reviewed on a rendered comparison before this call was made.
+
+#: Apply to numeric columns that must align vertically. Space Grotesk's
+#: proportional figures vary by up to 215/1000em, which visibly ragged the
+#: rank column; its tnum feature closes that to 5/1000em.
+NUMERIC_ALIGNMENT = "font-variant-numeric: tabular-nums;"
+
+#: Selectors that need NUMERIC_ALIGNMENT when Phase 3 migrates them. The last
+#: three are not mono today but are numeric columns that would benefit --
+#: .row-value in particular is the leaderboard's most prominent number column
+#: and has been running proportional figures all along.
+NUMERIC_SELECTORS = (
+    (".row-rank", "was mono; zero-padded ranks stacked in a 22px box"),
+    (".breakdown-row-value", "was mono; values right-aligned in a stacked list"),
+    (".row-value", "already Space Grotesk; 20px stat column, right-aligned"),
+    (".key-value", "already Space Grotesk; three-up stat cells"),
+    (".hero-value", "already Space Grotesk; 68px hero number"),
+)
 
 #: Text sizes, in px. Consolidated from 21 distinct values across the two
 #: files. Open question for the user: whether FONT_MONO survives at all.
@@ -203,15 +248,17 @@ def css_root_block():
   --warning: %s;
   --critical: %s;
 
-  /* type -- every stack ends in a generic family on purpose */
+  /* type -- two faces only, every stack ending in a generic family.
+     No --font-mono: of the 18 monospace selectors in app.css only two were
+     numeric columns, and tabular figures cover those. Numeric columns use
+     `font-variant-numeric: tabular-nums` instead -- see NUMERIC_SELECTORS. */
   --font-body: %s;
   --font-head: %s;
-  --font-mono: %s;
 }""" % (
         BG, SURFACE, SURFACE_2,
         HAIRLINE, BORDER, BORDER_CHIP,
         TEXT, TEXT_SECONDARY, TEXT_TERTIARY,
         ACCENT, GOLD, HEAT,
         GOOD, WARNING, CRITICAL,
-        FONT_BODY, FONT_HEAD, FONT_MONO,
+        FONT_BODY, FONT_HEAD,
     )

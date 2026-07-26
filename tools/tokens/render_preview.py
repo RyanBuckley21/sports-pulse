@@ -184,6 +184,9 @@ def build():
         '<div class="tyrow"><span class="tysize">%dpx</span>'
         '<span class="tysample disp" style="font-size:%dpx">74</span></div>' % (s, s)
         for s in T.DISPLAY_SCALE)
+    numeric_rows = "".join(
+        '<tr><td><code>%s</code></td><td>%s</td></tr>' % (sel, why)
+        for sel, why in T.NUMERIC_SELECTORS)
     radii_rows = "".join(
         '<div class="rad"><div class="radbox" style="border-radius:%dpx"></div>'
         '<code>%s</code><span>%dpx</span></div>' % (v, n, v)
@@ -200,7 +203,7 @@ def build():
 <meta name="theme-color" content="{BG}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* GENERATED FILE -- edit tools/tokens/tokens.py and re-run
    `python3 -m tools.tokens.render_preview`. Hand edits here will be lost.
@@ -209,6 +212,12 @@ def build():
    reviewing it cannot be confounded by the live styles and editing it cannot
    affect them. */
 {ROOT}
+:root {{
+  /* Documentation chrome only -- NOT a product token. This page displays hex
+     values and selector names, which read better monospaced; the design
+     system itself ships two faces and no mono. System stack, no webfont. */
+  --font-code: ui-monospace, SFMono-Regular, Menlo, monospace;
+}}
 * {{ box-sizing: border-box; }}
 body {{
   margin: 0; background: var(--bg); color: var(--text);
@@ -217,20 +226,20 @@ body {{
 .wrap {{ max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }}
 h1 {{ font: 800 28px var(--font-head); letter-spacing: -0.02em; margin: 0 0 6px; }}
 .sub {{ color: var(--text-secondary); font-size: 14px; line-height: 1.55; margin: 0 0 10px; }}
-.stamp {{ display: inline-block; font: 500 11px var(--font-mono); color: var(--text-tertiary);
+.stamp {{ display: inline-block; font: 500 11px var(--font-code); color: var(--text-tertiary);
   border: 1px solid var(--border); border-radius: var(--r-pill, 999px); padding: 5px 11px; margin-bottom: 30px; }}
 h2 {{ font: 700 17px var(--font-head); letter-spacing: -0.01em;
   margin: 40px 0 4px; padding-top: 22px; border-top: 1px solid var(--hairline); }}
 h2:first-of-type {{ border-top: 0; }}
 .lede {{ color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin: 0 0 18px; }}
-code {{ font-family: var(--font-mono); }}
+code {{ font-family: var(--font-code); }}
 
 .trow {{ display: flex; gap: 14px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--hairline); }}
 .trow:last-child {{ border-bottom: 0; }}
 .tchip {{ width: 46px; height: 46px; flex: none; border-radius: 10px; border: 1px solid var(--border); }}
 .tmeta {{ min-width: 0; }}
-.tname {{ font: 600 13px var(--font-mono); color: var(--text); }}
-.tval {{ font: 400 12px var(--font-mono); color: var(--text-secondary); margin-left: 8px; word-break: break-all; }}
+.tname {{ font: 600 13px var(--font-code); color: var(--text); }}
+.tval {{ font: 400 12px var(--font-code); color: var(--text-secondary); margin-left: 8px; word-break: break-all; }}
 .prov {{ display: inline-block; font: 700 9px var(--font-body); letter-spacing: 0.8px;
   text-transform: uppercase; border-radius: 999px; padding: 3px 8px; margin-left: 8px; vertical-align: 2px; }}
 .prov-app {{ color: var(--accent); border: 1px solid rgba(255,122,46,0.35); }}
@@ -259,14 +268,14 @@ code {{ font-family: var(--font-mono); }}
   color: var(--gold); border: 1px solid rgba(240,168,58,0.35); border-radius: 999px; padding: 5px 11px; }}
 .staleness {{ display: flex; align-items: center; gap: 6px; }}
 .live-dot {{ width: 6px; height: 6px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 6px var(--warning); }}
-.stale-text {{ font: 500 11px var(--font-mono); color: var(--warning); }}
+.stale-text {{ font: 500 11px var(--font-code); color: var(--warning); }}
 
 table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
 th {{ text-align: left; font: 700 10px var(--font-body); letter-spacing: 0.8px; text-transform: uppercase;
   color: var(--text-tertiary); padding: 0 8px 9px 0; border-bottom: 1px solid var(--border); }}
 td {{ padding: 9px 8px 9px 0; border-bottom: 1px solid var(--hairline); color: var(--text-secondary); }}
-td code {{ font: 500 12px var(--font-mono); color: var(--text); }}
-td.num {{ font: 500 12px var(--font-mono); color: var(--text-secondary); }}
+td code {{ font: 500 12px var(--font-code); color: var(--text); }}
+td.num {{ font: 500 12px var(--font-code); color: var(--text-secondary); }}
 td.dim {{ color: var(--text-tertiary); }}
 .vs {{ color: var(--text-tertiary); font-size: 11px; }}
 .dot {{ display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }}
@@ -282,7 +291,7 @@ td.dim {{ color: var(--text-tertiary); }}
 .chgswatches {{ display: flex; align-items: center; gap: 10px; flex: none; }}
 .chgswatches > div {{ text-align: center; }}
 .chgchip {{ width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); }}
-.chghex {{ display: block; font: 400 10px var(--font-mono); color: var(--text-secondary); margin-top: 5px; }}
+.chghex {{ display: block; font: 400 10px var(--font-code); color: var(--text-secondary); margin-top: 5px; }}
 .chgtag {{ display: block; font: 700 8px var(--font-body); letter-spacing: 0.7px; text-transform: uppercase;
   color: var(--text-tertiary); margin-top: 2px; }}
 .chgtag.now {{ color: var(--good); }}
@@ -294,24 +303,24 @@ td.dim {{ color: var(--text-tertiary); }}
 .team.toodark {{ border-color: rgba(139,144,156,0.4); }}
 .tbar {{ height: 4px; border-radius: 3px; margin-bottom: 9px; }}
 .tabbr {{ font: 700 14px var(--font-body); }}
-.thex {{ font: 400 10px var(--font-mono); color: var(--text-secondary); margin-top: 2px; }}
-.thsl {{ font: 400 10px var(--font-mono); color: var(--text-tertiary); }}
+.thex {{ font: 400 10px var(--font-code); color: var(--text-secondary); margin-top: 2px; }}
+.thsl {{ font: 400 10px var(--font-code); color: var(--text-tertiary); }}
 .tflag {{ display: inline-block; margin-top: 6px; font: 700 8px var(--font-body); letter-spacing: 0.4px;
   color: var(--warning); border: 1px solid rgba(231,218,94,0.4); border-radius: 999px; padding: 2px 6px; }}
 .tflag.dim {{ color: var(--text-secondary); border-color: var(--border); }}
 
 .tyrow {{ display: flex; align-items: baseline; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--hairline); }}
-.tysize {{ font: 500 11px var(--font-mono); color: var(--text-tertiary); width: 52px; flex: none; }}
-.tysample {{ font-family: var(--font-body); font-weight: 600; color: var(--text); }}
+.tysize {{ font: 500 11px var(--font-code); color: var(--text-tertiary); width: 52px; flex: none; }}
+.tysample {{ font-family: var(--font-body); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }}
 .tysample.disp {{ font-family: var(--font-head); font-weight: 800; letter-spacing: -0.03em; }}
 .radii {{ display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }}
 .rad {{ text-align: center; }}
 .radbox {{ width: 62px; height: 62px; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 7px; }}
-.rad code {{ display: block; font: 500 11px var(--font-mono); color: var(--text); }}
-.rad span {{ font: 400 10px var(--font-mono); color: var(--text-tertiary); }}
+.rad code {{ display: block; font: 500 11px var(--font-code); color: var(--text); }}
+.rad span {{ font: 400 10px var(--font-code); color: var(--text-tertiary); }}
 
 pre.tokens {{ background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 16px; overflow-x: auto; font: 400 11.5px/1.6 var(--font-mono); color: var(--text-secondary); }}
+  padding: 16px; overflow-x: auto; font: 400 11.5px/1.6 var(--font-code); color: var(--text-secondary); }}
 ol.decisions {{ padding-left: 20px; margin: 14px 0 0; }}
 ol.decisions li {{ font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); margin-bottom: 13px; }}
 ol.decisions strong {{ color: var(--text); }}
@@ -391,10 +400,30 @@ ol.decisions li.done strong {{ color: var(--text-secondary); }}
 
   <h2>9. Type</h2>
   <p class="lede">Every stack now terminates in a generic family. insights.css ended its Bricolage stacks at <code>'Space Grotesk'</code> with no generic, so a failed webfont request dropped headings to the browser's default <em>serif</em> &mdash; which is what happens when this page is opened offline.</p>
-  <p class="lede">One open question remains: <code>--font-mono</code> is used <strong>19 times</strong> in app.css and <strong>zero</strong> times in insights.css, whose header comment explicitly says &ldquo;No monospace, no serif.&rdquo; Consolidating forces a choice. I lean toward keeping it scoped to numeric/system text (timestamps, ranks) where it does real work separating machine output from prose.</p>
+  <p class="lede"><strong>Monospace is dropped.</strong> app.css used JetBrains Mono in 18 selectors. Auditing what each one actually contains: only <strong>two</strong> are numeric columns where vertical alignment is even possible &mdash; <code>.row-rank</code> and <code>.breakdown-row-value</code>. Two more hold digits (<code>.bar-label</code>, <code>.bar-sublabel</code>) but sit in a horizontal flex row, each centred in its own column, so nothing lines up vertically by construction. The other <strong>14 are text</strong>: uppercase section labels, category chips, team abbreviations, breadcrumbs, the literal string &ldquo;vs leader&rdquo;. Mono was supplying texture there, not alignment.</p>
+  <p class="lede">The alignment case is covered by tabular figures. Measured advances for Space Grotesk at 200px, per 1000em:</p>
+  <table>
+    <thead><tr><th>Treatment</th><th>digit advance range</th><th>spread</th><th>Aligns?</th></tr></thead>
+    <tbody>
+      <tr><td><code>Space Grotesk</code> default</td><td class="num">430 &ndash; 645</td><td class="num">215</td><td><span class="verdict bad">ragged</span></td></tr>
+      <tr><td><code>Space Grotesk</code> + <code>tabular-nums</code></td><td class="num">615 &ndash; 620</td><td class="num">5</td><td><span class="verdict ok">aligns</span></td></tr>
+      <tr><td><code>JetBrains Mono</code></td><td class="num">600 &ndash; 600</td><td class="num">0</td><td><span class="verdict ok">aligns</span></td></tr>
+    </tbody>
+  </table>
+  <p class="lede" style="margin-top:14px">The <code>1</code> is the culprit: 215/1000em narrower than <code>0</code> in the default figures. Since <code>app.js</code> zero-pads ranks (<code>padStart(2,&quot;0&quot;)</code>), ranks 01&ndash;09 lead with the widest digit and 10+ lead with the narrowest, which is the worst case for a stacked column. <code>tnum</code> closes the gap to 5/1000em &mdash; 0.07px at 13px.</p>
+  <div class="callout">
+    <strong>The decisive evidence against &ldquo;mono is load-bearing&rdquo;:</strong> <code>.row-value</code>, the leaderboard's most prominent numeric column at 20px, has been <em>Space Grotesk with proportional figures</em> this whole time (<code>app.css:97</code>) &mdash; as have <code>.key-value</code> and the 68px <code>.hero-value</code>. Every big number on the site already renders without mono. It was never doing consistent alignment work.
+    <br><br>
+    The cost is real and worth stating: those 14 label selectors lose a distinctly technical, wide-tracked character and get tighter. That is a visible design change, not a swap, and it was reviewed on a rendered before/after rather than decided on the numbers alone. It also removes a ~31KB webfont from the critical path and settles the two-face/three-face conflict in favour of insights.css's stated rule.
+  </div>
   {TYPE_ROWS}
   <p class="lede" style="margin-top:16px">Display scale &mdash; collapses today's 30/34/38px near-duplicates to 34:</p>
   {DISP_ROWS}
+  <p class="lede" style="margin-top:18px">Selectors Phase 3 must give <code>font-variant-numeric: tabular-nums</code>. The last three are not mono today &mdash; they are numeric columns that have been running proportional figures all along, so this is an improvement on current behaviour rather than a like-for-like port:</p>
+  <table>
+    <thead><tr><th>Selector</th><th>Why</th></tr></thead>
+    <tbody>{NUMERIC_ROWS}</tbody>
+  </table>
 
   <h2>10. Radii</h2>
   <p class="lede">Current values: 3, 6, 7, 9, 10, 13, 14, 16, 18, 999. The pill is Insights-only &mdash; 8 uses there, zero in app.css &mdash; and is a large part of why the two sections read as different products.</p>
@@ -410,7 +439,7 @@ ol.decisions li.done strong {{ color: var(--text-secondary); }}
     <li class="done"><strong><code>--warning</code> collision &mdash; fixed.</strong> {DE_GW_OLD:.1f} &rarr; {DE_GW_NEW:.1f} &Delta;E from <code>--gold</code>, and {DE_AW_NEW:.1f} from <code>--accent</code>.</li>
     <li class="done"><strong><code>--text-tertiary</code> contrast &mdash; fixed.</strong> {TT_OLD_WORST:.2f}:1 &rarr; {TT_NEW_WORST:.2f}:1 worst-case.</li>
     <li class="done"><strong>Font fallbacks &mdash; fixed.</strong> All three stacks terminate in a generic family.</li>
-    <li><strong>Still open &mdash; mono: keep or drop?</strong> Section 9. Blocks Phase 3 for the header and leaderboard rows.</li>
+    <li class="done"><strong>Mono &mdash; dropped.</strong> Section 9. Two numeric columns move to <code>tabular-nums</code>; 14 label selectors move to <code>--font-body</code>.</li>
     <li class="done"><strong>Team-colour collisions &mdash; noted for Phase 3.</strong> No action this phase, per your call.</li>
     <li class="done"><strong>Icon registry rename &mdash; deferred.</strong> Kept out of this diff.</li>
   </ol>
@@ -435,6 +464,7 @@ ol.decisions li.done strong {{ color: var(--text-secondary); }}
         SEPARATION_ROWS=separation_rows(),
         TEAM_SWATCHES=team_swatches(warm, dim),
         TYPE_ROWS=type_rows, DISP_ROWS=disp_rows, RADII_ROWS=radii_rows,
+        NUMERIC_ROWS=numeric_rows,
         DE_AG=de_ag, DE_GW_OLD=de_gw_old, DE_GW_NEW=de_gw_new,
         DE_AW_NEW=de_aw_new, DE_GOOD_W=de_good_w,
         TT_OLD_WORST=tt_old_worst, TT_NEW_WORST=tt_new_worst,
