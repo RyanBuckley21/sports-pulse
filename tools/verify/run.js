@@ -212,16 +212,19 @@ async function reEntryChecks(browser, base) {
   ok("one data fetch on load", json.length === 1, json.join(","));
 
   // Detail -> leave section -> return must land on the list, as a reload does.
+  // Detects the detail view by .pcat-list, not the old .hero-value: the 68px
+  // hero was retired when the page became a multi-category list, and .pcat-list
+  // is now the element that exists there and nowhere else.
   await p.click(".player-row");
   await p.waitForTimeout(250);
-  const inDetail = await p.evaluate(() => !!document.querySelector(".hero-value"));
+  const inDetail = await p.evaluate(() => !!document.querySelector(".pcat-list"));
   ok("player detail opens", inDetail);
   json = [];
   await p.evaluate(() => { SP.views.whosHot.unmount(); return SP.views.whosHot.mount(); });
   await p.waitForTimeout(300);
   ok("unmount+mount returns to the list",
      (await p.$$eval(".player-row", (e) => e.length)) > 0 &&
-     !(await p.evaluate(() => !!document.querySelector(".hero-value"))));
+     !(await p.evaluate(() => !!document.querySelector(".pcat-list"))));
   ok("re-mount inside the staleness window does not refetch", json.length === 0, json.join(",") || "none");
 
   // Scroll reset: [hidden] clears descendant scroll but never the document's.
@@ -287,6 +290,122 @@ async function reEntryChecks(browser, base) {
   await p.waitForTimeout(200);
   ok("clicks still work after five re-mounts",
      (await p.$$eval(".gr-item.is-open", (e) => e.length)) === 1);
+  await p.close();
+}
+
+// ------------------------------------------------------- player-detail
+// The detail page lists EVERY board a player qualifies on, hottest first, each
+// collapsing into its per-category breakdown. Three things here are only ever
+// wrong silently -- the page still renders, it just shows the wrong boards, in
+// the wrong order, or quietly stops deferring them -- so all three are measured.
+//
+// Ordering is the subtlest. The fixture deliberately gives its multi-board
+// player DIFFERENT ranks per board (1/2/3/4/6), because a fixture where
+// everyone is #1 everywhere lets a broken sort pass.
+async function playerDetailChecks(browser, base) {
+  heading("player-detail");
+  const p = await newPage(browser);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(600);
+
+  const read = () => p.evaluate(() => {
+    const items = [...document.querySelectorAll(".pcat-item")];
+    return {
+      count: items.length,
+      labels: items.map((i) => i.querySelector(".pcat-label").textContent),
+      ranks: items.map((i) => Number(i.querySelector(".pcat-rank").textContent.replace("#", ""))),
+      // Bar width is the pulse score, so it must fall as rank rises. Read the
+      // inline width rather than the rendered px, which varies with viewport.
+      widths: items.map((i) => parseFloat(i.querySelector(".mag-fill").style.width)),
+      open: items.map((i) => i.classList.contains("is-open")),
+      aria: items.map((i) => i.querySelector("[data-pcat-btn]").getAttribute("aria-expanded")),
+      // Measured, not inferred from the class: a collapsed section that still
+      // has height is the failure mode a class check cannot see.
+      heights: items.map((i) => Math.round(i.querySelector(".pcat-detail-inner").getBoundingClientRect().height)),
+      heatDots: items.map((i) => !!i.querySelector(".heat-dot")),
+    };
+  });
+
+  // Aaron Judge -- five boards at ranks 1/2/3/4/6. He is #2 on home_runs, the
+  // first board, so tapping row 2 of the default leaderboard reaches him.
+  await p.evaluate(() => document.querySelectorAll(".player-row")[1].click());
+  await p.waitForTimeout(300);
+  let s = await read();
+
+  ok("multi-board player lists every board", s.count === 5, s.count + " -> " + s.labels.join(", "));
+  ok("  ranks ascending (hottest first)",
+     s.ranks.every((r, i) => i === 0 || s.ranks[i - 1] <= r), s.ranks.join(","));
+  ok("  bar length falls with rank",
+     s.widths.every((w, i) => i === 0 || s.widths[i - 1] >= w), s.widths.join(","));
+  // 100 - (rank-1)*7, the _pulse() formula ported into app.js.
+  ok("  bar encodes pulse, not share-of-leader",
+     s.widths.every((w, i) => w === Math.max(30, Math.min(100, 100 - (s.ranks[i] - 1) * 7))),
+     s.ranks.map((r, i) => "#" + r + "=" + s.widths[i] + "%").join(" "));
+  ok("  exactly one heat dot, on the hottest board",
+     s.heatDots.filter(Boolean).length === 1 && s.heatDots[0], s.heatDots.join(","));
+
+  // The premise of the redesign: no category is privileged, INCLUDING the one
+  // tapped in from. Judge was reached via home_runs, which is not first here.
+  ok("  nothing expanded on arrival", s.open.every((o) => o === false), s.open.join(","));
+  ok("  and collapsed means zero height", s.heights.every((h) => h === 0), s.heights.join(","));
+  ok("  aria-expanded matches", s.aria.every((a) => a === "false"), s.aria.join(","));
+  ok("  the tapped category is not promoted to the top",
+     s.labels[0] === "Total Bases / G", s.labels[0]);
+
+  // The retired hero: its absence is the change, so assert it rather than
+  // trusting that nothing re-adds a 68px restatement of the tapped row.
+  ok("  no hero restating the leaderboard row",
+     (await p.$$eval(".hero-value, .hero-row", (e) => e.length)) === 0);
+
+  await p.evaluate(() => document.querySelectorAll("[data-pcat-btn]")[2].click());
+  await p.waitForTimeout(450);
+  s = await read();
+  ok("tapping a row expands it in place", s.open[2] === true && s.aria[2] === "true",
+     "open=" + s.open.join(",") + " aria=" + s.aria.join(","));
+  ok("  the section has height", s.heights[2] > 0, s.heights[2] + "px");
+  ok("  and the others stay closed (accordion)",
+     s.open.filter(Boolean).length === 1, s.open.join(","));
+  ok("  the full per-category detail is inside it",
+     await p.evaluate(() => {
+       const d = document.querySelectorAll(".pcat-item")[2];
+       return !!(d.querySelector(".key-row") && d.querySelector(".bars-row") && d.querySelector(".breakdown-row"));
+     }));
+
+  await p.evaluate(() => document.querySelectorAll("[data-pcat-btn]")[0].click());
+  await p.waitForTimeout(450);
+  s = await read();
+  ok("opening another closes the first", s.open[0] === true && s.open[2] === false,
+     s.open.join(","));
+
+  await p.evaluate(() => document.querySelectorAll("[data-pcat-btn]")[0].click());
+  await p.waitForTimeout(450);
+  s = await read();
+  ok("tapping the open row closes it", s.open.every((o) => o === false) && s.heights[0] === 0,
+     "open=" + s.open.join(",") + " h=" + s.heights[0]);
+
+  // Back must still work, and still land where the reader left the list.
+  await p.evaluate(() => { document.documentElement.style.minHeight = "3000px"; window.scrollTo(0, 300); });
+  await p.waitForTimeout(150);
+  await p.evaluate(() => document.querySelector("#backBtn").click());
+  await p.waitForTimeout(350);
+  ok("back returns to the leaderboard",
+     (await p.$$eval(".player-row", (e) => e.length)) > 0 &&
+     (await p.$$eval(".pcat-item", (e) => e.length)) === 0);
+
+  // N=1: a player on a single board. A collapsed row would put a tap between
+  // the reader and the only thing the page has to say, so it opens expanded.
+  await p.evaluate(() => {
+    document.querySelector('[data-cat="strikeouts"]').click();
+  });
+  await p.waitForTimeout(350);
+  await p.evaluate(() => document.querySelector(".player-row").click());
+  await p.waitForTimeout(350);
+  s = await read();
+  ok("single-board player auto-expands", s.count === 1 && s.open[0] === true,
+     "count=" + s.count + " open=" + s.open.join(","));
+  ok("  with aria and height agreeing", s.aria[0] === "true" && s.heights[0] > 0,
+     "aria=" + s.aria[0] + " h=" + s.heights[0]);
+
   await p.close();
 }
 
@@ -741,6 +860,7 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
   try {
     await scopeLeakCheck(browser, base);
     await reEntryChecks(browser, base);
+    await playerDetailChecks(browser, base);
     await aiNoteChecks(browser, base);
     await routerChecks(browser, base);
     await safeAreaChecks(browser, base);
