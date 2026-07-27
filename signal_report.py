@@ -14,10 +14,30 @@ ever read back by the generator.
 
 The all-time record
 -------------------
-Each report also appends its date's tallies to data/signal_report_history.json
-and prints the standing record across every date reported so far. The ledger is
-keyed BY DATE, so re-running a day (reported early with picks still pending,
-then again once they finish) overwrites that day rather than double-counting.
+Each report appends to data/signal_report_history.jsonl and prints the standing
+record across every date reported so far.
+
+ONE ROW PER PICK, not per-date totals. A row carries the pick (matchup, gamePk,
+market, side, Signal Score, flags) and an `observed` block: the raw box-score
+numbers every grading rule reads. That grain is what keeps later questions
+answerable -- how moneyline picks have done, whether 90+ scores outperform 60s --
+and, because the raw numbers are stored rather than only the verdict, a CHANGED
+grading rule can be re-applied to old rows for free. Storing verdicts alone
+would have frozen every row at whatever rule was in force the day it was
+written; the estimate-tie rule has already changed once. Aggregates are computed
+on every read and never stored as truth.
+
+Append-only JSONL, like data/training/*.jsonl: rows are added, never rewritten,
+so two machines reporting different dates merge cleanly. Re-reporting a date
+appends a new run rather than editing the old one, and reads take only each
+date's most recent run_id -- so a day reported early with picks still PENDING
+and reported again once they finish counts once.
+
+A date with nothing to grade is written down explicitly rather than left as an
+absence: `no_picks` (a store, but no market cleared the bar) and `no_store` (no
+committed store covers that date -- the common case, since the generator only
+runs when someone runs it). Both are reported as gaps, never as losses. A date
+with no row at all means the report was simply never run for it.
 
 Only a canonical run is recorded: `--all-markets` or a moved `--min-score`
 change the pick set, and `--store` points at a fixture rather than the project's
@@ -85,7 +105,7 @@ import betting_signals  # read-only: ranking (list_markets / top_market)
 
 CONFIG_PATH = "config.yaml"
 STORE_PATH = "data/insights.games.json"
-LEDGER_PATH = "data/signal_report_history.json"
+LEDGER_PATH = "data/signal_report_history.jsonl"
 SPORT_KEY = "mlb"
 
 # Reference lines used ONLY under --assume-lines. These are conventional round
@@ -149,51 +169,153 @@ def load_store(path, rev=None):
         die("no store at {}".format(path))
 
 
+SCHEMA_VERSION = 2
+
+# Per-date outcomes the ledger distinguishes. A date with no entry at all means
+# the report was never run for it -- which is why "the store had nothing" and
+# "no market cleared the bar" are written down as facts rather than left as the
+# same silence.
+STATUS_RECORDED, STATUS_NO_PICKS, STATUS_NO_STORE = "recorded", "no_picks", "no_store"
+
+
+def _now_iso():
+    return (datetime.datetime.now(datetime.timezone.utc)
+            .replace(microsecond=0).isoformat().replace("+00:00", "Z"))
+
+
 def load_ledger(path=LEDGER_PATH):
-    """The running record of every date reported so far. Missing or unreadable
-    means "no history yet" -- a broken ledger must never block a report."""
+    """Every row ever appended, in file order. Missing or unreadable means "no
+    history yet" -- a broken ledger must never block a report. A single corrupt
+    line is skipped rather than discarding the whole history."""
+    rows = []
     try:
         with open(path) as f:
-            data = json.load(f)
-    except (OSError, ValueError):
-        return {"schema_version": 1, "dates": {}}
-    if not isinstance(data.get("dates"), dict):
-        return {"schema_version": 1, "dates": {}}
-    return data
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    continue
+    except OSError:
+        return []
+    return rows
 
 
-def record_day(ledger, date, rows, source, path=LEDGER_PATH):
-    """Write this date's tallies into the ledger, keyed BY DATE.
+def latest_run_rows(all_rows):
+    """The rows that currently describe each date: those from that date's most
+    recent run_id.
 
-    Keying by date makes re-running a date idempotent: a day reported early
-    (picks still PENDING) and reported again after the games finish overwrites
-    its own entry instead of double-counting into the all-time record. Only the
-    outcome and estimate bases are stored -- assumed-line results come from
-    invented numbers and must never accumulate into a standing record.
+    The ledger is append-only (it merges cleanly across machines, unlike a single
+    mutated object), so re-reporting a date does not erase the earlier attempt --
+    it appends a newer run and this read supersedes the old one. That is what
+    makes a day reported early with picks still PENDING, then reported again once
+    they finish, count once rather than twice.
     """
-    tallies = {}
-    for basis in ("outcome", "estimate"):
-        rec = {"HIT": 0, "MISS": 0, "PUSH": 0}
-        for _, _, _, verdict, b in rows:
-            if b == basis and verdict in rec:
-                rec[verdict] += 1
-        tallies[basis] = rec
-    ledger.setdefault("dates", {})[date] = {
-        "recorded_at": datetime.datetime.now(datetime.timezone.utc)
-                               .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "source": source,
-        "picks": len(rows),
-        "pending": sum(1 for r in rows if r[3] in RERUNNABLE),
-        "outcome": tallies["outcome"],
-        "estimate": tallies["estimate"],
+    newest = {}
+    for row in all_rows:
+        date, run = row.get("date"), row.get("run_id") or ""
+        if not date:
+            continue
+        if date not in newest or run > newest[date]:
+            newest[date] = run
+    out = {}
+    for row in all_rows:
+        date = row.get("date")
+        if date and (row.get("run_id") or "") == newest.get(date):
+            out.setdefault(date, []).append(row)
+    return out
+
+
+def observed_facts(game):
+    """The raw numbers every grading rule reads, stored per pick so a verdict can
+    be RE-DERIVED later instead of being frozen at whatever rule was in force the
+    day it was written. (The estimate-tie rule changed once already; without
+    this, every row recorded before that change would still carry the old
+    verdict with no way to re-apply the new one.)"""
+    if game is None or not is_final(game):
+        return None
+    f5_away, f5_home, n_inn = innings_runs(game, 5)
+    i1_away, i1_home, n_first = innings_runs(game, 1)
+    teams = game.get("teams") or {}
+    return {
+        "away_score": (teams.get("away") or {}).get("score"),
+        "home_score": (teams.get("home") or {}).get("score"),
+        "f5_away": f5_away, "f5_home": f5_home,
+        "first_inning_runs": (i1_away + i1_home) if n_first else None,
+        "innings_played": n_inn,
+        "state": (game.get("status") or {}).get("detailedState"),
     }
-    ledger["schema_version"] = 1
+
+
+def build_pick_rows(date, rows, source, run_id):
+    """One ledger row per pick -- the grain that makes "how have moneyline picks
+    done" and "do 90+ scores outperform 60s" answerable later. Aggregates are
+    computed on read; none are stored as truth."""
+    out = []
+    for pick, game, result, verdict, basis in rows:
+        out.append({
+            "schema_version": SCHEMA_VERSION,
+            "date": date, "status": STATUS_RECORDED, "run_id": run_id, "source": source,
+            "gamePk": pick["gamePk"],
+            "away": pick["away_abbr"], "home": pick["home_abbr"],
+            "game_number": (game or {}).get("gameNumber"),
+            "start": pick["start"],
+            "bet_type": pick["bet_type"], "market": pick["market"], "side": pick["side"],
+            "score": pick["score"], "flags": pick["flags"], "point": pick.get("point"),
+            "result": result, "verdict": verdict, "basis": basis,
+            "observed": observed_facts(game),
+        })
+    return out
+
+
+def build_status_row(date, status, source, run_id, note=None):
+    """A date with no picks to record, written down explicitly so the gap reads
+    as a known fact rather than an absence indistinguishable from never having
+    run the report."""
+    row = {"schema_version": SCHEMA_VERSION, "date": date, "status": status,
+           "run_id": run_id, "source": source}
+    if note:
+        row["note"] = note
+    return row
+
+
+def append_ledger(new_rows, path=LEDGER_PATH):
+    """Append-only: rows are added, never rewritten. Two machines reporting
+    different dates produce files that merge cleanly, which a single mutated JSON
+    object would not."""
+    if not new_rows:
+        return
     try:
-        with open(path, "w") as f:
-            json.dump(ledger, f, indent=2, sort_keys=True)
+        with open(path, "a") as f:
+            for row in new_rows:
+                f.write(json.dumps(row, sort_keys=True) + "\n")
     except OSError as e:
         sys.stderr.write("signal_report: warning: could not write {} ({})\n".format(path, e))
-    return ledger
+
+
+def ledger_totals(all_rows):
+    """Records and date counts derived from the ledger on every read.
+
+    Returns (per-basis records, {status: date count}). Nothing here is cached to
+    disk: the JSONL rows are the only source of truth, so a change to how a
+    verdict is counted takes effect on the next read rather than needing a
+    stored aggregate to be rebuilt.
+    """
+    latest = latest_run_rows(all_rows)
+    records = {b: {"HIT": 0, "MISS": 0, "PUSH": 0} for b in BASES}
+    counts = {STATUS_RECORDED: 0, STATUS_NO_PICKS: 0, STATUS_NO_STORE: 0}
+    for date_rows in latest.values():
+        status = date_rows[0].get("status", STATUS_RECORDED)
+        has_pick = any(r.get("status") == STATUS_RECORDED and r.get("bet_type") for r in date_rows)
+        counts[status if not has_pick else STATUS_RECORDED] = \
+            counts.get(status if not has_pick else STATUS_RECORDED, 0) + 1
+        for row in date_rows:
+            basis, verdict = row.get("basis"), row.get("verdict")
+            if basis in records and verdict in records[basis]:
+                records[basis][verdict] += 1
+    return records, counts
 
 
 def is_recordable(args, min_score, threshold):
@@ -205,7 +327,7 @@ def is_recordable(args, min_score, threshold):
     any of those accumulate would silently mix incomparable denominators into one
     all-time number. `--rev` IS allowed: it reads the real committed store for an
     older date. `--assume-lines` is allowed too, since it only affects rows that
-    would otherwise go ungraded, and its tallies are never recorded anyway.
+    would otherwise go ungraded, and its results are never recorded anyway.
 
     Returns (recordable, reason_when_not).
     """
@@ -218,12 +340,6 @@ def is_recordable(args, min_score, threshold):
     if args.store != STORE_PATH:
         return False, "--store points outside the project store"
     return True, None
-
-
-def has_picks(rows):
-    """A date with no picks has nothing to record. Storing it anyway would add to
-    the ledger's date count while contributing no result to either record."""
-    return bool(rows)
 
 
 def store_slate_dates(store):
@@ -541,7 +657,7 @@ def matchup(pick, game):
     return label
 
 
-def render(date, picks, rows, store_size, assume_lines, ledger=None,
+def render(date, picks, rows, store_size, assume_lines, ledger_rows=None,
            not_recorded=None, out=sys.stdout):
     def w(line=""):
         out.write(line.rstrip() + "\n")
@@ -570,7 +686,7 @@ def render(date, picks, rows, store_size, assume_lines, ledger=None,
     w()
     for line in summary_lines(date, rows):
         w(line)
-    for line in alltime_lines(ledger, not_recorded):
+    for line in alltime_lines(ledger_rows, not_recorded):
         w(line)
 
 
@@ -617,19 +733,21 @@ def summary_lines(date, rows):
     return lines
 
 
-def alltime_lines(ledger, not_recorded=None):
-    """The standing record across every date in the ledger, same two-basis split
-    as the day's summary -- an all-time number that blended them would make the
-    same overstated claim the daily one is careful not to."""
-    dates = (ledger or {}).get("dates") or {}
+def alltime_lines(all_rows, not_recorded=None):
+    """The standing record across every date in the ledger, computed from the
+    rows on each read. Same two-basis split as the day's summary -- an all-time
+    number that blended them would make the same overstated claim.
+
+    Dates with nothing to grade are reported as their own counts rather than
+    folded in silently: a day the generator never ran is a gap in the record, and
+    a gap that looks like an absence is indistinguishable from never having asked.
+    """
     lines = []
-    if dates:
+    if all_rows:
+        records, counts = ledger_totals(all_rows)
         parts = []
-        for basis in ("outcome", "estimate"):
-            rec = {"HIT": 0, "MISS": 0, "PUSH": 0}
-            for day in dates.values():
-                for k in rec:
-                    rec[k] += (day.get(basis) or {}).get(k, 0)
+        for basis in BASES:
+            rec = records[basis]
             n = rec["HIT"] + rec["MISS"]
             if not n and not rec["PUSH"]:
                 continue
@@ -640,8 +758,17 @@ def alltime_lines(ledger, not_recorded=None):
             if rec["PUSH"]:
                 seg += " [{} push]".format(rec["PUSH"])
             parts.append(seg)
-        parts.append("{} date{}".format(len(dates), "" if len(dates) == 1 else "s"))
+        graded = counts.get(STATUS_RECORDED, 0)
+        parts.append("{} date{}".format(graded, "" if graded == 1 else "s"))
         lines.append("All-time:          {}".format("  ·  ".join(parts)))
+        gaps = []
+        if counts.get(STATUS_NO_PICKS):
+            gaps.append("{} with no pick over the bar".format(counts[STATUS_NO_PICKS]))
+        if counts.get(STATUS_NO_STORE):
+            gaps.append("{} with no store committed".format(counts[STATUS_NO_STORE]))
+        if gaps:
+            lines.append("         gaps: {} — recorded as such, not counted as losses".format(
+                ", ".join(gaps)))
     if not_recorded:
         lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
     return lines
@@ -701,6 +828,10 @@ def main(argv=None):
     threshold = (config.get("betting_signals") or {}).get(SPORT_KEY, {}).get("standout_threshold", 50)
     min_score = args.min_score if args.min_score is not None else threshold
 
+    run_id, source = _now_iso(), (
+        "{}@{}".format(args.store, args.rev) if args.rev else args.store)
+    recordable, why_not = is_recordable(args, min_score, threshold)
+
     store = load_store(args.store, args.rev)
     if not store:
         die("store {} is empty".format(args.store))
@@ -717,6 +848,12 @@ def main(argv=None):
     overlap = [pk for pk in store if pk in slate]
     if not overlap:
         stamps = store_slate_dates(store) or ["unknown"]
+        # Write the gap down before exiting. A date with no store is a fact about
+        # the record -- left unwritten it is indistinguishable from a date nobody
+        # ever asked about, and these accumulate every day the generator is not run.
+        if recordable:
+            append_ledger([build_status_row(args.date, STATUS_NO_STORE, source, run_id,
+                                            note="store covers {}".format("/".join(stamps)))])
         die("store {}{} covers {} ({} games), not {} — no gamePk overlap.\n"
             "  Try: --date {}   or   --rev <commit whose store covers {}>\n"
             "  (the store is pruned to one slate per run; past slates live in git history)".format(
@@ -749,15 +886,11 @@ def main(argv=None):
 
     # The standing record. Only a canonical run may add to it; every run still
     # displays it, so the all-time number is visible even from a fixture run.
-    ledger = load_ledger()
-    recordable, why_not = is_recordable(args, min_score, threshold)
-    if recordable and not has_picks(rows):
-        recordable, why_not = False, "no picks on this date"
     if recordable:
-        ledger = record_day(ledger, args.date, rows,
-                            "{}@{}".format(args.store, args.rev) if args.rev else args.store)
+        append_ledger(build_pick_rows(args.date, rows, source, run_id) if rows
+                      else [build_status_row(args.date, STATUS_NO_PICKS, source, run_id)])
 
-    render(args.date, picks, rows, len(store), args.assume_lines, ledger, why_not)
+    render(args.date, picks, rows, len(store), args.assume_lines, load_ledger(), why_not)
     return EXIT_PENDING if any(r[3] in RERUNNABLE for r in rows) else EXIT_OK
 
 
