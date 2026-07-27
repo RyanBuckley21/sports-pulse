@@ -24,12 +24,24 @@
   --text-secondary: #8b909c;
   --text-tertiary: #676b75;
 
-  /* The leaderboard rank column, deliberately dimmer than --text-tertiary and
-     deliberately outside the audited set: it is a de-emphasised ordinal you
-     read positionally, not prose. Already ran below the WCAG floor before this
-     change (rgba(255,255,255,0.32)); this is that same intent at the
-     consolidated palette's hue. */
-  --text-rank: #454851;
+  /* --text-rank IS RETIRED. It was #454851 -- a deliberately dim step below
+     --text-tertiary for ordinals "you read positionally, not prose" -- and it
+     sat outside the audited token set on that reasoning.
+
+     Measured against the surfaces it actually lands on, that reasoning does not
+     hold: 2.00:1 on a collapsed .pcat-item, 1.96:1 on the .board panel, 2.13:1
+     even on flat --bg. The audit's floor is 3.0:1 for large text and these are
+     11-13px. It was already under the floor before the glass surfaces (the
+     inherited value was rgba(255,255,255,0.32)), so this is a pre-existing
+     defect being paid off, not a Phase 3 regression -- but the rank badge
+     carries real weight on the detail page now that it labels what the bar
+     encodes, so "de-emphasised" stopped being a fair description of its job.
+
+     Everything that used it moves to --text-tertiary, the next step up in the
+     scale, which measures 3.42 / 3.36 / 3.33:1 on those same three surfaces.
+     Retired rather than redefined to #676b75: a token holding a value identical
+     to another token is a distinction with no difference, and the next reader
+     has to diff two hex codes to discover they are the same colour. */
 
   /* accents -- BOTH PERMANENT, DO NOT MERGE.
      --accent is Pulse Score (the deterministic heat metric); --gold is
@@ -180,9 +192,9 @@ body {
 .section-title-row { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 2px 8px; }
 .section-title { font: 600 12px var(--font-body); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; }
 /* "vs leader" -- a column caption for the bars below it, not a second heading.
-   Dropped to --text-rank so it sits with the rank column it explains rather
-   than competing with .section-title on the same line. */
-.section-sub { font: 500 11px var(--font-body); color: var(--text-rank); }
+   Dropped to --text-tertiary so it sits with the rank column it explains
+   rather than competing with .section-title on the same line. */
+.section-sub { font: 500 11px var(--font-body); color: var(--text-tertiary); }
 
 /* ---------- leaderboard rows ---------- */
 /* ONE GLASS PANEL AROUND THE WHOLE LIST, with hairline-separated rows inside
@@ -214,7 +226,7 @@ body {
    the list, so a trailing rule would draw a line to nowhere. */
 .board li:not(:last-child) .player-row { border-bottom: 1px solid var(--hairline); }
 .row-top { display: flex; align-items: center; gap: 10px; }
-.row-rank { font: 500 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--text-rank); width: 22px; flex: none; }
+.row-rank { font: 500 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--text-tertiary); width: 22px; flex: none; }
 .row-name { font: 600 15px var(--font-body); color: var(--text); letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .heat-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--heat); box-shadow: 0 0 6px rgba(255, 120, 40, 0.75); }
 .row-logo { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; flex: none; }
@@ -255,11 +267,85 @@ body {
 .identity-sub { font: 400 12px var(--font-body); color: rgba(255, 255, 255, 0.45); margin-top: 5px; }
 .identity-heat { margin-left: auto; width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--heat); box-shadow: 0 0 9px rgba(255, 120, 40, 0.8); }
 
-.hero-row { margin-top: 24px; display: flex; align-items: flex-end; gap: 14px; }
-.hero-value { font: 700 68px/0.82 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -2.5px; }
-.hero-caption { padding-bottom: 10px; }
-.hero-cat { font: 600 13px var(--font-body); color: var(--text); }
-.hero-sub { font: 500 11px var(--font-body); color: var(--text-tertiary); margin-top: 4px; }
+/* THE .hero-* RULES ARE GONE, with the markup they styled. The 68px hero
+   number restated the value from the leaderboard row the reader had just
+   tapped, which was the detail page's main redundancy. It was also inherently
+   single-category, so it had no correct value to show once the page began
+   listing every board a player qualifies on. Its numeric column moved to
+   .pcat-value -- see NUMERIC_SELECTORS in tools/tokens/tokens.py, which was
+   updated to match rather than left pointing at a selector nothing emits. */
+
+/* ---------- player categories (detail page) ----------
+   One row per board the player qualifies on, hottest first, each opening into
+   the full per-category detail.
+
+   Named .pcat-* rather than the obvious .cat-*: insights.css already defines
+   .cat-item, .cat-label and .cat-icon UNSCOPED (insights.css:137-144) and loads
+   after this file, so a .cat-* class here would be silently restyled on this
+   page. That is the exact cascade leak insights-scope-leak-check exists to
+   catch, and the cheapest fix is to not collide in the first place.
+
+   Surface treatment matches .gr-item in the games list -- soft glass collapsed,
+   strong glass open -- because it is the same interaction on the same kind of
+   list, and a second visual language for it would read as a different control. */
+.pcat-list { margin-top: 22px; }
+.pcat-item {
+  margin-bottom: 10px;
+  border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  backdrop-filter: blur(var(--glass-blur-soft));
+  -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--glass-border);
+  overflow: hidden;                 /* clips the row's hover wash to the corners */
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.pcat-item.is-open {
+  border-radius: var(--r-xl);
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border-color: var(--glass-border-lift);
+}
+.pcat-head {
+  display: block; width: 100%; padding: 13px 16px;
+  border: 0; background: none; font: inherit; color: inherit;
+  text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.pcat-head:hover, .pcat-head:active {
+  background-image: linear-gradient(var(--hairline), var(--hairline));
+}
+/* Inset ring: .pcat-item clips to its radius, so a positive offset would draw
+   the focus ring outside the clip where it cannot be seen. */
+.pcat-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pcat-top { display: flex; align-items: center; gap: 10px; }
+.pcat-label {
+  font: 600 15px var(--font-body); color: var(--text); letter-spacing: -0.2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.pcat-rank {
+  font: 500 13px var(--font-body); font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary); margin-left: auto; flex: none;
+}
+.pcat-value {
+  font: 600 20px var(--font-body); font-variant-numeric: tabular-nums;
+  color: var(--text); letter-spacing: -0.5px; flex: none;
+}
+/* The bar lives inside the <button>, so it is spans rather than divs (a button
+   takes phrasing content only) and needs display restored to draw a height. */
+.pcat-head .mag-track, .pcat-head .mag-fill { display: block; }
+
+/* Same 0fr -> 1fr disclosure as .gr-detail and .ai-body, at the same duration.
+   Padding sits on .pcat-detail-pad, INSIDE the clipping element: a clipped box
+   cannot shrink below its own padding, so a gutter on .pcat-detail-inner would
+   hold every collapsed row open by that many pixels. */
+.pcat-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s ease; }
+.pcat-item.is-open .pcat-detail { grid-template-rows: 1fr; }
+.pcat-detail-inner { overflow: hidden; min-height: 0; }
+.pcat-detail-pad { padding: 2px 16px 16px; }
+.pcat-sub {
+  font: 500 10px var(--font-body); color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
 
 .key-row { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border-radius: 14px; overflow: hidden; background: rgba(255, 255, 255, 0.16); }
 .key-cell { background: var(--surface); padding: 15px 8px; text-align: center; }
@@ -294,4 +380,10 @@ body {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .board { background: var(--glass-fallback); }
   .sport-btn.active { background: rgba(255, 255, 255, 0.14); }
+}
+
+/* Both disclosures on this page honour the setting -- see the matching block
+   in insights/insights.css for the row-level and AI-note ones. */
+@media (prefers-reduced-motion: reduce) {
+  .pcat-detail { transition: none; }
 }
