@@ -18,12 +18,32 @@ name: Capture MLB training data
 
 on:
   schedule:
-    # 14:20 UTC = 10:20 AM US Eastern (EDT, UTC-4). Same daylight-saving caveat
-    # as deploy-pages.yml: shift to 15:20 UTC in the fall to hold the wall-clock
-    # time. Capture timing only affects how much margin there is before first
-    # pitch -- it can never cause a post-start capture, which the clock gate
-    # blocks regardless.
-    - cron: "20 14 * * *"
+    # THREE entries, deliberately redundant. GitHub does not run scheduled
+    # workflows on time under load: the 2026-07-26 run was due 14:20 UTC and
+    # actually started 17:46 UTC, a 3h26m delay. First pitch that day was 16:15
+    # UTC, so 9 of 15 games had already started and were (correctly) refused by
+    # the pre-game gates -- a single 14:20 entry would have captured 6 of 15.
+    #
+    # A single cron cannot be made safe by moving it, because the delay is
+    # unbounded. Redundancy can: capture_features() is skip-if-present on
+    # (gamePk, date), so whichever entry lands first captures the slate and the
+    # later ones are free no-ops. Three tries have to ALL be delayed past first
+    # pitch before a day is lost.
+    #
+    # 09:20 UTC is the earliest entry because probable starters are essentially
+    # all announced by then -- measured 2026-07-27: >=80% of games had both
+    # starters announced 18h BEFORE a 09:20 run would fire, ~92% on the day.
+    # Moving to 10:20 would buy ~nothing in completeness (that band of the
+    # announcement curve is flat) and cost an hour of delay margin. A row with a
+    # null starter_era is an honest gap and strictly better than no row.
+    #
+    # Daylight saving: same caveat as deploy-pages.yml -- shift all three by
+    # +1h in the fall to hold the wall-clock times. Capture timing only affects
+    # how much margin there is before first pitch; it can never cause a
+    # post-start capture, which the clock gate blocks regardless.
+    - cron: "20 9 * * *"
+    - cron: "20 11 * * *"
+    - cron: "20 13 * * *"
   workflow_dispatch: {}
 
 # Scoped to this workflow only. deploy-pages.yml is unchanged and still read-only.
