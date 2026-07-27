@@ -183,23 +183,52 @@ def _now_iso():
             .replace(microsecond=0).isoformat().replace("+00:00", "Z"))
 
 
+def _warn_unreadable(path, bad):
+    """Say so, loudly and every run, when rows are being dropped.
+
+    A skipped line is silently missing picks from the all-time record -- the
+    exact shape of masked failure the capture workflow's exit-code handling
+    exists to prevent. A truncated append (crash mid-write, full disk) looks
+    identical to a clean file unless something says otherwise, so this warns on
+    stderr with the line number and enough of the content to find it, and keeps
+    warning until the file is fixed. It does not fail the run: the rest of the
+    history is still worth reporting.
+    """
+    sys.stderr.write(
+        "signal_report: WARNING: {} unreadable line{} in {} — those picks are "
+        "MISSING from the all-time record below\n".format(
+            len(bad), "" if len(bad) == 1 else "s", path))
+    for lineno, why, content in bad:
+        excerpt = content if len(content) <= 60 else content[:59] + "…"
+        sys.stderr.write("signal_report:   line {}: {}: {}\n".format(lineno, why, excerpt))
+
+
 def load_ledger(path=LEDGER_PATH):
-    """Every row ever appended, in file order. Missing or unreadable means "no
-    history yet" -- a broken ledger must never block a report. A single corrupt
-    line is skipped rather than discarding the whole history."""
-    rows = []
+    """Every row ever appended, in file order. A missing file means "no history
+    yet"; a corrupt line is skipped rather than discarding the whole history --
+    but never silently, see _warn_unreadable."""
+    rows, bad = [], []
     try:
         with open(path) as f:
-            for line in f:
+            for lineno, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
                     continue
                 try:
-                    rows.append(json.loads(line))
+                    row = json.loads(line)
                 except ValueError:
+                    bad.append((lineno, "unparseable JSON", line))
                     continue
+                # A row with no date cannot be attributed to a day, so every read
+                # would drop it. Same failure, same warning.
+                if not isinstance(row, dict) or not row.get("date"):
+                    bad.append((lineno, "no date field", line))
+                    continue
+                rows.append(row)
     except OSError:
         return []
+    if bad:
+        _warn_unreadable(path, bad)
     return rows
 
 
