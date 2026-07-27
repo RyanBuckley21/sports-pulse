@@ -16,21 +16,20 @@
    content. On <body> the background re-evaluates against the scoped token,
    and since nothing styles <html>, it propagates to the canvas as well. */
 
-body.insights-scope {
-  --bg: #0c0d10;
-  --surface: #16181d;
-  --surface-2: #1c1f26;                 /* lifted panels: rows, pill cells, AI note */
-  --border: #262932;
-  --border-chip: #2c303a;
-  --text: #f4f5f7;
-  --text-secondary: #8b909c;
-  --text-tertiary: #565a64;
-  --gold: #f0a83a;                       /* single consistent accent, site-wide */
-  /* --accent and --heat are intentionally NOT overridden: the Pulse gauge keeps
-     the app's distinct orange heat so Pulse Score and the gold Signal Score /
-     Best Angle system stay visually separable when they share a card. */
-  --hairline: rgba(255, 255, 255, 0.06);
-}
+/* The `body.insights-scope` TOKEN BLOCK THAT USED TO LIVE HERE IS GONE.
+   It declared --bg/--surface/--surface-2/--border/--border-chip/--text/
+   --text-secondary/--text-tertiary/--gold/--hairline for this section only,
+   because app.css carried a different (older) palette and the two had to
+   coexist in one document. app.css:11 now carries the consolidated set at
+   :root, so every one of those declarations was either an exact duplicate or
+   -- in --text-tertiary's case -- a stale value (#565a64, which measured
+   2.39:1 against --surface-2 and was raised to #676b75 during consolidation).
+   Re-adding any of them would silently reintroduce a two-palette document.
+
+   The CLASS ITSELF IS STILL LOAD-BEARING and shell.js must keep toggling it:
+   the four scoped rules below (.breakdown-label and the three .vs-starter-*)
+   guard selectors app.css also owns, and `insights-scope-leak-check` in the
+   verification suite measures exactly that boundary. */
 
 /* `body { font-family }` and `[hidden] { display: none !important }` used to be
    declared here too. Both were exact duplicates of app.css (lines 20 and 30),
@@ -53,58 +52,61 @@ body.insights-scope {
    heading is now the first child of .wrap and that margin only pushed every
    insights route 22px lower than Who's Hot. */
 .insights-h1 {
-  font: 800 28px 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
+  font: 800 28px var(--font-head); letter-spacing: -0.02em;
   color: var(--text); margin: 0 2px 8px;
 }
 .insights-note {
-  font: 500 11px 'Space Grotesk'; color: var(--text-tertiary);
+  font: 500 11px var(--font-body); color: var(--text-tertiary);
   letter-spacing: 0.3px; margin: 0 2px 16px;
 }
 
 /* ---------------- reusable insight cards ---------------- */
 .insight-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 18px; padding: 18px; margin-bottom: 14px;
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-lift);
+  border-radius: var(--r-xl); padding: 18px; margin-bottom: 14px;
 }
 .ic-head { display: flex; align-items: center; gap: 10px; }
 
 /* Game card header: AWAY @ HOME on the left, first pitch on the right. */
 .gi-head { justify-content: space-between; }
 .gi-teams { display: flex; align-items: center; gap: 8px; }
-.gi-at { font: 600 12px 'Space Grotesk'; color: var(--text-tertiary); }
-.gi-when { font: 600 11px 'Space Grotesk'; color: var(--text-secondary); white-space: nowrap; }
-.gi-venue { font: 500 11px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 6px; }
-.gi-probables { font: 500 11px 'Space Grotesk'; color: var(--text-secondary); margin-top: 4px; }
+.gi-at { font: 600 12px var(--font-body); color: var(--text-tertiary); }
+.gi-when { font: 600 11px var(--font-body); color: var(--text-secondary); white-space: nowrap; }
+.gi-venue { font: 500 11px var(--font-body); color: var(--text-tertiary); margin-top: 6px; }
+.gi-probables { font: 500 11px var(--font-body); color: var(--text-secondary); margin-top: 4px; }
 
 /* Team card header. */
-.ti-name { font: 700 18px 'Bricolage Grotesque', 'Space Grotesk'; color: var(--text); letter-spacing: -0.02em; }
+.ti-name { font: 700 18px var(--font-head); color: var(--text); letter-spacing: -0.02em; }
 
 /* Player card header: team-colored left edge (var set inline from team_color). */
 .pi-head {
   flex-direction: column; align-items: flex-start; gap: 3px;
   border-left: 3px solid var(--pi-color, var(--gold)); padding-left: 11px;
 }
-.pi-name { font: 800 22px 'Bricolage Grotesque', 'Space Grotesk'; color: var(--text); letter-spacing: -0.02em; }
-.pi-sub { font: 500 11px 'Space Grotesk'; color: var(--text-tertiary); letter-spacing: 0.4px; }
+.pi-name { font: 800 22px var(--font-head); color: var(--text); letter-spacing: -0.02em; }
+.pi-sub { font: 500 11px var(--font-body); color: var(--text-tertiary); letter-spacing: 0.4px; }
 .pi-team { color: var(--pi-color, var(--text-secondary)); font-weight: 600; }
 
-.insight-headline { font: 500 14px/1.4 'Space Grotesk'; color: var(--text); margin: 12px 0 0; }
+.insight-headline { font: 500 14px/1.4 var(--font-body); color: var(--text); margin: 12px 0 0; }
 .insight-section { margin-top: 18px; }
 /* Scoped: app.css:153 also defines .breakdown-label, for the Who's Hot player
    detail. Without the scope this restyle would win there too (this file loads
    second), silently swapping that view's type. */
 body.insights-scope .breakdown-label {
-  font: 600 10px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1.5px;
+  font: 600 10px var(--font-body); text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--text-tertiary); margin-bottom: 10px;
 }
 
 /* ---- Pulse Score ---- */
 .pulse { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
-.pulse-score { font: 800 38px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.03em; flex: none; }
-.pulse-max { font: 600 13px 'Space Grotesk'; color: var(--text-tertiary); letter-spacing: 0; margin-left: 2px; }
+.pulse-score { font: 800 38px/1 var(--font-head); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; flex: none; }
+.pulse-max { font: 600 13px var(--font-body); color: var(--text-tertiary); letter-spacing: 0; margin-left: 2px; }
 .pulse-meta { flex: 1; min-width: 0; }
 .pulse-label {
-  font: 600 10px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1.5px;
+  font: 600 10px var(--font-body); text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--text-tertiary); margin-bottom: 8px;
 }
 .pulse-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
@@ -123,8 +125,8 @@ body.insights-scope .breakdown-label {
   padding: 10px 2px; border-bottom: 1px solid var(--hairline);
 }
 .signal-row:last-child { border-bottom: none; }
-.signal-label { font: 400 13px 'Space Grotesk'; color: var(--text-secondary); }
-.signal-value { font: 600 13px 'Space Grotesk'; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.signal-label { font: 400 13px var(--font-body); color: var(--text-secondary); }
+.signal-value { font: 600 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--text); display: flex; align-items: center; gap: 7px; }
 .signal-mark { font-size: 9px; line-height: 1; }
 .signal-pos { color: var(--good); }
 .signal-neg { color: var(--critical); }
@@ -139,51 +141,78 @@ body.insights-scope .breakdown-label {
   display: inline-flex; align-items: center; justify-content: center;
 }
 .cat-icon svg { width: 22px; height: 22px; }
-.cat-label { font: 600 10px 'Space Grotesk'; letter-spacing: 0.3px; color: var(--text-secondary); text-align: center; }
+.cat-label { font: 600 10px var(--font-body); letter-spacing: 0.3px; color: var(--text-secondary); text-align: center; }
 
-/* ---- Best Angle: promoted, tinted, larger than the ranked rows ---- */
+/* ---- Best Angle: promoted, tinted, larger than the ranked rows ----
+   The Phase 3 glass pass skipped this component because the handoff never named
+   it, which left an OPAQUE tinted block -- the heaviest surface in the card --
+   sitting inside an otherwise all-glass expanded row. On a real device it read
+   heavier than the game-score header above it.
+
+   It now takes the same inset-wash tier as .ai-summary and .gr-chip, and like
+   them carries NO backdrop-filter of its own: a nested blur inside the
+   already-blurred card has nothing new behind it to blur and would cost another
+   compositing layer per open row. No blur IS the tier here, not an omission.
+
+   What still marks it as the featured pick, rather than a plain .ss-row: the
+   accent tints the fill and the border and runs full-strength down the left
+   edge, and the type is a scale up (19px/34px vs the rows' 14px/22px). All
+   three are identity slots -- the accent is the market/side colour, never a
+   status colour, so the Phase 3 placement rule is unchanged. */
 .best-angle {
   position: relative; overflow: hidden; margin: 4px 0 14px;
-  padding: 16px 16px 16px 20px; border-radius: 16px;
-  border: 1px solid var(--ba-color, var(--gold));
-  background: var(--surface-2);
-  background: color-mix(in srgb, var(--ba-color, var(--gold)) 13%, var(--surface));
+  padding: 16px 16px 16px 20px; border-radius: var(--r-xl);
+  border: 1px solid color-mix(in srgb, var(--ba-color, var(--gold)) 40%, transparent);
+  background: color-mix(in srgb, var(--ba-color, var(--gold)) 8%, var(--glass-inset));
 }
 .best-angle::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--ba-color, var(--gold)); }
+/* Was a black pill (rgba(0,0,0,0.28)), which only worked against the opaque
+   navy block -- on a wash it reads as a hole punched in the panel. Same
+   tint/border construction as .ai-badge, so the card's two badges are built the
+   same way and differ only in which colour they take. */
 .ba-tag {
-  display: inline-block; font: 700 9px 'Space Grotesk'; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--ba-color, var(--gold)); background: rgba(0, 0, 0, 0.28);
+  display: inline-block; font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ba-color, var(--gold));
+  background: color-mix(in srgb, var(--ba-color, var(--gold)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ba-color, var(--gold)) 35%, transparent);
   border-radius: 999px; padding: 4px 11px; margin-bottom: 12px;
 }
 .ba-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.ba-market { font: 700 19px 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em; color: var(--text); }
-.ba-side { font: 500 13px 'Space Grotesk'; color: var(--text-secondary); margin-top: 3px; }
+.ba-market { font: 700 19px var(--font-head); letter-spacing: -0.02em; color: var(--text); }
+.ba-side { font: 500 13px var(--font-body); color: var(--text-secondary); margin-top: 3px; }
 .ba-scorebox { text-align: right; flex: none; }
-.ba-score { font: 800 34px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.03em; color: var(--text); }
-.ba-scorelabel { font: 600 9px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 3px; }
+.ba-score { font: 800 34px/1 var(--font-head); letter-spacing: -0.03em; color: var(--text); }
+.ba-scorelabel { font: 600 9px var(--font-body); text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 3px; }
 
 /* ---- Signal Scores: vertical list of rounded rows ---- */
 .signal-scores { margin-top: 4px; display: flex; flex-direction: column; gap: 9px; }
+/* Same wash tier as Best Angle above, and it HAD to move with it. These rows
+   were opaque --surface-2; converting only Best Angle would have left the
+   featured pick lighter than the plain rows beneath it, inverting the very
+   hierarchy the conversion exists to fix. Untinted and on the lighter border
+   rung, so the difference between "the pick" and "the rest" is carried by
+   Best Angle's tint and type scale rather than by one of them being the only
+   solid object in the card. */
 .ss-row {
   position: relative; overflow: hidden; display: grid;
   grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
-  padding: 12px 14px 12px 16px; border-radius: 14px;
-  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 12px 14px 12px 16px; border-radius: var(--r-lg);
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
 }
 .ss-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--row-color, var(--gold)); }
-.ss-rank { font: 600 12px 'Space Grotesk'; color: var(--text-tertiary); width: 14px; text-align: center; }
+.ss-rank { font: 600 12px var(--font-body); color: var(--text-tertiary); width: 14px; text-align: center; }
 .ss-main { min-width: 0; }
-.ss-market { font: 600 14px 'Space Grotesk'; letter-spacing: -0.01em; color: var(--text); }
-.ss-side { font: 500 12px 'Space Grotesk'; color: var(--text-secondary); margin-top: 2px; }
+.ss-market { font: 600 14px var(--font-body); letter-spacing: -0.01em; color: var(--text); }
+.ss-side { font: 500 12px var(--font-body); color: var(--text-secondary); margin-top: 2px; }
 .ss-scorebox { text-align: right; flex: none; }
-.ss-score { font: 700 22px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em; color: var(--text); }
-.ss-scorelabel { font: 600 9px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 2px; }
+.ss-score { font: 700 22px/1 var(--font-head); letter-spacing: -0.02em; color: var(--text); }
+.ss-scorelabel { font: 600 9px var(--font-body); text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 2px; }
 
 /* Attached run estimate ("Est. 8 runs (7-10)"). Same 500 weight as the side
    line it sits under, a step smaller and in tertiary ink: it is context for
    the Signal Score, so it must never compete with the big score number. */
-.ba-est { font: 500 11px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; }
-.ss-est { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 2px; }
+.ba-est { font: 500 11px var(--font-body); color: var(--text-tertiary); margin-top: 5px; }
+.ss-est { font: 500 10px var(--font-body); color: var(--text-tertiary); margin-top: 2px; }
 
 /* ---- Game Row: the compact COLLAPSED row for the games list ----
    A lighter sibling of .insight-card, not a variant of it: denser padding and a
@@ -194,22 +223,20 @@ body.insights-scope .breakdown-label {
    on the identity line and the chips get the whole width beneath it. Both the
    chips and the pulse are optional in the markup -- their tracks simply
    collapse when Cards.gameRow omits them. */
+/* THE SURFACE LIVES ON .gr-item, NOT HERE -- see the expand/collapse block
+   below for why. This row is now pure layout over its parent's glass. */
 .gr-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "head pulse" "chips chips";
   align-items: center; gap: 10px 12px;
-  padding: 14px 16px; border-radius: 14px;
-  background: var(--surface-2); border: 1px solid var(--border);
-  margin-bottom: 10px; cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  padding: 14px 16px; cursor: pointer;
 }
 /* Reads as tappable before the click handler exists. The lift is a --hairline
-   wash layered over the surface rather than a swap to another surface token:
-   --surface is DARKER than --surface-2, so swapping would read as a press, not
-   a hover. :active included so touch gets the same feedback. */
+   wash layered over the glass rather than a swap to another fill: the fills
+   differ by opacity, so swapping would read as the row opening, not as a
+   hover. :active included so touch gets the same feedback. */
 .gr-row:hover, .gr-row:active {
-  border-color: var(--border-chip);
   background-image: linear-gradient(var(--hairline), var(--hairline));
 }
 
@@ -219,8 +246,8 @@ body.insights-scope .breakdown-label {
 }
 .gr-teams { display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* Same values as .gi-at / .gi-when -- matched deliberately, not inherited. */
-.gr-at { font: 600 12px 'Space Grotesk'; color: var(--text-tertiary); }
-.gr-when { font: 600 11px 'Space Grotesk'; color: var(--text-secondary); white-space: nowrap; }
+.gr-at { font: 600 12px var(--font-body); color: var(--text-tertiary); }
+.gr-when { font: 600 11px var(--font-body); color: var(--text-secondary); white-space: nowrap; }
 
 /* Chips wrap rather than scroll: three market labels ("First Five Moneyline")
    cannot honestly fit one phone-width line, and wrapping keeps every chip
@@ -231,7 +258,12 @@ body.insights-scope .breakdown-label {
   position: relative; overflow: hidden; flex: 0 1 auto; min-width: 0;
   display: inline-flex; align-items: baseline; gap: 6px;
   padding: 6px 10px 6px 13px; border-radius: 9px;
-  background: var(--surface); border: 1px solid var(--border);
+  /* A wash, not an opaque fill. --surface here was correct while .gr-row was
+     itself opaque; on glass it reads as a solid tile floating on a translucent
+     panel -- the one element in the row that is not made of the same material.
+     Reuses --glass-inset (the AI-note wash) rather than introducing a second
+     near-identical alpha: both are "an inset panel on top of glass". */
+  background: var(--glass-inset); border: 1px solid var(--glass-border-lift);
 }
 /* Same left-accent convention as .ss-row::before, at 3px for the smaller chip.
    NOTE: the custom property is --chip-color (what Cards.gameRow sets on each
@@ -241,13 +273,13 @@ body.insights-scope .breakdown-label {
   background: var(--chip-color, var(--gold));
 }
 .gr-chip-market {
-  font: 600 11px 'Space Grotesk'; color: var(--text);
+  font: 600 11px var(--font-body); color: var(--text);
   min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.gr-chip-side { font: 500 11px 'Space Grotesk'; color: var(--text-secondary); white-space: nowrap; }
+.gr-chip-side { font: 500 11px var(--font-body); color: var(--text-secondary); white-space: nowrap; }
 .gr-chip-score {
-  font: 700 13px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
-  color: var(--text); white-space: nowrap;
+  font: 700 13px/1 var(--font-head); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; color: var(--text); white-space: nowrap;
 }
 
 /* Compact Pulse: the number alone. Namespaced away from .pulse-hot etc (whose
@@ -255,7 +287,8 @@ body.insights-scope .breakdown-label {
    the SAME semantic colors, so a band means the same thing in both views. */
 .gr-pulse {
   grid-area: pulse; justify-self: end;
-  font: 700 15px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.02em;
+  font: 700 15px/1 var(--font-head); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 .gr-pulse-hot { color: var(--accent); }
 .gr-pulse-warm { color: var(--warning); }
@@ -266,13 +299,39 @@ body.insights-scope .breakdown-label {
    beneath it, so you never lose your place in the list. Spacing moves from the
    row to the wrapper; otherwise the row's own margin would sit between it and
    its panel. */
-.gr-item { margin-bottom: 10px; }
-.gr-item .gr-row { margin-bottom: 0; }
-/* Open rows square off where the panel meets them, so the two read as one
-   object rather than a row with a card floating under it. */
-.gr-item.is-open .gr-row {
-  border-color: var(--border-chip);
-  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+/* THE GLASS SURFACE MOVED UP FROM .gr-row TO .gr-item, and that is the whole
+   trick for making an open row read as ONE object.
+
+   Previously the row owned a background and border, and the open state squared
+   off the row's bottom corners so the detail panel below could butt against
+   it. Two stacked surfaces pretending to be one. With a translucent material
+   that pretence stops working: two overlapping glass fills double up their
+   alpha along the seam and draw a visible band exactly where the join is
+   supposed to disappear.
+
+   So the item owns one continuous surface and the row is layout only. Open and
+   closed then differ by fill/blur/radius on a single element -- no seam to
+   hide, and no JS change: .is-open is the same class insights.js already
+   toggles. */
+.gr-item {
+  margin-bottom: 10px;
+  border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  backdrop-filter: blur(var(--glass-blur-soft));
+  -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--glass-border);
+  /* Clips the row's hover wash to the rounded corners. */
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+/* Open is the primary surface on the screen, so it takes the heavier rung of
+   every ladder: more fill, more blur, a brighter edge, a wider radius. */
+.gr-item.is-open {
+  border-radius: var(--r-xl);
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border-color: var(--glass-border-lift);
 }
 /* 0fr -> 1fr animates to the content's natural height: no JS measuring and no
    max-height guess that would clip a long card (these carry AI text of varying
@@ -286,15 +345,28 @@ body.insights-scope .breakdown-label {
 /* Inside the panel the game card is content, not a card: it drops its own
    surface/border so it doesn't nest a panel inside a panel. Its matchup header
    is suppressed because the row directly above it already says the same thing. */
+/* Inside the panel the game card is content, not a card: it drops its own
+   surface, border AND BLUR so it doesn't nest a glass panel inside a glass
+   panel -- stacking two backdrop-filters would darken the card against the
+   row that owns it, which is the opposite of reading as one object. */
 .gr-detail .insight-card {
   background: none; border: 0; border-radius: 0; margin: 0;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
   padding: 4px 2px 2px;
 }
 .gr-detail .gi-head { display: none; }
-/* The row is keyboard-reachable (role=button, tabindex=0 from the wiring). */
-.gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* The row is keyboard-reachable (role=button, tabindex=0 from the wiring).
+   outline-offset is NEGATIVE, drawing the ring just inside the row: .gr-item
+   now clips to its rounded corners, and a +2px offset would put the ring
+   outside that clip where it is invisible. Losing a focus ring is a real
+   accessibility regression, not a cosmetic one, so it is drawn inward. */
+.gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
-  .gr-detail { transition: none; }
+  /* Both disclosures, the row-level one and the AI note nested inside it --
+     a card that honours the setting for one and not the other is worse than
+     honouring it for neither. */
+  .gr-detail, .ai-body { transition: none; }
+  .ai-chevron { transition: none; }
 }
 
 /* ---- Compare table (generic two-entity metric comparison) ---- */
@@ -304,10 +376,10 @@ body.insights-scope .breakdown-label {
   padding: 9px 2px; border-bottom: 1px solid var(--hairline);
 }
 .cmp-row:last-child { border-bottom: none; }
-.cmp-metric { font: 500 13px 'Space Grotesk'; color: var(--text-secondary); }
-.cmp-val { font: 600 14px 'Space Grotesk'; color: var(--text-secondary); min-width: 64px; text-align: right; }
+.cmp-metric { font: 500 13px var(--font-body); color: var(--text-secondary); }
+.cmp-val { font: 600 14px var(--font-body); color: var(--text-secondary); min-width: 64px; text-align: right; }
 .cmp-head .cmp-val {
-  font: 600 10px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary);
+  font: 600 10px var(--font-body); text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary);
 }
 .cmp-win { color: var(--text); font-weight: 700; }
 
@@ -316,8 +388,8 @@ body.insights-scope .breakdown-label {
 .fb-row { display: flex; align-items: center; gap: 8px; }
 .fb-track { flex: 1; height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
 .fb-bar { height: 100%; border-radius: 999px; background: var(--fb-color, var(--gold)); min-width: 2px; }
-.fb-val { font: 600 12px 'Space Grotesk'; color: var(--text-secondary); width: 22px; text-align: right; }
-.fb-date { font: 500 9px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 3px; }
+.fb-val { font: 600 12px var(--font-body); color: var(--text-secondary); width: 22px; text-align: right; }
+.fb-date { font: 500 9px var(--font-body); color: var(--text-tertiary); margin-top: 3px; }
 
 /* ---- Vs Next Starter (career line vs today's probable; mirrors main app,
    restyled to the insights type system) ---- */
@@ -325,48 +397,89 @@ body.insights-scope .breakdown-label {
    all three for the Who's Hot player detail, which renders them via
    renderVsNextStarter (app.js:354-356). */
 body.insights-scope .vs-starter-section { margin-top: 18px; }
-body.insights-scope .vs-starter-line { font: 600 15px 'Space Grotesk'; color: var(--text); letter-spacing: -0.01em; padding: 4px 0 2px; }
-body.insights-scope .vs-starter-caveat { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); margin-top: 5px; letter-spacing: 0.4px; }
+body.insights-scope .vs-starter-line { font: 600 15px var(--font-body); color: var(--text); letter-spacing: -0.01em; padding: 4px 0 2px; }
+body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color: var(--text-tertiary); margin-top: 5px; letter-spacing: 0.4px; }
 
 /* ---- Run Estimate (deterministic implied total; NOT a market line) ---- */
 .est-total { margin-top: 4px; }
-.est-headline { font: 800 30px/1 'Bricolage Grotesque', 'Space Grotesk'; letter-spacing: -0.03em; color: var(--text); }
-.est-unit { font: 600 13px 'Space Grotesk'; color: var(--text-secondary); letter-spacing: 0; margin-left: 2px; }
+.est-headline { font: 800 30px/1 var(--font-head); letter-spacing: -0.03em; color: var(--text); }
+.est-unit { font: 600 13px var(--font-body); color: var(--text-secondary); letter-spacing: 0; margin-left: 2px; }
 .est-range { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.est-band { font: 600 12px 'Space Grotesk'; color: var(--text-secondary); }
-.est-note { flex-basis: 100%; font: 400 11px/1.45 'Space Grotesk'; color: var(--text-tertiary); margin-top: 4px; }
+.est-band { font: 600 12px var(--font-body); color: var(--text-secondary); }
+.est-note { flex-basis: 100%; font: 400 11px/1.45 var(--font-body); color: var(--text-tertiary); margin-top: 4px; }
 
 /* ---- AI Note: its own inset card, distinct from computed sections ---- */
-.ai-summary { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
-.ai-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+/* An inset panel INSIDE an already-glass card, so it is a flat white wash and
+   carries no blur of its own: a second backdrop-filter nested in the first has
+   nothing new to blur (only its parent sits behind it) and would cost a second
+   compositing layer per card for no visible difference. Dropping the border
+   too -- the wash alone separates it, and a bordered panel inside a bordered
+   card reads as clutter at this size. */
+.ai-summary { background: var(--glass-inset); border: 0; border-radius: var(--r-md); padding: 14px 16px; }
+
+/* The whole header row is the control, not just the badge -- a 9px pill is
+   below any reasonable touch target, and the chevron has to be inside the same
+   hit area as the thing it points at. Button reset first, because a <button>
+   brings its own font, colour, padding and centring. */
+.ai-summary-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
 .ai-badge {
-  font: 700 9px 'Space Grotesk'; letter-spacing: 1px; text-transform: uppercase;
+  font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
   color: var(--gold); background: rgba(240, 168, 58, 0.12);
   border: 1px solid rgba(240, 168, 58, 0.35); border-radius: 999px; padding: 4px 10px;
 }
+.ai-chevron {
+  font: 400 16px/1 var(--font-body); color: var(--text-tertiary);
+  transition: transform 0.28s ease, color 0.15s ease;
+}
+.ai-summary.is-revealed .ai-chevron { transform: rotate(90deg); color: var(--text-secondary); }
+.ai-summary-head:hover .ai-chevron { color: var(--text-secondary); }
+.ai-summary-head:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: var(--r-xs); }
+
+/* Same 0fr -> 1fr idiom and same duration as .gr-detail, deliberately: this is
+   a nested disclosure inside that one, and two different expand mechanisms in
+   one card would read as two unrelated behaviours.
+
+   THE 10px SPACING SITS ON THE FIRST CHILD, and neither of the two obvious
+   places works. margin-bottom on the header is outside the clipped element, so
+   it stays put and leaves a 10px dead band under the badge while closed.
+   padding-top on .ai-body-inner is inside it but cannot compress either: used
+   height can never go below padding, box-sizing notwithstanding, so the
+   "collapsed" note stayed exactly 10px tall. A margin on a child is inside the
+   clip and contributes to content height, which is what actually goes to zero.
+   Both wrong versions were caught by measuring the rendered height rather than
+   trusting the class -- hence that assertion in the ai-note group. */
+.ai-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+.ai-summary.is-revealed .ai-body { grid-template-rows: 1fr; }
+.ai-body-inner { overflow: hidden; min-height: 0; }
+.ai-body-inner > :first-child { margin-top: 10px; }
+
 .ai-summary-title { display: none; }
-.ai-summary-text { font: 500 14px/1.55 'Space Grotesk'; color: var(--text); margin: 0; letter-spacing: -0.01em; }
-.ai-summary-story { font: 400 13px/1.55 'Space Grotesk'; color: var(--text-secondary); margin: 8px 0 0; }
-.ai-summary.clamp .ai-summary-story {
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ai-readmore {
-  display: inline-block; margin-top: 9px; font: 600 12px 'Space Grotesk';
-  color: var(--gold); background: none; border: none; padding: 0; cursor: pointer;
-}
+.ai-summary-text { font: 500 14px/1.55 var(--font-body); color: var(--text); margin: 0; letter-spacing: -0.01em; }
+/* No line clamp. The story used to render 3-line-clamped behind a "Read full
+   note" button; the header disclosure replaced that gate, and re-adding a
+   clamp here would put a second one back behind the first. */
+.ai-summary-story { font: 400 13px/1.55 var(--font-body); color: var(--text-secondary); margin: 8px 0 0; }
 .ai-note {
   margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
-  font: 400 12.5px/1.5 'Space Grotesk'; color: var(--text-secondary);
+  font: 400 12.5px/1.5 var(--font-body); color: var(--text-secondary);
 }
-.ai-note-label { font: 700 9px 'Space Grotesk'; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-right: 7px; }
-.ai-caveat { font: 500 10px 'Space Grotesk'; color: var(--text-tertiary); letter-spacing: 0.4px; margin-top: 10px; }
+.ai-note-label { font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-right: 7px; }
+.ai-caveat { font: 500 10px var(--font-body); color: var(--text-tertiary); letter-spacing: 0.4px; margin-top: 10px; }
 
 /* ---- de-emphasized disclaimers + tap-to-reveal "i" affordance ---- */
-.disclaimer { font: 400 11px/1.45 'Space Grotesk'; color: var(--text-tertiary); margin-top: 10px; }
+.disclaimer { font: 400 11px/1.45 var(--font-body); color: var(--text-tertiary); margin-top: 10px; }
 .info-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 16px; height: 16px; border-radius: 999px; border: 1px solid var(--border-chip);
-  background: none; color: var(--text-tertiary); font: 700 9px 'Space Grotesk';
+  background: none; color: var(--text-tertiary); font: 700 9px var(--font-body);
   cursor: pointer; padding: 0; line-height: 1; vertical-align: middle;
 }
 .info-btn:hover { color: var(--text-secondary); border-color: var(--text-tertiary); }
@@ -374,6 +487,24 @@ body.insights-scope .vs-starter-caveat { font: 500 10px 'Space Grotesk'; color: 
 /* ---- component gallery (the #/components route) ---- */
 .gallery-item { margin-bottom: 26px; }
 .gallery-tag {
-  font: 700 10px 'Space Grotesk'; text-transform: uppercase; letter-spacing: 1.5px;
+  font: 700 10px var(--font-body); text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--gold); margin: 0 2px 8px;
+}
+
+/* ---- glass fallback ----
+   Blur is what sells the material, not the alpha. With backdrop-filter
+   unsupported a 0.45-0.6 fill does not read as translucent -- it reads as a
+   washed-out panel over whatever happens to be behind it, and on the games
+   list the collapsed rows lose their edges entirely. So these go honestly
+   opaque instead of pretending. Same surfaces, near-full opacity.
+
+   Grouped at the end rather than beside each rule: this is one decision about
+   one capability, and splitting it across the file would mean four @supports
+   blocks that have to be kept in agreement. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .insight-card { background: var(--glass-fallback); }
+  .gr-item { background: var(--glass-fallback); }
+  .gr-item.is-open { background: var(--glass-fallback); }
+  /* .ai-summary is a wash inside a now-opaque card, so it needs no fallback --
+     it never carried a blur in the first place. */
 }

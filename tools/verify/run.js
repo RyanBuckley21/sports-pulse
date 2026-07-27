@@ -135,31 +135,41 @@ async function scopeLeakCheck(browser, base) {
   await p.goto(base + "/__leak.html", { waitUntil: "load" });
   await p.waitForTimeout(200);
 
+  // THE DISCRIMINATING PROPERTIES CHANGED IN PHASE 3, AND THE CHECK HAD TO
+  // FOLLOW. This used to read fontFamily on .breakdown-label / .vs-starter-line
+  // -- "JetBrains Mono" unscoped vs "Space Grotesk" scoped -- which was the
+  // sharpest available signal while app.css was a mono-typeset stylesheet. Both
+  // files now resolve to var(--font-body), so fontFamily is IDENTICAL in both
+  // states: keeping it would have left an assertion that can no longer fail,
+  // which is worse than no assertion because it still reads like coverage.
+  //
+  // Swapped for the properties where the two rules genuinely still disagree --
+  // weight (500 vs 600) and letter-spacing (0.3px vs -0.01em) -- so the check
+  // keeps measuring what it was built to measure: that insights.css, which
+  // loads second, does not win on selectors app.css also owns.
   const read = () => p.evaluate(() => {
     const g = (sel, prop) => getComputedStyle(document.querySelector(sel))[prop];
     return {
       bodyBackground: getComputedStyle(document.body).backgroundColor,
-      breakdownLabelFont: g(".breakdown-label", "fontFamily"),
+      breakdownLabelWeight: g(".breakdown-label", "fontWeight"),
       breakdownLabelMargin: g(".breakdown-label", "marginBottom"),
-      vsStarterLineFont: g(".vs-starter-line", "fontFamily"),
+      vsStarterLineSpacing: g(".vs-starter-line", "letterSpacing"),
       vsStarterSectionMargin: g(".vs-starter-section", "marginTop"),
       vsStarterCaveatSpacing: g(".vs-starter-caveat", "letterSpacing"),
     };
   });
 
   const APP = {  // app.css -- what Who's Hot must keep
-    bodyBackground: "rgb(10, 10, 11)",
-    breakdownLabelFont: '"JetBrains Mono"',
+    breakdownLabelWeight: "500",
     breakdownLabelMargin: "4px",
-    vsStarterLineFont: '"JetBrains Mono"',
+    vsStarterLineSpacing: "0.3px",
     vsStarterSectionMargin: "22px",
     vsStarterCaveatSpacing: "0.5px",
   };
   const INSIGHTS = {  // insights.css -- what the insights section must get
-    bodyBackground: "rgb(12, 13, 16)",
-    breakdownLabelFont: '"Space Grotesk"',
+    breakdownLabelWeight: "600",
     breakdownLabelMargin: "10px",
-    vsStarterLineFont: '"Space Grotesk"',
+    vsStarterLineSpacing: "-0.15px",
     vsStarterSectionMargin: "18px",
     vsStarterCaveatSpacing: "0.4px",
   };
@@ -173,6 +183,19 @@ async function scopeLeakCheck(browser, base) {
   for (const k of Object.keys(INSIGHTS)) {
     ok("scoped applies insights.css " + k, on[k] === INSIGHTS[k], on[k] + " vs " + INSIGHTS[k]);
   }
+
+  // The inverse of everything above, and new in Phase 3: the page background
+  // must now be THE SAME in both states. It was the clearest evidence of the
+  // two-palette document (rgb(10,10,11) unscoped, rgb(12,13,16) scoped) --
+  // toggling the class re-themed the canvas. One consolidated :root is what
+  // lets a glass surface read as the same material on Who's Hot and on
+  // Players, so a difference here now means someone reintroduced a
+  // section-scoped token block.
+  ok("one palette: the canvas does not re-theme on scope",
+     off.bodyBackground === on.bodyBackground,
+     "unscoped=" + off.bodyBackground + " scoped=" + on.bodyBackground);
+  ok("  and it is the consolidated --bg", on.bodyBackground === "rgb(12, 13, 16)",
+     on.bodyBackground);
   await p.close();
 }
 
@@ -264,6 +287,109 @@ async function reEntryChecks(browser, base) {
   await p.waitForTimeout(200);
   ok("clicks still work after five re-mounts",
      (await p.$$eval(".gr-item.is-open", (e) => e.length)) === 1);
+  await p.close();
+}
+
+// ------------------------------------------------------------- ai-note
+// The AI note is a SECOND, NESTED disclosure inside the row-level accordion,
+// and the two are independent: a note lives inside an open row, so opening a
+// row must not reveal its note and revealing a note must not disturb the row.
+// That independence is the thing most likely to break silently -- nothing
+// throws, the card just starts giving away the paragraph it was meant to defer
+// (or the row starts collapsing when you tap the badge).
+//
+// Also covers the shared-component claim. .ai-summary is emitted by
+// gameInsight, playerInsight, teamInsight and the gallery from ONE function, so
+// forking the behaviour per screen is the regression to watch for: the checks
+// run the same assertions on Games and on Players.
+async function aiNoteChecks(browser, base) {
+  heading("ai-note");
+  const p = await newPage(browser);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(600);
+
+  const state = () => p.evaluate(() => {
+    const box = document.querySelector(".ai-summary");
+    if (!box) return null;
+    const btn = box.querySelector("[data-ainote]");
+    const body = box.querySelector(".ai-body");
+    return {
+      revealed: box.classList.contains("is-revealed"),
+      aria: btn && btn.getAttribute("aria-expanded"),
+      isButton: btn && btn.tagName,
+      rows: body && getComputedStyle(body).gridTemplateRows,
+      // The measured height of the clipped inner is what the user actually
+      // gets; the class could be right while the CSS silently failed.
+      innerH: Math.round(box.querySelector(".ai-body-inner").getBoundingClientRect().height),
+      openRows: document.querySelectorAll(".gr-item.is-open").length,
+    };
+  });
+
+  // ---- Games ----
+  await goRoute(p, "#/games");
+  await p.click(".gr-row");
+  await p.waitForTimeout(400);
+  let s = await state();
+  ok("games: an expanded row renders an AI note", s !== null);
+  ok("  it is collapsed on open", s.revealed === false && s.aria === "false",
+     "revealed=" + s.revealed + " aria-expanded=" + s.aria);
+  ok("  and collapsed means zero height, not just an unset class", s.innerH === 0, s.innerH + "px");
+  // Row-level and note-level state must not have been conflated.
+  ok("  opening the row did not reveal the note", s.openRows === 1 && !s.revealed,
+     "openRows=" + s.openRows + " revealed=" + s.revealed);
+  // A real button, so the platform supplies Enter/Space and focus.
+  ok("  the control is a real button", s.isButton === "BUTTON", String(s.isButton));
+  // Through getByRole, not textContent: the chevron is aria-hidden, so it is in
+  // the text but must NOT be in the accessible name. textContent cannot tell the
+  // difference and would pass on a button that announces "AI Note >" to a screen
+  // reader. This runs the real accessible-name computation.
+  const named = await p.getByRole("button", { name: "AI Note", exact: true }).count();
+  ok("  named by the badge, with the chevron excluded", named >= 1, "matches=" + named);
+
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("games: tapping the header reveals it", s.revealed === true && s.aria === "true",
+     "revealed=" + s.revealed + " aria-expanded=" + s.aria);
+  ok("  the body actually has height", s.innerH > 0, s.innerH + "px");
+  ok("  it uses the grid-rows mechanism, not display", s.rows !== "0px", s.rows);
+  ok("  revealing the note left the row open", s.openRows === 1, "openRows=" + s.openRows);
+
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("games: tapping again collapses it", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
+  // The clamp/"Read full note" pair this disclosure replaced. Two gates on one
+  // paragraph was the thing being removed, so its return is a regression.
+  const stale = await p.evaluate(() => ({
+    readmore: document.querySelectorAll("[data-readmore], .ai-readmore").length,
+    clamped: document.querySelectorAll(".ai-summary.clamp").length,
+  }));
+  ok("no second gate behind the first", stale.readmore === 0 && stale.clamped === 0,
+     "readmore=" + stale.readmore + " clamp=" + stale.clamped);
+
+  // ---- Players: same component, so the same behaviour, unforked ----
+  await goRoute(p, "#/players");
+  await p.waitForTimeout(300);
+  s = await state();
+  ok("players: the note is collapsed on arrival", s !== null && s.revealed === false && s.innerH === 0,
+     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("  and reveals the same way", s.revealed === true && s.innerH > 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
+  // Same guarantee the row accordion has: state is a class on re-rendered DOM,
+  // so leaving and returning must reset it rather than restore it.
+  await goRoute(p, "#/games");
+  await goRoute(p, "#/players");
+  s = await state();
+  ok("  leaving and returning re-collapses it", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
   await p.close();
 }
 
@@ -396,16 +522,42 @@ async function safeAreaChecks(browser, base) {
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(700);
 
-  const pad = await p.evaluate(() => ({
-    mainTop: getComputedStyle(document.querySelector(".shell-main")).paddingTop,
-    mainBottom: getComputedStyle(document.querySelector(".shell-main")).paddingBottom,
-    tabbarBottom: getComputedStyle(document.querySelector(".tabbar")).paddingBottom,
-  }));
-  ok("shell-main applies the top inset", pad.mainTop === INSET_TOP + "px", pad.mainTop);
-  ok("shell-main clears tab bar + bottom inset",
-     pad.mainBottom === (60 + INSET_BOTTOM) + "px", pad.mainBottom);
-  ok("tab bar applies the bottom inset",
-     pad.tabbarBottom === INSET_BOTTOM + "px", pad.tabbarBottom);
+  // Phase 3 made the tab bar a floating pill: inset 14px from the left, right
+  // and bottom edges instead of running edge to edge. The safe-area inset moved
+  // with it, OUT of the bar's padding-bottom and INTO its bottom offset -- a
+  // pill has to move as a whole, where the old bar could pad its labels up and
+  // leave its background sitting under the home indicator.
+  //
+  // So this measures the bar's BOX rather than its padding string. That is a
+  // stronger assertion than the one it replaces: padding-bottom: 34px was only
+  // ever a proxy for "the bar clears the indicator", and it stopped being a
+  // valid proxy the moment the bar left the bottom edge.
+  const BAR_H = 62;         // .tabbar height
+  const BAR_GAP = 14;       // how far it floats above the bottom edge
+  const geom = await p.evaluate(() => {
+    const bar = document.querySelector(".tabbar");
+    const r = bar.getBoundingClientRect();
+    return {
+      mainTop: getComputedStyle(document.querySelector(".shell-main")).paddingTop,
+      mainBottom: getComputedStyle(document.querySelector(".shell-main")).paddingBottom,
+      barH: Math.round(r.height),
+      barLeft: Math.round(r.left),
+      barGapBelow: Math.round(window.innerHeight - r.bottom),
+      viewportW: window.innerWidth,
+    };
+  });
+  ok("shell-main applies the top inset", geom.mainTop === INSET_TOP + "px", geom.mainTop);
+  ok("shell-main clears the floating bar + bottom inset",
+     geom.mainBottom === (90 + INSET_BOTTOM) + "px", geom.mainBottom);
+  ok("tab bar is the floating pill height", geom.barH === BAR_H, geom.barH + "px");
+  // The whole point of the offset change: the pill's own bottom edge -- not
+  // just its labels -- has to sit above the home indicator.
+  ok("tab bar floats clear of the home indicator",
+     geom.barGapBelow === BAR_GAP + INSET_BOTTOM,
+     "gap=" + geom.barGapBelow + " expected " + (BAR_GAP + INSET_BOTTOM));
+  // Inset from the side edges too, on a viewport narrower than the 402px cap.
+  ok("tab bar is inset from the side edges",
+     geom.barLeft === BAR_GAP, "left=" + geom.barLeft + " expected " + BAR_GAP);
 
   // Geometry, not just declarations: nothing may render inside either strip.
   const tops = {};
@@ -510,9 +662,27 @@ async function standaloneChecks(browser, base) {
   ok("viewport-fit=cover for the safe-area insets", meta.viewportFit);
 
   // The tab bar must clear the iOS home indicator rather than sit under it.
-  const padded = await p.evaluate(() =>
-    getComputedStyle(document.querySelector(".tabbar")).paddingBottom !== "");
-  ok("tab bar reserves safe-area padding", padded);
+  //
+  // This asserts the RULE references env(safe-area-inset-bottom), not a
+  // computed value: there is no inset emulation on this page, so every computed
+  // number here is identical whether the env() is present or not, and a
+  // computed-value check would pass on a bar that ignores the indicator
+  // entirely. (The old check -- paddingBottom !== "" -- was true of any element
+  // with any padding, so it never had teeth. safeAreaChecks measures the real
+  // geometry with the inset emulated; this one guards the declaration.)
+  const reservesInset = await p.evaluate(() => {
+    for (const sheet of document.styleSheets) {
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; }  // cross-origin (fonts)
+      for (const r of rules) {
+        if (r.selectorText === ".tabbar") {
+          return /env\(\s*safe-area-inset-bottom/.test(r.style.getPropertyValue("bottom"));
+        }
+      }
+    }
+    return false;
+  });
+  ok("tab bar offsets itself by the safe-area inset", reservesInset);
   await p.close();
 
   // Repo-wide, not just this document. The original bug was five pages each
@@ -571,6 +741,7 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
   try {
     await scopeLeakCheck(browser, base);
     await reEntryChecks(browser, base);
+    await aiNoteChecks(browser, base);
     await routerChecks(browser, base);
     await safeAreaChecks(browser, base);
     await standaloneChecks(browser, base);
