@@ -143,18 +143,38 @@ body.insights-scope .breakdown-label {
 .cat-icon svg { width: 22px; height: 22px; }
 .cat-label { font: 600 10px var(--font-body); letter-spacing: 0.3px; color: var(--text-secondary); text-align: center; }
 
-/* ---- Best Angle: promoted, tinted, larger than the ranked rows ---- */
+/* ---- Best Angle: promoted, tinted, larger than the ranked rows ----
+   The Phase 3 glass pass skipped this component because the handoff never named
+   it, which left an OPAQUE tinted block -- the heaviest surface in the card --
+   sitting inside an otherwise all-glass expanded row. On a real device it read
+   heavier than the game-score header above it.
+
+   It now takes the same inset-wash tier as .ai-summary and .gr-chip, and like
+   them carries NO backdrop-filter of its own: a nested blur inside the
+   already-blurred card has nothing new behind it to blur and would cost another
+   compositing layer per open row. No blur IS the tier here, not an omission.
+
+   What still marks it as the featured pick, rather than a plain .ss-row: the
+   accent tints the fill and the border and runs full-strength down the left
+   edge, and the type is a scale up (19px/34px vs the rows' 14px/22px). All
+   three are identity slots -- the accent is the market/side colour, never a
+   status colour, so the Phase 3 placement rule is unchanged. */
 .best-angle {
   position: relative; overflow: hidden; margin: 4px 0 14px;
-  padding: 16px 16px 16px 20px; border-radius: 16px;
-  border: 1px solid var(--ba-color, var(--gold));
-  background: var(--surface-2);
-  background: color-mix(in srgb, var(--ba-color, var(--gold)) 13%, var(--surface));
+  padding: 16px 16px 16px 20px; border-radius: var(--r-xl);
+  border: 1px solid color-mix(in srgb, var(--ba-color, var(--gold)) 40%, transparent);
+  background: color-mix(in srgb, var(--ba-color, var(--gold)) 8%, var(--glass-inset));
 }
 .best-angle::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--ba-color, var(--gold)); }
+/* Was a black pill (rgba(0,0,0,0.28)), which only worked against the opaque
+   navy block -- on a wash it reads as a hole punched in the panel. Same
+   tint/border construction as .ai-badge, so the card's two badges are built the
+   same way and differ only in which colour they take. */
 .ba-tag {
   display: inline-block; font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
-  color: var(--ba-color, var(--gold)); background: rgba(0, 0, 0, 0.28);
+  color: var(--ba-color, var(--gold));
+  background: color-mix(in srgb, var(--ba-color, var(--gold)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ba-color, var(--gold)) 35%, transparent);
   border-radius: 999px; padding: 4px 11px; margin-bottom: 12px;
 }
 .ba-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
@@ -166,11 +186,18 @@ body.insights-scope .breakdown-label {
 
 /* ---- Signal Scores: vertical list of rounded rows ---- */
 .signal-scores { margin-top: 4px; display: flex; flex-direction: column; gap: 9px; }
+/* Same wash tier as Best Angle above, and it HAD to move with it. These rows
+   were opaque --surface-2; converting only Best Angle would have left the
+   featured pick lighter than the plain rows beneath it, inverting the very
+   hierarchy the conversion exists to fix. Untinted and on the lighter border
+   rung, so the difference between "the pick" and "the rest" is carried by
+   Best Angle's tint and type scale rather than by one of them being the only
+   solid object in the card. */
 .ss-row {
   position: relative; overflow: hidden; display: grid;
   grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
-  padding: 12px 14px 12px 16px; border-radius: 14px;
-  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 12px 14px 12px 16px; border-radius: var(--r-lg);
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
 }
 .ss-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--row-color, var(--gold)); }
 .ss-rank { font: 600 12px var(--font-body); color: var(--text-tertiary); width: 14px; text-align: center; }
