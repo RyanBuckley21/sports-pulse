@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
 """How did yesterday's top Signal Score picks actually do?
 
-A standalone, read-only reporting CLI. It reads the picks that
-`betting_signals.py` already generated (out of the committed
-data/insights.games.json store) and grades them against real outcomes from the
-MLB StatsAPI. It does NOT change, re-run, or re-derive how picks are made:
-betting_signals and implied_total are imported read-only (only for ranking) or
-not at all.
+A standalone reporting CLI. It reads the picks that `betting_signals.py` already
+generated (out of the committed data/insights.games.json store) and grades them
+against real outcomes from the MLB StatsAPI. It does NOT change, re-run, or
+re-derive how picks are made: betting_signals and implied_total are imported
+read-only (only for ranking) or not at all, and nothing this script writes is
+ever read back by the generator.
 
     python3 signal_report.py                      # yesterday (US/Eastern)
     python3 signal_report.py --date 2026-07-22
     python3 signal_report.py --date 2026-07-21 --rev f27b478
+
+The all-time record
+-------------------
+Each report also appends its date's tallies to data/signal_report_history.json
+and prints the standing record across every date reported so far. The ledger is
+keyed BY DATE, so re-running a day (reported early with picks still pending,
+then again once they finish) overwrites that day rather than double-counting.
+
+Only a canonical run is recorded: `--all-markets` or a moved `--min-score`
+change the pick set, and `--store` points at a fixture rather than the project's
+own store, so any of those would mix incomparable denominators into one number.
+Such runs still DISPLAY the all-time record, with a note saying why they were
+not added to it. `--no-record` opts out explicitly. Assumed-line results are
+never recorded at all.
 
 The pick set
 ------------
@@ -71,6 +85,7 @@ import betting_signals  # read-only: ranking (list_markets / top_market)
 
 CONFIG_PATH = "config.yaml"
 STORE_PATH = "data/insights.games.json"
+LEDGER_PATH = "data/signal_report_history.json"
 SPORT_KEY = "mlb"
 
 # Reference lines used ONLY under --assume-lines. These are conventional round
@@ -132,6 +147,83 @@ def load_store(path, rev=None):
             return json.load(f)
     except FileNotFoundError:
         die("no store at {}".format(path))
+
+
+def load_ledger(path=LEDGER_PATH):
+    """The running record of every date reported so far. Missing or unreadable
+    means "no history yet" -- a broken ledger must never block a report."""
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return {"schema_version": 1, "dates": {}}
+    if not isinstance(data.get("dates"), dict):
+        return {"schema_version": 1, "dates": {}}
+    return data
+
+
+def record_day(ledger, date, rows, source, path=LEDGER_PATH):
+    """Write this date's tallies into the ledger, keyed BY DATE.
+
+    Keying by date makes re-running a date idempotent: a day reported early
+    (picks still PENDING) and reported again after the games finish overwrites
+    its own entry instead of double-counting into the all-time record. Only the
+    outcome and estimate bases are stored -- assumed-line results come from
+    invented numbers and must never accumulate into a standing record.
+    """
+    tallies = {}
+    for basis in ("outcome", "estimate"):
+        rec = {"HIT": 0, "MISS": 0, "PUSH": 0}
+        for _, _, _, verdict, b in rows:
+            if b == basis and verdict in rec:
+                rec[verdict] += 1
+        tallies[basis] = rec
+    ledger.setdefault("dates", {})[date] = {
+        "recorded_at": datetime.datetime.now(datetime.timezone.utc)
+                               .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "source": source,
+        "picks": len(rows),
+        "pending": sum(1 for r in rows if r[3] in RERUNNABLE),
+        "outcome": tallies["outcome"],
+        "estimate": tallies["estimate"],
+    }
+    ledger["schema_version"] = 1
+    try:
+        with open(path, "w") as f:
+            json.dump(ledger, f, indent=2, sort_keys=True)
+    except OSError as e:
+        sys.stderr.write("signal_report: warning: could not write {} ({})\n".format(path, e))
+    return ledger
+
+
+def is_recordable(args, min_score, threshold):
+    """Whether this run represents the canonical picks for its date.
+
+    Only a default-shaped run may enter the standing record. `--all-markets` or a
+    moved `--min-score` change the pick set, and `--store` points at something
+    other than the project's own store (a fixture, a reconstruction) -- letting
+    any of those accumulate would silently mix incomparable denominators into one
+    all-time number. `--rev` IS allowed: it reads the real committed store for an
+    older date. `--assume-lines` is allowed too, since it only affects rows that
+    would otherwise go ungraded, and its tallies are never recorded anyway.
+
+    Returns (recordable, reason_when_not).
+    """
+    if args.no_record:
+        return False, "--no-record"
+    if args.all_markets:
+        return False, "--all-markets changes the pick set"
+    if min_score != threshold:
+        return False, "--min-score {} is not the standout threshold".format(min_score)
+    if args.store != STORE_PATH:
+        return False, "--store points outside the project store"
+    return True, None
+
+
+def has_picks(rows):
+    """A date with no picks has nothing to record. Storing it anyway would add to
+    the ledger's date count while contributing no result to either record."""
+    return bool(rows)
 
 
 def store_slate_dates(store):
@@ -449,7 +541,8 @@ def matchup(pick, game):
     return label
 
 
-def render(date, picks, rows, store_size, assume_lines, out=sys.stdout):
+def render(date, picks, rows, store_size, assume_lines, ledger=None,
+           not_recorded=None, out=sys.stdout):
     def w(line=""):
         out.write(line.rstrip() + "\n")
 
@@ -476,6 +569,8 @@ def render(date, picks, rows, store_size, assume_lines, out=sys.stdout):
         w("{}{}{}".format(INDENT, verdict + BASIS_SUFFIX.get(basis, ""), flags))
     w()
     for line in summary_lines(date, rows):
+        w(line)
+    for line in alltime_lines(ledger, not_recorded):
         w(line)
 
 
@@ -522,6 +617,36 @@ def summary_lines(date, rows):
     return lines
 
 
+def alltime_lines(ledger, not_recorded=None):
+    """The standing record across every date in the ledger, same two-basis split
+    as the day's summary -- an all-time number that blended them would make the
+    same overstated claim the daily one is careful not to."""
+    dates = (ledger or {}).get("dates") or {}
+    lines = []
+    if dates:
+        parts = []
+        for basis in ("outcome", "estimate"):
+            rec = {"HIT": 0, "MISS": 0, "PUSH": 0}
+            for day in dates.values():
+                for k in rec:
+                    rec[k] += (day.get(basis) or {}).get(k, 0)
+            n = rec["HIT"] + rec["MISS"]
+            if not n and not rec["PUSH"]:
+                continue
+            seg = "{} {}-{}{} on {} pick{}".format(
+                BASIS_LABEL[basis], rec["HIT"], rec["MISS"],
+                " ({:.0f}%)".format(100.0 * rec["HIT"] / n) if n else "",
+                n, "" if n == 1 else "s")
+            if rec["PUSH"]:
+                seg += " [{} push]".format(rec["PUSH"])
+            parts.append(seg)
+        parts.append("{} date{}".format(len(dates), "" if len(dates) == 1 else "s"))
+        lines.append("All-time:          {}".format("  ·  ".join(parts)))
+    if not_recorded:
+        lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
+    return lines
+
+
 # --------------------------------------------------------------------------- #
 # main
 # --------------------------------------------------------------------------- #
@@ -556,6 +681,8 @@ def parse_args(argv=None):
                    help="every market with a lean at/above the floor, not one standout per game")
     p.add_argument("--assume-lines", action="store_true",
                    help="grade totals/run lines against ASSUMED reference numbers (opt-in, labeled)")
+    p.add_argument("--no-record", action="store_true",
+                   help="report without adding this date to the all-time record ({})".format(LEDGER_PATH))
     args = p.parse_args(argv)
     if args.date:
         try:
@@ -620,7 +747,17 @@ def main(argv=None):
         result, verdict, basis = grade(pick, game, args.assume_lines)
         rows.append((pick, game, result, verdict, basis))
 
-    render(args.date, picks, rows, len(store), args.assume_lines)
+    # The standing record. Only a canonical run may add to it; every run still
+    # displays it, so the all-time number is visible even from a fixture run.
+    ledger = load_ledger()
+    recordable, why_not = is_recordable(args, min_score, threshold)
+    if recordable and not has_picks(rows):
+        recordable, why_not = False, "no picks on this date"
+    if recordable:
+        ledger = record_day(ledger, args.date, rows,
+                            "{}@{}".format(args.store, args.rev) if args.rev else args.store)
+
+    render(args.date, picks, rows, len(store), args.assume_lines, ledger, why_not)
     return EXIT_PENDING if any(r[3] in RERUNNABLE for r in rows) else EXIT_OK
 
 

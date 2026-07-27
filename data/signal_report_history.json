@@ -1,0 +1,37 @@
+{
+  "dates": {
+    "2026-07-21": {
+      "estimate": {
+        "HIT": 0,
+        "MISS": 0,
+        "PUSH": 0
+      },
+      "outcome": {
+        "HIT": 2,
+        "MISS": 2,
+        "PUSH": 0
+      },
+      "pending": 0,
+      "picks": 10,
+      "recorded_at": "2026-07-27T14:42:44Z",
+      "source": "data/insights.games.json@f27b478"
+    },
+    "2026-07-22": {
+      "estimate": {
+        "HIT": 0,
+        "MISS": 0,
+        "PUSH": 0
+      },
+      "outcome": {
+        "HIT": 2,
+        "MISS": 3,
+        "PUSH": 0
+      },
+      "pending": 0,
+      "picks": 9,
+      "recorded_at": "2026-07-27T14:42:49Z",
+      "source": "data/insights.games.json"
+    }
+  },
+  "schema_version": 1
+}
