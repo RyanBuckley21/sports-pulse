@@ -239,7 +239,16 @@ NUMERIC_SELECTORS = (
     (".breakdown-row-value", "was mono; values right-aligned in a stacked list"),
     (".row-value", "already Space Grotesk; 20px stat column, right-aligned"),
     (".key-value", "already Space Grotesk; three-up stat cells"),
-    (".hero-value", "already Space Grotesk; 68px hero number"),
+    # .hero-value was here, described as "already Space Grotesk; 68px hero
+    # number". The hero was retired when the player detail page became a
+    # multi-category list: it restated the value from the leaderboard row the
+    # reader had just tapped, and being inherently single-category it had no
+    # correct value to show once the page listed every board a player qualifies
+    # on. Its numeric column is .pcat-value below. Removed rather than left in
+    # place, because a selector list that names markup nothing emits stops being
+    # a checklist and becomes folklore.
+    (".pcat-value", "per-category value, stacked down the detail page's list"),
+    (".pcat-rank", "per-category rank in the same list, right-aligned beside it"),
     # Added in Phase 3. The insights section was never audited for this in
     # Phase 1 because the list above came out of the mono inventory, which was
     # app.css-only -- insights.css has always been mono-free. These are the

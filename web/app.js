@@ -102,6 +102,55 @@
     return { sportKey: state.selected.sport, sportLabel: sp.label, cat: cat, player: player, board: cat.players };
   }
 
+  // A player's identity ACROSS boards. data.json carries no stable player id --
+  // normalizer.py declares `entity_id` but no fetcher populates it and
+  // generate_stats.py drops it before emitting -- so name+team is the only key
+  // available. Deliberately the same composite generate_insights.py already
+  // uses (`_entity_key`, "aaron judge|nyy"), lowercased and trimmed the same
+  // way, so the two surfaces group players identically rather than nearly.
+  function entityKey(name, teamAbbr) {
+    return String(name || "").trim().toLowerCase() + "|" + String(teamAbbr || "").trim().toLowerCase();
+  }
+
+  // Every category the selected player appears in, HOTTEST FIRST.
+  //
+  // Ordering is by rank ascending, which is not an invented metric: it is
+  // exactly the order generate_insights.py's pulse produces, since
+  // `_pulse(rank) = 100 - (rank-1)*7` is strictly decreasing in rank. Sorting
+  // by rank and sorting by pulse are the same sort, so this reuses the app's
+  // shipped definition of "hot" without a second copy of the formula. The
+  // category key breaks ties so the order cannot flap between renders.
+  function playerCategoriesCtx() {
+    if (!state.selected) return null;
+    var sp = state.data.sports[state.selected.sport];
+    if (!sp) return null;
+    var from = sp.categories.find(function (c) { return c.key === state.selected.cat; });
+    var seed = from && from.players.find(function (p) { return p.rank === state.selected.rank; });
+    if (!seed) return null;
+
+    var key = entityKey(seed.entity, seed.team_abbr);
+    var entries = [];
+    sp.categories.forEach(function (c) {
+      var p = c.players.find(function (q) { return entityKey(q.entity, q.team_abbr) === key; });
+      if (p) entries.push({ cat: c, player: p, board: c.players });
+    });
+    entries.sort(function (a, b) {
+      var d = (Number(a.player.rank) || 99) - (Number(b.player.rank) || 99);
+      return d || (a.cat.key < b.cat.key ? -1 : a.cat.key > b.cat.key ? 1 : 0);
+    });
+    return { sportKey: state.selected.sport, sportLabel: sp.label, player: seed, entries: entries };
+  }
+
+  // The heat a rank represents, 30..100. A verbatim port of _pulse() in
+  // generate_insights.py:172 -- IF THAT FORMULA CHANGES, CHANGE THIS TOO. It is
+  // duplicated rather than shared because data.json carries no per-category
+  // pulse (generate_insights.py emits one pulse per PLAYER, from their best
+  // rank, and only for the top-20 players that get AI text), while this page
+  // needs one per category for every player who can be tapped.
+  function rankPulse(rank) {
+    return Math.max(30, Math.min(100, 100 - ((Number(rank) || 99) - 1) * 7));
+  }
+
   // ---------------- rendering ----------------
 
   function render() {
@@ -224,27 +273,121 @@
     );
   }
 
+  // The player detail page. NOT a deep-dive on the one category tapped in from
+  // -- that is what the leaderboard row already showed, and repeating it at 68px
+  // was the page's main redundancy. It answers "what is this player hot in right
+  // now", across every board they qualify on, hottest first.
+  //
+  // Nothing is expanded by default, INCLUDING the category tapped in from: the
+  // point is that no category is privileged. The one exception is a player who
+  // qualifies on exactly one board, where there is nothing to privilege and a
+  // collapsed row would just be a tap between the reader and the only content.
   function renderDetail() {
-    var ctx = selectedPlayerCtx();
-    if (!ctx) {
+    var ctx = playerCategoriesCtx();
+    if (!ctx || !ctx.entries.length) {
       state.view = "list";
       return renderList();
     }
-    var cat = ctx.cat;
     var player = ctx.player;
-    var board = ctx.board;
-    var isLeader = player.rank === 1;
     var teamColor = player.team_color || "#ffffff";
-    var isSoccer = ctx.sportKey === "worldcup";
+    var soloCategory = ctx.entries.length === 1;
 
     var teamChipLogo = player.logo_path ? '<img src="' + esc(player.logo_path) + '" alt="">' : "";
     var teamChip = player.team_abbr
       ? '<span class="team-chip" style="color:' + teamColor + ";background:" + alpha(teamColor, "26") + '">' +
         teamChipLogo + esc(player.team_abbr) + "</span>"
       : "";
-
     var posLine = esc(player.team) + (player.position ? " &middot; " + esc(player.position) : "");
-    var heat = isLeader ? '<span class="identity-heat"></span>' : "";
+    // The flame now means "#1 on some board", not "#1 on the board you came
+    // from" -- entries are rank-sorted, so the first entry carries the best rank.
+    var bestRank = Number(ctx.entries[0].player.rank) || 99;
+    var heat = bestRank === 1 ? '<span class="identity-heat"></span>' : "";
+
+    var rows = ctx.entries
+      .map(function (entry, i) {
+        return renderCategorySection(entry, ctx, i === 0, soloCategory);
+      })
+      .join("");
+
+    return (
+      '<div class="detail-back-row">' +
+      '<button class="back-btn" id="backBtn" type="button" aria-label="Back">' +
+      '<svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M7 1 1.5 7.5 7 14" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' +
+      "</button>" +
+      // Was "{sport} · {category}". The page is no longer about one category, so
+      // naming one in the breadcrumb would promise a view it does not render.
+      '<span class="crumb">' + esc(ctx.sportLabel) + "</span>" +
+      "</div>" +
+      '<div class="identity-row">' +
+      teamChip +
+      "<div><div class=\"identity-name\">" + esc(player.entity) + '</div><div class="identity-sub">' + posLine + "</div></div>" +
+      heat +
+      "</div>" +
+      '<div class="pcat-list">' + rows + "</div>"
+    );
+  }
+
+  // One category: the compact always-visible row, plus the full detail it opens
+  // into. `hottest` is the player's best-ranked category (entries are sorted),
+  // and takes the same leader treatment the leaderboard's #1 row gets -- heat
+  // dot and a glow on the bar -- so "best board" reads the same in both places.
+  function renderCategorySection(entry, ctx, hottest, open) {
+    var cat = entry.cat;
+    var player = entry.player;
+    var teamColor = player.team_color || "#ffffff";
+
+    // BAR LENGTH IS HEAT (rank), NOT SHARE-OF-LEADER. On the leaderboard
+    // .mag-fill means "% of the leader in this category", which works there
+    // because every row shares one leader. Here every row has a DIFFERENT
+    // leader, so that number is not comparable down the column and the bars
+    // would not descend with the rank ordering -- which reads as a broken sort
+    // rather than as two metrics. Pulse is comparable across categories, so bar
+    // length and row order carry the same signal.
+    //
+    // Colour stays the team colour, per the Phase 3 placement rule: .mag-fill
+    // is an identity slot on the leaderboard, and re-hueing it by heat band
+    // here would put a semantic colour in a slot that is team-coloured one
+    // screen away. Length carries heat; colour carries identity.
+    var pulse = rankPulse(player.rank);
+    var barShadow = hottest ? "box-shadow:0 0 10px " + alpha(player.team_color, "80") + ";" : "";
+    var heatDot = hottest ? '<span class="heat-dot"></span>' : "";
+    var valDisplay = cat.kind === "threshold" ? esc(thresholdDisplay(player)) : fmtValue(player.value, cat.kind);
+
+    return (
+      '<div class="pcat-item' + (open ? " is-open" : "") + '" data-pcat="' + esc(cat.key) + '">' +
+      '<button class="pcat-head" type="button" data-pcat-btn aria-expanded="' + (open ? "true" : "false") + '">' +
+      '<span class="pcat-top">' +
+      '<span class="pcat-label">' + esc(cat.label) + "</span>" +
+      heatDot +
+      '<span class="pcat-rank">#' + Number(player.rank) + "</span>" +
+      '<span class="pcat-value">' + valDisplay + "</span>" +
+      "</span>" +
+      '<span class="mag-track"><span class="mag-fill" style="width:' + pulse + "%;background:" + teamColor + ";" + barShadow + '"></span></span>' +
+      "</button>" +
+      // Three nested elements, not two, and the innermost one carries the
+      // padding on purpose. .pcat-detail-inner is the element that clips, and a
+      // clipped box cannot shrink below its own padding -- putting the gutter
+      // there would leave every collapsed category permanently open by that
+      // many pixels. Same trap the AI note hit; the fix is a padded child.
+      '<div class="pcat-detail"><div class="pcat-detail-inner">' +
+      '<div class="pcat-detail-pad">' + renderCategoryDetail(entry, ctx) + "</div>" +
+      "</div></div>" +
+      "</div>"
+    );
+  }
+
+  // The full per-category detail -- unchanged in content from what the page
+  // rendered before this became a multi-category view. The key cells moved in
+  // here from the page header: rank, ranked-of and the gap to #1/#2 are all
+  // per-category numbers, so with no category privileged at the top level there
+  // was no single correct value for them to show.
+  function renderCategoryDetail(entry, ctx) {
+    var cat = entry.cat;
+    var player = entry.player;
+    var board = entry.board;
+    var isLeader = player.rank === 1;
+    var teamColor = player.team_color || "#ffffff";
+    var isSoccer = ctx.sportKey === "worldcup";
 
     var leaderVal = board[0].value;
     var secondVal = board.length > 1 ? board[1].value : board[0].value;
@@ -317,33 +460,16 @@
       })
       .join("");
 
-    var vsHtml = renderVsNextStarter(player.vs_next_starter);
-
     return (
-      '<div class="detail-back-row">' +
-      '<button class="back-btn" id="backBtn" type="button" aria-label="Back">' +
-      '<svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M7 1 1.5 7.5 7 14" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' +
-      "</button>" +
-      '<span class="crumb">' + esc(ctx.sportLabel) + " &middot; " + esc(cat.label) + "</span>" +
-      "</div>" +
-      '<div class="identity-row">' +
-      teamChip +
-      "<div><div class=\"identity-name\">" + esc(player.entity) + '</div><div class="identity-sub">' + posLine + "</div></div>" +
-      heat +
-      "</div>" +
-      '<div class="hero-row">' +
-      '<div class="hero-value" style="color:' + teamColor + '">' +
-      (cat.kind === "threshold" ? esc(thresholdDisplay(player)) : fmtValue(player.value, cat.kind)) + "</div>" +
-      '<div class="hero-caption"><div class="hero-cat">' + esc(cat.label) + '</div><div class="hero-sub">' +
-      esc(cat.sub).toUpperCase() + " &middot; #" + Number(player.rank) + "</div></div>" +
-      "</div>" +
+      '<div class="pcat-sub">' + esc(cat.sub).toUpperCase() + "</div>" +
       '<div class="key-row">' +
       keyCell("#" + Number(player.rank), "Rank") +
       keyCell(String(player.total_qualified != null ? player.total_qualified : "-"), "Ranked") +
       keyCell(gapStr, gapLabel) +
       "</div>" +
       '<div class="bars-section"><div class="bars-label">' + barsTitle + "</div>" + barsHtml + "</div>" +
-      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml + vsHtml + "</div>"
+      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml +
+      renderVsNextStarter(player.vs_next_starter) + "</div>"
     );
   }
 
@@ -501,6 +627,35 @@
     }
     if (e.target.closest("#backBtn")) {
       goBack();
+      return;
+    }
+    // Category disclosure on the detail page. Deliberately keyed off
+    // [data-pcat-btn] and NOT [data-rank]: the leaderboard row branch above
+    // matches any [data-rank] ancestor, so reusing that attribute here would
+    // make expanding a category navigate instead.
+    //
+    // Toggles a class in place and does NOT call render(), which rebuilds
+    // appEl.innerHTML wholesale and would drop the open row (and the page
+    // scroll) on every tap. Same approach as .gr-item.is-open and
+    // .ai-summary.is-revealed. Safe from being re-rendered underneath: the 30s
+    // freshness interval only writes to #liveDot / #statusText, which do not
+    // exist in the detail view, so it returns early here.
+    var pcatBtn = e.target.closest("[data-pcat-btn]");
+    if (pcatBtn) {
+      var item = pcatBtn.parentNode;
+      var wasOpen = item.classList.contains("is-open");
+      // Accordion, matching the games list: opening one closes the other, so
+      // the page stays a scannable column instead of stacking full detail.
+      var openItems = appEl.querySelectorAll(".pcat-item.is-open");
+      for (var i = 0; i < openItems.length; i++) {
+        openItems[i].classList.remove("is-open");
+        var b = openItems[i].querySelector("[data-pcat-btn]");
+        if (b) b.setAttribute("aria-expanded", "false");
+      }
+      if (!wasOpen) {
+        item.classList.add("is-open");
+        pcatBtn.setAttribute("aria-expanded", "true");
+      }
       return;
     }
   });
