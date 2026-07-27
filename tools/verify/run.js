@@ -290,6 +290,109 @@ async function reEntryChecks(browser, base) {
   await p.close();
 }
 
+// ------------------------------------------------------------- ai-note
+// The AI note is a SECOND, NESTED disclosure inside the row-level accordion,
+// and the two are independent: a note lives inside an open row, so opening a
+// row must not reveal its note and revealing a note must not disturb the row.
+// That independence is the thing most likely to break silently -- nothing
+// throws, the card just starts giving away the paragraph it was meant to defer
+// (or the row starts collapsing when you tap the badge).
+//
+// Also covers the shared-component claim. .ai-summary is emitted by
+// gameInsight, playerInsight, teamInsight and the gallery from ONE function, so
+// forking the behaviour per screen is the regression to watch for: the checks
+// run the same assertions on Games and on Players.
+async function aiNoteChecks(browser, base) {
+  heading("ai-note");
+  const p = await newPage(browser);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(600);
+
+  const state = () => p.evaluate(() => {
+    const box = document.querySelector(".ai-summary");
+    if (!box) return null;
+    const btn = box.querySelector("[data-ainote]");
+    const body = box.querySelector(".ai-body");
+    return {
+      revealed: box.classList.contains("is-revealed"),
+      aria: btn && btn.getAttribute("aria-expanded"),
+      isButton: btn && btn.tagName,
+      rows: body && getComputedStyle(body).gridTemplateRows,
+      // The measured height of the clipped inner is what the user actually
+      // gets; the class could be right while the CSS silently failed.
+      innerH: Math.round(box.querySelector(".ai-body-inner").getBoundingClientRect().height),
+      openRows: document.querySelectorAll(".gr-item.is-open").length,
+    };
+  });
+
+  // ---- Games ----
+  await goRoute(p, "#/games");
+  await p.click(".gr-row");
+  await p.waitForTimeout(400);
+  let s = await state();
+  ok("games: an expanded row renders an AI note", s !== null);
+  ok("  it is collapsed on open", s.revealed === false && s.aria === "false",
+     "revealed=" + s.revealed + " aria-expanded=" + s.aria);
+  ok("  and collapsed means zero height, not just an unset class", s.innerH === 0, s.innerH + "px");
+  // Row-level and note-level state must not have been conflated.
+  ok("  opening the row did not reveal the note", s.openRows === 1 && !s.revealed,
+     "openRows=" + s.openRows + " revealed=" + s.revealed);
+  // A real button, so the platform supplies Enter/Space and focus.
+  ok("  the control is a real button", s.isButton === "BUTTON", String(s.isButton));
+  // Through getByRole, not textContent: the chevron is aria-hidden, so it is in
+  // the text but must NOT be in the accessible name. textContent cannot tell the
+  // difference and would pass on a button that announces "AI Note >" to a screen
+  // reader. This runs the real accessible-name computation.
+  const named = await p.getByRole("button", { name: "AI Note", exact: true }).count();
+  ok("  named by the badge, with the chevron excluded", named >= 1, "matches=" + named);
+
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("games: tapping the header reveals it", s.revealed === true && s.aria === "true",
+     "revealed=" + s.revealed + " aria-expanded=" + s.aria);
+  ok("  the body actually has height", s.innerH > 0, s.innerH + "px");
+  ok("  it uses the grid-rows mechanism, not display", s.rows !== "0px", s.rows);
+  ok("  revealing the note left the row open", s.openRows === 1, "openRows=" + s.openRows);
+
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("games: tapping again collapses it", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
+  // The clamp/"Read full note" pair this disclosure replaced. Two gates on one
+  // paragraph was the thing being removed, so its return is a regression.
+  const stale = await p.evaluate(() => ({
+    readmore: document.querySelectorAll("[data-readmore], .ai-readmore").length,
+    clamped: document.querySelectorAll(".ai-summary.clamp").length,
+  }));
+  ok("no second gate behind the first", stale.readmore === 0 && stale.clamped === 0,
+     "readmore=" + stale.readmore + " clamp=" + stale.clamped);
+
+  // ---- Players: same component, so the same behaviour, unforked ----
+  await goRoute(p, "#/players");
+  await p.waitForTimeout(300);
+  s = await state();
+  ok("players: the note is collapsed on arrival", s !== null && s.revealed === false && s.innerH === 0,
+     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
+  await p.click("[data-ainote]");
+  await p.waitForTimeout(450);
+  s = await state();
+  ok("  and reveals the same way", s.revealed === true && s.innerH > 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
+  // Same guarantee the row accordion has: state is a class on re-rendered DOM,
+  // so leaving and returning must reset it rather than restore it.
+  await goRoute(p, "#/games");
+  await goRoute(p, "#/players");
+  s = await state();
+  ok("  leaving and returning re-collapses it", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
+
+  await p.close();
+}
+
 // -------------------------------------------------------------------- router
 async function routerChecks(browser, base) {
   heading("router");
@@ -638,6 +741,7 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
   try {
     await scopeLeakCheck(browser, base);
     await reEntryChecks(browser, base);
+    await aiNoteChecks(browser, base);
     await routerChecks(browser, base);
     await safeAreaChecks(browser, base);
     await standaloneChecks(browser, base);

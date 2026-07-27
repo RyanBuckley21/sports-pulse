@@ -362,7 +362,11 @@ body.insights-scope .breakdown-label {
    accessibility regression, not a cosmetic one, so it is drawn inward. */
 .gr-row:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
-  .gr-detail { transition: none; }
+  /* Both disclosures, the row-level one and the AI note nested inside it --
+     a card that honours the setting for one and not the other is worse than
+     honouring it for neither. */
+  .gr-detail, .ai-body { transition: none; }
+  .ai-chevron { transition: none; }
 }
 
 /* ---- Compare table (generic two-entity metric comparison) ---- */
@@ -412,22 +416,57 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
    too -- the wash alone separates it, and a bordered panel inside a bordered
    card reads as clutter at this size. */
 .ai-summary { background: var(--glass-inset); border: 0; border-radius: var(--r-md); padding: 14px 16px; }
-.ai-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* The whole header row is the control, not just the badge -- a 9px pill is
+   below any reasonable touch target, and the chevron has to be inside the same
+   hit area as the thing it points at. Button reset first, because a <button>
+   brings its own font, colour, padding and centring. */
+.ai-summary-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
 .ai-badge {
   font: 700 9px var(--font-body); letter-spacing: 1px; text-transform: uppercase;
   color: var(--gold); background: rgba(240, 168, 58, 0.12);
   border: 1px solid rgba(240, 168, 58, 0.35); border-radius: 999px; padding: 4px 10px;
 }
+.ai-chevron {
+  font: 400 16px/1 var(--font-body); color: var(--text-tertiary);
+  transition: transform 0.28s ease, color 0.15s ease;
+}
+.ai-summary.is-revealed .ai-chevron { transform: rotate(90deg); color: var(--text-secondary); }
+.ai-summary-head:hover .ai-chevron { color: var(--text-secondary); }
+.ai-summary-head:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: var(--r-xs); }
+
+/* Same 0fr -> 1fr idiom and same duration as .gr-detail, deliberately: this is
+   a nested disclosure inside that one, and two different expand mechanisms in
+   one card would read as two unrelated behaviours.
+
+   THE 10px SPACING SITS ON THE FIRST CHILD, and neither of the two obvious
+   places works. margin-bottom on the header is outside the clipped element, so
+   it stays put and leaves a 10px dead band under the badge while closed.
+   padding-top on .ai-body-inner is inside it but cannot compress either: used
+   height can never go below padding, box-sizing notwithstanding, so the
+   "collapsed" note stayed exactly 10px tall. A margin on a child is inside the
+   clip and contributes to content height, which is what actually goes to zero.
+   Both wrong versions were caught by measuring the rendered height rather than
+   trusting the class -- hence that assertion in the ai-note group. */
+.ai-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+.ai-summary.is-revealed .ai-body { grid-template-rows: 1fr; }
+.ai-body-inner { overflow: hidden; min-height: 0; }
+.ai-body-inner > :first-child { margin-top: 10px; }
+
 .ai-summary-title { display: none; }
 .ai-summary-text { font: 500 14px/1.55 var(--font-body); color: var(--text); margin: 0; letter-spacing: -0.01em; }
+/* No line clamp. The story used to render 3-line-clamped behind a "Read full
+   note" button; the header disclosure replaced that gate, and re-adding a
+   clamp here would put a second one back behind the first. */
 .ai-summary-story { font: 400 13px/1.55 var(--font-body); color: var(--text-secondary); margin: 8px 0 0; }
-.ai-summary.clamp .ai-summary-story {
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ai-readmore {
-  display: inline-block; margin-top: 9px; font: 600 12px var(--font-body);
-  color: var(--gold); background: none; border: none; padding: 0; cursor: pointer;
-}
 .ai-note {
   margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
   font: 400 12.5px/1.5 var(--font-body); color: var(--text-secondary);

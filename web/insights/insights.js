@@ -341,17 +341,40 @@
     // purpose. Optional `note` ({label, text}) renders a small labeled line
     // beneath the story (game betting_note / player matchup_note) -- shown only
     // when non-empty, and sitting inside this block so the caveat covers it too.
+    //
+    // COLLAPSED BY DEFAULT. Everything else in an expanded card is scannable --
+    // a score, a band, a labelled number -- and costs a glance. This is the one
+    // element that costs reading, and it is also the tallest, so it is the one
+    // thing worth a second tap. Best Angle and the ranked rows deliberately
+    // stay ungated.
+    //
+    // THE `clamp` / "Read full note" PAIR THAT USED TO LIVE HERE IS GONE. It
+    // was already a disclosure: `story` rendered 3-line-clamped with a button
+    // to un-clamp it. Keeping both would have meant tap "AI Note" -> read three
+    // clipped lines -> tap again, two gates on one paragraph. One gate, and
+    // past it the note is whole.
+    //
+    // This is a SEPARATE state from the row-level .gr-item.is-open accordion --
+    // hence `is-revealed` rather than a second `is-open`. The two nest (a note
+    // lives inside an open row) and must stay independently readable.
     aiSummary: function (summary, story, note) {
       var hasNote = note && note.text;
       if (!summary && !story && !hasNote) return "";
       return (
-        '<div class="ai-summary' + (story ? " clamp" : "") + '">' +
-        '<div class="ai-summary-head"><span class="ai-badge">AI Note</span></div>' +
+        '<div class="ai-summary">' +
+        // A real <button>, so Enter/Space and focus come from the platform
+        // rather than being reimplemented. Its accessible name is the badge
+        // text; the chevron is decorative and hidden from the tree.
+        '<button class="ai-summary-head" type="button" data-ainote aria-expanded="false">' +
+        '<span class="ai-badge">AI Note</span>' +
+        '<span class="ai-chevron" aria-hidden="true">&rsaquo;</span>' +
+        "</button>" +
+        '<div class="ai-body"><div class="ai-body-inner">' +
         (summary ? '<p class="ai-summary-text">' + esc(summary) + "</p>" : "") +
         (story ? '<p class="ai-summary-story">' + esc(story) + "</p>" : "") +
-        (story ? '<button class="ai-readmore" type="button" data-readmore>Read full note →</button>' : "") +
         (hasNote ? '<div class="ai-note"><span class="ai-note-label">' + esc(note.label) + "</span>" + esc(note.text) + "</div>" : "") +
         '<div class="ai-caveat">Context, not a prediction.</div>' +
+        "</div></div>" +
         "</div>"
       );
     },
@@ -531,18 +554,22 @@
   }
 
   // Light affordances (delegated, survives re-render): a game row expands its
-  // full card; "i" reveals a hidden disclaimer sibling; "Read full note"
-  // un-clamps the AI story. The row check is first and returns early -- the
+  // full card; "i" reveals a hidden disclaimer sibling; the AI Note header
+  // reveals its body. The row check is first and returns early -- the
   // data-toggle controls all live inside .gr-detail, never inside .gr-row, so
   // the two never contend for the same click.
+  //
+  // The AI note's state is a class on the element, exactly like .gr-item's --
+  // no module-level variable to keep in sync, and it resets for free because
+  // mount() re-renders the section on every visit.
   root.addEventListener("click", function (ev) {
     var row = ev.target.closest && ev.target.closest(".gr-row");
     if (row) return toggleGame(row);
-    var t = ev.target.closest && ev.target.closest("[data-toggle],[data-readmore]");
+    var t = ev.target.closest && ev.target.closest("[data-toggle],[data-ainote]");
     if (!t) return;
-    if (t.hasAttribute("data-readmore")) {
+    if (t.hasAttribute("data-ainote")) {
       var card = t.closest(".ai-summary");
-      if (card) t.textContent = card.classList.toggle("clamp") ? "Read full note →" : "Show less ←";
+      if (card) t.setAttribute("aria-expanded", card.classList.toggle("is-revealed") ? "true" : "false");
     } else {
       var tgt = t.nextElementSibling;
       if (tgt) tgt.hidden = !tgt.hidden;

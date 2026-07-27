@@ -28,8 +28,23 @@ ROSTER = [
 ]
 
 
+#: The committed mock carries `summary` but no `story`, so every AI note in the
+#: suite renders as a single sentence. The REAL pipeline populates both --
+#: generate_insights.py asks the model for a 2-3 sentence story alongside the
+#: one-line summary and passes it through to insights.players / insights.games
+#: -- which means the mock alone can never exercise the AI note at the length it
+#: actually ships at, and the note is the tallest thing in an expanded card.
+#: Same reasoning as the synthesised signal scores below.
+STORY = (
+    "The road offence has been the more consistent of the two all month, and "
+    "the bullpen gap is what keeps showing up in the late innings rather than "
+    "anything in the starting matchup. Neither side has faced this rotation "
+    "since the last series."
+)
+
+
 def _with_signals(game, i):
-    """Attach a best angle and ranked signal scores to a mock game.
+    """Attach a best angle, ranked signal scores and an AI story to a mock game.
 
     Cards.gameRow renders up to three chips from best_angle + signal_scores,
     deduped on market|side. Long market labels on purpose: they are what makes
@@ -47,7 +62,15 @@ def _with_signals(game, i):
         {"market": "Run Line", "side": away, "score": 64 - i * 2},
         {"market": "Game Total Under", "side": None, "score": 58 - i},
     ]
+    game.setdefault("story", STORY)
     return game
+
+
+def _with_story(player):
+    """Same gap on the players side: mock players carry summary, never story."""
+    player = dict(player)
+    player.setdefault("story", STORY)
+    return player
 
 
 def build():
@@ -82,7 +105,7 @@ def build():
         # insights.js reads players/games from here; teams and components come
         # from the committed mock instead.
         "insights": {
-            "players": mock["players"],
+            "players": [_with_story(p) for p in mock["players"]],
             # The committed mock predates signal scores, so its games render no
             # market chips at all -- which meant the suite could never see the
             # chip strip that only appears with real pipeline data. Synthesised
