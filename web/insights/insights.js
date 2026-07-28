@@ -56,6 +56,15 @@
   // Card builders look up UI[entity.sport]; nothing sport-specific is hardcoded.
   var UI = {};
 
+  // AI Insights feature flag (data.aiInsightsEnabled, set by generate_stats.py
+  // from config.yaml's ai_insights.enabled), populated at render time like UI
+  // above. Gates Cards.aiSummary only -- pulse/signals/comparisons/etc. are
+  // deterministic and always render. Defaults true so fixtures that predate
+  // this field (e.g. mock-insights.json, used by the dev-only Teams/Components
+  // views) keep showing their AI Note as before; only an explicit `false`
+  // (real pipeline output with the flag off) hides it.
+  var AI_ENABLED = true;
+
   // Icon registry: name -> inline SVG (CSP-safe, no external assets). Sport
   // config chooses which named icon each category uses -- this is only the glyph
   // library, it carries no labels and no logic. A future sport adds glyphs here
@@ -358,6 +367,7 @@
     // hence `is-revealed` rather than a second `is-open`. The two nest (a note
     // lives inside an open row) and must stay independently readable.
     aiSummary: function (summary, story, note) {
+      if (!AI_ENABLED) return "";
       var hasNote = note && note.text;
       if (!summary && !story && !hasNote) return "";
       return (
@@ -678,6 +688,7 @@
   function renderView(view, data, root) {
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
+    AI_ENABLED = data.aiInsightsEnabled !== false;
     if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
     else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
