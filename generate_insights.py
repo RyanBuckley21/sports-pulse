@@ -740,6 +740,11 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
               .format(reason, total, with_text, len(game_entities), g_with_text))
         insight_map = {k: _carry(store.get(k)) for k in entities}
         game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
+        # Persist the deterministic build even though generation is skipped --
+        # skip_generation is now the permanent default (ai_disabled), so
+        # without this the committed stores would never advance again.
+        _save_store(store_path, _carry_forward_store(entities, store, now_iso))
+        _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
     else:
         # One preflight for the whole run, iff anything (player or game) needs regen.
         needs = (any(_needs_regen(e, store.get(k)) for k, e in entities.items())
@@ -788,6 +793,51 @@ def _ui_meta(config):
         if cats:
             out[sport_key] = {"signal_categories": cats}
     return out
+
+
+def _carry_forward_store(entities, store, now_iso):
+    """The player store persisted when AI generation is skipped: same shape
+    _generate_all writes (pruned to the current entity set), but with only
+    previously-generated text carried forward -- nothing is invented here.
+    Lets the deterministic build (pulse/signals) reach the committed store
+    even when generation never runs, instead of leaving it frozen at
+    whichever date AI generation last actually executed."""
+    new_store = {}
+    for key, ent in entities.items():
+        prev = store.get(key)
+        text = _carry(prev) or {"story": None, "summary": None, "takeaways": [], "matchup_note": None}
+        new_store[key] = {
+            "entity": ent.get("entity"), "team": ent.get("team"),
+            "last_game_date": ent.get("last_game_date"),
+            "template_version": PROMPT_VERSION,
+            "generated_at": prev.get("generated_at", now_iso) if prev else now_iso,
+            "story": text["story"], "summary": text["summary"], "takeaways": text["takeaways"],
+            "matchup_note": text.get("matchup_note"),
+        }
+    return new_store
+
+
+def _carry_forward_games_store(entities, store, now_iso):
+    """The games store persisted when AI generation is skipped: same shape
+    _generate_games writes (pruned to today's slate), but with only
+    previously-generated text carried forward. See _carry_forward_store."""
+    new_store = {}
+    for pk, ent in entities.items():
+        prev = store.get(pk)
+        text = _carry_game(prev) or {"story": None, "summary": None, "betting_note": None}
+        new_store[pk] = {
+            "away": ent.get("away"), "home": ent.get("home"),
+            "start": ent.get("start"), "venue": ent.get("venue"),
+            "probables": ent.get("probables"), "signals": ent.get("signals"),
+            "pulse": ent.get("pulse"), "betting_signals": ent.get("betting_signals"),
+            "standout": ent.get("standout"),
+            "status": ent.get("status"),
+            "template_version": GAME_PROMPT_VERSION,
+            "generated_at": prev.get("generated_at", now_iso) if prev else now_iso,
+            "story": text.get("story"), "summary": text.get("summary"),
+            "betting_note": text.get("betting_note"),
+        }
+    return new_store
 
 
 def _generate_all(entities, store, now_iso, total, store_path, child_env, usage_log=None):
