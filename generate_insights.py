@@ -88,7 +88,10 @@ MANAGED_AUTH_VARS = (
 # text -- betting_note, matchup_note, AND the general story/summary/takeaways.
 # The prompts instruct against these; this is the belt-and-suspenders check that
 # lets a call self-heal (bounded retry) when the model slips, so the daily job
-# never ships e.g. "series edge" or a "bullpen unit".
+# never ships e.g. "series edge" or a "bullpen unit". AI-prose-only: _has_banned
+# is called solely from _call_claude/_call_claude_game, so it never runs (and
+# never needs to) when ai_insights.enabled is false -- there's no deterministic
+# text anywhere else in the pipeline that this check scans.
 _BANNED_SINGLE = ("bet", "back", "fade", "play", "take", "tail", "hammer", "consider",
                   "recommend", "pick", "lock", "value", "edge", "unit", "units", "odds",
                   "cover", "juice", "chalk", "you", "your")
@@ -578,6 +581,16 @@ def _needs_regen_game(ent, prev):
 
 # ---------------- entry point ----------------
 
+def ai_insights_enabled(config):
+    """Whether the AI-prose path (Claude calls, the banned-word scan that
+    guards them, and the JS AI Note blurb) is switched on. Reads
+    config.yaml's ai_insights.enabled; defaults to True (today's behavior)
+    when the key/block is absent, so any config that predates this flag is
+    unaffected. Shared with generate_stats.py so data.json's aiInsightsEnabled
+    can never drift from what this module actually does."""
+    return bool((config or {}).get("ai_insights", {}).get("enabled", True))
+
+
 def _carry(prev):
     """Carry-forward view of a stored player record (or None if we have nothing)."""
     if not prev:
@@ -708,9 +721,19 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     # Games: full slate, uncapped. Built deterministically here (CI included).
     game_entities, games_store, _game_date = _build_game_entities(config, generated_at)
 
-    skip_generation = bool(os.environ.get("SP_SKIP_INSIGHTS")) or shutil.which("claude") is None
+    # Config kill switch is checked FIRST and short-circuits the other two --
+    # when it's off, this branch must never reach _subprocess_env/_preflight
+    # (SP_ALLOW_API_BILLING included), never run _needs_regen/_needs_regen_game,
+    # and never call _generate_all/_generate_games. Only the merge below runs.
+    ai_disabled = not ai_insights_enabled(config)
+    skip_generation = ai_disabled or bool(os.environ.get("SP_SKIP_INSIGHTS")) or shutil.which("claude") is None
     if skip_generation:
-        reason = "SP_SKIP_INSIGHTS set" if os.environ.get("SP_SKIP_INSIGHTS") else "`claude` CLI not found"
+        if ai_disabled:
+            reason = "AI Insights disabled via config"
+        elif os.environ.get("SP_SKIP_INSIGHTS"):
+            reason = "SP_SKIP_INSIGHTS set"
+        else:
+            reason = "`claude` CLI not found"
         with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
         g_with_text = sum(1 for pk in game_entities if (games_store.get(pk) or {}).get("summary"))
         print("insights: {} -> merge-only: top {} players ({} w/ text), {} games ({} w/ text), no AI calls"

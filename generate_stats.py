@@ -265,7 +265,9 @@ def main():
     # text and maintains the committed insight stores (data/insights.json,
     # data/insights.games.json) + boxscore cache. `config` is passed so the game
     # builder can reach the MLB endpoints. AI generation no-ops when the claude
-    # CLI is unavailable (e.g. in CI); the deterministic game build still runs.
+    # CLI is unavailable (e.g. in CI) or ai_insights.enabled is false; the
+    # deterministic game build still runs either way.
+    data["aiInsightsEnabled"] = generate_insights.ai_insights_enabled(config)
     insights_md = generate_insights.run(data, generated_at, config=config)
     markdown = render_markdown(ranked, generated_at) + insights_md
 

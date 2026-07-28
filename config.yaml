@@ -10,6 +10,14 @@ top_n: 10
 # but stays off until its key is listed here. See docs/leagues.md.
 active_sports: [mlb]
 
+# Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
+# prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
+# everything else (betting_signals, training_capture, boxscore cache, outcome
+# resolution, deterministic pulse/signals/comparisons) keeps running. Flip
+# back to true to re-enable; nothing about this flag deletes committed state.
+ai_insights:
+  enabled: false
+
 mlb:
   base_url: https://statsapi.mlb.com/api/v1
   season: 2026
