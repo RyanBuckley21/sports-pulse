@@ -352,7 +352,16 @@ body.insights-scope .breakdown-label {
 .gr-detail .insight-card {
   background: none; border: 0; border-radius: 0; margin: 0;
   backdrop-filter: none; -webkit-backdrop-filter: none;
-  padding: 4px 2px 2px;
+  /* Horizontal was 2px -- a pre-Phase-3 leftover from d6240fc, the original
+     "wire the games list to expand rows in place" commit, and never revisited
+     by any of the glass-surface work since. It put the Pulse score and every
+     signal row 2px from the card edge, against 16px everywhere else in this
+     same card: .gr-row above it, .ai-summary inside it, and .pcat-detail-pad
+     (the equivalent seam on the player-detail page). 16px matches that
+     convention rather than inventing a new number. Vertical stays as it was --
+     top is tight against the row it's suppressing (.gi-head, hidden), bottom
+     is tight against .ai-caveat, which already carries its own margin. */
+  padding: 4px 16px 2px;
 }
 .gr-detail .gi-head { display: none; }
 /* The row is keyboard-reachable (role=button, tabindex=0 from the wiring).
