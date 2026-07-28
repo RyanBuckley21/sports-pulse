@@ -1,0 +1,134 @@
+name: Regenerate stats and grade picks
+
+# Daily, deterministic-only run of the stats/signals pipeline, followed by
+# grading yesterday's Signal Score picks against real outcomes. Deliberately
+# its OWN workflow rather than a step bolted onto deploy-pages.yml or
+# capture-training-data.yml:
+#   * deploy-pages.yml keeps `permissions: contents: read` and already runs
+#     generate_stats.py itself, but only to build output/data.json for the
+#     site -- it never commits data/insights.games.json, data/insights.json,
+#     or the signal-report ledger, and is not modified by this workflow at
+#     all;
+#   * capture-training-data.yml owns data/training/ exclusively; this
+#     workflow never touches that directory or that file;
+#   * `contents: write` here is scoped to this workflow alone, and is used
+#     for nothing but committing the three files below.
+#
+# SP_SKIP_INSIGHTS=1 is set unconditionally (not a toggle): it skips
+# generate_insights.py's `claude -p` AI-prose calls while leaving the
+# deterministic game builder -- standout, betting_signals, pulse, and Signal
+# Score -- running exactly as it does today. As of 2026-07-28, config.yaml's
+# `ai_insights.enabled: false` already disables the AI-prose path by default
+# repo-wide, so this env var is now belt-and-suspenders: it keeps this
+# workflow AI-call-free and auth-free even if that config default is ever
+# flipped back for local/dev use.
+#
+# Two cron entries, not one, and not three:
+#   * This repo's scheduler has dropped entire days outright (all three of
+#     capture-training-data.yml's entries failed to fire on 2026-07-27) --
+#     that is scheduler downtime, not a timing problem, and a single entry
+#     has no defense against it.
+#   * Both entries stay BEFORE the earliest documented MLB first pitch
+#     (~16:05-16:15 UTC, per capture-training-data.yml's measurements). That
+#     line is a hard invariant here, not just a nice-to-have: unlike
+#     training capture, a late run wouldn't fail -- but it would compute
+#     some of the day's picks from a game already in progress instead of
+#     pre-game, silently mixing pre-game and mid-game picks into the same
+#     committed store that signal_report.py later grades as "the pick." A
+#     third entry pushed close to (or past) first pitch would trade that
+#     integrity for marginal extra outage coverage, which isn't worth it.
+#   * Unlike capture-training-data.yml's redundancy (which walks the
+#     probable-starter announcement curve -- each entry gets genuinely
+#     better data), these two entries are pure scheduler-outage insurance:
+#     the deterministic builder doesn't need starters announced to produce
+#     a valid (if less complete) score. A run that fires late degrades
+#     gracefully rather than losing the day.
+#   * Residual risk: an outage spanning the full 13:40-15:40 UTC window
+#     (which is what actually happened on 2026-07-27) still leaves a
+#     `no_store` gap for that date. Recovery is manual `workflow_dispatch`,
+#     same as the rest of this project's rare-failure handling.
+#
+# Daylight saving: shift both entries by +1h in the fall to hold the wall-
+# clock times, same caveat as the other scheduled workflows here.
+
+on:
+  schedule:
+    - cron: "40 13 * * *"
+    - cron: "40 15 * * *"
+  workflow_dispatch: {}
+
+# Scoped to this workflow only. deploy-pages.yml and capture-training-data.yml
+# are unchanged.
+permissions:
+  contents: write
+
+# Never let two runs (the two cron entries, or a manual dispatch overlapping
+# a scheduled one) race on the same commit.
+concurrency:
+  group: daily-stats-and-grade
+  cancel-in-progress: false
+
+jobs:
+  regenerate-and-grade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # Deterministic game builder only -- no AI calls, no auth needed. See
+      # the header comment for why this is unconditional rather than a
+      # toggle.
+      - name: Regenerate stats and signals
+        id: generate_stats
+        env:
+          SP_SKIP_INSIGHTS: "1"
+        run: python3 generate_stats.py
+
+      # Reads yesterday's picks out of the store this step just refreshed
+      # and grades them against real outcomes. Only runs if generate_stats
+      # succeeded -- steps default to `success()`, so a failed regen above
+      # skips this automatically rather than grading a partial run.
+      - name: Grade yesterday's Signal Score picks
+        id: grade_picks
+        run: python3 signal_report.py
+
+      # Backstop annotation so a hard crash in either step is always
+      # diagnosable from the summary, not just the logs -- same standard as
+      # capture-training-data.yml. Costs nothing on a normal run.
+      - name: Annotate failure
+        if: failure()
+        run: |
+          if [ "${{ steps.generate_stats.outcome }}" = "failure" ]; then
+            echo "::warning title=Stats regeneration failed::generate_stats.py failed for $(date -u +%Y-%m-%d). No grading was run and nothing was committed -- see the Regenerate stats and signals step logs."
+          elif [ "${{ steps.grade_picks.outcome }}" = "failure" ]; then
+            echo "::warning title=Signal report grading failed::signal_report.py failed for $(date -u +%Y-%m-%d). Nothing was committed this run -- see the Grade yesterday's Signal Score picks step logs."
+          fi
+
+      # Only runs if both steps above succeeded (default `success()` gating):
+      # a failed regen or a failed grading run commits nothing, by design --
+      # there is no partial-success case here worth preserving, unlike
+      # capture-training-data.yml's append-only training rows.
+      - name: Commit stats and grading
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/insights.games.json data/insights.json data/signal_report_history.jsonl
+          if git diff --staged --quiet; then
+            echo "No changes this run -- nothing to commit."
+            exit 0
+          fi
+          git commit -m "Regenerate stats and grade yesterday's picks for $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push failed (attempt $attempt); rebasing and retrying"
+            sleep $((attempt * 4))
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          echo "push failed after 3 attempts"
+          exit 1
