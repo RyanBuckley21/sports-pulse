@@ -273,6 +273,27 @@
     );
   }
 
+  // The vs-next-starter block does not vary by category and never has. It comes
+  // from fetchers/mlb.py's enrich_with_vs_next_starter, which caches the next
+  // opposing starter PER TEAM and the career line PER (batter, pitcher) pair --
+  // both keyed well above the individual stat-category record -- so every
+  // hitting-category board for the same player carries an identical object.
+  // Pitching boards never get one at all (that enrichment explicitly skips
+  // non-hitting categories: "this is a batter-vs-pitcher stat"). A player on N
+  // hitting boards showed this same block N times before this fix.
+  //
+  // Scans every entry rather than trusting ctx.player (the category tapped in
+  // from) because a two-way player's tapped-in category could be the pitching
+  // one, whose own record has no vs_next_starter even though their hitting
+  // boards do. Since the content is identical wherever it is present, the
+  // first truthy one found is the correct, complete answer.
+  function playerVsNextStarter(ctx) {
+    for (var i = 0; i < ctx.entries.length; i++) {
+      if (ctx.entries[i].player.vs_next_starter) return ctx.entries[i].player.vs_next_starter;
+    }
+    return null;
+  }
+
   // The player detail page. NOT a deep-dive on the one category tapped in from
   // -- that is what the leaderboard row already showed, and repeating it at 68px
   // was the page's main redundancy. It answers "what is this player hot in right
@@ -323,7 +344,9 @@
       "<div><div class=\"identity-name\">" + esc(player.entity) + '</div><div class="identity-sub">' + posLine + "</div></div>" +
       heat +
       "</div>" +
-      '<div class="pcat-list">' + rows + "</div>"
+      '<div class="pcat-list">' + rows + "</div>" +
+      // Page-level, once -- not per category. See playerVsNextStarter above.
+      renderVsNextStarter(playerVsNextStarter(ctx))
     );
   }
 
@@ -468,8 +491,10 @@
       keyCell(gapStr, gapLabel) +
       "</div>" +
       '<div class="bars-section"><div class="bars-label">' + barsTitle + "</div>" + barsHtml + "</div>" +
-      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml +
-      renderVsNextStarter(player.vs_next_starter) + "</div>"
+      // vs-next-starter used to render here, once per category. It never
+      // varied by category (see playerVsNextStarter, up in renderDetail) --
+      // moved to the page level, once, below the category list.
+      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml + "</div>"
     );
   }
 

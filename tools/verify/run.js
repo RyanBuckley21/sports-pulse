@@ -383,6 +383,32 @@ async function playerDetailChecks(browser, base) {
   ok("tapping the open row closes it", s.open.every((o) => o === false) && s.heights[0] === 0,
      "open=" + s.open.join(",") + " h=" + s.heights[0]);
 
+  // vs-next-starter used to render once PER CATEGORY -- identical every time,
+  // since fetchers/mlb.py caches it per team and per (batter, pitcher) pair,
+  // never per stat category. Judge is on 5 hitting boards here, so 5 identical
+  // copies would be the old bug; exactly 1 is the fix.
+  const vs = await p.evaluate(() => {
+    const sections = [...document.querySelectorAll(".vs-starter-section")];
+    const list = document.querySelector(".pcat-list");
+    return {
+      count: sections.length,
+      insideAnyRow: sections.some((el) => el.closest(".pcat-item") !== null),
+      // Sibling of .pcat-list (page level), not a descendant of it.
+      isPageLevel: sections.length === 1 && sections[0].parentElement === list.parentElement,
+      // Comes after the category list in document order, per the spec.
+      afterList: sections.length === 1 &&
+        !!(list.compareDocumentPosition(sections[0]) & Node.DOCUMENT_POSITION_FOLLOWING),
+      text: sections[0] && sections[0].textContent,
+    };
+  });
+  ok("vs-next-starter renders exactly once, not once per category",
+     vs.count === 1, "count=" + vs.count);
+  ok("  at the page level, not inside any category row",
+     !vs.insideAnyRow, "insideAnyRow=" + vs.insideAnyRow);
+  ok("  as a sibling of .pcat-list, after it", vs.isPageLevel && vs.afterList,
+     "isPageLevel=" + vs.isPageLevel + " afterList=" + vs.afterList);
+  ok("  showing the shared matchup", /Chris Sale/.test(vs.text || ""), JSON.stringify(vs.text));
+
   // Back must still work, and still land where the reader left the list.
   await p.evaluate(() => { document.documentElement.style.minHeight = "3000px"; window.scrollTo(0, 300); });
   await p.waitForTimeout(150);
