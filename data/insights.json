@@ -1,8 +1,19 @@
 {
+  "cam schlittler|nyy": {
+    "entity": "Cam Schlittler",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "New York Yankees",
+    "template_version": "v2"
+  },
   "ceddanne rafaela|bos": {
     "entity": "Ceddanne Rafaela",
     "generated_at": "2026-07-20T02:41:31.400502+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": "",
     "story": "Rafaela has recorded a hit in 16 of 20 recent games, ranking third among qualified hitters. He has produced runs in 15 of 20 games \u2014 second best in baseball. His 8-game hitting streak demonstrates sustained contact at the plate.",
     "summary": "Rafaela ranks third in hit rate and second in run production over the last 20 games.",
@@ -12,17 +23,6 @@
       "8-game hitting streak"
     ],
     "team": "Boston Red Sox",
-    "template_version": "v2"
-  },
-  "chase burns|cin": {
-    "entity": "Chase Burns",
-    "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-28",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Cincinnati Reds",
     "template_version": "v2"
   },
   "chris sale|atl": {
@@ -39,7 +39,7 @@
   "cj abrams|wsh": {
     "entity": "CJ Abrams",
     "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-29",
     "matchup_note": "",
     "story": "Abrams leads his cohort with 5 home runs, ranking first among 40 players. He's averaging 3.0 combined hits, runs, and RBIs per game, which ranks fifth among 77 peers. His 3.0 total bases per game places him third among 41 players.",
     "summary": "Abrams is ranking at the top across home runs and multiple offensive production categories.",
@@ -51,10 +51,21 @@
     "team": "Washington Nationals",
     "template_version": "v2"
   },
+  "ernie clement|tor": {
+    "entity": "Ernie Clement",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-29",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Toronto Blue Jays",
+    "template_version": "v2"
+  },
   "ezequiel duran|tex": {
     "entity": "Ezequiel Duran",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -62,10 +73,21 @@
     "team": "Texas Rangers",
     "template_version": "v2"
   },
+  "fernando tatis jr.|sd": {
+    "entity": "Fernando Tatis Jr.",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-28",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "San Diego Padres",
+    "template_version": "v2"
+  },
   "freddie freeman|lad": {
     "entity": "Freddie Freeman",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-26",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -76,7 +98,7 @@
   "gabriel moreno|ari": {
     "entity": "Gabriel Moreno",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-29",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -84,36 +106,10 @@
     "team": "Arizona Diamondbacks",
     "template_version": "v2"
   },
-  "gavin williams|cle": {
-    "entity": "Gavin Williams",
-    "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-23",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Cleveland Guardians",
-    "template_version": "v2"
-  },
-  "gerrit cole|nyy": {
-    "entity": "Gerrit Cole",
-    "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-07-22",
-    "matchup_note": "",
-    "story": "Cole has averaged 5.5 strikeouts per game as a starter, ranking ninth among 31 qualified starters. Over his last ten starts, he has struck out six or more batters in five of those games, placing him fourth in the frequency of reaching 6+ strikeouts.",
-    "summary": "Cole's strikeout output remains consistent and highly ranked among starting pitchers.",
-    "takeaways": [
-      "5.5 K/G ranks 9th among starters",
-      "5 of last 10 starts with 6+ strikeouts",
-      "Fourth in frequency of 6+ K games"
-    ],
-    "team": "New York Yankees",
-    "template_version": "v2"
-  },
   "jackson merrill|sd": {
     "entity": "Jackson Merrill",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-26",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -124,7 +120,7 @@
   "jeremy pe\u00f1a|hou": {
     "entity": "Jeremy Pe\u00f1a",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -132,10 +128,21 @@
     "team": "Houston Astros",
     "template_version": "v2"
   },
+  "jes\u00fas luzardo|phi": {
+    "entity": "Jes\u00fas Luzardo",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-29",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Philadelphia Phillies",
+    "template_version": "v2"
+  },
   "joc pederson|tex": {
     "entity": "Joc Pederson",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -143,21 +150,21 @@
     "team": "Texas Rangers",
     "template_version": "v2"
   },
-  "michael harris ii|atl": {
-    "entity": "Michael Harris II",
-    "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+  "joe ryan|min": {
+    "entity": "Joe Ryan",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-20",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Atlanta Braves",
+    "team": "Minnesota Twins",
     "template_version": "v2"
   },
   "nick gonzales|pit": {
     "entity": "Nick Gonzales",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-29",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -168,48 +175,18 @@
   "nico hoerner|chc": {
     "entity": "Nico Hoerner",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "Chicago Cubs",
-    "template_version": "v2"
-  },
-  "reid detmers|laa": {
-    "entity": "Reid Detmers",
-    "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-07-22",
-    "matchup_note": "",
-    "story": "Reid Detmers leads all starting pitchers with 6.9 strikeouts per game. Over his last 10 starts, he has recorded 6 or more strikeouts in 7 of them, a rate unmatched in the 27-starter sample.",
-    "summary": "Detmers is producing elite strikeout numbers with remarkable consistency.",
-    "takeaways": [
-      "Leads all starters with 6.9 K/G",
-      "7 of 10 recent starts featured 6+ strikeouts",
-      "Ranks 1st in both strikeout metrics"
-    ],
-    "team": "Los Angeles Angels",
-    "template_version": "v2"
-  },
-  "sandy alcantara|mia": {
-    "entity": "Sandy Alcantara",
-    "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-07-22",
-    "matchup_note": "",
-    "story": "Alcantara is averaging 5.9 strikeouts per game, the second-highest rate among MLB starters. Over his last ten starts, he has recorded six or more strikeouts in six games \u2014 the third-most frequent occurrence of this threshold.",
-    "summary": "Alcantara's recent strikeout rate ranks second among MLB starters.",
-    "takeaways": [
-      "5.9 K/G: 2nd among starting pitchers",
-      "Reached 6+ strikeouts in 6 of last 10 starts (3rd in frequency)",
-      "Sustained high strikeout production"
-    ],
-    "team": "Miami Marlins",
     "template_version": "v2"
   },
   "seiya suzuki|chc": {
     "entity": "Seiya Suzuki",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -217,26 +194,37 @@
     "team": "Chicago Cubs",
     "template_version": "v2"
   },
-  "taj bradley|min": {
-    "entity": "Taj Bradley",
-    "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-23",
+  "tarik skubal|det": {
+    "entity": "Tarik Skubal",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-29",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Minnesota Twins",
+    "team": "Detroit Tigers",
     "template_version": "v2"
   },
   "ty france|sd": {
     "entity": "Ty France",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-07-26",
+    "last_game_date": "2026-07-28",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "San Diego Padres",
+    "template_version": "v2"
+  },
+  "yordan alvarez|hou": {
+    "entity": "Yordan Alvarez",
+    "generated_at": "2026-07-29T17:59:24.730280+00:00",
+    "last_game_date": "2026-07-28",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Houston Astros",
     "template_version": "v2"
   }
 }
