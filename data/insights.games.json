@@ -9,7 +9,7 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 8,
+        "score": 7,
         "side": "No clear lean"
       },
       "first_five_total": {
@@ -41,7 +41,7 @@
         "away": {
           "abbr": "TOR",
           "flags": [],
-          "score": 2,
+          "score": 3,
           "side": "No clear lean"
         },
         "home": {
@@ -60,11 +60,11 @@
     },
     "probables": {
       "away": {
-        "era": "3.78",
+        "era": "3.80",
         "name": "Trey Yesavage"
       },
       "home": {
-        "era": "4.97",
+        "era": "4.94",
         "name": "Zack Littell"
       }
     },
@@ -91,7 +91,7 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "3.78 vs 4.97"
+        "value": "3.80 vs 4.94"
       }
     ],
     "standout": {
@@ -548,12 +548,12 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 67,
+        "score": 68,
         "side": "ARI"
       },
       "first_five_total": {
         "flags": [],
-        "score": 37,
+        "score": 38,
         "side": "Under"
       },
       "game_total": {
@@ -563,17 +563,17 @@
       },
       "moneyline": {
         "flags": [],
-        "score": 20,
+        "score": 21,
         "side": "ARI"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 37,
+        "score": 38,
         "side": "NRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 20,
+        "score": 21,
         "side": "No clear lean"
       },
       "team_total": {
@@ -586,8 +586,8 @@
         "home": {
           "abbr": "PIT",
           "flags": [],
-          "score": 14,
-          "side": "No clear lean"
+          "score": 15,
+          "side": "Under"
         }
       }
     },
@@ -599,7 +599,7 @@
     },
     "probables": {
       "away": {
-        "era": "2.54",
+        "era": "2.48",
         "name": "Eduardo Rodriguez"
       },
       "home": {
@@ -630,14 +630,14 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "2.54 vs 3.81"
+        "value": "2.48 vs 3.81"
       }
     ],
     "standout": {
       "bet_type": "first_five_moneyline",
       "flags": [],
       "market": "First Five Moneyline",
-      "score": 67,
+      "score": 68,
       "side": "ARI"
     },
     "start": "12:35 PM ET",
@@ -657,45 +657,45 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 18,
-        "side": "No clear lean"
+        "score": 25,
+        "side": "NYM"
       },
       "first_five_total": {
         "flags": [],
-        "score": 46,
-        "side": "No clear lean"
+        "score": 22,
+        "side": "Over"
       },
       "game_total": {
         "flags": [],
-        "score": 5,
-        "side": "No clear lean"
+        "score": 34,
+        "side": "Over"
       },
       "moneyline": {
         "flags": [],
-        "score": 29,
+        "score": 52,
         "side": "NYM"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 46,
-        "side": "No clear lean"
+        "score": 22,
+        "side": "YRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 29,
-        "side": "No clear lean"
+        "score": 52,
+        "side": "NYM"
       },
       "team_total": {
         "away": {
           "abbr": "ATL",
           "flags": [],
-          "score": 56,
+          "score": 55,
           "side": "Under"
         },
         "home": {
           "abbr": "NYM",
           "flags": [],
-          "score": 46,
+          "score": 74,
           "side": "Over"
         }
       }
@@ -708,11 +708,11 @@
     },
     "probables": {
       "away": {
-        "era": "0.00",
+        "era": "4.15",
         "name": "AJ Smith-Shawver"
       },
       "home": {
-        "era": "4.36",
+        "era": "4.42",
         "name": "Sean Manaea"
       }
     },
@@ -739,18 +739,18 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "0.00 vs 4.36"
+        "value": "4.15 vs 4.42"
       }
     ],
     "standout": {
       "bet_type": "team_total",
       "flags": [],
-      "high": 4,
-      "low": 2,
+      "high": 8,
+      "low": 6,
       "market": "Team Total",
-      "point": 3,
-      "score": 56,
-      "side": "ATL Under",
+      "point": 7,
+      "score": 74,
+      "side": "NYM Over",
       "unit": "runs"
     },
     "start": "1:10 PM ET",
@@ -996,32 +996,32 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 20,
-        "side": "PHI"
+        "score": 17,
+        "side": "No clear lean"
       },
       "first_five_total": {
         "flags": [],
-        "score": 14,
+        "score": 9,
         "side": "No clear lean"
       },
       "game_total": {
         "flags": [],
-        "score": 7,
+        "score": 10,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 26,
+        "score": 24,
         "side": "PHI"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 14,
+        "score": 9,
         "side": "No clear lean"
       },
       "run_line": {
         "flags": [],
-        "score": 26,
+        "score": 24,
         "side": "No clear lean"
       },
       "team_total": {
@@ -1034,7 +1034,7 @@
         "home": {
           "abbr": "MIA",
           "flags": [],
-          "score": 13,
+          "score": 10,
           "side": "No clear lean"
         }
       }
@@ -1047,7 +1047,7 @@
     },
     "probables": {
       "away": {
-        "era": "3.37",
+        "era": "3.57",
         "name": "Jes\u00fas Luzardo"
       },
       "home": {
@@ -1073,17 +1073,17 @@
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "PHI 6-5"
+        "value": "PHI 6-6"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "3.37 vs 5.31"
+        "value": "3.57 vs 5.31"
       }
     ],
     "standout": null,
     "start": "12:10 PM ET",
-    "status": "Live",
+    "status": "Final",
     "story": null,
     "summary": null,
     "template_version": "v3",
@@ -1330,7 +1330,7 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 76,
+        "score": 78,
         "side": "DET"
       },
       "first_five_total": {
@@ -1345,7 +1345,7 @@
       },
       "moneyline": {
         "flags": [],
-        "score": 47,
+        "score": 48,
         "side": "DET"
       },
       "nrfi_yrfi": {
@@ -1355,20 +1355,20 @@
       },
       "run_line": {
         "flags": [],
-        "score": 47,
+        "score": 48,
         "side": "DET"
       },
       "team_total": {
         "away": {
           "abbr": "BAL",
           "flags": [],
-          "score": 56,
+          "score": 57,
           "side": "Under"
         },
         "home": {
           "abbr": "DET",
           "flags": [],
-          "score": 20,
+          "score": 21,
           "side": "Over"
         }
       }
@@ -1381,11 +1381,11 @@
     },
     "probables": {
       "away": {
-        "era": "4.22",
+        "era": "4.27",
         "name": "Trevor Rogers"
       },
       "home": {
-        "era": "2.59",
+        "era": "2.52",
         "name": "Tarik Skubal"
       }
     },
@@ -1412,14 +1412,14 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.22 vs 2.59"
+        "value": "4.27 vs 2.52"
       }
     ],
     "standout": {
       "bet_type": "first_five_moneyline",
       "flags": [],
       "market": "First Five Moneyline",
-      "score": 76,
+      "score": 78,
       "side": "DET"
     },
     "start": "1:10 PM ET",
