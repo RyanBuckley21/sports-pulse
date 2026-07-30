@@ -9,7 +9,7 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 66,
+        "score": 70,
         "side": "TB"
       },
       "first_five_total": {
@@ -24,7 +24,7 @@
       },
       "moneyline": {
         "flags": [],
-        "score": 60,
+        "score": 65,
         "side": "TB"
       },
       "nrfi_yrfi": {
@@ -34,7 +34,7 @@
       },
       "run_line": {
         "flags": [],
-        "score": 60,
+        "score": 65,
         "side": "TB"
       },
       "team_total": {
@@ -86,7 +86,7 @@
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "TEX 1-1"
+        "value": "TB 2-1"
       },
       {
         "label": "Probables ERA",
@@ -106,7 +106,7 @@
       "unit": "runs"
     },
     "start": "12:10 PM ET",
-    "status": "Live",
+    "status": "Final",
     "story": null,
     "summary": null,
     "template_version": "v3",
@@ -122,45 +122,45 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 24,
+        "score": 29,
         "side": "No clear lean"
       },
       "first_five_total": {
         "flags": [],
-        "score": 18,
+        "score": 22,
         "side": "Under"
       },
       "game_total": {
         "flags": [],
-        "score": 10,
+        "score": 13,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 48,
+        "score": 50,
         "side": "CHC"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 18,
+        "score": 22,
         "side": "NRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 48,
+        "score": 50,
         "side": "CHC"
       },
       "team_total": {
         "away": {
           "abbr": "CHC",
           "flags": [],
-          "score": 56,
+          "score": 55,
           "side": "Over"
         },
         "home": {
           "abbr": "STL",
           "flags": [],
-          "score": 67,
+          "score": 70,
           "side": "Under"
         }
       }
@@ -173,11 +173,11 @@
     },
     "probables": {
       "away": {
-        "era": "3.88",
+        "era": "3.75",
         "name": "Javier Assad"
       },
       "home": {
-        "era": "3.68",
+        "era": "3.64",
         "name": "Andre Pallante"
       }
     },
@@ -204,7 +204,7 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "3.88 vs 3.68"
+        "value": "3.75 vs 3.64"
       }
     ],
     "standout": {
@@ -214,7 +214,7 @@
       "low": 2,
       "market": "Team Total",
       "point": 3,
-      "score": 67,
+      "score": 70,
       "side": "STL Under",
       "unit": "runs"
     },
@@ -452,17 +452,17 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 11,
+        "score": 7,
         "side": "No clear lean"
       },
       "first_five_total": {
         "flags": [],
-        "score": 6,
+        "score": 8,
         "side": "No clear lean"
       },
       "game_total": {
         "flags": [],
-        "score": 34,
+        "score": 35,
         "side": "Under"
       },
       "moneyline": {
@@ -472,7 +472,7 @@
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 6,
+        "score": 8,
         "side": "No clear lean"
       },
       "run_line": {
@@ -490,7 +490,7 @@
         "home": {
           "abbr": "MIN",
           "flags": [],
-          "score": 43,
+          "score": 45,
           "side": "Under"
         }
       }
@@ -503,7 +503,7 @@
     },
     "probables": {
       "away": {
-        "era": "4.71",
+        "era": "4.59",
         "name": "Noah Cameron"
       },
       "home": {
@@ -529,17 +529,17 @@
       {
         "label": "Season series",
         "tone": "neutral",
-        "value": "KC 6-3"
+        "value": "KC 6-4"
       },
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.71 vs 4.45"
+        "value": "4.59 vs 4.45"
       }
     ],
     "standout": null,
     "start": "1:40 PM ET",
-    "status": "Live",
+    "status": "Final",
     "story": null,
     "summary": null,
     "template_version": "v3",
@@ -777,45 +777,45 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 65,
+        "score": 63,
         "side": "CWS"
       },
       "first_five_total": {
         "flags": [],
-        "score": 44,
+        "score": 50,
         "side": "Under"
       },
       "game_total": {
         "flags": [],
-        "score": 33,
+        "score": 36,
         "side": "Under"
       },
       "moneyline": {
         "flags": [],
-        "score": 43,
+        "score": 42,
         "side": "CWS"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 44,
+        "score": 50,
         "side": "NRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 43,
+        "score": 42,
         "side": "CWS"
       },
       "team_total": {
         "away": {
           "abbr": "NYY",
           "flags": [],
-          "score": 56,
+          "score": 57,
           "side": "Under"
         },
         "home": {
           "abbr": "CWS",
           "flags": [],
-          "score": 2,
+          "score": 6,
           "side": "No clear lean"
         }
       }
@@ -828,11 +828,11 @@
     },
     "probables": {
       "away": {
-        "era": "4.17",
+        "era": "3.99",
         "name": "Ryan Weathers"
       },
       "home": {
-        "era": "3.13",
+        "era": "3.04",
         "name": "Sean Burke"
       }
     },
@@ -859,14 +859,14 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.17 vs 3.13"
+        "value": "3.99 vs 3.04"
       }
     ],
     "standout": {
       "bet_type": "first_five_moneyline",
       "flags": [],
       "market": "First Five Moneyline",
-      "score": 65,
+      "score": 63,
       "side": "CWS"
     },
     "start": "2:10 PM ET",
