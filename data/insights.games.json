@@ -452,39 +452,39 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 52,
-        "side": "No clear lean"
+        "score": 31,
+        "side": "MIA"
       },
       "first_five_total": {
         "flags": [],
-        "score": 76,
-        "side": "Under"
+        "score": 29,
+        "side": "No clear lean"
       },
       "game_total": {
         "flags": [],
-        "score": 49,
-        "side": "Under"
+        "score": 2,
+        "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 64,
+        "score": 15,
         "side": "NYM"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 76,
-        "side": "NRFI"
+        "score": 29,
+        "side": "No clear lean"
       },
       "run_line": {
         "flags": [],
-        "score": 64,
-        "side": "NYM"
+        "score": 15,
+        "side": "No clear lean"
       },
       "team_total": {
         "away": {
           "abbr": "MIA",
           "flags": [],
-          "score": 91,
+          "score": 43,
           "side": "Under"
         },
         "home": {
@@ -505,6 +505,10 @@
       "away": {
         "era": "4.89",
         "name": "Janson Junk"
+      },
+      "home": {
+        "era": "8.85",
+        "name": "Kodai Senga"
       }
     },
     "pulse": {
@@ -526,15 +530,14 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "MIA 7-6"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "4.89 vs 8.85"
       }
     ],
-    "standout": {
-      "bet_type": "team_total",
-      "flags": [],
-      "market": "Team Total",
-      "score": 91,
-      "side": "MIA Under"
-    },
+    "standout": null,
     "start": "7:10 PM ET",
     "status": "Preview",
     "story": null,
@@ -1193,32 +1196,32 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 63,
+        "score": 55,
         "side": "CHC"
       },
       "first_five_total": {
         "flags": [],
-        "score": 13,
-        "side": "No clear lean"
+        "score": 17,
+        "side": "Under"
       },
       "game_total": {
         "flags": [],
-        "score": 37,
+        "score": 40,
         "side": "Under"
       },
       "moneyline": {
         "flags": [],
-        "score": 40,
+        "score": 36,
         "side": "CHC"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 13,
-        "side": "No clear lean"
+        "score": 17,
+        "side": "NRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 40,
+        "score": 36,
         "side": "CHC"
       },
       "team_total": {
@@ -1231,8 +1234,8 @@
         "home": {
           "abbr": "CHC",
           "flags": [],
-          "score": 16,
-          "side": "Over"
+          "score": 12,
+          "side": "No clear lean"
         }
       }
     },
@@ -1244,11 +1247,11 @@
     },
     "probables": {
       "away": {
-        "era": "4.33",
+        "era": "4.14",
         "name": "Will Warren"
       },
       "home": {
-        "era": "3.66",
+        "era": "3.67",
         "name": "Shota Imanaga"
       }
     },
@@ -1275,7 +1278,7 @@
       {
         "label": "Probables ERA",
         "tone": "neutral",
-        "value": "4.33 vs 3.66"
+        "value": "4.14 vs 3.67"
       }
     ],
     "standout": {
@@ -1306,32 +1309,32 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 36,
+        "score": 39,
         "side": "No clear lean"
       },
       "first_five_total": {
         "flags": [],
-        "score": 78,
-        "side": "Under"
+        "score": 11,
+        "side": "No clear lean"
       },
       "game_total": {
         "flags": [],
-        "score": 63,
+        "score": 16,
         "side": "Under"
       },
       "moneyline": {
         "flags": [],
-        "score": 3,
-        "side": "No clear lean"
+        "score": 32,
+        "side": "BAL"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 78,
-        "side": "NRFI"
+        "score": 11,
+        "side": "No clear lean"
       },
       "run_line": {
         "flags": [],
-        "score": 3,
+        "score": 32,
         "side": "No clear lean"
       },
       "team_total": {
@@ -1344,7 +1347,7 @@
         "home": {
           "abbr": "BAL",
           "flags": [],
-          "score": 56,
+          "score": 17,
           "side": "Under"
         }
       }
@@ -1356,6 +1359,10 @@
       "name": "Orioles"
     },
     "probables": {
+      "away": {
+        "era": "7.06",
+        "name": "Andrew Painter"
+      },
       "home": {
         "era": "3.13",
         "name": "Brandon Young"
@@ -1380,14 +1387,23 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "PHI 1-1"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "7.06 vs 3.13"
       }
     ],
     "standout": {
-      "bet_type": "first_five_total",
+      "bet_type": "team_total",
       "flags": [],
-      "market": "First Five Total",
-      "score": 78,
-      "side": "Under"
+      "high": 3,
+      "low": 2,
+      "market": "Team Total",
+      "point": 3,
+      "score": 64,
+      "side": "PHI Under",
+      "unit": "runs"
     },
     "start": "7:05 PM ET",
     "status": "Preview",
