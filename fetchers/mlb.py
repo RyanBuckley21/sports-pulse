@@ -1024,7 +1024,20 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
 
     framed_pen = None
     if home_pen is not None or away_pen is not None:
-        if (home_pen or -1) > (away_pen or -1):
+        # Explicit None checks, NOT an `x or -1` sentinel: 0.00 is a real bullpen
+        # ERA (a short, clean week -- BAL and CWS both posted one in 2026), and
+        # 0.0 is falsy, so the sentinel collapsed it onto the same value as "no
+        # 7-day sample at all". When one side was 0.00 and the other None, both
+        # sides of the comparison became -1, the `>` was False, and the else
+        # branch formatted the None -- TypeError, which the caller's blanket
+        # except then turned into a silently dropped slate.
+        #
+        # Framing rule is unchanged: lower is better, so the HIGHER ERA is the
+        # side worth flagging. The only new behaviour is that when just one side
+        # has a number, that side frames unconditionally -- there is nothing to
+        # compare it against. Both-None is still handled by the guard above
+        # (framed_pen stays None and no signal is appended).
+        if away_pen is None or (home_pen is not None and home_pen > away_pen):
             framed_pen = home_pen
             signals.append({"label": f"{home_ref['abbr']} bullpen ERA (7d)", "value": "{:.2f}".format(home_pen), "tone": "neg"})
         else:
