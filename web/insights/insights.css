@@ -378,6 +378,87 @@ body.insights-scope .breakdown-label {
   .ai-chevron { transition: none; }
 }
 
+/* ---- Player Row: the compact COLLAPSED row for the players list ----
+   A lighter sibling of .insight-card, exactly like .gr-row/.gr-item above --
+   same glass-fill/blur/radius ladder, same 0fr -> 1fr expand idiom. A
+   distinct "pi-row-" namespace rather than reusing gr-*: this is a different
+   list (one entity, not a matchup) with a different row shape -- an identity
+   line with a Pulse number, and the player's recommended category full-width
+   beneath it, in place of the games row's up-to-three market chips. */
+.pi-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "id pulse" "cat cat";
+  align-items: center; gap: 6px 12px;
+  padding: 14px 16px; cursor: pointer;
+}
+/* Same hover/active wash as .gr-row -- a --hairline layer over the glass
+   rather than a fill swap, so it reads as a hover, not as the row opening. */
+.pi-row:hover, .pi-row:active {
+  background-image: linear-gradient(var(--hairline), var(--hairline));
+}
+.pi-row-id { grid-area: id; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pi-row-name {
+  font: 700 14px var(--font-body); letter-spacing: -0.01em; color: var(--text);
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pi-row-pos { font: 600 11px var(--font-body); color: var(--text-tertiary); white-space: nowrap; }
+.pi-row-cat { grid-area: cat; font: 500 11px var(--font-body); color: var(--text-secondary); }
+/* Same semantic colors as .gr-pulse-hot/warm/cool -- a band means the same
+   thing in both lists -- kept as its own namespace rather than shared classes
+   for the same "owns its styling outright" reason .gr-pulse does. */
+.pi-row-pulse {
+  grid-area: pulse; justify-self: end;
+  font: 700 15px/1 var(--font-head); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.pi-row-pulse-hot { color: var(--accent); }
+.pi-row-pulse-warm { color: var(--warning); }
+.pi-row-pulse-cool { color: var(--good); }
+
+/* ---- Player Row: expand/collapse ----
+   Identical mechanism to .gr-item/.gr-detail above -- see the comment there
+   for why the glass surface lives on the item, not the row, and why the
+   detail panel's own identity header is suppressed below. */
+.pi-item {
+  margin-bottom: 10px;
+  border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  backdrop-filter: blur(var(--glass-blur-soft));
+  -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.pi-item.is-open {
+  border-radius: var(--r-xl);
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border-color: var(--glass-border-lift);
+}
+.pi-detail {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+.pi-item.is-open .pi-detail { grid-template-rows: 1fr; }
+.pi-detail-inner { overflow: hidden; min-height: 0; }
+/* Inside the panel the player card is content, not a card -- same reasoning
+   as .gr-detail .insight-card above, right down to the 16px horizontal gutter
+   matching every other seam in this card (.pi-row above it, .ai-summary
+   inside it). Its own identity header is suppressed because the row directly
+   above it already says the same thing. */
+.pi-detail .insight-card {
+  background: none; border: 0; border-radius: 0; margin: 0;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  padding: 4px 16px 2px;
+}
+.pi-detail .pi-head { display: none; }
+.pi-row:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .pi-detail { transition: none; }
+}
+
 /* ---- Compare table (generic two-entity metric comparison) ---- */
 .compare-table { margin-top: 6px; }
 .cmp-row {
@@ -511,6 +592,8 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
   .insight-card { background: var(--glass-fallback); }
   .gr-item { background: var(--glass-fallback); }
   .gr-item.is-open { background: var(--glass-fallback); }
+  .pi-item { background: var(--glass-fallback); }
+  .pi-item.is-open { background: var(--glass-fallback); }
   /* .ai-summary is a wash inside a now-opaque card, so it needs no fallback --
      it never carried a blur in the first place. */
 }

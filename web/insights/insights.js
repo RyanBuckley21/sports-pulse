@@ -512,6 +512,40 @@
       );
     },
 
+    // Player Row -- the compact COLLAPSED-state row for the players list:
+    // team + name + position, the player's recommended category, and a small
+    // Pulse number. Mirrors Cards.gameRow -- deliberately much lighter than
+    // playerInsight (no gauge, no signals, no AI text); the two are siblings,
+    // not variants, and playerInsight stays the expanded view.
+    //
+    // Sub-elements use a "pi-row-" prefix, not "pi-": playerInsight below
+    // already owns .pi-head/.pi-name/.pi-sub/.pi-team for the EXPANDED card's
+    // identity line, and this is a different row with different markup, so it
+    // needs its own names rather than colliding with those.
+    playerRow: function (p) {
+      if (!p) return "";
+      var team = { abbr: p.team, color: p.team_color };
+      // Compact Pulse: the number alone, same convention as Cards.gameRow's
+      // .gr-pulse -- reuses pulseBand() rather than Cards.pulseScore(), since
+      // the gauge belongs to the expanded card.
+      var pulse = "";
+      if (p.pulse && p.pulse.score != null) {
+        var ps = Math.max(0, Math.min(100, Number(p.pulse.score) || 0));
+        pulse = '<span class="pi-row-pulse pi-row-pulse-' + pulseBand(ps) + '">' + ps + "</span>";
+      }
+      return (
+        '<div class="pi-row">' +
+        '<div class="pi-row-id">' +
+        teamTag(team) +
+        '<span class="pi-row-name">' + esc(p.name) + "</span>" +
+        (p.pos ? '<span class="pi-row-pos">' + esc(p.pos) + "</span>" : "") +
+        "</div>" +
+        pulse +
+        (p.series_label ? '<div class="pi-row-cat">' + esc(p.series_label) + "</div>" : "") +
+        "</div>"
+      );
+    },
+
     // Player Insight -- player identity + the three sub-cards.
     playerInsight: function (p) {
       if (!p) return "";
@@ -553,6 +587,12 @@
   // expanded card on demand without re-fetching data.json.
   var gamesById = {};
 
+  // Players list state: same idea as gamesById, but keyed by list index --
+  // players carry no stable id in data.json (unlike games' `id`), and the
+  // rendered list order is fixed for the life of one render, so the index is
+  // a perfectly stable key for that render's lifetime.
+  var playersById = {};
+
   // One game in the list: the compact row plus its (initially empty) detail
   // panel. The wrapper -- not Cards.gameRow -- owns the id and the panel, so
   // the row component stays the pure standalone function it was built as.
@@ -588,11 +628,47 @@
     row.setAttribute("aria-expanded", "true");
   }
 
-  // Light affordances (delegated, survives re-render): a game row expands its
-  // full card; "i" reveals a hidden disclaimer sibling; the AI Note header
-  // reveals its body. The row check is first and returns early -- the
-  // data-toggle controls all live inside .gr-detail, never inside .gr-row, so
-  // the two never contend for the same click.
+  // One player in the list: the compact row plus its (initially empty) detail
+  // panel. Exactly gameItem's shape, keyed by index instead of id.
+  function playerItem(p, idx) {
+    return (
+      '<div class="pi-item" data-player-idx="' + idx + '">' +
+      Cards.playerRow(p) +
+      '<div class="pi-detail"><div class="pi-detail-inner"></div></div>' +
+      "</div>"
+    );
+  }
+
+  function closePlayerItem(item) {
+    item.classList.remove("is-open");
+    var r = item.querySelector(".pi-row");
+    if (r) r.setAttribute("aria-expanded", "false");
+  }
+
+  // Same accordion behavior as toggleGame: opening a row closes whichever
+  // player row was open, and the expanded card is built once, on first open.
+  function togglePlayer(row) {
+    var item = row.parentNode;
+    var isOpen = item.classList.contains("is-open");
+    var cur = root.querySelector(".pi-item.is-open");
+    if (cur && cur !== item) closePlayerItem(cur);
+    if (isOpen) return closePlayerItem(item);
+    var inner = item.querySelector(".pi-detail-inner");
+    if (inner && !inner.firstChild) {
+      inner.innerHTML = Cards.playerInsight(playersById[item.getAttribute("data-player-idx")]);
+    }
+    item.classList.add("is-open");
+    row.setAttribute("aria-expanded", "true");
+  }
+
+  // Light affordances (delegated, survives re-render): a game or player row
+  // expands its full card; "i" reveals a hidden disclaimer sibling; the AI
+  // Note header reveals its body. The row checks are first and return early
+  // -- the data-toggle controls all live inside .gr-detail/.pi-detail, never
+  // inside .gr-row/.pi-row, so neither contends for the same click. Games and
+  // players are separate views (one or the other is ever in the DOM), but
+  // both checks stay live so the same handler covers both without re-binding
+  // per view.
   //
   // The AI note's state is a class on the element, exactly like .gr-item's --
   // no module-level variable to keep in sync, and it resets for free because
@@ -600,6 +676,8 @@
   root.addEventListener("click", function (ev) {
     var row = ev.target.closest && ev.target.closest(".gr-row");
     if (row) return toggleGame(row);
+    var prow = ev.target.closest && ev.target.closest(".pi-row");
+    if (prow) return togglePlayer(prow);
     var t = ev.target.closest && ev.target.closest("[data-toggle],[data-ainote]");
     if (!t) return;
     if (t.hasAttribute("data-ainote")) {
@@ -616,9 +694,14 @@
   root.addEventListener("keydown", function (ev) {
     if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
     var row = ev.target.closest && ev.target.closest(".gr-row");
-    if (!row) return;
+    if (row) {
+      ev.preventDefault();
+      return toggleGame(row);
+    }
+    var prow = ev.target.closest && ev.target.closest(".pi-row");
+    if (!prow) return;
     ev.preventDefault();
-    toggleGame(row);
+    togglePlayer(prow);
   });
 
   // ---------------- re-entry point ----------------
@@ -690,9 +773,9 @@
       });
   }
 
-  // Nothing to tear down: the open row lives in the DOM as .gr-item.is-open and
-  // goes away with the next mount()'s re-render, and gamesById / UI are both
-  // reassigned on every render.
+  // Nothing to tear down: the open row lives in the DOM as .gr-item.is-open or
+  // .pi-item.is-open and goes away with the next mount()'s re-render, and
+  // gamesById / playersById / UI are all reassigned on every render.
   function unmount() {}
 
   window.SP.views = window.SP.views || {};
@@ -714,7 +797,7 @@
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
     AI_ENABLED = data.aiInsightsEnabled !== false;
-    if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
+    if (view === "players") renderPlayers((data.insights && data.insights.players) || [], root);
     else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
@@ -732,6 +815,24 @@
     // inside Cards.gameRow -- the component stays presentational, and only the
     // wiring that actually makes rows clickable claims they are buttons.
     [].forEach.call(root.querySelectorAll(".gr-row"), function (r) {
+      r.setAttribute("role", "button");
+      r.setAttribute("tabindex", "0");
+      r.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  // Players render as compact rows that expand in place, mirroring renderGames
+  // above. Every visit starts fully collapsed for the same reason: mount()
+  // always re-renders, so a remembered open row would not be resuming
+  // anything -- you are re-scanning the list fresh.
+  function renderPlayers(players, root) {
+    playersById = {};
+    players.forEach(function (p, idx) { playersById[String(idx)] = p; });
+    root.innerHTML = list(players, playerItem);
+    // Interactive rows, exposed to keyboard and assistive tech here rather than
+    // inside Cards.playerRow -- the component stays presentational, and only
+    // the wiring that actually makes rows clickable claims they are buttons.
+    [].forEach.call(root.querySelectorAll(".pi-row"), function (r) {
       r.setAttribute("role", "button");
       r.setAttribute("tabindex", "0");
       r.setAttribute("aria-expanded", "false");
