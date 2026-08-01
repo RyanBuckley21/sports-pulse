@@ -11,6 +11,7 @@ category) instead of pulling every boxscore in the window.
 """
 
 import datetime
+import math
 
 import requests
 
@@ -915,6 +916,50 @@ def _game_pulse(framed_ops, framed_bullpen_era, series):
     return {"score": score, "label": label}
 
 
+def _pulse_band(score):
+    """Same band vocabulary players and games already use, so one Pulse number
+    means the same thing everywhere in the UI."""
+    return "Scorching" if score >= 85 else "Hot" if score >= 70 else "Warm" if score >= 55 else "Notable"
+
+
+def _team_pulse(ops, bullpen_era, cfg):
+    """Deterministic 0-100 notability score for ONE team from its own form.
+
+    Each component is squashed against its league-average baseline with the same
+    tanh shape betting_signals uses, so a big gap can't dominate: `base` is the
+    league average and `scale` is the distance that reads as a meaningful move.
+    Direction is intrinsic to the metric and lives here in code, not in config --
+    higher OPS is good, LOWER bullpen ERA is good, hence the flipped numerator.
+
+    The two components are renormalized over whichever ones actually have data.
+    A team with no games in one window is scored on the other alone rather than
+    being handed a substitute value or penalized for the gap; a team with neither
+    gets None, and the card renders without a Pulse rather than showing a 50 that
+    would look like a real measurement. 50 is the league-average score, not the
+    no-data score.
+    """
+    terms = []
+    ops_cfg = (cfg or {}).get("ops") or {}
+    pen_cfg = (cfg or {}).get("bullpen") or {}
+    if ops is not None and ops_cfg.get("scale"):
+        terms.append((math.tanh((ops - ops_cfg["base"]) / ops_cfg["scale"]),
+                      ops_cfg.get("weight", 0.5)))
+    if bullpen_era is not None and pen_cfg.get("scale"):
+        terms.append((math.tanh((pen_cfg["base"] - bullpen_era) / pen_cfg["scale"]),
+                      pen_cfg.get("weight", 0.5)))
+    if not terms:
+        return None
+    wsum = sum(w for _, w in terms)
+    if wsum <= 0:
+        return None
+    combined = sum(d * w for d, w in terms) / wsum
+    # Round half UP, matching betting_signals._round -- banker's rounding would
+    # make a hand-checked score off by one at exact .5 boundaries.
+    score = int(math.floor(50 + 50 * combined + 0.5))
+    score = max(0, min(100, score))
+    return {"score": score, "label": _pulse_band(score)}
+
+
 def _label_markets(markets, labels):
     """Apply readable sport market labels to betting_signals.list_markets() rows.
     The label map is sport config (insights_ui.<sport>.market_labels); this keeps
@@ -1200,9 +1245,91 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     }
 
 
-def build_game_entities(config, game_date, boxscore_cache):
+def _build_team_entities(session, base_url, season, game_date, games, config,
+                         ops_cache, boxscore_cache, touched):
+    """One deterministic Team entity per team on `game_date`'s slate.
+
+    Built inside build_game_entities' run so it reuses that run's caches: the
+    whole-team OPS shares each team's already-fetched hitting log (see
+    team_window_ops), and the 7d bullpen ERA reuses the boxscore cache the game
+    cards already populated. A team appearing twice (split doubleheader) is
+    profiled once.
+
+    v1 is deliberately smaller than the deferred mock it replaces: two numeric
+    signals and a Pulse, no headline and no summary. Those were AI prose in the
+    mock, and there is no deterministic source for them -- inventing placeholder
+    text to fill the shape would be exactly the fabrication the rest of this
+    pipeline refuses. The card renders without them.
+    """
+    import team_meta  # local import, matching _build_one_game's convention
+
+    cfg = ((config.get("team_pulse") or {}).get("mlb") or {})
+    if not cfg:
+        return {}
+    ops_days = (cfg.get("ops") or {}).get("window_days", 14)
+    pen_days = (cfg.get("bullpen") or {}).get("window_days", 7)
+    ops_base = (cfg.get("ops") or {}).get("base")
+    pen_base = (cfg.get("bullpen") or {}).get("base")
+
+    seen, out = set(), []
+    for g in games:
+        for side in ("away", "home"):
+            t = ((g.get("teams") or {}).get(side) or {}).get("team") or {}
+            team_id, full_name = t.get("id"), t.get("name")
+            if team_id is None or team_id in seen:
+                continue
+            seen.add(team_id)
+            meta = team_meta.get_team_meta("mlb", full_name) or {}
+            ops = team_window_ops(session, base_url, team_id, season, game_date,
+                                  ops_cache, window_days=ops_days)
+            pen = team_bullpen_era(session, base_url, team_id, game_date,
+                                   boxscore_cache, touched, window_days=pen_days)
+            abbr = meta.get("abbr") or t.get("abbreviation")
+            # Tone is the CONNOTATION, not the raw direction (the convention
+            # keySignals documents): a bullpen ERA better than league average
+            # reads "pos" even though the number is low. The framed game signals
+            # hardcode their tone because framing has already picked the notable
+            # side; a standalone team has no such framing, so tone is measured
+            # against the same league baseline the Pulse uses.
+            signals = []
+            if pen is not None:
+                signals.append({
+                    "label": "{} bullpen ERA ({}d)".format(abbr, pen_days),
+                    "value": "{:.2f}".format(pen),
+                    "tone": "pos" if (pen_base is not None and pen <= pen_base) else "neg",
+                })
+            if ops is not None:
+                signals.append({
+                    "label": "{} OPS ({}d)".format(abbr, ops_days),
+                    "value": _fmt_ops(ops),
+                    "tone": "pos" if (ops_base is not None and ops >= ops_base) else "neg",
+                })
+            out.append({
+                "id": team_id,
+                "sport": "mlb",
+                "abbr": abbr,
+                "name": t.get("teamName"),
+                # `team_color`, NOT `color`: the pipeline's own key. The deferred
+                # mock used `color`, and that mismatch is a known open item --
+                # teamTag reads both so game TeamRefs keep working.
+                "team_color": meta.get("color"),
+                "pulse": _team_pulse(ops, pen, cfg),
+                "signals": signals,
+            })
+    # Most notable first; abbr as a deterministic tiebreak so equal scores don't
+    # reorder between runs. A team with no pulse at all sorts to the bottom.
+    out.sort(key=lambda e: (-((e.get("pulse") or {}).get("score") or 0), e.get("abbr") or ""))
+    return out
+
+
+def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     """Build one deterministic Game insight entity for every game on `game_date`'s
     MLB slate (full slate -- uncapped, since "today's games" is already bounded).
+
+    `team_entities`, when a list is passed, is populated in place with one Team
+    entity per team on the slate -- the same out-parameter convention
+    `training_rows` uses on _build_one_game. Left as None (the default) no team
+    work is done at all, so callers that only want games pay nothing for this.
 
     Returns (entities, pruned_boxscore_cache, training_rows):
       - entities: ordered {str(gamePk): entity} in slate order; each entity carries
@@ -1246,6 +1373,19 @@ def build_game_entities(config, game_date, boxscore_cache):
                 ops_cache, era_cache, config, injured_ids, training_rows=training_rows,
             )
             entities[str(g.get("gamePk"))] = ent
+
+    # Teams, from the same session and the same caches the game loop just warmed.
+    # Guarded separately: the Teams view is additive, and a failure here must not
+    # cost the slate its games, signals, or training rows.
+    if team_entities is not None:
+        try:
+            all_games = [g for d in sched.get("dates", []) for g in d.get("games", [])]
+            team_entities.extend(_build_team_entities(
+                session, base_url, season, game_date, all_games, config,
+                ops_cache, boxscore_cache, touched))
+        except Exception as e:  # noqa: BLE001 -- teams are additive
+            print("insights(teams): builder failed ({}); teams section skipped"
+                  .format(str(e)[:160]))
 
     pruned_cache = {pk: boxscore_cache[pk] for pk in touched if pk in boxscore_cache}
     return entities, pruned_cache, training_rows
