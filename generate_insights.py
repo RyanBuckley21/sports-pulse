@@ -635,20 +635,29 @@ def _print_auth_abort(e):
     print("!" * 70 + "\n")
 
 
-def _build_game_entities(config, generated_at):
+def _build_game_entities(config, generated_at, team_entities=None):
     """Deterministic game builder + its stores. Runs in CI too (only the AI calls
     are gated later). Guarded: any failure yields empty games (players unaffected).
-    Returns (game_entities, games_store, game_date)."""
+    Returns (game_entities, games_store, game_date).
+
+    `team_entities`, when a list is passed, is filled with the Team entities built
+    from the SAME slate and caches -- see mlb.build_game_entities. It stays an
+    out-parameter rather than a fourth return value so the existing three-value
+    unpacking at every other call site keeps working untouched."""
     if config is None:
         return {}, {}, None
     game_date = generated_at.date().isoformat()
     try:
         box_cache = _load_store(BOXSCORE_CACHE_PATH)
-        game_entities, box_cache, training_rows = mlb.build_game_entities(config, game_date, box_cache)
+        game_entities, box_cache, training_rows = mlb.build_game_entities(
+            config, game_date, box_cache, team_entities=team_entities)
         _save_store(BOXSCORE_CACHE_PATH, box_cache)
         games_store = _load_store(GAMES_STORE_PATH)
         print("insights(games): built {} games for {} (boxscore cache: {} final games)"
               .format(len(game_entities), game_date, len(box_cache)))
+        if team_entities is not None:
+            print("insights(teams): built {} team profiles for {}"
+                  .format(len(team_entities), game_date))
         # Phase 1 training capture: append-only, never pruned, separately
         # guarded so a capture failure can't take the games section down with
         # it. Skip-if-present makes a second run of the day a no-op.
@@ -719,7 +728,11 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     total = len(entities)
 
     # Games: full slate, uncapped. Built deterministically here (CI included).
-    game_entities, games_store, _game_date = _build_game_entities(config, generated_at)
+    # Teams ride along on the same build -- same slate, same session, same caches
+    # -- rather than opening a second fetch path for the Teams view.
+    team_entities = []
+    game_entities, games_store, _game_date = _build_game_entities(
+        config, generated_at, team_entities=team_entities)
 
     # Config kill switch is checked FIRST and short-circuits the other two --
     # when it's off, this branch must never reach _subprocess_env/_preflight
@@ -776,6 +789,11 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
     if game_entities:
         data["insights"]["games"] = _build_games_section(game_entities, game_text)
+    # Teams: already ranked and card-ready out of the builder, and carrying no AI
+    # text at all, so there is no text_map to merge and no _build_*_section pass
+    # to run -- it is assigned straight across, alongside players and games.
+    if team_entities:
+        data["insights"]["teams"] = team_entities
     data["insights"]["ui"] = _ui_meta(config)
     return _markdown_addendum(data, insight_map)
 

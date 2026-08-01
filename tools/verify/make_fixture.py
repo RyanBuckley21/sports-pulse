@@ -206,6 +206,26 @@ def _with_story(player):
     return player
 
 
+def _as_team_profile(team):
+    """Reshape a mock team into the profile the pipeline actually emits.
+
+    The mock is the deferred Phase 2 fixture: it keys the brand colour as
+    `color` and carries AI `headline`/`summary`. The real builder keys
+    `team_color` and emits neither, so a fixture that kept the mock's shape
+    would test a card this app no longer renders -- and in particular would
+    never catch teamTag falling back to the placeholder grey. Identity, pulse
+    and signals carry over unchanged; they are the same shape either way."""
+    return {
+        "id": team.get("id"),
+        "sport": "mlb",
+        "abbr": team.get("abbr"),
+        "name": team.get("name"),
+        "team_color": team.get("color"),
+        "pulse": team.get("pulse"),
+        "signals": team.get("signals"),
+    }
+
+
 def build():
     with open(MOCK) as fh:
         mock = json.load(fh)
@@ -218,8 +238,8 @@ def build():
         "sports": {
             "mlb": {"label": "MLB", "categories": [_board(b) for b in BOARDS]}
         },
-        # insights.js reads players/games from here; teams and components come
-        # from the committed mock instead.
+        # insights.js reads players/games/teams from here; only the components
+        # gallery still comes from the committed mock.
         "insights": {
             "players": [_with_story(p) for p in mock["players"]],
             # The committed mock predates signal scores, so its games render no
@@ -227,6 +247,7 @@ def build():
             # chip strip that only appears with real pipeline data. Synthesised
             # here so the games view under test matches what actually ships.
             "games": [_with_signals(g, i) for i, g in enumerate(mock["games"])],
+            "teams": [_as_team_profile(t) for t in mock["teams"]],
             "ui": {},
         },
     }

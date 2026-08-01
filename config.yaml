@@ -258,6 +258,41 @@ betting_signals:
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 
+# Team Pulse -- a deterministic 0-100 notability score for ONE team, built from
+# that team's own form against league average. Sport-keyed like the blocks above;
+# mlb populated, other sports reserved empty (no block = no team pulse, and the
+# Teams view simply renders nothing for that sport).
+#
+# `base` and `scale` are deliberately the SAME league-average constants the
+# betting_signals scales already carry -- ops_solo for offense, bullpen_solo for
+# the pen -- because they answer the same question ("where is league average, and
+# how far from it is a meaningful move"). They are duplicated here rather than
+# cross-referenced so this block stays readable on its own and so retuning the
+# betting layer can't silently move the Teams view; if league average genuinely
+# shifts, both should be updated together.
+#
+# `weight` splits the two components. They are renormalized over whichever
+# components actually have data, so a team with no games in one window is scored
+# on the other alone rather than being penalized for the gap or given a made-up
+# value. A team with neither gets no pulse at all.
+team_pulse:
+  mlb:
+    # Higher OPS is better. Matches betting_signals.mlb.scales.ops_solo.
+    ops:
+      base: 0.725
+      scale: 0.080
+      weight: 0.50
+      window_days: 14
+    # LOWER bullpen ERA is better -- the sign flip lives in code, same rule as
+    # betting_signals' `favors` direction. Matches scales.bullpen_solo.
+    bullpen:
+      base: 4.00
+      scale: 1.50
+      weight: 0.50
+      window_days: 7
+  # Reserved for future sports; empty = the Teams view renders nothing.
+  worldcup: {}
+
 # ---------------------------------------------------------------------------
 # Insights UI presentation, sport-keyed (mirrors betting_signals / player_angle).
 # The Python build resolves these into data.json so the JS components stay

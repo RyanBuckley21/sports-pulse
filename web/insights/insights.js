@@ -20,7 +20,11 @@
 
   function teamTag(t) {
     if (!t || !t.abbr) return "";
-    var c = t.color || "rgba(255,255,255,0.5)";
+    // `team_color` is the pipeline's key (team profiles, player rows); `color`
+    // is the game TeamRef's and the deferred mock's. Both shapes reach this one
+    // helper, so it reads either rather than making callers normalise -- and
+    // prefers team_color, so a real profile never falls back to the grey.
+    var c = t.team_color || t.color || "rgba(255,255,255,0.5)";
     // Reuses .team-chip from app.css for consistent chip styling.
     return '<span class="team-chip" style="color:' + c + ";background:" + alpha(c, "26") + '">' + esc(t.abbr) + "</span>";
   }
@@ -725,17 +729,19 @@
   // without the shell having to sit at the root.
   var SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
 
-  // Players and games render from the live pipeline output (data.json ->
-  // insights.players / insights.games); teams/components are still the deferred mock.
+  // Players, games and teams all render from the live pipeline output
+  // (data.json -> insights.players / insights.games / insights.teams). Only the
+  // components gallery is still the deferred mock -- it is a card showcase with
+  // no live equivalent, and it is not in the tab bar (direct URL only).
   function sourceFor(view) {
-    var rel = (view === "players" || view === "games") ? "../data.json" : "mock-insights.json";
-    return new URL(rel, SCRIPT_URL).href;
+    var live = view === "players" || view === "games" || view === "teams";
+    return new URL(live ? "../data.json" : "mock-insights.json", SCRIPT_URL).href;
   }
 
-  // Keyed by SOURCE URL, not by view -- games and players share one data.json
-  // read, teams and components share one mock read. So the four views cost two
-  // requests, and switching between two views backed by the same file costs
-  // none. Same 10-minute ceiling as app.js, for the same reason: it outlasts
+  // Keyed by SOURCE URL, not by view -- games, players and teams share one
+  // data.json read and components is alone on the mock. So the four views cost
+  // two requests, and switching between any two views backed by the same file
+  // costs none. Same 10-minute ceiling as app.js, for the same reason: it outlasts
   // any tab switch but not a session resumed the next day. (The mock is a
   // committed fixture that never changes at runtime, so its entry never
   // meaningfully expires -- one rule is simpler than special-casing it.)
@@ -799,7 +805,10 @@
     AI_ENABLED = data.aiInsightsEnabled !== false;
     if (view === "players") renderPlayers((data.insights && data.insights.players) || [], root);
     else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
-    else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
+    // insights.teams, matching players/games -- NOT the top-level data.teams the
+    // mock used. renderGallery still reads that top-level shape, and still gets
+    // it, because components is the one view still backed by the mock.
+    else if (view === "teams") root.innerHTML = list((data.insights && data.insights.teams) || [], Cards.teamInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
   }
