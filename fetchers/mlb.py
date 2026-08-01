@@ -694,12 +694,15 @@ def _recompute_ops(splits):
     return round(obp + slg, 3)
 
 
-def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache, window_days=14):
-    """A team's recomputed OPS over its last `window_days` of completed games on
-    one side (home games for the home team, road games for the away team). Cached
-    per (team_id, is_home) so a doubleheader team isn't fetched twice. None if the
-    team has no games on that side in the window."""
-    key = (team_id, is_home)
+def _team_hitting_log(session, base_url, team_id, season, cache):
+    """A team's full-season hitting game log splits, cached per team under a key
+    shape distinct from the computed-OPS entries that share this dict.
+
+    Lifted out of team_side_ops so the side-split and whole-team OPS variants can
+    share ONE response. Both already filter client-side (the endpoint has no date
+    or home/road parameter), so a team touched by both paths in the same run
+    costs one HTTP call, not two."""
+    key = ("log", team_id)
     if key in cache:
         return cache[key]
     data = _get(
@@ -709,12 +712,53 @@ def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache
     )
     stats = data.get("stats", [])
     splits = stats[0].get("splits", []) if stats else []
+    cache[key] = splits
+    return splits
+
+
+def _ops_window(splits, as_of_date, window_days):
+    """The completed-game splits inside the trailing `window_days`, ending the day
+    BEFORE as_of_date (today's game hasn't been played when the slate is built)."""
     cutoff = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=window_days)).isoformat()
-    windowed = [
-        s for s in splits
-        if s.get("date") and cutoff <= s["date"] < as_of_date and bool(s.get("isHome")) == is_home
-    ]
+    return [s for s in splits if s.get("date") and cutoff <= s["date"] < as_of_date]
+
+
+def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache, window_days=14):
+    """A team's recomputed OPS over its last `window_days` of completed games on
+    one side (home games for the home team, road games for the away team). Cached
+    per (team_id, is_home) so a doubleheader team isn't fetched twice. None if the
+    team has no games on that side in the window."""
+    key = (team_id, is_home)
+    if key in cache:
+        return cache[key]
+    splits = _team_hitting_log(session, base_url, team_id, season, cache)
+    windowed = [s for s in _ops_window(splits, as_of_date, window_days)
+                if bool(s.get("isHome")) == is_home]
     ops = _recompute_ops(windowed)
+    cache[key] = ops
+    return ops
+
+
+def team_window_ops(session, base_url, team_id, season, as_of_date, cache, window_days=14):
+    """A team's recomputed OPS over its last `window_days` of completed games,
+    HOME AND ROAD TOGETHER. None if it has no games in the window.
+
+    Deliberately not team_side_ops with a flag. The split version exists to frame
+    one matchup -- the home team's home form against the away team's road form --
+    and comparing those two directly carries a systematic pro-home tilt, since
+    home splits run roughly .020-.030 OPS above road splits league-wide. A team
+    profile has no opponent and no side to frame, so a split would not just
+    inherit that tilt, it would answer a question nobody asked: half of a team's
+    games would be silently discarded from its own form number.
+
+    Shares the cache (and therefore the HTTP call) with team_side_ops via
+    _team_hitting_log; the computed value is cached under (team_id, "all"), which
+    cannot collide with the (team_id, bool) side entries."""
+    key = (team_id, "all")
+    if key in cache:
+        return cache[key]
+    splits = _team_hitting_log(session, base_url, team_id, season, cache)
+    ops = _recompute_ops(_ops_window(splits, as_of_date, window_days))
     cache[key] = ops
     return ops
 
