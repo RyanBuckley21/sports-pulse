@@ -82,6 +82,11 @@
   // any element with no one clear associated team).
   var GOLD = "#f0a83a";
 
+  // Max pixel height for a Recent Form bar, matching app.js's own
+  // renderCategoryDetail bar math exactly, so the two vertical bar charts
+  // (Who's Hot player detail, Players tab) read as one visual language.
+  var BAR_MAX_PX = 54;
+
   // Resolve a Signal Score / Best Angle row to a team color: markets tied to one
   // team (moneyline "SEA", team_total "TB Over", first-five "TOR") take that
   // team's color; totals / first-five totals / NRFI-YRFI have no single team, so
@@ -271,32 +276,52 @@
       return '<div class="compare-table">' + head + rows + "</div>";
     },
 
-    // Recent Form -- a HORIZONTAL bar chart (leaderboard convention): one bar per
-    // data point, proportional width, value at the end, date beneath. Bar fill is
-    // the entity's team color. Generic over any [{value, date}] series; empty when
-    // there's no series.
-    formBars: function (series, color) {
+    // Recent Form -- a VERTICAL bar chart, matching Who's Hot's per-category
+    // detail (app.js's renderCategoryDetail): pixel-height bars scaled to the
+    // series max, a value label above each bar, and an optional IP sub-label
+    // below (pitcher series only -- `hasIp` mirrors app.js's own guard).
+    // Series longer than 12 points drop the per-bar label (same dense-mode
+    // threshold as app.js) since a 20-point window can't fit a legible label
+    // over every bar in a phone-width row.
+    //
+    // Renders the .bars-section wrapper itself (not just the .bars-row), so
+    // `title` takes the place of app.js's `barsTitle` as the .bars-label text.
+    // These classes come from app.css, loaded globally on every route -- no
+    // insights.css rules exist (or should be added) for the bars themselves.
+    // Generic over any [{value, date, raw, ip}] series; empty when there's no
+    // series.
+    formBars: function (series, color, title) {
       if (!series || !series.length) return "";
       var vals = series.map(function (s) { return Number(s && s.value) || 0; });
-      var max = Math.max.apply(null, vals.concat([1])); // guard divide-by-zero
+      var maxVal = Math.max(1, Math.max.apply(null, vals)); // guard divide-by-zero
       var fill = color || GOLD;
-      var rows = series
+      var hasIp = series.some(function (s) { return s && s.ip != null; });
+      var dense = series.length > 12;
+      var bars = series
         .map(function (s) {
           var v = Number(s && s.value) || 0;
-          var w = Math.max(2, Math.round((v / max) * 100));
-          var d = fmtDate(s && s.date);
+          var hPx = Math.max(4, Math.round((v / maxVal) * BAR_MAX_PX) || 0);
+          var o = v === 0 ? 0.22 : 1;
+          // threshold/streak series carry the raw per-game count under `raw`
+          // (met/miss drives the bar height); everything else labels with the
+          // plain value, same as app.js.
+          var label = s && s.raw != null ? String(Number(s.raw)) : String(v);
+          var barLabel = dense ? "" : '<span class="bar-label">' + esc(label) + "</span>";
+          var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s && s.ip != null ? esc(s.ip) : "") + "</span>" : "";
           return (
-            '<div class="fb-item">' +
-            '<div class="fb-row">' +
-            '<div class="fb-track"><div class="fb-bar" style="width:' + w + "%;--fb-color:" + esc(fill) + '"></div></div>' +
-            '<span class="fb-val">' + v + "</span>" +
-            "</div>" +
-            (d ? '<div class="fb-date">' + esc(d) + "</div>" : "") +
+            '<div class="bar-col">' +
+            barLabel +
+            '<div class="bar" style="height:' + hPx + "px;opacity:" + o + ";background:" + esc(fill) + ';"></div>' +
+            ipLabel +
             "</div>"
           );
         })
         .join("");
-      return '<div class="form-bars">' + rows + "</div>";
+      return (
+        '<div class="bars-section"><div class="bars-label">' + esc(title || "") + "</div>" +
+        '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + (dense ? " bars-row-dense" : "") + '">' + bars + "</div>" +
+        "</div>"
+      );
     },
 
     // Vs Next Starter -- the player's career line against today's probable
@@ -508,7 +533,7 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        section(formEyebrow(p), Cards.formBars(p.series, p.team_color)) +
+        Cards.formBars(p.series, p.team_color, formEyebrow(p)) +
         Cards.vsStarter(p.vs_next_starter) +
         block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"

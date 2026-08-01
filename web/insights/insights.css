@@ -392,13 +392,10 @@ body.insights-scope .breakdown-label {
 }
 .cmp-win { color: var(--text); font-weight: 700; }
 
-/* ---- Recent Form: horizontal bar chart (leaderboard convention) ---- */
-.form-bars { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-.fb-row { display: flex; align-items: center; gap: 8px; }
-.fb-track { flex: 1; height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
-.fb-bar { height: 100%; border-radius: 999px; background: var(--fb-color, var(--gold)); min-width: 2px; }
-.fb-val { font: 600 12px var(--font-body); color: var(--text-secondary); width: 22px; text-align: right; }
-.fb-date { font: 500 9px var(--font-body); color: var(--text-tertiary); margin-top: 3px; }
+/* ---- Recent Form: vertical bar chart ----
+   Renders via app.css's .bars-section/.bars-row/.bar-col family (Who's Hot's
+   own player-detail bars), loaded globally on every route -- no rules of its
+   own belong here. See Cards.formBars in insights.js. */
 
 /* ---- Vs Next Starter (career line vs today's probable; mirrors main app,
    restyled to the insights type system) ---- */
