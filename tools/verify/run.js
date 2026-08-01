@@ -264,6 +264,13 @@ async function reEntryChecks(browser, base) {
   json = [];
   await p.evaluate(() => SP.views.insights.mount("teams"));
   await p.waitForTimeout(400);
+  ok("teams now shares data.json too: no fetch", json.length === 0, json.join(",") || "none");
+  // Components is the last view still on the mock, so it is what proves the
+  // cache keys on SOURCE rather than view. This assertion used to be teams'
+  // job; teams moved to the live pipeline, components did not.
+  json = [];
+  await p.evaluate(() => SP.views.insights.mount("components"));
+  await p.waitForTimeout(400);
   ok("view on the other source: exactly one fetch", json.length === 1, json.join(",") || "none");
   ok("and it is the mock", /mock-insights\.json/.test(json[0] || ""), json[0] || "none");
 

@@ -62,7 +62,7 @@
     {
       hash: "#/teams", id: "teams", label: "Teams", tab: true,
       section: "insights", view: "teams",
-      title: "Teams", note: "Preview with mock data — not live.",
+      title: "Teams", note: "Team form for today's slate — 14-day OPS and 7-day bullpen ERA.",
     },
     // Development scaffolding, deliberately absent from the tab bar -- the same
     // "reach it by direct URL only" arrangement components.html has always had.
