@@ -110,6 +110,21 @@ def _series(kind, value, n, seed):
     return out
 
 
+#: Attached to Aaron Judge on every HITTING board he appears on (never on
+#: strikeouts, which is Skubal-only anyway) -- the SAME object each time, on
+#: purpose. That mirrors fetchers/mlb.py's enrich_with_vs_next_starter, which
+#: caches the next opposing starter per TEAM and the career line per (batter,
+#: pitcher) pair, not per stat category -- so every hitting-category record for
+#: one player carries an identical vs_next_starter. Giving every board its own
+#: distinct copy here would test a scenario the real pipeline cannot produce,
+#: and would hide a regression where playerVsNextStarter() started reading a
+#: per-category field instead of the shared one.
+VS_NEXT_STARTER = {
+    "pitcher_name": "Chris Sale", "game_date": "2026-07-29",
+    "hits": 3, "ab": 11, "hr": 1, "rbi": 2, "avg": ".273",
+}
+
+
 def _board(board):
     """One category, ranks 1..n over its own ordering of the roster."""
     n = len(board["order"])
@@ -137,6 +152,7 @@ def _board(board):
             "position": "SP" if name == "Tarik Skubal" else "RF",
             "value": value, "total_qualified": 142, "window": window, "met": met,
             "series": _series(board["kind"], value, span, i + 1),
+            "vs_next_starter": VS_NEXT_STARTER if name == "Aaron Judge" else None,
         })
     return {
         "key": board["key"], "label": board["label"],

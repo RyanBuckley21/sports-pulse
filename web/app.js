@@ -13,6 +13,20 @@
 
   var appEl = document.getElementById("app");
 
+  // Opt out of the browser's OWN scroll-restoration-on-navigation feature.
+  // Default is "auto", which snapshots the current scroll offset onto a
+  // history entry at the moment you navigate away from it, then tries to
+  // restore that snapshot when you return. That collides directly with the
+  // detail view's history footprint below: the [data-rank] handler resets
+  // scroll to 0 (for the detail view) BEFORE pushing the new entry, so the
+  // browser's auto-snapshot for the LIST entry being left ends up recording
+  // "0" -- and going back would restore that wrong snapshot instead of
+  // (or racing against) returnToList()'s own state.listScroll restore.
+  // "manual" leaves scroll entirely to the app's existing state.listScroll /
+  // setPageScroll bookkeeping, which is already correct and was already the
+  // only mechanism in play before history entries were involved at all.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
   // True while this section is the one on screen. Set by mount()/unmount();
   // read only by the freshness ticker, which must not do work for a hidden view.
   var mounted = false;
@@ -273,6 +287,27 @@
     );
   }
 
+  // The vs-next-starter block does not vary by category and never has. It comes
+  // from fetchers/mlb.py's enrich_with_vs_next_starter, which caches the next
+  // opposing starter PER TEAM and the career line PER (batter, pitcher) pair --
+  // both keyed well above the individual stat-category record -- so every
+  // hitting-category board for the same player carries an identical object.
+  // Pitching boards never get one at all (that enrichment explicitly skips
+  // non-hitting categories: "this is a batter-vs-pitcher stat"). A player on N
+  // hitting boards showed this same block N times before this fix.
+  //
+  // Scans every entry rather than trusting ctx.player (the category tapped in
+  // from) because a two-way player's tapped-in category could be the pitching
+  // one, whose own record has no vs_next_starter even though their hitting
+  // boards do. Since the content is identical wherever it is present, the
+  // first truthy one found is the correct, complete answer.
+  function playerVsNextStarter(ctx) {
+    for (var i = 0; i < ctx.entries.length; i++) {
+      if (ctx.entries[i].player.vs_next_starter) return ctx.entries[i].player.vs_next_starter;
+    }
+    return null;
+  }
+
   // The player detail page. NOT a deep-dive on the one category tapped in from
   // -- that is what the leaderboard row already showed, and repeating it at 68px
   // was the page's main redundancy. It answers "what is this player hot in right
@@ -323,7 +358,9 @@
       "<div><div class=\"identity-name\">" + esc(player.entity) + '</div><div class="identity-sub">' + posLine + "</div></div>" +
       heat +
       "</div>" +
-      '<div class="pcat-list">' + rows + "</div>"
+      '<div class="pcat-list">' + rows + "</div>" +
+      // Page-level, once -- not per category. See playerVsNextStarter above.
+      renderVsNextStarter(playerVsNextStarter(ctx))
     );
   }
 
@@ -468,8 +505,10 @@
       keyCell(gapStr, gapLabel) +
       "</div>" +
       '<div class="bars-section"><div class="bars-label">' + barsTitle + "</div>" + barsHtml + "</div>" +
-      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml +
-      renderVsNextStarter(player.vs_next_starter) + "</div>"
+      // vs-next-starter used to render here, once per category. It never
+      // varied by category (see playerVsNextStarter, up in renderDetail) --
+      // moved to the page level, once, below the category list.
+      '<div class="breakdown-section"><div class="breakdown-label">Breakdown</div>' + breakdownHtml + "</div>"
     );
   }
 
@@ -623,6 +662,14 @@
       state.view = "detail";
       render();
       setPageScroll(0); // detail opens at the top
+      // Give this a real history footprint -- see the swipe-to-go-back note
+      // at goBack() for why. SAME url as the list (no hash change: this must
+      // never fire hashchange, which the router listens for), differentiated
+      // only by the state object. One push per visit: the detail DOM has no
+      // [data-rank] elements, so there is no path from one detail view
+      // straight into another without passing back through the list first,
+      // and this branch only ever runs from the list.
+      history.pushState({ whosHotDetail: true }, "", location.href);
       return;
     }
     if (e.target.closest("#backBtn")) {
@@ -660,13 +707,53 @@
     }
   });
 
-  function goBack() {
+  // The actual "return to list" work, shared by both paths that can trigger
+  // it: the in-app back button / hand-rolled swipe (via goBack(), below) and
+  // the native OS swipe-back gesture (via the popstate listener, below --
+  // that gesture bypasses every click/touch handler in this file, so it has
+  // no other way to reach this).
+  function returnToList() {
     state.view = "list";
     state.selected = null;
     render();
     setChipScroll(state.chipScroll || 0);
     setPageScroll(state.listScroll || 0); // land back where you left the list
   }
+
+  function goBack() {
+    returnToList();  // immediate -- no visible delay waiting on history.back()
+    // Pops the entry pushed when entering detail (see the [data-rank] branch
+    // above), so the real history stack matches what is now on screen. Without
+    // this, the stack would grow by one every visit to a player's detail page
+    // and never shrink, since returnToList() alone does not touch it.
+    history.back();
+  }
+
+  // The detail view's history footprint, and the reason for it: entering
+  // detail used to be a pure state swap with no history entry at all, so
+  // native OS edge-swipe-back had nothing of ours to pop -- it fell straight
+  // through to whatever hash-route entry was on the stack before the CURRENT
+  // Who's Hot visit (i.e. whichever tab was open immediately before this one),
+  // landing on that tab instead of returning to this list. The [data-rank]
+  // branch above now pushes one real entry per visit to close that gap; this
+  // listener is what native swipe-back actually reaches, since it never goes
+  // through goBack() or any click/touch handler in this file.
+  //
+  // Deliberately keyed off state.view, not event.state: when goBack() is what
+  // triggered the pop, state.view is already "list" by the time this fires
+  // (returnToList() ran synchronously, moments earlier), so the guard below
+  // is false and this is a harmless no-op -- there is exactly one place that
+  // ever performs the reset, whichever path triggered it.
+  //
+  // No hashchange fires for any of this (the pushed entry reuses the same
+  // URL), so shell.js's router never re-enters over it -- deliberately: that
+  // router's mount() does an unconditional scrollTo(0,0), which would clobber
+  // the scroll restore in returnToList() if a same-section hashchange fired
+  // here. Popstate is the only signal used, precisely to avoid that collision.
+  window.addEventListener("popstate", function () {
+    if (!mounted) return; // another section owns the screen right now
+    if (state.view === "detail") returnToList();
+  });
 
   // ---------------- swipe-to-go-back ----------------
   // The detail view is a state swap, not a history entry, so iOS' native

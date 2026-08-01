@@ -383,6 +383,32 @@ async function playerDetailChecks(browser, base) {
   ok("tapping the open row closes it", s.open.every((o) => o === false) && s.heights[0] === 0,
      "open=" + s.open.join(",") + " h=" + s.heights[0]);
 
+  // vs-next-starter used to render once PER CATEGORY -- identical every time,
+  // since fetchers/mlb.py caches it per team and per (batter, pitcher) pair,
+  // never per stat category. Judge is on 5 hitting boards here, so 5 identical
+  // copies would be the old bug; exactly 1 is the fix.
+  const vs = await p.evaluate(() => {
+    const sections = [...document.querySelectorAll(".vs-starter-section")];
+    const list = document.querySelector(".pcat-list");
+    return {
+      count: sections.length,
+      insideAnyRow: sections.some((el) => el.closest(".pcat-item") !== null),
+      // Sibling of .pcat-list (page level), not a descendant of it.
+      isPageLevel: sections.length === 1 && sections[0].parentElement === list.parentElement,
+      // Comes after the category list in document order, per the spec.
+      afterList: sections.length === 1 &&
+        !!(list.compareDocumentPosition(sections[0]) & Node.DOCUMENT_POSITION_FOLLOWING),
+      text: sections[0] && sections[0].textContent,
+    };
+  });
+  ok("vs-next-starter renders exactly once, not once per category",
+     vs.count === 1, "count=" + vs.count);
+  ok("  at the page level, not inside any category row",
+     !vs.insideAnyRow, "insideAnyRow=" + vs.insideAnyRow);
+  ok("  as a sibling of .pcat-list, after it", vs.isPageLevel && vs.afterList,
+     "isPageLevel=" + vs.isPageLevel + " afterList=" + vs.afterList);
+  ok("  showing the shared matchup", /Chris Sale/.test(vs.text || ""), JSON.stringify(vs.text));
+
   // Back must still work, and still land where the reader left the list.
   await p.evaluate(() => { document.documentElement.style.minHeight = "3000px"; window.scrollTo(0, 300); });
   await p.waitForTimeout(150);
@@ -405,6 +431,140 @@ async function playerDetailChecks(browser, base) {
      "count=" + s.count + " open=" + s.open.join(","));
   ok("  with aria and height agreeing", s.aria[0] === "true" && s.heights[0] > 0,
      "aria=" + s.aria[0] + " h=" + s.heights[0]);
+
+  await p.close();
+}
+
+// ------------------------------------------------------------ detail-history
+// Entering the player-detail page used to be a pure state swap with no
+// history footprint at all -- confirmed live: native OS edge-swipe-back had
+// no entry of ours to pop, so it fell through to whatever hash-route entry
+// was on the stack before the CURRENT Who's Hot visit (i.e. whichever tab was
+// open immediately before it), landing on THAT tab instead of returning here.
+//
+// Playwright has no literal iOS edge-swipe simulator, so page.goBack() is
+// used as the closest available equivalent: it drives the same underlying
+// primitive a native gesture does (moves the browser's real session-history
+// position back by one, firing a genuine popstate) rather than anything the
+// app's own click/touch handlers are involved in. That is precisely the path
+// the fix's popstate listener exists for, and precisely the path the original
+// bug happened on.
+async function detailHistoryChecks(browser, base) {
+  heading("detail-history");
+  const p = await newPage(browser);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(600);
+
+  // ---- reproduce the ORIGINAL bug's exact setup ----
+  // Visit Players, then come back to Who's Hot, THEN open a detail view. Before
+  // the fix this is exactly the sequence that made native back land on Players.
+  await goRoute(p, "#/players");
+  await goRoute(p, "#/");
+  await p.waitForTimeout(200);
+
+  await p.evaluate(() => window.scrollTo(0, 300));
+  await p.waitForTimeout(100);
+  const scrollBeforeOpen = await p.evaluate(() => window.scrollY);
+  await p.evaluate(() => document.querySelectorAll(".player-row")[1].click());
+  await p.waitForTimeout(300);
+
+  const opened = await p.evaluate(() => ({
+    hash: location.hash,
+    state: history.state,
+    onDetail: !!document.querySelector(".pcat-list"),
+  }));
+  ok("opening detail pushes a history entry", opened.state && opened.state.whosHotDetail === true,
+     JSON.stringify(opened.state));
+  ok("  without changing the hash (router must not see this)", opened.hash === "#/", opened.hash);
+
+  // ---- the actual regression test: real back-navigation, not the in-app button ----
+  await p.goBack();
+  await p.waitForTimeout(400);
+  const afterNativeBack = await p.evaluate(() => ({
+    hash: location.hash,
+    appHidden: document.getElementById("app").hidden,
+    insightsHidden: document.getElementById("insightsView").hidden,
+    onList: !!document.querySelector(".board"),
+    scroll: window.scrollY,
+    activeTab: document.querySelector('.tab[aria-current="page"]').getAttribute("data-route"),
+  }));
+  ok("native back-navigation returns to the Who's Hot LIST, not the previous tab",
+     afterNativeBack.onList && !afterNativeBack.appHidden && afterNativeBack.insightsHidden,
+     JSON.stringify(afterNativeBack));
+  ok("  the active tab is still Who's Hot", afterNativeBack.activeTab === "whos-hot",
+     afterNativeBack.activeTab);
+  ok("  the hash never changed (router took no part in this)",
+     afterNativeBack.hash === "#/", afterNativeBack.hash);
+  ok("  scroll position survives the round trip",
+     afterNativeBack.scroll === scrollBeforeOpen,
+     "before=" + scrollBeforeOpen + " after=" + afterNativeBack.scroll);
+
+  // ---- the in-app back button: same destination, and the stack stays flat ----
+  // history.length never DECREASES on back() (it only repositions; going back
+  // leaves a now-stale forward entry sitting past the current position), so
+  // flatness is only observable by comparing length AFTER each round trip
+  // completes: the next push must truncate that stale forward entry rather
+  // than stacking a new one behind it. Two full round trips, different rows.
+  const lens = [];
+  for (let i = 0; i < 2; i++) {
+    await p.evaluate((idx) => document.querySelectorAll(".player-row")[idx].click(), i);
+    await p.waitForTimeout(250);
+    await p.evaluate(() => document.querySelector("#backBtn").click());
+    await p.waitForTimeout(250);
+    lens.push(await p.evaluate(() => history.length));
+  }
+  ok("in-app back button also returns to the list",
+     await p.evaluate(() => !!document.querySelector(".board")));
+  ok("  repeated visits to different rows do not deepen the history stack",
+     lens[0] === lens[1], "lengths=" + lens.join(","));
+
+  // ---- scroll survives the in-app back button too, not just native back ----
+  await p.evaluate(() => window.scrollTo(0, 250));
+  await p.waitForTimeout(100);
+  const scrollBeforeBtn = await p.evaluate(() => window.scrollY);
+  await p.evaluate(() => document.querySelectorAll(".player-row")[2].click());
+  await p.waitForTimeout(300);
+  await p.evaluate(() => document.querySelector("#backBtn").click());
+  await p.waitForTimeout(300);
+  const scrollAfterBtn = await p.evaluate(() => window.scrollY);
+  ok("scroll position survives the in-app back button",
+     scrollAfterBtn === scrollBeforeBtn,
+     "before=" + scrollBeforeBtn + " after=" + scrollAfterBtn);
+
+  // ---- the hand-rolled swipe-to-dismiss gesture, kept deliberately untouched
+  // by this fix, still has to work: real Touch objects, not plain shapes, or
+  // Chromium rejects the TouchEvent construction outright.
+  await p.evaluate(() => window.scrollTo(0, 180));
+  await p.waitForTimeout(100);
+  const scrollBeforeSwipe = await p.evaluate(() => window.scrollY);
+  await p.evaluate(() => document.querySelectorAll(".player-row")[0].click());
+  await p.waitForTimeout(300);
+  const lenBeforeSwipe = await p.evaluate(() => history.length);
+  await p.evaluate(() => {
+    const target = document.querySelector("#app .wrap");
+    function fire(type, x, y) {
+      const t = new Touch({ identifier: 0, target, clientX: x, clientY: y });
+      const ev = new TouchEvent(type, {
+        touches: type === "touchend" ? [] : [t], changedTouches: [t],
+        bubbles: true, cancelable: true,
+      });
+      document.getElementById("app").dispatchEvent(ev);
+    }
+    fire("touchstart", 20, 400);
+    fire("touchmove", 60, 400);
+    fire("touchmove", 160, 400); // clearly rightward, past the 12px decide threshold
+    fire("touchend", 160, 400);
+  });
+  await p.waitForTimeout(400); // 180ms slide transition + goBack()'s 170ms setTimeout
+  const afterSwipe = await p.evaluate(() => ({
+    onList: !!document.querySelector(".board"), scroll: window.scrollY, len: history.length,
+  }));
+  ok("the hand-rolled swipe gesture still returns to the list, untouched by this fix",
+     afterSwipe.onList, JSON.stringify(afterSwipe));
+  ok("  and still restores scroll", afterSwipe.scroll === scrollBeforeSwipe,
+     "before=" + scrollBeforeSwipe + " after=" + afterSwipe.scroll);
+  ok("  and still pairs its own push/pop (flat stack)", afterSwipe.len === lenBeforeSwipe,
+     "before=" + lenBeforeSwipe + " after=" + afterSwipe.len);
 
   await p.close();
 }
@@ -861,6 +1021,7 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
     await scopeLeakCheck(browser, base);
     await reEntryChecks(browser, base);
     await playerDetailChecks(browser, base);
+    await detailHistoryChecks(browser, base);
     await aiNoteChecks(browser, base);
     await routerChecks(browser, base);
     await safeAreaChecks(browser, base);
