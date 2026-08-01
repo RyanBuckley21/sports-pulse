@@ -47,13 +47,21 @@ name: Regenerate stats and grade picks
 # generated text, never inventing any); verified live that the stores now
 # advance on every skip-mode run.
 #
-# The two halves below run INDEPENDENTLY, each committed on its own outcome:
-# grading a transient signal_report.py failure must never block today's
-# regenerate step from persisting the slate that TOMORROW's grading run will
-# need, and vice versa. That's a real risk, not a hypothetical: gating the
-# two together would turn one bad day into two. The job still ends red if
-# either half failed (annotated below); it just doesn't lose the half that
-# worked.
+# The two halves below run INDEPENDENTLY: grading a transient signal_report.py
+# failure must never block today's regenerate step from persisting the slate
+# that TOMORROW's grading run will need, and vice versa. That's a real risk,
+# not a hypothetical: gating the two together would turn one bad day into two.
+# The job still ends red if either half failed (annotated below); it just
+# doesn't lose the half that worked.
+#
+# The stats/signals commit is gated on that step's own exit code (nothing
+# meaningful to commit on a failed build). The GRADING commit is gated on the
+# ledger file actually changing, not on signal_report.py's exit code --
+# its "no gamePk overlap" die() path writes a self-documenting no_store row
+# BEFORE it exits non-zero, specifically so a genuine gap is recorded rather
+# than silently dropped; success-gating that commit would throw the row away
+# right when it matters. Every other die() path in signal_report.py writes
+# nothing, so this stays a no-op on a real crash.
 #
 # Two cron entries, not one, and not three:
 #   * This repo's scheduler has dropped entire days outright (all three of
@@ -118,11 +126,20 @@ jobs:
         id: grade_picks
         run: python3 signal_report.py
 
-      # Independent of the regenerate step: commits only if grading itself
-      # succeeded, regardless of what happens below.
+      # Gated on the FILE having changed, not on grade_picks having exited 0.
+      # signal_report.py's own "no gamePk overlap" die() path writes a
+      # self-documenting no_store row to the ledger BEFORE it exits non-zero
+      # -- that's how it records a genuine gap instead of leaving it as a
+      # silent absence. Gating this step on grade_picks' exit code would
+      # discard that row exactly when it matters most. Every OTHER die() path
+      # (bad --date, empty store, schedule fetch failure) writes nothing, so
+      # `git diff --staged --quiet` below still correctly no-ops on a real
+      # crash -- this is strictly more correct than success-gating, not just
+      # more lenient. `!cancelled()` (rather than no `if` at all) still skips
+      # this on a cancelled job.
       - name: Commit grading
         id: commit_grading
-        if: ${{ steps.grade_picks.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -189,7 +206,7 @@ jobs:
         run: |
           day="$(date -u +%Y-%m-%d)"
           if [ "${{ steps.grade_picks.outcome }}" = "failure" ]; then
-            echo "::warning title=Signal report grading failed::signal_report.py failed for $day. Nothing was committed for grading this run -- see the Grade yesterday's Signal Score picks step logs."
+            echo "::warning title=Signal report grading failed::signal_report.py failed for $day -- either a genuine no_store/no_picks gap (self-documented in the ledger and still committed) or a real error. See the Grade yesterday's Signal Score picks step logs to tell which."
           fi
           if [ "${{ steps.generate_stats.outcome }}" = "failure" ]; then
             echo "::warning title=Stats regeneration failed::generate_stats.py failed for $day. Nothing was committed for stats/signals this run -- see the Regenerate stats and signals step logs."
