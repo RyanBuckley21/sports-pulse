@@ -82,6 +82,11 @@
   // any element with no one clear associated team).
   var GOLD = "#f0a83a";
 
+  // Max pixel height for a Recent Form bar, matching app.js's own
+  // renderCategoryDetail bar math exactly, so the two vertical bar charts
+  // (Who's Hot player detail, Players tab) read as one visual language.
+  var BAR_MAX_PX = 54;
+
   // Resolve a Signal Score / Best Angle row to a team color: markets tied to one
   // team (moneyline "SEA", team_total "TB Over", first-five "TOR") take that
   // team's color; totals / first-five totals / NRFI-YRFI have no single team, so
@@ -271,32 +276,52 @@
       return '<div class="compare-table">' + head + rows + "</div>";
     },
 
-    // Recent Form -- a HORIZONTAL bar chart (leaderboard convention): one bar per
-    // data point, proportional width, value at the end, date beneath. Bar fill is
-    // the entity's team color. Generic over any [{value, date}] series; empty when
-    // there's no series.
-    formBars: function (series, color) {
+    // Recent Form -- a VERTICAL bar chart, matching Who's Hot's per-category
+    // detail (app.js's renderCategoryDetail): pixel-height bars scaled to the
+    // series max, a value label above each bar, and an optional IP sub-label
+    // below (pitcher series only -- `hasIp` mirrors app.js's own guard).
+    // Series longer than 12 points drop the per-bar label (same dense-mode
+    // threshold as app.js) since a 20-point window can't fit a legible label
+    // over every bar in a phone-width row.
+    //
+    // Renders the .bars-section wrapper itself (not just the .bars-row), so
+    // `title` takes the place of app.js's `barsTitle` as the .bars-label text.
+    // These classes come from app.css, loaded globally on every route -- no
+    // insights.css rules exist (or should be added) for the bars themselves.
+    // Generic over any [{value, date, raw, ip}] series; empty when there's no
+    // series.
+    formBars: function (series, color, title) {
       if (!series || !series.length) return "";
       var vals = series.map(function (s) { return Number(s && s.value) || 0; });
-      var max = Math.max.apply(null, vals.concat([1])); // guard divide-by-zero
+      var maxVal = Math.max(1, Math.max.apply(null, vals)); // guard divide-by-zero
       var fill = color || GOLD;
-      var rows = series
+      var hasIp = series.some(function (s) { return s && s.ip != null; });
+      var dense = series.length > 12;
+      var bars = series
         .map(function (s) {
           var v = Number(s && s.value) || 0;
-          var w = Math.max(2, Math.round((v / max) * 100));
-          var d = fmtDate(s && s.date);
+          var hPx = Math.max(4, Math.round((v / maxVal) * BAR_MAX_PX) || 0);
+          var o = v === 0 ? 0.22 : 1;
+          // threshold/streak series carry the raw per-game count under `raw`
+          // (met/miss drives the bar height); everything else labels with the
+          // plain value, same as app.js.
+          var label = s && s.raw != null ? String(Number(s.raw)) : String(v);
+          var barLabel = dense ? "" : '<span class="bar-label">' + esc(label) + "</span>";
+          var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s && s.ip != null ? esc(s.ip) : "") + "</span>" : "";
           return (
-            '<div class="fb-item">' +
-            '<div class="fb-row">' +
-            '<div class="fb-track"><div class="fb-bar" style="width:' + w + "%;--fb-color:" + esc(fill) + '"></div></div>' +
-            '<span class="fb-val">' + v + "</span>" +
-            "</div>" +
-            (d ? '<div class="fb-date">' + esc(d) + "</div>" : "") +
+            '<div class="bar-col">' +
+            barLabel +
+            '<div class="bar" style="height:' + hPx + "px;opacity:" + o + ";background:" + esc(fill) + ';"></div>' +
+            ipLabel +
             "</div>"
           );
         })
         .join("");
-      return '<div class="form-bars">' + rows + "</div>";
+      return (
+        '<div class="bars-section"><div class="bars-label">' + esc(title || "") + "</div>" +
+        '<div class="bars-row' + (hasIp ? " bars-row-ip" : "") + (dense ? " bars-row-dense" : "") + '">' + bars + "</div>" +
+        "</div>"
+      );
     },
 
     // Vs Next Starter -- the player's career line against today's probable
@@ -487,6 +512,40 @@
       );
     },
 
+    // Player Row -- the compact COLLAPSED-state row for the players list:
+    // team + name + position, the player's recommended category, and a small
+    // Pulse number. Mirrors Cards.gameRow -- deliberately much lighter than
+    // playerInsight (no gauge, no signals, no AI text); the two are siblings,
+    // not variants, and playerInsight stays the expanded view.
+    //
+    // Sub-elements use a "pi-row-" prefix, not "pi-": playerInsight below
+    // already owns .pi-head/.pi-name/.pi-sub/.pi-team for the EXPANDED card's
+    // identity line, and this is a different row with different markup, so it
+    // needs its own names rather than colliding with those.
+    playerRow: function (p) {
+      if (!p) return "";
+      var team = { abbr: p.team, color: p.team_color };
+      // Compact Pulse: the number alone, same convention as Cards.gameRow's
+      // .gr-pulse -- reuses pulseBand() rather than Cards.pulseScore(), since
+      // the gauge belongs to the expanded card.
+      var pulse = "";
+      if (p.pulse && p.pulse.score != null) {
+        var ps = Math.max(0, Math.min(100, Number(p.pulse.score) || 0));
+        pulse = '<span class="pi-row-pulse pi-row-pulse-' + pulseBand(ps) + '">' + ps + "</span>";
+      }
+      return (
+        '<div class="pi-row">' +
+        '<div class="pi-row-id">' +
+        teamTag(team) +
+        '<span class="pi-row-name">' + esc(p.name) + "</span>" +
+        (p.pos ? '<span class="pi-row-pos">' + esc(p.pos) + "</span>" : "") +
+        "</div>" +
+        pulse +
+        (p.series_label ? '<div class="pi-row-cat">' + esc(p.series_label) + "</div>" : "") +
+        "</div>"
+      );
+    },
+
     // Player Insight -- player identity + the three sub-cards.
     playerInsight: function (p) {
       if (!p) return "";
@@ -508,7 +567,7 @@
         (p.headline ? '<p class="insight-headline">' + esc(p.headline) + "</p>" : "") +
         Cards.pulseScore(p.pulse) +
         section("Key Signals", Cards.keySignals(p.signals)) +
-        section(formEyebrow(p), Cards.formBars(p.series, p.team_color)) +
+        Cards.formBars(p.series, p.team_color, formEyebrow(p)) +
         Cards.vsStarter(p.vs_next_starter) +
         block(Cards.aiSummary(p.summary, p.story, p.matchup_note ? { label: "Matchup", text: p.matchup_note } : null)) +
         "</article>"
@@ -527,6 +586,12 @@
   // Games list state: the rendered slate, keyed by id, so a row can build its
   // expanded card on demand without re-fetching data.json.
   var gamesById = {};
+
+  // Players list state: same idea as gamesById, but keyed by list index --
+  // players carry no stable id in data.json (unlike games' `id`), and the
+  // rendered list order is fixed for the life of one render, so the index is
+  // a perfectly stable key for that render's lifetime.
+  var playersById = {};
 
   // One game in the list: the compact row plus its (initially empty) detail
   // panel. The wrapper -- not Cards.gameRow -- owns the id and the panel, so
@@ -563,11 +628,47 @@
     row.setAttribute("aria-expanded", "true");
   }
 
-  // Light affordances (delegated, survives re-render): a game row expands its
-  // full card; "i" reveals a hidden disclaimer sibling; the AI Note header
-  // reveals its body. The row check is first and returns early -- the
-  // data-toggle controls all live inside .gr-detail, never inside .gr-row, so
-  // the two never contend for the same click.
+  // One player in the list: the compact row plus its (initially empty) detail
+  // panel. Exactly gameItem's shape, keyed by index instead of id.
+  function playerItem(p, idx) {
+    return (
+      '<div class="pi-item" data-player-idx="' + idx + '">' +
+      Cards.playerRow(p) +
+      '<div class="pi-detail"><div class="pi-detail-inner"></div></div>' +
+      "</div>"
+    );
+  }
+
+  function closePlayerItem(item) {
+    item.classList.remove("is-open");
+    var r = item.querySelector(".pi-row");
+    if (r) r.setAttribute("aria-expanded", "false");
+  }
+
+  // Same accordion behavior as toggleGame: opening a row closes whichever
+  // player row was open, and the expanded card is built once, on first open.
+  function togglePlayer(row) {
+    var item = row.parentNode;
+    var isOpen = item.classList.contains("is-open");
+    var cur = root.querySelector(".pi-item.is-open");
+    if (cur && cur !== item) closePlayerItem(cur);
+    if (isOpen) return closePlayerItem(item);
+    var inner = item.querySelector(".pi-detail-inner");
+    if (inner && !inner.firstChild) {
+      inner.innerHTML = Cards.playerInsight(playersById[item.getAttribute("data-player-idx")]);
+    }
+    item.classList.add("is-open");
+    row.setAttribute("aria-expanded", "true");
+  }
+
+  // Light affordances (delegated, survives re-render): a game or player row
+  // expands its full card; "i" reveals a hidden disclaimer sibling; the AI
+  // Note header reveals its body. The row checks are first and return early
+  // -- the data-toggle controls all live inside .gr-detail/.pi-detail, never
+  // inside .gr-row/.pi-row, so neither contends for the same click. Games and
+  // players are separate views (one or the other is ever in the DOM), but
+  // both checks stay live so the same handler covers both without re-binding
+  // per view.
   //
   // The AI note's state is a class on the element, exactly like .gr-item's --
   // no module-level variable to keep in sync, and it resets for free because
@@ -575,6 +676,8 @@
   root.addEventListener("click", function (ev) {
     var row = ev.target.closest && ev.target.closest(".gr-row");
     if (row) return toggleGame(row);
+    var prow = ev.target.closest && ev.target.closest(".pi-row");
+    if (prow) return togglePlayer(prow);
     var t = ev.target.closest && ev.target.closest("[data-toggle],[data-ainote]");
     if (!t) return;
     if (t.hasAttribute("data-ainote")) {
@@ -591,9 +694,14 @@
   root.addEventListener("keydown", function (ev) {
     if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
     var row = ev.target.closest && ev.target.closest(".gr-row");
-    if (!row) return;
+    if (row) {
+      ev.preventDefault();
+      return toggleGame(row);
+    }
+    var prow = ev.target.closest && ev.target.closest(".pi-row");
+    if (!prow) return;
     ev.preventDefault();
-    toggleGame(row);
+    togglePlayer(prow);
   });
 
   // ---------------- re-entry point ----------------
@@ -665,9 +773,9 @@
       });
   }
 
-  // Nothing to tear down: the open row lives in the DOM as .gr-item.is-open and
-  // goes away with the next mount()'s re-render, and gamesById / UI are both
-  // reassigned on every render.
+  // Nothing to tear down: the open row lives in the DOM as .gr-item.is-open or
+  // .pi-item.is-open and goes away with the next mount()'s re-render, and
+  // gamesById / playersById / UI are all reassigned on every render.
   function unmount() {}
 
   window.SP.views = window.SP.views || {};
@@ -689,7 +797,7 @@
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
     AI_ENABLED = data.aiInsightsEnabled !== false;
-    if (view === "players") root.innerHTML = list((data.insights && data.insights.players) || [], Cards.playerInsight);
+    if (view === "players") renderPlayers((data.insights && data.insights.players) || [], root);
     else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
     else if (view === "teams") root.innerHTML = list(data.teams, Cards.teamInsight);
     else if (view === "components") root.innerHTML = renderGallery(data);
@@ -707,6 +815,24 @@
     // inside Cards.gameRow -- the component stays presentational, and only the
     // wiring that actually makes rows clickable claims they are buttons.
     [].forEach.call(root.querySelectorAll(".gr-row"), function (r) {
+      r.setAttribute("role", "button");
+      r.setAttribute("tabindex", "0");
+      r.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  // Players render as compact rows that expand in place, mirroring renderGames
+  // above. Every visit starts fully collapsed for the same reason: mount()
+  // always re-renders, so a remembered open row would not be resuming
+  // anything -- you are re-scanning the list fresh.
+  function renderPlayers(players, root) {
+    playersById = {};
+    players.forEach(function (p, idx) { playersById[String(idx)] = p; });
+    root.innerHTML = list(players, playerItem);
+    // Interactive rows, exposed to keyboard and assistive tech here rather than
+    // inside Cards.playerRow -- the component stays presentational, and only
+    // the wiring that actually makes rows clickable claims they are buttons.
+    [].forEach.call(root.querySelectorAll(".pi-row"), function (r) {
       r.setAttribute("role", "button");
       r.setAttribute("tabindex", "0");
       r.setAttribute("aria-expanded", "false");
