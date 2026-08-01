@@ -232,27 +232,56 @@ def load_ledger(path=LEDGER_PATH):
     return rows
 
 
+def _has_pick(row):
+    """Whether a ledger row is an actual graded pick, as opposed to a status row
+    (`no_picks` / `no_store`) recording that a date had nothing to grade."""
+    return row.get("status") == STATUS_RECORDED and bool(row.get("bet_type"))
+
+
 def latest_run_rows(all_rows):
     """The rows that currently describe each date: those from that date's most
-    recent run_id.
+    recent run THAT RECORDED PICKS, falling back to its most recent run overall
+    only when no run for that date ever recorded one.
 
     The ledger is append-only (it merges cleanly across machines, unlike a single
     mutated object), so re-reporting a date does not erase the earlier attempt --
     it appends a newer run and this read supersedes the old one. That is what
     makes a day reported early with picks still PENDING, then reported again once
     they finish, count once rather than twice.
+
+    Newest-overall is NOT the right rule on its own, because a later run can be a
+    no-op that knows strictly LESS about the date than the run it would supersede.
+    The store holds one slate at a time, so anything that reads it after it has
+    rolled forward finds no gamePk overlap and writes a `no_store` row -- and that
+    row is newer than the run that actually graded the day. Two routine paths hit
+    this: daily-stats-and-grade.yml grades twice a day with a regenerate in
+    between (the second pass always reads the pruned store), and a manual --rev
+    replay pointed at a revision that no longer covers the date does the same
+    thing. Under newest-overall, either one silently erases a completed day from
+    the all-time record.
+
+    Preferring the newest run WITH picks makes both cases no-ops, which is what
+    they are. A genuine gap still records normally: `no_picks` and `no_store` days
+    have no pick-bearing run to prefer, so the fallback carries them through, and
+    a later real regrade (which does record picks) still supersedes an earlier
+    one. Nothing here rewrites the ledger -- this is a read-time rule only.
     """
-    newest = {}
+    picked, newest = {}, {}
     for row in all_rows:
         date, run = row.get("date"), row.get("run_id") or ""
         if not date:
             continue
         if date not in newest or run > newest[date]:
             newest[date] = run
+        if _has_pick(row) and (date not in picked or run > picked[date]):
+            picked[date] = run
+    # Per date: the newest pick-bearing run when there is one, else newest overall.
+    chosen = dict(newest)
+    chosen.update(picked)
     out = {}
     for row in all_rows:
         date = row.get("date")
-        if date and (row.get("run_id") or "") == newest.get(date):
+        if date and (row.get("run_id") or "") == chosen.get(date):
             out.setdefault(date, []).append(row)
     return out
 
