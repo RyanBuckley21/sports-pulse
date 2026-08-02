@@ -11,39 +11,114 @@ name: Capture MLB training data
 #     nothing but committing the two data/training/ files;
 #   * if this workflow fails, the site deploy is entirely unaffected.
 #
-# Runs 20 minutes after the deploy workflow's 14:00 UTC cron so the two never
-# contend, while still landing ~1h45m before the earliest typical first pitch
-# (~16:05-16:15 UTC). Games that start before this run are correctly SKIPPED by
-# training_capture's clock gate rather than captured after the fact.
+# THE DEADLINE IS NOT FIRST PITCH -- it is roughly first pitch MINUS 15 minutes.
+# This corrects the model the rest of this file used to be written against, and
+# it applies to every run, not just late ones.
+#
+# pregame_gate() requires THREE things, and the one that actually bites is the
+# STATUS gate, not the clock gate: a game is only capturable while
+# abstractGameState == "Preview". MLB leaves Preview when a game enters
+# warmup/pre-game, which is comfortably before the posted first pitch. Measured
+# from the store's own rows:
+#   * 2026-07-29 -- capture ran 15:58:26-15:58:29Z, first pitch 16:10Z. It
+#     finished 11 MINUTES BEFORE first pitch, its date gate passed, and gamePk
+#     823837 (the 16:10Z game) was still refused.
+#   * 2026-07-30 -- same shape: ran 16:01:24-16:01:25Z, first pitch 16:10Z,
+#     9 minutes early, gamePk 822946 refused.
+# Both were single-game losses, and both were invisible until someone diffed
+# commit history -- which is why the coverage check at the end of this job now
+# exists. (The exact warmup lead was inferred from these refusals plus
+# training_capture's own note that PW is a distinct pre-game status code; no run
+# has yet been observed mid-warmup to measure it directly.)
+#
+# So "landed before first pitch" is NOT the safety condition. Budget against
+# first pitch minus ~30 minutes if you want margin you can rely on.
+#
+# The job itself is not the constraint: the capture step runs in 2-4 seconds
+# (one 4.5 min outlier in 16 runs). Arrival time is everything.
 
 on:
   schedule:
-    # THREE entries, deliberately redundant. GitHub does not run scheduled
-    # workflows on time under load: the 2026-07-26 run was due 14:20 UTC and
-    # actually started 17:46 UTC, a 3h26m delay. First pitch that day was 16:15
-    # UTC, so 9 of 15 games had already started and were (correctly) refused by
-    # the pre-game gates -- a single 14:20 entry would have captured 6 of 15.
+    # SIX entries. This replaces three (09:20/11:20/13:20), and the reasoning
+    # that produced those three was wrong in a specific, measurable way.
     #
-    # A single cron cannot be made safe by moving it, because the delay is
-    # unbounded. Redundancy can: capture_features() is skip-if-present on
-    # (gamePk, date), so whichever entry lands first captures the slate and the
-    # later ones are free no-ops. Three tries have to ALL be delayed past first
-    # pitch before a day is lost.
+    # THE OLD PREMISE, AND WHY IT DOES NOT HOLD. The previous comment argued
+    # that redundancy multiplies reliability: "three tries have to ALL be
+    # delayed past first pitch before a day is lost." That assumes the three
+    # entries' delays are roughly INDEPENDENT. Across the complete run history
+    # (18 runs, 16 scheduled, 6 days -- the workflow is only a week old, so this
+    # is all there is) they are not:
     #
-    # 09:20 UTC is the earliest entry because probable starters are essentially
-    # all announced by then -- measured 2026-07-27: >=80% of games had both
-    # starters announced 18h BEFORE a 09:20 run would fire, ~92% on the day.
-    # Moving to 10:20 would buy ~nothing in completeness (that band of the
-    # announcement curve is flat) and cost an hour of delay margin. A row with a
-    # null starter_era is an honest gap and strictly better than no row.
+    #     entry   n   mean delay   range
+    #     09:20   6     +6.5h      +3.3h .. +8.4h
+    #     11:20   5     +5.2h      +3.5h .. +5.8h
+    #     13:20   5     +4.4h      +3.2h .. +4.9h
     #
-    # Daylight saving: same caveat as deploy-pages.yml -- shift all three by
-    # +1h in the fall to hold the wall-clock times. Capture timing only affects
-    # how much margin there is before first pitch; it can never cause a
-    # post-start capture, which the clock gate blocks regardless.
+    # Delays SHRINK across the day, and 14 of 16 arrivals landed inside one
+    # 15:58-18:12Z window. The three entries were not three independent tries;
+    # they were one late arrival with two retries stacked behind it. (08-01 is
+    # the exception -- 12:39/14:48/16:33, roughly equal +3.3h delays -- so this
+    # is a tendency, not a floor, and six days cannot pin the distribution.)
+    #
+    # Every run has queue time 0s (created_at == run_started_at), so this is
+    # GitHub being slow to CREATE the run, not a runner backlog.
+    #
+    # WHAT SIX ENTRIES ACTUALLY BUY. Not earlier arrival -- if the arrival
+    # window is an absolute-time attractor, earlier entries land there too.
+    # What they buy is surviving a total scheduler DROP, which is the worst
+    # failure actually observed: on 2026-07-27 NO entry fired at all and all 12
+    # games were lost. Moving three entries earlier does nothing about that;
+    # having six independent chances to fire does. That is the same redundancy
+    # principle the three-entry design already rested on, applied to the failure
+    # mode that actually happened.
+    #
+    # Two of the seven days on record were rescued by a human hitting Run
+    # workflow (07-26 and 07-28); the schedule alone has delivered a complete
+    # slate on only two (07-31, 08-01). That is the bar being raised here.
+    #
+    # 09:20 IS DELIBERATELY KEPT. It is the one entry with a validated
+    # announcement-completeness figure behind it, so the earlier entries are
+    # added in FRONT of it as insurance rather than replacing it.
+    #
+    # DOES CAPTURING EARLIER COST COMPLETENESS? capture_features() is
+    # skip-if-present, so whichever entry wins the race is the one whose data
+    # is kept permanently -- an early low-quality capture would lock out a
+    # better later one. Measured against that risk, using the `probables` field
+    # the store already records on every row (real captures, real lead times):
+    #
+    #     T-12.7h  100%   2026-07-26, captured 03:32Z
+    #     T-7.1h    93%   live sample, 2026-08-02 10:26Z
+    #     T-6.8h    75%   2026-07-28, captured 10:53Z
+    #     T-6.4h   100%   2026-08-01, captured 12:44Z
+    #     T-2.1h    87%   2026-07-31, captured 16:16Z
+    #     T-0.2h    93%   2026-07-29, captured 15:58Z
+    #     T-0.1h    89%   2026-07-30, captured 16:01Z
+    #
+    # Completeness does NOT degrade with lead time in this sample -- it is flat
+    # and noisy, and the EARLIEST sample (T-12.7h, 03:32Z, almost exactly the
+    # new 03:20 entry) is the highest at 100%. The lowest is at T-6.8h. So the
+    # skip-if-present risk is real in principle but is not visible in the data;
+    # n is small and the 03:20-equivalent point is a single observation, so this
+    # is worth re-checking once the wider schedule has a few weeks of history.
+    #
+    # A row with a null starter_era is an honest gap and still strictly better
+    # than no row, which is what the alternative has actually been.
+    #
+    # 13:20 IS DROPPED. Given the deadline is first pitch minus ~15 minutes and
+    # the earliest observed first pitch is 16:10Z, a 13:20 entry that lands on
+    # time is already inside the danger band, and one that slips at all is past
+    # it. It was contributing retries, not coverage.
+    #
+    # Daylight saving: same caveat as deploy-pages.yml -- shift all six by +1h
+    # in the fall to hold the wall-clock times. Capture timing only affects how
+    # much margin there is; it can never cause a post-start capture, which the
+    # gates block regardless.
+    - cron: "20 1 * * *"
+    - cron: "20 3 * * *"
+    - cron: "20 5 * * *"
+    - cron: "20 7 * * *"
     - cron: "20 9 * * *"
     - cron: "20 11 * * *"
-    - cron: "20 13 * * *"
   workflow_dispatch: {}
 
 # Scoped to this workflow only. deploy-pages.yml is unchanged and still read-only.
@@ -68,6 +143,78 @@ jobs:
       - name: Capture features and resolve outcomes
         id: capture
         run: python3 capture_training_data.py
+
+      # Coverage check. Compares rows actually on file for today against the real
+      # slate size and annotates any shortfall on the run summary.
+      #
+      # THE THRESHOLD IS "ANY SHORTFALL", not a fraction, and that is a
+      # deliberate correction. The two real coverage losses on record were ONE
+      # game each -- 1 of 16 on 2026-07-29 and 1 of 10 on 2026-07-30, i.e. 6%
+      # and 10%. Any "meaningful fraction" bar above ~5% would have stayed
+      # silent through both, which is exactly how they went unnoticed until
+      # someone diffed commit history. A false-positive costs one line on a
+      # summary page; a missed game is permanently absent from an append-only
+      # store, so the asymmetry justifies the loosest possible threshold.
+      #
+      # Runs on the STORE, not on this run's own log, so it reports the day's
+      # true coverage rather than this entry's contribution -- a later entry
+      # that legitimately no-ops via skip-if-present stays silent instead of
+      # warning about games it was never going to write.
+      #
+      # KNOWN BLIND SPOT: this can only fire when a run exists. The worst
+      # observed failure (2026-07-27, zero entries fired, all 12 games lost)
+      # produces no run and therefore no annotation. Catching that needs a
+      # separate scheduled "did yesterday capture anything?" alarm, which is
+      # not this workflow's job.
+      #
+      # `!cancelled()` so it still reports after a failed capture step, and it
+      # never fails the job -- it is a smoke alarm, not a gate.
+      - name: Check slate coverage
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import json, os, collections, datetime, urllib.request
+          date = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+          path = "data/training/mlb_features.jsonl"
+          have = set()
+          if os.path.exists(path):
+              for line in open(path):
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      r = json.loads(line)
+                  except ValueError:
+                      continue
+                  if r.get("date") == date:
+                      have.add(str(r.get("gamePk")))
+          url = ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=" + date)
+          try:
+              sched = json.load(urllib.request.urlopen(url, timeout=30))
+          except Exception as e:
+              print("::warning title=Coverage check skipped::could not fetch the %s "
+                    "schedule (%s); coverage not verified this run" % (date, str(e)[:120]))
+              raise SystemExit(0)
+          games = {str(g.get("gamePk")): g
+                   for d in sched.get("dates", []) for g in d.get("games", [])}
+          if not games:
+              print("No games scheduled for %s -- nothing to cover." % date)
+              raise SystemExit(0)
+          missing = sorted(set(games) - have)
+          print("coverage %s: %d of %d games on file" % (date, len(have & set(games)), len(games)))
+          if not missing:
+              raise SystemExit(0)
+          detail = ", ".join(
+              "%s (start %sZ, %s)" % (
+                  pk, (games[pk].get("gameDate") or "")[11:16],
+                  ((games[pk].get("status") or {}).get("detailedState") or "?"))
+              for pk in missing[:6])
+          more = "" if len(missing) <= 6 else " +%d more" % (len(missing) - 6)
+          print("::warning title=Training capture incomplete for %s::%d of %d games have no "
+                "feature row. Missing: %s%s. These are permanently absent from the "
+                "append-only store unless a run still lands while they are in Preview."
+                % (date, len(missing), len(games), detail, more))
+          PY
 
       # capture_training_data.py annotates the specific step that failed, but a
       # hard crash (or a non-zero exit before it can print) would leave nothing
