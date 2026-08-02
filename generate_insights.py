@@ -732,8 +732,18 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     # Teams ride along on the same build -- same slate, same session, same caches
     # -- rather than opening a second fetch path for the Teams view.
     team_entities = []
-    game_entities, games_store, _game_date = _build_game_entities(
+    game_entities, games_store, game_date = _build_game_entities(
         config, generated_at, team_entities=team_entities)
+
+    # Decided ONCE, before either branch below, and only about the COMMITTED
+    # games store. The build above always ran and `game_entities` is always
+    # returned in full, so data.json (and the live site) still reflect current,
+    # in-progress state regardless of what this says.
+    games_writable, why_frozen = _games_store_writable(game_entities, games_store, game_date)
+    if why_frozen:
+        print("insights(games): NOT overwriting {} -- {}. The committed store keeps "
+              "its pre-game snapshot; data.json still has live state."
+              .format(GAMES_STORE_PATH, why_frozen))
 
     # Config kill switch is checked FIRST and short-circuits the other two --
     # when it's off, this branch must never reach _subprocess_env/_preflight
@@ -757,8 +767,12 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
         # Persist the deterministic build even though generation is skipped --
         # skip_generation is now the permanent default (ai_disabled), so
         # without this the committed stores would never advance again.
+        # The PLAYER store is written unconditionally, as before: it carries AI
+        # carry-forward text and change-detection fields only, nothing grades
+        # against it, and it has no pre-game snapshot semantics to protect.
         _save_store(store_path, _carry_forward_store(entities, store, now_iso))
-        _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
+        if games_writable:
+            _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
     else:
         # One preflight for the whole run, iff anything (player or game) needs regen.
         needs = (any(_needs_regen(e, store.get(k)) for k, e in entities.items())
@@ -782,7 +796,7 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
             insight_map = _generate_all(entities, store, now_iso, total, store_path, child_env,
                                         usage_log=usage_log)
             game_text = (_generate_games(game_entities, games_store, now_iso, GAMES_STORE_PATH, child_env,
-                                         usage_log=usage_log)
+                                         usage_log=usage_log, may_write=games_writable)
                          if game_entities else {})
             _report_usage(usage_log)
 
@@ -834,6 +848,72 @@ def _carry_forward_store(entities, store, now_iso):
             "matchup_note": text.get("matchup_note"),
         }
     return new_store
+
+
+def _slate_started(game_entities):
+    """Whether any game on the built slate is already past first pitch.
+
+    Reads the `status` the builder already puts on every entity -- the raw
+    schedule's abstractGameState, "Preview" / "Live" / "Final" -- so this costs
+    no extra request and cannot disagree with what the build actually saw.
+
+    A missing/unknown status counts as STARTED, deliberately. The only thing
+    this gate can do is decline to overwrite a store that already covers the
+    same date, so failing closed costs at most one same-day refresh (and the
+    earlier snapshot is the one worth keeping anyway); failing open would let
+    exactly the overwrite this exists to prevent through. A date with no store
+    yet is unaffected either way -- see _games_store_writable.
+    """
+    return any((e.get("status") or "") != "Preview" for e in (game_entities or {}).values())
+
+
+def _store_covers_date(store, game_date):
+    """Whether the committed games store already holds a slate for `game_date`.
+
+    Same rule signal_report.store_slate_dates uses to decide which date a store
+    describes: entries stamp the run that produced them, and the store is pruned
+    to one slate per run, so a matching `generated_at` day means this date has
+    already been captured.
+    """
+    if not game_date:
+        return False
+    return any((e.get("generated_at") or "")[:10] == game_date
+               for e in (store or {}).values())
+
+
+def _games_store_writable(game_entities, games_store, game_date):
+    """Whether this run may overwrite the committed games store.
+
+    The games store is the historical record of what the pick WAS: signal_report
+    grades against it, and it is the only place a pre-game standout survives. It
+    is meant to be a pre-game snapshot, and daily-stats-and-grade.yml's header
+    treats "both cron entries land before first pitch" as a hard invariant --
+    but nothing enforced it, and GitHub's scheduler has been running that
+    workflow hours late, so a late run was replacing a clean pre-game store with
+    a mid-game one. The extra cron entries were not adding coverage there; they
+    were overwriting good data with worse.
+
+    So: once any game on the slate has started, a store that already covers this
+    date is left alone. This is the same "earliest snapshot wins" rule
+    training_capture.capture_features already applies, arrived at for the same
+    reason -- it just has to be expressed as skip-if-covered here, because this
+    store is rebuilt whole each run rather than appended to.
+
+    A date with NO store yet always writes, even if the run is already late:
+    a mid-game record of today is worth more than no record at all, and there is
+    nothing better to protect.
+
+    Returns (writable, reason) -- `reason` is None when writable.
+    """
+    if not _slate_started(game_entities):
+        return True, None
+    if not _store_covers_date(games_store, game_date):
+        return True, None
+    started = sorted(
+        "{}@{}".format((e.get("away") or {}).get("abbr"), (e.get("home") or {}).get("abbr"))
+        for e in game_entities.values() if (e.get("status") or "") != "Preview")
+    return False, ("{} of {} games already underway and a store for {} is already "
+                   "committed".format(len(started), len(game_entities), game_date))
 
 
 def _carry_forward_games_store(entities, store, now_iso):
@@ -929,11 +1009,17 @@ def _build_players_section(entities, insight_map, generated_at):
     return {"generated_at": generated_at.isoformat(), "players": players}
 
 
-def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=None):
+def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=None,
+                    may_write=True):
     """Game AI generation loop: regenerate non-final games each run, carry final
     ones. Mirrors _generate_all -- rebuilds the store pruned to today's gamePks
     (yesterday's slate drops off). Returns {gamePk: {story, summary}}.
-    `usage_log` is passed straight through to the per-game call."""
+    `usage_log` is passed straight through to the per-game call.
+
+    `may_write=False` (the pre-first-pitch gate in run(); see
+    _games_store_writable) suppresses ONLY the store write. Generation, the
+    returned text_map, and therefore data.json are unaffected -- the caller
+    still gets everything it would otherwise get."""
     gen = carried = failed = 0
     text_map = {}
     new_store = {}  # rebuilt from today's slate -> prunes yesterday's games
@@ -973,9 +1059,14 @@ def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=N
         text_map[pk] = {"story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
                         "betting_note": (text or {}).get("betting_note")}
 
-    _save_store(store_path, new_store)
-    print("insights(games): generated {}, carried forward {}, failed {} (store pruned to {} entries)"
-          .format(gen, carried, failed, len(new_store)))
+    if may_write:
+        _save_store(store_path, new_store)
+        print("insights(games): generated {}, carried forward {}, failed {} (store pruned to {} entries)"
+              .format(gen, carried, failed, len(new_store)))
+    else:
+        print("insights(games): generated {}, carried forward {}, failed {} (store NOT written -- "
+              "slate already under way, see the pre-first-pitch gate above)"
+              .format(gen, carried, failed))
     return text_map
 
 
