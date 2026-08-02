@@ -17,7 +17,7 @@
   "chase burns|cin": {
     "entity": "Chase Burns",
     "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-07-28",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -28,7 +28,7 @@
   "cj abrams|wsh": {
     "entity": "CJ Abrams",
     "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": "",
     "story": "Abrams leads his cohort with 5 home runs, ranking first among 40 players. He's averaging 3.0 combined hits, runs, and RBIs per game, which ranks fifth among 77 peers. His 3.0 total bases per game places him third among 41 players.",
     "summary": "Abrams is ranking at the top across home runs and multiple offensive production categories.",
@@ -62,21 +62,10 @@
     "team": "Los Angeles Dodgers",
     "template_version": "v2"
   },
-  "gabriel moreno|ari": {
-    "entity": "Gabriel Moreno",
-    "generated_at": "2026-07-31T18:53:43.029696+00:00",
-    "last_game_date": "2026-08-01",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Arizona Diamondbacks",
-    "template_version": "v2"
-  },
   "gavin williams|cle": {
     "entity": "Gavin Williams",
     "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-07-28",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -84,15 +73,15 @@
     "team": "Cleveland Guardians",
     "template_version": "v2"
   },
-  "gerrit cole|nyy": {
-    "entity": "Gerrit Cole",
-    "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-07-28",
+  "griffin jax|tb": {
+    "entity": "Griffin Jax",
+    "generated_at": "2026-08-02T18:46:30.235720+00:00",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "New York Yankees",
+    "team": "Tampa Bay Rays",
     "template_version": "v2"
   },
   "jacob misiorowski|mil": {
@@ -106,37 +95,26 @@
     "team": "Milwaukee Brewers",
     "template_version": "v2"
   },
-  "jake mangum|pit": {
-    "entity": "Jake Mangum",
-    "generated_at": "2026-08-01T16:42:47.912355+00:00",
+  "jake bauers|mil": {
+    "entity": "Jake Bauers",
+    "generated_at": "2026-08-02T18:46:30.235720+00:00",
     "last_game_date": "2026-08-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Pittsburgh Pirates",
+    "team": "Milwaukee Brewers",
     "template_version": "v2"
   },
   "jeremy pe\u00f1a|hou": {
     "entity": "Jeremy Pe\u00f1a",
     "generated_at": "2026-07-31T18:53:43.029696+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "Houston Astros",
-    "template_version": "v2"
-  },
-  "joc pederson|tex": {
-    "entity": "Joc Pederson",
-    "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-08-01",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Texas Rangers",
     "template_version": "v2"
   },
   "luis garc\u00eda jr.|wsh": {
@@ -153,7 +131,7 @@
   "matt olson|atl": {
     "entity": "Matt Olson",
     "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -164,7 +142,7 @@
   "munetaka murakami|cws": {
     "entity": "Munetaka Murakami",
     "generated_at": "2026-07-30T18:57:47.646887+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -175,7 +153,7 @@
   "pete crow-armstrong|chc": {
     "entity": "Pete Crow-Armstrong",
     "generated_at": "2026-07-30T20:22:55.213431+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -186,12 +164,23 @@
   "seiya suzuki|chc": {
     "entity": "Seiya Suzuki",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-08-01",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "Chicago Cubs",
+    "template_version": "v2"
+  },
+  "steven kwan|cle": {
+    "entity": "Steven Kwan",
+    "generated_at": "2026-08-02T18:46:30.235720+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cleveland Guardians",
     "template_version": "v2"
   },
   "taj bradley|min": {
@@ -216,10 +205,21 @@
     "team": "San Diego Padres",
     "template_version": "v2"
   },
+  "yordan alvarez|hou": {
+    "entity": "Yordan Alvarez",
+    "generated_at": "2026-08-02T18:46:30.235720+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Houston Astros",
+    "template_version": "v2"
+  },
   "zack wheeler|phi": {
     "entity": "Zack Wheeler",
     "generated_at": "2026-08-02T16:41:00.233259+00:00",
-    "last_game_date": "2026-07-27",
+    "last_game_date": "2026-08-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
