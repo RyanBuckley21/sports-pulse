@@ -94,6 +94,19 @@ the resulting records SEPARATE rather than blending them into one percentage:
     the exact skew the record is currently reporting. It can tell you whether our
     own number tracks reality; it cannot tell you which way to lean against it.
 
+    AND IT SPANS MORE THAN ONE MODEL. The OPS input feeding both the lean and the
+    `point` changed twice on 2026-08-02: first from a home/road split to the
+    combined 14-day window (PR #22, commit c31d426), then to that window shrunk
+    toward the league baseline by its own sample size (PR #23). Rows either side
+    of those commits were produced by measurably different models -- #22 alone
+    moved the standout on 52 of 96 games it was checked against -- so the
+    all-time estimate-graded percentage silently averages across them. Unlike
+    data/training/*.jsonl, which carries a `schema_version` for exactly this, the
+    ledger has no version field and its rows cannot be told apart after the fact
+    except by date. Read any span crossing 2026-08-02 as two records, not one,
+    and treat the Over/Under figures above as describing the pre-change rows they
+    were measured on.
+
 A total whose store predates the estimate work (data/insights.games.json at
 73615c8, the 2026-07-22 slate, was committed ten commits before it) carries no
 number and stays UNPRICED, listed with its actual runs but in neither record.
