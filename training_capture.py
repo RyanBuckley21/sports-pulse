@@ -11,6 +11,28 @@ Two append-only JSONL stores, joined on (gamePk, date):
   data/training/mlb_features.jsonl -- one PRE-GAME snapshot per game per day
   data/training/mlb_outcomes.jsonl -- one row per resolved game
 
+The outcome row also carries the GROUND TRUTH for the one feature the pre-game
+snapshot can only guess at: `actual_away_starter_id` / `actual_home_starter_id`,
+the pitchers who really started. A feature row freezes the announced PROBABLE
+before first pitch, and that probable is sometimes wrong -- measured against
+real boxscores, 4 of the 162 captured probables in this store did not start
+(~2.5%; n is small, so read it as "this happens", not as a rate). Joining the
+two stores on (gamePk, date) therefore answers "was the probable we trained on
+the pitcher who actually pitched", which is the difference between a model
+learning from a guess and knowing it was a guess.
+
+Recording the truth does NOT weaken the leakage invariant, because it lands on
+the OUTCOME side. The feature row is still written once, pre-game, and never
+touched; the starter id is written later, from the completed game, by the same
+resolver that already writes the score. A reader who wants the pre-game view
+alone can ignore the outcome store entirely, exactly as before.
+
+Schema note: only rows resolved under SCHEMA_VERSION >= 2 carry these fields.
+Historical rows lack the keys, which is an honest gap rather than a bug -- and a
+recoverable one, since MLB rewrites probablePitcher to the real starter on a
+finished game, so a backfill would cost one hydrated schedule call per
+already-resolved date. Not built here.
+
 CRITICAL INVARIANT -- neither store is ever rewritten. There is no "w"-mode
 open and no rebuild-a-dict-then-save anywhere in this module; append is the
 only write verb. That is the deliberate opposite of data/insights.games.json,
@@ -39,7 +61,14 @@ OUTCOMES_PATH = "data/training/mlb_outcomes.jsonl"
 
 # Bumped only when the row shape changes, so a reader can tell a month-1 row
 # from a month-3 row instead of silently mis-parsing it.
-SCHEMA_VERSION = 1
+#
+# v2: outcome rows gain `actual_away_starter_id` / `actual_home_starter_id`.
+# Feature rows are unchanged; only build_outcome_row emits the new fields, and
+# only rows written from v2 onward carry them. Rows resolved before this bump
+# simply lack the keys -- an honest gap, not a bug. A reader must therefore use
+# .get() rather than [] and treat a missing key as "not recorded", which is a
+# different statement from a present-but-null one ("MLB reported no starter").
+SCHEMA_VERSION = 2
 
 # MLB Stats API status vocabulary. `abstractGameState` is the coarse bucket
 # (Preview / Live / Final); `statusCode` is the fine-grained one.
@@ -247,11 +276,47 @@ def _inning_runs(innings, upto):
     return total
 
 
+def _actual_starter_id(teams, side):
+    """The pitcher who actually started for `side`, or None.
+
+    Read off `probablePitcher` on a FINAL game, which is not the same field it
+    was pre-game: MLB REWRITES probablePitcher to the pitcher who really started
+    once a game completes. Verified on the four games in this repo's own store
+    whose captured probable did not start -- 823192, 823593, 824890 and 824000
+    all now report the actual starter, 4 of 4.
+
+    That is why recording this needs no boxscore call and no new capture step:
+    the same schedule read the resolver already makes carries it, once the
+    hydrate asks for it (see generate_insights.schedule_fetcher).
+
+    Only ever call this on a game that has passed the completion gate below.
+    Pre-game the identical field means the announced probable, which is exactly
+    the value the feature row already froze -- reading it here would silently
+    re-record the guess as though it were the answer.
+    """
+    return ((teams.get(side) or {}).get("probablePitcher") or {}).get("id")
+
+
 def build_outcome_row(game, date_str, now=None):
     """One outcome row for a completed game, a void marker for a postponed or
     cancelled one, or None if the game has not resolved yet (in-progress,
     delayed, suspended) -- an unresolved game stays label-less and is retried
-    on the next run, never guessed."""
+    on the next run, never guessed.
+
+    A completed row also carries `actual_away_starter_id` /
+    `actual_home_starter_id`: who really took the ball. The feature row froze a
+    PROBABLE before first pitch, and that probable is sometimes wrong -- 4 of
+    162 captured probables in this store did not start, including one
+    (gamePk 823593) that was announced, scratched to null, and re-announced as
+    a different pitcher, all pre-game. Storing the truth alongside the guess is
+    what lets a reader filter or model those rows instead of training on them
+    silently. n is small; treat 4/162 as a known limitation, not a rate.
+
+    Null when MLB reports no probablePitcher on a finished game. Measured 0 of
+    174 team-sides across the store's six dates, so this is unobserved rather
+    than merely rare -- handled defensively because a postponed-then-resumed or
+    forfeited game is a plausible case the sample does not contain.
+    """
     now = now or _now_utc()
     status = game.get("status") or {}
     abstract = status.get("abstractGameState")
@@ -296,6 +361,10 @@ def build_outcome_row(game, date_str, now=None):
         "innings_played": len(innings),
         "first_inning_runs": _inning_runs(innings, 1),
         "f5_total_runs": _inning_runs(innings, 5),
+        # Ground truth for the probable each feature row froze -- see the
+        # docstring and _actual_starter_id. Schema v2; absent on older rows.
+        "actual_away_starter_id": _actual_starter_id(teams, "away"),
+        "actual_home_starter_id": _actual_starter_id(teams, "home"),
     }
 
 

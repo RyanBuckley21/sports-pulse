@@ -677,9 +677,23 @@ def _build_game_entities(config, generated_at, team_entities=None):
 
 def schedule_fetcher(config):
     """A `fetch_schedule(date_str)` callable over the MLB schedule endpoint,
-    hydrated with the linescore (needed for the per-inning NRFI / first-five
-    labels). Built here rather than in training_capture so that module stays
-    free of HTTP concerns."""
+    hydrated with the linescore (per-inning NRFI / first-five labels) and the
+    probable pitcher. Built here rather than in training_capture so that module
+    stays free of HTTP concerns.
+
+    `probablePitcher` is here for training_capture._actual_starter_id: on a
+    FINAL game MLB rewrites that field to whoever really started, so the
+    resolver gets ground truth without a boxscore call. Verified that
+    `hydrate=linescore` alone returns no probablePitcher at all (0 of 15 games
+    on 2026-07-31) while `linescore,probablePitcher` returns both on 15 of 15 --
+    so this is a genuine widening, not a field that was already arriving unread.
+    Comma-combined hydrates are the same pattern mlb.build_game_entities already
+    uses ("probablePitcher,team,venue").
+
+    Both callers of this function feed resolve_outcomes and nothing else
+    (capture_training_data.main and _resolve_training_outcomes), so widening the
+    hydrate cannot affect any other consumer.
+    """
     import requests  # local import: only the outcome resolver needs a session
 
     base_url = config["mlb"]["base_url"]
@@ -687,7 +701,8 @@ def schedule_fetcher(config):
 
     def fetch_schedule(date_str):
         return mlb._get(session, f"{base_url}/schedule",
-                        params={"sportId": 1, "date": date_str, "hydrate": "linescore"})
+                        params={"sportId": 1, "date": date_str,
+                                "hydrate": "linescore,probablePitcher"})
 
     return fetch_schedule
 
