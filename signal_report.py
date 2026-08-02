@@ -80,6 +80,20 @@ the resulting records SEPARATE rather than blending them into one percentage:
     That is a weaker claim than an outcome-graded row makes, so it gets its own
     tally.
 
+    AND IT IS NOT A TUNING TARGET. The estimate-graded record is real and stays,
+    but it must never be used as ground truth for fitting weights, because it is
+    measurably skewed against the direction the model itself leans: as of
+    2026-08-02 its Over picks are 1-10 (9%) while its Under picks are 7-12 (37%),
+    on the same rows. The two halves of that comparison are not independent.
+    betting_signals' total lean is a deviation from a fixed league-average
+    constant, while the `point` it is graded against comes from implied_total's
+    matchup-specific model (each team scored against the SPECIFIC opponent's
+    blended staff) -- so the same input that pushes a lean Over has frequently
+    already raised the number that lean has to clear. Fitting weights to this
+    record would therefore optimise for agreeing with implied_total, and bake in
+    the exact skew the record is currently reporting. It can tell you whether our
+    own number tracks reality; it cannot tell you which way to lean against it.
+
 A total whose store predates the estimate work (data/insights.games.json at
 73615c8, the 2026-07-22 slate, was committed ten commits before it) carries no
 number and stays UNPRICED, listed with its actual runs but in neither record.
