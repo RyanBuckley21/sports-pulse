@@ -906,21 +906,36 @@ def main(argv=None):
     overlap = [pk for pk in store if pk in slate]
     if not overlap:
         stamps = store_slate_dates(store) or ["unknown"]
+        # A run whose date is ALREADY graded has learned nothing, and neither the
+        # ledger nor the exit code should suggest otherwise. The store holds one
+        # slate at a time, so anything reading it after it has rolled forward finds
+        # no overlap for a date that was graded correctly hours earlier --
+        # daily-stats-and-grade.yml does exactly this twice a day (grade,
+        # regenerate, grade again), and a --rev replay pointed past the date does
+        # the same. Writing a no_store row there buries real gaps in noise; dying
+        # there is worse, because it reds the whole workflow run and fires its
+        # "grading failed" annotation for a day whose picks are already in the
+        # record -- which trains everyone to ignore the one signal that marks a
+        # genuine gap. Report it on stdout and exit clean instead.
+        #
+        # Only for a run that could have recorded this date, though: a fixture or
+        # --no-record run asked to read one specific store, and "that store does
+        # not cover this date" remains the answer it needs.
+        if recordable:
+            graded = [row for row in load_ledger()
+                      if row.get("date") == args.date and _has_pick(row)]
+            if graded:
+                print("signal_report: {} is already graded -- {} pick{} recorded at {}. "
+                      "This store covers {}; nothing to do.".format(
+                          args.date, len(graded), "" if len(graded) == 1 else "s",
+                          max(row.get("run_id") or "" for row in graded), "/".join(stamps)))
+                return EXIT_OK
         # Write the gap down before exiting. A date with no store is a fact about
         # the record -- left unwritten it is indistinguishable from a date nobody
         # ever asked about, and these accumulate every day the generator is not run.
-        #
-        # Unless the date is already graded, in which case this run learned nothing
-        # and should leave no trace. The store holds one slate at a time, so any run
-        # that reads it after it has rolled forward finds no overlap for a date that
-        # may have been graded correctly minutes earlier -- daily-stats-and-grade.yml
-        # does exactly this twice a day (grade, regenerate, grade again), as does a
-        # --rev replay pointed past the date. latest_run_rows() already ignores such
-        # a row on read; not writing it keeps the RAW ledger auditable too, so a
-        # no_store row in the file always means a date nothing ever graded. A genuine
-        # gap has no pick-bearing run to find, and is still recorded as before.
-        if recordable and not any(row.get("date") == args.date and _has_pick(row)
-                                  for row in load_ledger()):
+        # A genuine gap has no pick-bearing run above to find, so it lands here and
+        # is recorded, and fails loudly, exactly as it always has.
+        if recordable:
             append_ledger([build_status_row(args.date, STATUS_NO_STORE, source, run_id,
                                             note="store covers {}".format("/".join(stamps)))])
         die("store {}{} covers {} ({} games), not {} — no gamePk overlap.\n"
