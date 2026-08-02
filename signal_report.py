@@ -573,10 +573,19 @@ def grade(pick, game, assume_lines):
         margin = (a_score - h_score) if side == away else (h_score - a_score)
         if not assume_lines:
             return "{} (margin {:+d})".format(final, margin), "UNPRICED", None
+        # Which margin covers depends on which SIDE of the line the pick is on,
+        # so it cannot be hardcoded: laying -1.5 needs a win by 2+, getting +1.5
+        # covers on a loss by 1 or any win. `laying` is derived per pick in
+        # collect_picks from the same game's moneyline lean -- see
+        # _run_line_laying. Defaulting to True keeps the old reading for any pick
+        # built without it.
+        laying = pick.get("laying", True)
+        covered = margin >= 2 if laying else margin >= -1
         # Compact form: the full score plus "(margin +3)" plus the line runs past
         # the RESULT column and would be truncated mid-number.
-        return ("{} · {:+d} vs -{}".format(final, margin, ASSUMED_RUN_LINE),
-                ("HIT" if margin >= 2 else "MISS"), "assumed")
+        return ("{} · {:+d} vs {}{}".format(
+                    final, margin, "-" if laying else "+", ASSUMED_RUN_LINE),
+                ("HIT" if covered else "MISS"), "assumed")
 
     if bt in ("game_total", "first_five_total", "team_total"):
         if bt == "game_total":
@@ -652,6 +661,28 @@ def _stored_standout(entry, min_score):
     return sd if sd["score"] >= min_score else None
 
 
+def _run_line_laying(scored, side):
+    """Whether a run_line pick is LAYING the line (favourite: must win by 2+) or
+    GETTING it (underdog: covers by losing 1 or winning outright).
+
+    There are no prices anywhere in this project, so favourite/underdog is derived
+    from the same game's moneyline lean instead: a moneyline leaning the SAME way
+    says this is the side we think wins outright, which is the side laying the
+    line; a moneyline leaning the other way says this is the side we think loses,
+    so it is getting the line. No moneyline lean leaves nothing to derive from and
+    falls back to laying -- the assumption grade() previously made unconditionally
+    for every run_line pick.
+
+    This is dormant today: run_line shares moneyline's exact config weights, so
+    the two never disagree and every pick resolves to laying, exactly as before.
+    It stops being dormant the moment run_line gets weights of its own.
+    """
+    ml = (scored.get("moneyline") or {}).get("side")
+    if not ml or ml == "No clear lean":
+        return True
+    return ml == side
+
+
 def collect_picks(store, config, min_score, all_markets):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
@@ -678,7 +709,7 @@ def collect_picks(store, config, min_score, all_markets):
             top = betting_signals.top_market(scored, min_score)
             markets = [top] if top else []
         for m in markets:
-            picks.append({
+            pick = {
                 "point": m.get("point"),
                 "gamePk": pk,
                 "away_abbr": (entry.get("away") or {}).get("abbr"),
@@ -689,7 +720,14 @@ def collect_picks(store, config, min_score, all_markets):
                 "side": m["side"],
                 "score": m["score"],
                 "flags": m.get("flags") or [],
-            })
+            }
+            # Resolved here rather than in grade(), which sees one pick at a time
+            # and has no access to the game's other markets. `scored` is the full
+            # per-game betting_signals dict, moneyline included, whether or not
+            # moneyline is itself among the picks being reported.
+            if m["bet_type"] == "run_line":
+                pick["laying"] = _run_line_laying(scored, m["side"])
+            picks.append(pick)
     picks.sort(key=lambda p: (-p["score"], p["gamePk"]))
     return picks
 
@@ -739,7 +777,7 @@ def render(date, picks, rows, store_size, assume_lines, ledger_rows=None,
         w("that is a calibration check on our own number, so it is tallied separately from outcome-graded rows.")
     if assume_lines:
         w("--assume-lines ON: rows marked (asm) use ASSUMED reference numbers "
-          "(game {} / team {} / F5 {} / run line -{}).".format(
+          "(game {} / team {} / F5 {} / run line ±{}).".format(
               ASSUMED_LINES["game_total"], ASSUMED_LINES["team_total"],
               ASSUMED_LINES["first_five_total"], ASSUMED_RUN_LINE))
         w("Those are conventional round numbers, NOT real market lines — no line data exists in this project.")
