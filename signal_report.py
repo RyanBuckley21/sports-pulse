@@ -598,14 +598,24 @@ def grade(pick, game, assume_lines):
         point = pick.get("point")
         if point is not None:
             text = "{} vs est {}".format(text, point)
-            # Landing exactly on the estimate counts AGAINST the pick: the lean
-            # said the actual would finish on one side of this number and it did
-            # not, so the row is a MISS and stays in the denominator. The tie is
-            # still shown plainly rather than hidden behind the verdict. This
-            # convention is scoped to estimate-graded totals -- a first-five
-            # moneyline tie is a genuine no-result and remains a PUSH.
+            # Landing exactly on the estimate is a no-result, not a loss: the
+            # pick's Over/Under claim is neither confirmed nor refuted when the
+            # actual finishes ON the number, so there is no side to be right or
+            # wrong about. That is the same reading first_five_moneyline already
+            # applies to a 0-0-through-5 tie a few lines above, and grading the
+            # model's most accurate possible outcome -- reality landing exactly on
+            # its own estimate -- as a failure was inconsistent with it.
+            #
+            # This changes how OLD rows read if a past date is ever re-graded:
+            # rows carrying "(tie)" in their result text were written as MISS and
+            # will come back as PUSH. That is by design -- verdicts are not stored
+            # as frozen truth (see "the estimate-tie rule has already changed
+            # once" in the module docstring), and `observed` keeps the raw numbers
+            # precisely so a changed rule can be re-applied. Rows already in the
+            # ledger keep their recorded verdict until their date is re-graded;
+            # ledger_totals counts what each row stored.
             if actual == point:
-                return text + " (tie)", "MISS", "estimate"
+                return text + " (tie)", "PUSH", "estimate"
             return text, ("HIT" if (actual > point) == over else "MISS"), "estimate"
 
         if not assume_lines:
