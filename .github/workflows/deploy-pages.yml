@@ -27,6 +27,78 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      # Training-capture drop alarm. Deliberately hosted HERE, in the deploy
+      # workflow, and not in capture-training-data.yml.
+      #
+      # capture-training-data.yml's own coverage check (added in #15) can only
+      # report on a run that happened. The failure it cannot see is the one that
+      # actually cost the most: on 2026-07-27 not one of that workflow's cron
+      # entries fired at all, the entire 12-game slate was lost, and nothing
+      # anywhere said so -- it was found by hand-diffing commit history. An
+      # alarm attached to that same workflow's schedule shares the failure it is
+      # meant to detect, so a systemic drop would silence the alarm and the
+      # capture together.
+      #
+      # This workflow's schedule is demonstrably independent of it. On
+      # 2026-07-27 -- the very day all three capture entries were dropped --
+      # deploy-pages' 14:00 cron DID fire (19:00:27Z, +5.0h late, success). It
+      # also runs on every push to main, so it has trigger paths the capture
+      # workflow does not have at all: 23 push runs vs 7 scheduled in the last
+      # 30. Its cron is late just as often (+3.6h..+5.0h), which does not matter
+      # here -- this check reads yesterday, so any time of day works.
+      #
+      # Runs before pip install because it needs only the standard library, and
+      # early so a later build failure cannot suppress it. Adds no permissions:
+      # it reads a committed file and makes one unauthenticated GET, so
+      # `contents: read` stays exactly as it is. Never fails the job.
+      #
+      # Scope: ZERO rows only. Partial-slate days are already reported by
+      # capture-training-data.yml's own coverage check, and warning twice for
+      # one condition would just train people to ignore both.
+      - name: Alarm if yesterday captured nothing
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, urllib.request
+          y = (datetime.datetime.now(datetime.timezone.utc).date()
+               - datetime.timedelta(days=1)).isoformat()
+          path = "data/training/mlb_features.jsonl"
+          rows = 0
+          if os.path.exists(path):
+              for line in open(path):
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      if json.loads(line).get("date") == y:
+                          rows += 1
+                  except ValueError:
+                      continue
+          if rows:
+              print("training capture for %s: %d feature row(s) on file -- OK" % (y, rows))
+              raise SystemExit(0)
+          # Zero rows is only an alarm if there were games to capture. An empty
+          # slate (All-Star break, season boundary) is a correct zero.
+          try:
+              sched = json.load(urllib.request.urlopen(
+                  "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=" + y, timeout=30))
+              games = sum(len(d.get("games") or []) for d in sched.get("dates", []))
+          except Exception as e:
+              print("::warning title=Capture drop alarm inconclusive for %s::no feature rows on "
+                    "file and the schedule could not be fetched (%s), so 'no games' and 'capture "
+                    "lost the slate' cannot be told apart." % (y, str(e)[:120]))
+              raise SystemExit(0)
+          if not games:
+              print("training capture for %s: 0 rows, but 0 games were scheduled -- OK" % y)
+              raise SystemExit(0)
+          print("::warning title=Training capture MISSED %s entirely::%d games were scheduled and "
+                "NOT ONE has a feature row. Every entry of capture-training-data.yml either failed "
+                "to fire or was refused by the pre-game gates. Those games are permanently absent "
+                "from the append-only store; a workflow_dispatch now cannot recover them, only a "
+                "future day's capture can be protected." % (y, games))
+          PY
+
       - run: pip install -r requirements.txt
       - run: python3 generate_stats.py
       - run: |
