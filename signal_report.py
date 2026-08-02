@@ -909,7 +909,18 @@ def main(argv=None):
         # Write the gap down before exiting. A date with no store is a fact about
         # the record -- left unwritten it is indistinguishable from a date nobody
         # ever asked about, and these accumulate every day the generator is not run.
-        if recordable:
+        #
+        # Unless the date is already graded, in which case this run learned nothing
+        # and should leave no trace. The store holds one slate at a time, so any run
+        # that reads it after it has rolled forward finds no overlap for a date that
+        # may have been graded correctly minutes earlier -- daily-stats-and-grade.yml
+        # does exactly this twice a day (grade, regenerate, grade again), as does a
+        # --rev replay pointed past the date. latest_run_rows() already ignores such
+        # a row on read; not writing it keeps the RAW ledger auditable too, so a
+        # no_store row in the file always means a date nothing ever graded. A genuine
+        # gap has no pick-bearing run to find, and is still recorded as before.
+        if recordable and not any(row.get("date") == args.date and _has_pick(row)
+                                  for row in load_ledger()):
             append_ledger([build_status_row(args.date, STATUS_NO_STORE, source, run_id,
                                             note="store covers {}".format("/".join(stamps)))])
         die("store {}{} covers {} ({} games), not {} — no gamePk overlap.\n"
