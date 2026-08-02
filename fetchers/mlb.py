@@ -1072,9 +1072,31 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
 
     away_ref, home_ref = teamref(away_t), teamref(home_t)
 
-    # OPS: home team's home form, away team's road form (14d, recomputed).
-    home_ops = team_side_ops(session, base_url, home_id, season, True, game_date, ops_cache) if home_id else None
-    away_ops = team_side_ops(session, base_url, away_id, season, False, game_date, ops_cache) if away_id else None
+    # OPS: each team's whole 14d form, home and road together (recomputed).
+    #
+    # This used to be team_side_ops -- the home team's HOME split against the away
+    # team's ROAD split. That framing reads well but the comparison is not fair in
+    # either direction. team_window_ops' own docstring names the first problem:
+    # home splits run roughly .020-.030 OPS above road splits league-wide, so
+    # putting one against the other hands the home team a systematic head start
+    # before any real form is measured. Measured over the 96 games captured in
+    # data/training/mlb_features.jsonl, moving to the combined window lifts away
+    # OPS by a mean +.029 and drops home OPS by -.020 -- a .049 relative swing.
+    #
+    # The second problem is worse and is about sample size, not bias. A 14-day
+    # side split is a HALF sample: median 5 games, minimum 0, and 7% of the split
+    # numbers in that same set rest on two games or fewer -- MIL's road OPS on
+    # 2026-07-28 was .284 off a single game, against .748 combined. Three teams
+    # had zero games on the relevant side and produced None, dropping the input
+    # out of the pick entirely. The combined window never dipped below 9 games.
+    #
+    # Both fixes have to land on this one line, because all four consumers read
+    # it: betting_signals.build_inputs below, implied_total's three estimates,
+    # training_capture's feature row, and the displayed signal badge. Keeping them
+    # consistent with each other matters more than tuning any one in isolation, so
+    # nothing downstream is adjusted to compensate.
+    home_ops = team_window_ops(session, base_url, home_id, season, game_date, ops_cache) if home_id else None
+    away_ops = team_window_ops(session, base_url, away_id, season, game_date, ops_cache) if away_id else None
 
     # Bullpen ERA (7d): true bullpen, boxscore-cached.
     home_pen = team_bullpen_era(session, base_url, home_id, game_date, boxscore_cache, touched) if home_id else None
@@ -1101,12 +1123,14 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     signals = []
     framed_ops = None
     if home_ops is not None or away_ops is not None:
+        # No home/road qualifier: the number is now the team's whole 14-day window,
+        # so naming a side would describe a split that is no longer being taken.
         if (away_ops or -1) > (home_ops or -1):
             framed_ops = away_ops
-            signals.append({"label": f"{away_ref['abbr']} road OPS (14d)", "value": _fmt_ops(away_ops), "tone": "pos"})
+            signals.append({"label": f"{away_ref['abbr']} OPS (14d)", "value": _fmt_ops(away_ops), "tone": "pos"})
         else:
             framed_ops = home_ops
-            signals.append({"label": f"{home_ref['abbr']} home OPS (14d)", "value": _fmt_ops(home_ops), "tone": "pos"})
+            signals.append({"label": f"{home_ref['abbr']} OPS (14d)", "value": _fmt_ops(home_ops), "tone": "pos"})
 
     framed_pen = None
     if home_pen is not None or away_pen is not None:
