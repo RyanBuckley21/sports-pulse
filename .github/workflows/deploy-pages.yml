@@ -183,7 +183,79 @@ jobs:
           PY
 
       - run: pip install -r requirements.txt
-      - run: python3 generate_stats.py
+
+      # Push-deploy throttle. Every merge to main triggers this workflow, and
+      # generate_stats.py is not cheap on any of them: generate_insights.run()
+      # calls _build_game_entities() unconditionally at its top, before the
+      # SP_SKIP_INSIGHTS / ai_insights_enabled gating, so each run pays the full
+      # boxscore + bullpen-ERA + team-OPS fetch cost. Most merges are code or UI
+      # changes that cannot alter a single byte of what it produces.
+      #
+      # actions/cache rather than a committed marker file, because this workflow
+      # holds `contents: read` (see the permissions block above) and that is
+      # deliberate -- it is the reason a capture or grading failure elsewhere can
+      # never reach the site deploy's credentials. A throttle that had to commit
+      # its own state would force `contents: write` here and give that up for a
+      # performance tweak. The cache API is authorised by the job's own GITHUB_TOKEN
+      # for cache scope alone and needs no `permissions:` entry at all.
+      #
+      # The key is a floor(unix/1200) time bucket, so runs landing in the SAME
+      # 20-minute wall-clock window share one regeneration. Note this coalesces
+      # same-window runs; it is not a sliding "at most one per 20 minutes" --
+      # two pushes either side of a bucket boundary both regenerate, by design,
+      # since the alternative needs a stored timestamp and more moving parts in
+      # the deploy path. Measured against the real push history it skips ~14% of
+      # push runs at 20 minutes; a wider bucket skips more but the deployed
+      # data.json carries live in-progress game state, so the window doubles as
+      # the staleness bound and 20 minutes is the honest ceiling for that.
+      #
+      # PUSH ONLY. On schedule and workflow_dispatch the restore step is skipped,
+      # so `cache-hit` is the empty string, `!= 'true'` holds, and regeneration
+      # runs unconditionally exactly as before -- those runs never read or write
+      # the cache at all.
+      #
+      # Fails open in every direction: `continue-on-error` on both cache steps
+      # means an unavailable cache service leaves `cache-hit` unset and costs one
+      # extra (correct) regeneration rather than breaking or skipping the deploy.
+      # `success() &&` on the save step keeps a failed regeneration from caching a
+      # stale or missing data.json under this window's key.
+      - name: Compute the push-deploy throttle window
+        if: ${{ github.event_name == 'push' }}
+        id: throttle
+        run: |
+          bucket=$(( $(date -u +%s) / 1200 ))
+          echo "key=data-json-v1-${bucket}" >> "$GITHUB_OUTPUT"
+          echo "push-deploy throttle: 20-minute window ${bucket} (key data-json-v1-${bucket})"
+
+      - name: Restore this window's data.json
+        if: ${{ github.event_name == 'push' }}
+        id: restore_data
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: output/data.json
+          key: ${{ steps.throttle.outputs.key }}
+
+      - name: Regenerate stats and signals
+        if: ${{ success() && steps.restore_data.outputs.cache-hit != 'true' }}
+        run: python3 generate_stats.py
+
+      - name: Reuse this window's data.json
+        if: ${{ success() && steps.restore_data.outputs.cache-hit == 'true' }}
+        run: |
+          echo "Another push already regenerated this 20-minute window; reusing its"
+          echo "output/data.json instead of refetching the whole slate."
+          ls -l output/data.json
+
+      - name: Save this window's data.json
+        if: ${{ success() && github.event_name == 'push'
+                && steps.restore_data.outputs.cache-hit != 'true' }}
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: output/data.json
+          key: ${{ steps.throttle.outputs.key }}
+
       - run: |
           mkdir -p site
           # The navigation shell is one document: index.html plus the three
