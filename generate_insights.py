@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 
+import pulse
 import training_capture
 from fetchers import mlb
 
@@ -173,9 +174,9 @@ def _fmt_value(player, kind):
 
 
 def _pulse(best_rank):
-    score = max(30, min(100, 100 - (best_rank - 1) * 7))
-    label = ("Scorching" if score >= 85 else "Hot" if score >= 70 else "Warm" if score >= 55 else "Notable")
-    return {"score": score, "label": label}
+    # Scoring stays here (it is rank-based and specific to players); NAMING is
+    # pulse.pulse's, shared with games and teams -- see pulse.py.
+    return pulse.pulse(max(30, min(100, 100 - (best_rank - 1) * 7)))
 
 
 def build_entities(data, config=None):
