@@ -33,6 +33,14 @@ recoverable one, since MLB rewrites probablePitcher to the real starter on a
 finished game, so a backfill would cost one hydrated schedule call per
 already-resolved date. Not built here.
 
+Second schema note, and the one that bites silently: `away_ops` / `home_ops`
+mean DIFFERENT THINGS either side of SCHEMA_VERSION 3 (2026-08-02). Up to v2
+they were a home/road split; from v3 they are the team's combined 14-day OPS.
+The field names never changed, so nothing in a row's shape reveals the break --
+a v2 row and a v3 row are indistinguishable by shape. Check `schema_version`
+before pooling rows for anything OPS-dependent. Full detail at the
+SCHEMA_VERSION definition below.
+
 CRITICAL INVARIANT -- neither store is ever rewritten. There is no "w"-mode
 open and no rebuild-a-dict-then-save anywhere in this module; append is the
 only write verb. That is the deliberate opposite of data/insights.games.json,
@@ -68,7 +76,35 @@ OUTCOMES_PATH = "data/training/mlb_outcomes.jsonl"
 # simply lack the keys -- an honest gap, not a bug. A reader must therefore use
 # .get() rather than [] and treat a missing key as "not recorded", which is a
 # different statement from a present-but-null one ("MLB reported no starter").
-SCHEMA_VERSION = 2
+#
+# v3 (2026-08-02): `away_ops` / `home_ops` CHANGE MEANING. The field names and
+# the row shape are identical, which is exactly why this needs a version bump --
+# nothing about a v2 row looks different from a v3 one, but the numbers are not
+# the same statistic.
+#
+#   v2 and earlier: a HOME/ROAD SPLIT. `away_ops` was the away team's road-only
+#     OPS over the trailing 14 days; `home_ops` was the home team's home-only
+#     OPS. Half of each team's games were excluded, so the median row rests on
+#     about 5 games and some on one or none.
+#   v3 onward: the team's COMBINED 14-day OPS, home and road together, from
+#     fetchers/mlb.py's team_window_ops. Median about 12 games, never under 9 in
+#     the captured sample.
+#
+# The two are not interchangeable and the difference is not noise: across the 96
+# rows on file at the bump, the combined value runs a mean +.029 higher for away
+# teams and -.020 lower for home teams than the split it replaced, because home
+# splits sit .020-.030 OPS above road splits league-wide. Pooling v2 and v3 rows
+# into one training set without accounting for that trains a model on a step
+# change in an input, and the step is roughly the size of the home-field effect
+# such a model would be trying to learn.
+#
+# No migration and no backfill, deliberately. These are raw pre-game
+# observations, append-only, same principle as the signal-report ledger: a v2
+# row is a true record of what was computed that day, and rewriting it would be
+# fabricating a measurement nobody took. Split by `schema_version` at read time
+# instead -- and if the corpus is still thin at v3, prefer discarding the v2 rows
+# for OPS-dependent work over silently mixing them.
+SCHEMA_VERSION = 3
 
 # MLB Stats API status vocabulary. `abstractGameState` is the coarse bucket
 # (Preview / Live / Final); `statusCode` is the fine-grained one.
