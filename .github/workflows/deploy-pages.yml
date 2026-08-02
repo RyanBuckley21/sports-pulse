@@ -99,6 +99,89 @@ jobs:
                 "future day's capture can be protected." % (y, games))
           PY
 
+      # Signal-grading drop alarm. Same shape and same reasoning as the capture
+      # alarm above, watching daily-stats-and-grade.yml instead: an alarm on the
+      # watched workflow's own schedule shares the failure it exists to detect,
+      # and that workflow has only two cron entries, so a scheduler drop takes
+      # both. deploy-pages also runs on every push to main, which is trigger
+      # coverage daily-stats-and-grade has none of.
+      #
+      # ONE DAY FURTHER BACK than the capture alarm, and that difference is
+      # load-bearing. Training capture writes rows for date X during day X, so
+      # by X+1 they are on file. Grading writes rows for date X on X+1 --
+      # signal_report.py defaults to yesterday. Checking "yesterday" here would
+      # therefore ask whether TODAY's grading run has happened yet, and this
+      # workflow routinely runs before it: daily-stats-and-grade's commits land
+      # 16:41-20:37Z (13:40/15:40 crons, chronically late), while deploy-pages
+      # fires on every merge -- on 2026-08-02 it ran at 03:37, 03:52, 10:49,
+      # 11:15, 11:45 and 16:05Z, all before that day's grading run. Six false
+      # alarms in one day, and on 2026-07-29/30/31 the scheduled deploy beat the
+      # grading commit by 1-2 minutes, so it was a coin flip on those too. The
+      # day before yesterday was graded on yesterday's run, hours before the
+      # earliest this workflow can fire today, so it is the newest date that can
+      # be judged without racing. The cost is that a drop is reported one day
+      # later; an alarm that cries wolf daily is worth strictly less than that.
+      #
+      # Scope: ZERO rows of ANY status. A no_store or no_picks row means the
+      # workflow DID run and already wrote its own gap down -- that is
+      # signal_report.py's job and re-flagging it here would double-report one
+      # condition. Zero rows means nothing ran at all. (2026-07-26 is the real
+      # example of the former: one no_store row, silent here. 2026-07-23/24/25
+      # and 07-27 are the latter: no rows, games scheduled.)
+      #
+      # Same schedule fallback as the capture alarm, because a zero is only an
+      # alarm if there were games to grade. The fetch is duplicated rather than
+      # shared: a helper would have to live in a checked-in file, and this
+      # change is scoped to this workflow. Standard library only, so it runs
+      # before pip install; never fails the job; adds no permissions.
+      - name: Alarm if a whole day's grading is missing
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, urllib.request
+          # Grading for date X runs on X+1, so the newest date whose grading run
+          # has certainly finished is the day before yesterday. See above.
+          today = datetime.datetime.now(datetime.timezone.utc).date()
+          d = (today - datetime.timedelta(days=2)).isoformat()
+          graded_on = (today - datetime.timedelta(days=1)).isoformat()
+          path = "data/signal_report_history.jsonl"
+          rows = 0
+          if os.path.exists(path):
+              for line in open(path):
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      if json.loads(line).get("date") == d:
+                          rows += 1
+                  except ValueError:
+                      continue
+          if rows:
+              print("signal grading for %s: %d ledger row(s) on file -- OK" % (d, rows))
+              raise SystemExit(0)
+          # Zero rows is only an alarm if there were games to grade. An empty
+          # slate (All-Star break, season boundary) is a correct zero.
+          try:
+              sched = json.load(urllib.request.urlopen(
+                  "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=" + d, timeout=30))
+              games = sum(len(x.get("games") or []) for x in sched.get("dates", []))
+          except Exception as e:
+              print("::warning title=Grading drop alarm inconclusive for %s::no ledger rows on "
+                    "file and the schedule could not be fetched (%s), so 'no games' and "
+                    "'grading never ran' cannot be told apart." % (d, str(e)[:120]))
+              raise SystemExit(0)
+          if not games:
+              print("signal grading for %s: 0 rows, but 0 games were scheduled -- OK" % d)
+              raise SystemExit(0)
+          print("::warning title=Signal grading MISSED %s entirely::%d games were scheduled and "
+                "the ledger has NO row of any status for that date, so both cron entries of "
+                "daily-stats-and-grade.yml were dropped on %s -- a run that happened would have "
+                "written its own no_store or no_picks row. Unlike a lost training capture this "
+                "is recoverable: the slate is still in git history. Re-grade with `python3 "
+                "signal_report.py --date %s --rev <commit whose store covers %s>`."
+                % (d, games, graded_on, d, d))
+          PY
+
       - run: pip install -r requirements.txt
       - run: python3 generate_stats.py
       - run: |
