@@ -80,6 +80,20 @@ the resulting records SEPARATE rather than blending them into one percentage:
     That is a weaker claim than an outcome-graded row makes, so it gets its own
     tally.
 
+    AND IT IS NOT A TUNING TARGET. The estimate-graded record is real and stays,
+    but it must never be used as ground truth for fitting weights, because it is
+    measurably skewed against the direction the model itself leans: as of
+    2026-08-02 its Over picks are 1-10 (9%) while its Under picks are 7-12 (37%),
+    on the same rows. The two halves of that comparison are not independent.
+    betting_signals' total lean is a deviation from a fixed league-average
+    constant, while the `point` it is graded against comes from implied_total's
+    matchup-specific model (each team scored against the SPECIFIC opponent's
+    blended staff) -- so the same input that pushes a lean Over has frequently
+    already raised the number that lean has to clear. Fitting weights to this
+    record would therefore optimise for agreeing with implied_total, and bake in
+    the exact skew the record is currently reporting. It can tell you whether our
+    own number tracks reality; it cannot tell you which way to lean against it.
+
 A total whose store predates the estimate work (data/insights.games.json at
 73615c8, the 2026-07-22 slate, was committed ten commits before it) carries no
 number and stays UNPRICED, listed with its actual runs but in neither record.
@@ -573,10 +587,19 @@ def grade(pick, game, assume_lines):
         margin = (a_score - h_score) if side == away else (h_score - a_score)
         if not assume_lines:
             return "{} (margin {:+d})".format(final, margin), "UNPRICED", None
+        # Which margin covers depends on which SIDE of the line the pick is on,
+        # so it cannot be hardcoded: laying -1.5 needs a win by 2+, getting +1.5
+        # covers on a loss by 1 or any win. `laying` is derived per pick in
+        # collect_picks from the same game's moneyline lean -- see
+        # _run_line_laying. Defaulting to True keeps the old reading for any pick
+        # built without it.
+        laying = pick.get("laying", True)
+        covered = margin >= 2 if laying else margin >= -1
         # Compact form: the full score plus "(margin +3)" plus the line runs past
         # the RESULT column and would be truncated mid-number.
-        return ("{} · {:+d} vs -{}".format(final, margin, ASSUMED_RUN_LINE),
-                ("HIT" if margin >= 2 else "MISS"), "assumed")
+        return ("{} · {:+d} vs {}{}".format(
+                    final, margin, "-" if laying else "+", ASSUMED_RUN_LINE),
+                ("HIT" if covered else "MISS"), "assumed")
 
     if bt in ("game_total", "first_five_total", "team_total"):
         if bt == "game_total":
@@ -598,14 +621,24 @@ def grade(pick, game, assume_lines):
         point = pick.get("point")
         if point is not None:
             text = "{} vs est {}".format(text, point)
-            # Landing exactly on the estimate counts AGAINST the pick: the lean
-            # said the actual would finish on one side of this number and it did
-            # not, so the row is a MISS and stays in the denominator. The tie is
-            # still shown plainly rather than hidden behind the verdict. This
-            # convention is scoped to estimate-graded totals -- a first-five
-            # moneyline tie is a genuine no-result and remains a PUSH.
+            # Landing exactly on the estimate is a no-result, not a loss: the
+            # pick's Over/Under claim is neither confirmed nor refuted when the
+            # actual finishes ON the number, so there is no side to be right or
+            # wrong about. That is the same reading first_five_moneyline already
+            # applies to a 0-0-through-5 tie a few lines above, and grading the
+            # model's most accurate possible outcome -- reality landing exactly on
+            # its own estimate -- as a failure was inconsistent with it.
+            #
+            # This changes how OLD rows read if a past date is ever re-graded:
+            # rows carrying "(tie)" in their result text were written as MISS and
+            # will come back as PUSH. That is by design -- verdicts are not stored
+            # as frozen truth (see "the estimate-tie rule has already changed
+            # once" in the module docstring), and `observed` keeps the raw numbers
+            # precisely so a changed rule can be re-applied. Rows already in the
+            # ledger keep their recorded verdict until their date is re-graded;
+            # ledger_totals counts what each row stored.
             if actual == point:
-                return text + " (tie)", "MISS", "estimate"
+                return text + " (tie)", "PUSH", "estimate"
             return text, ("HIT" if (actual > point) == over else "MISS"), "estimate"
 
         if not assume_lines:
@@ -642,6 +675,28 @@ def _stored_standout(entry, min_score):
     return sd if sd["score"] >= min_score else None
 
 
+def _run_line_laying(scored, side):
+    """Whether a run_line pick is LAYING the line (favourite: must win by 2+) or
+    GETTING it (underdog: covers by losing 1 or winning outright).
+
+    There are no prices anywhere in this project, so favourite/underdog is derived
+    from the same game's moneyline lean instead: a moneyline leaning the SAME way
+    says this is the side we think wins outright, which is the side laying the
+    line; a moneyline leaning the other way says this is the side we think loses,
+    so it is getting the line. No moneyline lean leaves nothing to derive from and
+    falls back to laying -- the assumption grade() previously made unconditionally
+    for every run_line pick.
+
+    This is dormant today: run_line shares moneyline's exact config weights, so
+    the two never disagree and every pick resolves to laying, exactly as before.
+    It stops being dormant the moment run_line gets weights of its own.
+    """
+    ml = (scored.get("moneyline") or {}).get("side")
+    if not ml or ml == "No clear lean":
+        return True
+    return ml == side
+
+
 def collect_picks(store, config, min_score, all_markets):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
@@ -668,7 +723,7 @@ def collect_picks(store, config, min_score, all_markets):
             top = betting_signals.top_market(scored, min_score)
             markets = [top] if top else []
         for m in markets:
-            picks.append({
+            pick = {
                 "point": m.get("point"),
                 "gamePk": pk,
                 "away_abbr": (entry.get("away") or {}).get("abbr"),
@@ -679,7 +734,14 @@ def collect_picks(store, config, min_score, all_markets):
                 "side": m["side"],
                 "score": m["score"],
                 "flags": m.get("flags") or [],
-            })
+            }
+            # Resolved here rather than in grade(), which sees one pick at a time
+            # and has no access to the game's other markets. `scored` is the full
+            # per-game betting_signals dict, moneyline included, whether or not
+            # moneyline is itself among the picks being reported.
+            if m["bet_type"] == "run_line":
+                pick["laying"] = _run_line_laying(scored, m["side"])
+            picks.append(pick)
     picks.sort(key=lambda p: (-p["score"], p["gamePk"]))
     return picks
 
@@ -729,7 +791,7 @@ def render(date, picks, rows, store_size, assume_lines, ledger_rows=None,
         w("that is a calibration check on our own number, so it is tallied separately from outcome-graded rows.")
     if assume_lines:
         w("--assume-lines ON: rows marked (asm) use ASSUMED reference numbers "
-          "(game {} / team {} / F5 {} / run line -{}).".format(
+          "(game {} / team {} / F5 {} / run line ±{}).".format(
               ASSUMED_LINES["game_total"], ASSUMED_LINES["team_total"],
               ASSUMED_LINES["first_five_total"], ASSUMED_RUN_LINE))
         w("Those are conventional round numbers, NOT real market lines — no line data exists in this project.")
