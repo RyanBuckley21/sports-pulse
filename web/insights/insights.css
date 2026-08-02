@@ -111,12 +111,25 @@ body.insights-scope .breakdown-label {
 }
 .pulse-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
 .pulse-fill { height: 100%; border-radius: 999px; }
+/* Band colours. The class comes from the LABEL Python emits, never from a
+   threshold recomputed here -- see pulseBand() in insights.js.
+
+   `cool` (Notable) is deliberately NEUTRAL, not --good. It used to be the same
+   green as .signal-pos, which meant a below-average Pulse was coloured with the
+   project's "this is good" token: a 13/100 rendered in the identical green as
+   the positive-signal marker beside it. Neutral is the honest colour for a band
+   that spans just-below-average scores.
+
+   `cold` is --critical, the same token .signal-neg uses, because that is what
+   the band means. Hot/warm are unchanged. */
 .pulse-hot .pulse-score { color: var(--accent); }
 .pulse-hot .pulse-fill { background: var(--heat); }
 .pulse-warm .pulse-score { color: var(--warning); }
 .pulse-warm .pulse-fill { background: var(--warning); }
-.pulse-cool .pulse-score { color: var(--good); }
-.pulse-cool .pulse-fill { background: var(--good); }
+.pulse-cool .pulse-score { color: var(--text-secondary); }
+.pulse-cool .pulse-fill { background: var(--text-secondary); }
+.pulse-cold .pulse-score { color: var(--critical); }
+.pulse-cold .pulse-fill { background: var(--critical); }
 
 /* ---- Key Signals ---- */
 .signals { margin-top: 4px; }
@@ -292,7 +305,8 @@ body.insights-scope .breakdown-label {
 }
 .gr-pulse-hot { color: var(--accent); }
 .gr-pulse-warm { color: var(--warning); }
-.gr-pulse-cool { color: var(--good); }
+.gr-pulse-cool { color: var(--text-secondary); }
+.gr-pulse-cold { color: var(--critical); }
 
 /* ---- Game Row: expand/collapse ----
    The row stays put as a persistent header and the full game card opens
@@ -414,7 +428,8 @@ body.insights-scope .breakdown-label {
 }
 .pi-row-pulse-hot { color: var(--accent); }
 .pi-row-pulse-warm { color: var(--warning); }
-.pi-row-pulse-cool { color: var(--good); }
+.pi-row-pulse-cool { color: var(--text-secondary); }
+.pi-row-pulse-cold { color: var(--critical); }
 
 /* ---- Player Row: expand/collapse ----
    Identical mechanism to .gr-item/.gr-detail above -- see the comment there

@@ -29,8 +29,28 @@
     return '<span class="team-chip" style="color:' + c + ";background:" + alpha(c, "26") + '">' + esc(t.abbr) + "</span>";
   }
 
-  function pulseBand(score) {
-    return score >= 80 ? "hot" : score >= 60 ? "warm" : "cool";
+  // The band a Pulse belongs to is decided ONCE, in Python (pulse.py), and
+  // travels on the pulse object as `label`. This maps that word to a CSS
+  // suffix; it does not re-derive the band from the score.
+  //
+  // That distinction is the whole point. This function used to cut at 80/60
+  // while Python's ladder cut at 85/70/55, so the two disagreed over two whole
+  // ranges: a 58 read "Warm" in text while colouring itself `cool`, and a 74
+  // read "Hot" while colouring itself `warm`. Any future band added to
+  // pulse.PULSE_BANDS needs one entry here and nothing else.
+  var PULSE_CLASS = {
+    Scorching: "hot",
+    Hot: "hot",
+    Warm: "warm",
+    Notable: "cool",
+    Cold: "cold",
+  };
+
+  // Takes the pulse OBJECT, not a score -- the label is the input now.
+  // An unrecognised or absent label falls back to `cool`, the neutral band:
+  // the one colour that makes no claim about whether the number is good.
+  function pulseBand(p) {
+    return (p && PULSE_CLASS[p.label]) || "cool";
   }
 
   // A labeled sub-section wrapper, reusing app.css's .breakdown-label.
@@ -147,7 +167,7 @@
       if (!p) return "";
       var s = Math.max(0, Math.min(100, Number(p.score) || 0));
       return (
-        '<div class="pulse pulse-' + pulseBand(s) + '">' +
+        '<div class="pulse pulse-' + pulseBand(p) + '">' +
         '<div class="pulse-score">' + s + '<span class="pulse-max">/100</span></div>' +
         '<div class="pulse-meta">' +
         '<div class="pulse-label">' + esc(p.label || "Pulse") + "</div>" +
@@ -460,7 +480,7 @@
       var pulse = "";
       if (g.pulse && g.pulse.score != null) {
         var ps = Math.max(0, Math.min(100, Number(g.pulse.score) || 0));
-        pulse = '<span class="gr-pulse gr-pulse-' + pulseBand(ps) + '">' + ps + "</span>";
+        pulse = '<span class="gr-pulse gr-pulse-' + pulseBand(g.pulse) + '">' + ps + "</span>";
       }
       return (
         '<div class="gr-row">' +
@@ -535,7 +555,7 @@
       var pulse = "";
       if (p.pulse && p.pulse.score != null) {
         var ps = Math.max(0, Math.min(100, Number(p.pulse.score) || 0));
-        pulse = '<span class="pi-row-pulse pi-row-pulse-' + pulseBand(ps) + '">' + ps + "</span>";
+        pulse = '<span class="pi-row-pulse pi-row-pulse-' + pulseBand(p.pulse) + '">' + ps + "</span>";
       }
       return (
         '<div class="pi-row">' +

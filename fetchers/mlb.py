@@ -15,6 +15,8 @@ import math
 
 import requests
 
+import pulse
+
 REQUEST_TIMEOUT = 15
 
 
@@ -911,15 +913,11 @@ def _game_pulse(framed_ops, framed_bullpen_era, series):
     if series is not None:
         diff = abs(series[0] - series[1])
         score += 8 if diff >= 4 else 4 if diff >= 2 else 0
-    score = max(30, min(100, score))
-    label = ("Scorching" if score >= 85 else "Hot" if score >= 70 else "Warm" if score >= 55 else "Notable")
-    return {"score": score, "label": label}
-
-
-def _pulse_band(score):
-    """Same band vocabulary players and games already use, so one Pulse number
-    means the same thing everywhere in the UI."""
-    return "Scorching" if score >= 85 else "Hot" if score >= 70 else "Warm" if score >= 55 else "Notable"
+    # Both clamps are currently dead -- the base is 55 and every term is
+    # additive, so the reachable range is 55..90 -- but they are the guard that
+    # keeps this honest if a future term ever subtracts, so they stay.
+    score = max(0, min(100, score))
+    return pulse.pulse(score)
 
 
 def _team_pulse(ops, bullpen_era, cfg):
@@ -956,8 +954,7 @@ def _team_pulse(ops, bullpen_era, cfg):
     # Round half UP, matching betting_signals._round -- banker's rounding would
     # make a hand-checked score off by one at exact .5 boundaries.
     score = int(math.floor(50 + 50 * combined + 0.5))
-    score = max(0, min(100, score))
-    return {"score": score, "label": _pulse_band(score)}
+    return pulse.pulse(max(0, min(100, score)))
 
 
 def _label_markets(markets, labels):

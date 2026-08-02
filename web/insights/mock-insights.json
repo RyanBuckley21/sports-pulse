@@ -4,46 +4,115 @@
   "games": [
     {
       "id": 823101,
-      "away": { "abbr": "NYY", "name": "Yankees", "color": "#4377D5" },
-      "home": { "abbr": "BOS", "name": "Red Sox", "color": "#C94F57" },
+      "away": {
+        "abbr": "NYY",
+        "name": "Yankees",
+        "color": "#4377D5"
+      },
+      "home": {
+        "abbr": "BOS",
+        "name": "Red Sox",
+        "color": "#C94F57"
+      },
       "start": "7:10 PM ET",
       "venue": "Fenway Park",
       "headline": "Division rematch turns on two shaky bullpens",
-      "pulse": { "score": 84, "label": "Must-watch" },
+      "pulse": {
+        "score": 84,
+        "label": "Hot"
+      },
       "signals": [
-        { "label": "NYY road OPS (14d)", "value": ".812", "tone": "pos" },
-        { "label": "BOS bullpen ERA (7d)", "value": "5.60", "tone": "neg" },
-        { "label": "Season series", "value": "NYY 6-4", "tone": "neutral" }
+        {
+          "label": "NYY road OPS (14d)",
+          "value": ".812",
+          "tone": "pos"
+        },
+        {
+          "label": "BOS bullpen ERA (7d)",
+          "value": "5.60",
+          "tone": "neg"
+        },
+        {
+          "label": "Season series",
+          "value": "NYY 6-4",
+          "tone": "neutral"
+        }
       ],
-      "summary": "The Yankees come in swinging a hot road bat while Boston's relief corps has leaked runs all week. The middle innings are where the leverage sits — whichever pen blinks first likely decides the tone."
+      "summary": "The Yankees come in swinging a hot road bat while Boston's relief corps has leaked runs all week. The middle innings are where the leverage sits \u2014 whichever pen blinks first likely decides the tone."
     },
     {
       "id": 823102,
-      "away": { "abbr": "LAD", "name": "Dodgers", "color": "#3186C4" },
-      "home": { "abbr": "SD", "name": "Padres", "color": "#FFC425" },
+      "away": {
+        "abbr": "LAD",
+        "name": "Dodgers",
+        "color": "#3186C4"
+      },
+      "home": {
+        "abbr": "SD",
+        "name": "Padres",
+        "color": "#FFC425"
+      },
       "start": "9:40 PM ET",
       "venue": "Petco Park",
       "headline": "Two aces line up in a low-scoring script",
-      "pulse": { "score": 71, "label": "High stakes" },
+      "pulse": {
+        "score": 71,
+        "label": "Hot"
+      },
       "signals": [
-        { "label": "Combined starter ERA", "value": "2.48", "tone": "pos" },
-        { "label": "SD home runs/9 (14d)", "value": "0.7", "tone": "pos" },
-        { "label": "Season series", "value": "SD 4-3", "tone": "neutral" }
+        {
+          "label": "Combined starter ERA",
+          "value": "2.48",
+          "tone": "pos"
+        },
+        {
+          "label": "SD home runs/9 (14d)",
+          "value": "0.7",
+          "tone": "pos"
+        },
+        {
+          "label": "Season series",
+          "value": "SD 4-3",
+          "tone": "neutral"
+        }
       ],
       "summary": "Both starters have been missing bats, so run-scoring may be at a premium. Expect the story to hinge on one swing or one defensive miscue rather than a big inning."
     },
     {
       "id": 823103,
-      "away": { "abbr": "SEA", "name": "Mariners", "color": "#4FC9C9" },
-      "home": { "abbr": "HOU", "name": "Astros", "color": "#EB6E1F" },
+      "away": {
+        "abbr": "SEA",
+        "name": "Mariners",
+        "color": "#4FC9C9"
+      },
+      "home": {
+        "abbr": "HOU",
+        "name": "Astros",
+        "color": "#EB6E1F"
+      },
       "start": "8:10 PM ET",
       "venue": "Daikin Park",
       "headline": "AL West tilt with real standings weight",
-      "pulse": { "score": 66, "label": "Rising" },
+      "pulse": {
+        "score": 66,
+        "label": "Warm"
+      },
       "signals": [
-        { "label": "SEA last 10", "value": "8-2", "tone": "pos" },
-        { "label": "HOU runs/game (10d)", "value": "3.4", "tone": "neg" },
-        { "label": "Games back", "value": "1.5", "tone": "neutral" }
+        {
+          "label": "SEA last 10",
+          "value": "8-2",
+          "tone": "pos"
+        },
+        {
+          "label": "HOU runs/game (10d)",
+          "value": "3.4",
+          "tone": "neg"
+        },
+        {
+          "label": "Games back",
+          "value": "1.5",
+          "tone": "neutral"
+        }
       ],
       "summary": "Seattle is surging just as Houston's offense has gone quiet. With barely a game separating them, the winner takes a real step in the division picture."
     }
@@ -54,11 +123,26 @@
       "name": "Mariners",
       "color": "#4FC9C9",
       "headline": "Quietly the hottest team in the AL West",
-      "pulse": { "score": 78, "label": "Rising" },
+      "pulse": {
+        "score": 78,
+        "label": "Hot"
+      },
       "signals": [
-        { "label": "Last 10", "value": "8-2", "tone": "pos" },
-        { "label": "Run differential (10d)", "value": "+22", "tone": "pos" },
-        { "label": "Team K rate", "value": "24.1%", "tone": "neg" }
+        {
+          "label": "Last 10",
+          "value": "8-2",
+          "tone": "pos"
+        },
+        {
+          "label": "Run differential (10d)",
+          "value": "+22",
+          "tone": "pos"
+        },
+        {
+          "label": "Team K rate",
+          "value": "24.1%",
+          "tone": "neg"
+        }
       ],
       "summary": "The bats have finally caught up to the pitching, and a +22 run differential over ten days says the surge is real rather than lucky. Strikeouts remain the one thing keeping this from a runaway stretch."
     },
@@ -67,11 +151,26 @@
       "name": "Tigers",
       "color": "#FA4616",
       "headline": "Rotation carrying an inconsistent lineup",
-      "pulse": { "score": 63, "label": "Steady" },
+      "pulse": {
+        "score": 63,
+        "label": "Warm"
+      },
       "signals": [
-        { "label": "Starter ERA (14d)", "value": "2.90", "tone": "pos" },
-        { "label": "Runs/game (14d)", "value": "3.6", "tone": "neg" },
-        { "label": "One-run games", "value": "9-5", "tone": "neutral" }
+        {
+          "label": "Starter ERA (14d)",
+          "value": "2.90",
+          "tone": "pos"
+        },
+        {
+          "label": "Runs/game (14d)",
+          "value": "3.6",
+          "tone": "neg"
+        },
+        {
+          "label": "One-run games",
+          "value": "9-5",
+          "tone": "neutral"
+        }
       ],
       "summary": "Detroit's starters keep games close, but the offense has been feast-or-famine. The heavy one-run-game workload shows how thin the margins have been night to night."
     },
@@ -80,11 +179,26 @@
       "name": "Cubs",
       "color": "#315EC4",
       "headline": "Power spike masking a bullpen wobble",
-      "pulse": { "score": 58, "label": "Mixed" },
+      "pulse": {
+        "score": 58,
+        "label": "Warm"
+      },
       "signals": [
-        { "label": "Home runs (10d)", "value": "19", "tone": "pos" },
-        { "label": "Bullpen ERA (10d)", "value": "4.85", "tone": "neg" },
-        { "label": "Record (10d)", "value": "5-5", "tone": "neutral" }
+        {
+          "label": "Home runs (10d)",
+          "value": "19",
+          "tone": "pos"
+        },
+        {
+          "label": "Bullpen ERA (10d)",
+          "value": "4.85",
+          "tone": "neg"
+        },
+        {
+          "label": "Record (10d)",
+          "value": "5-5",
+          "tone": "neutral"
+        }
       ],
       "summary": "The Cubs are slugging their way to competitive games, but late-inning leads haven't been safe. The homers are keeping the record afloat while the relief group sorts itself out."
     }
@@ -95,12 +209,27 @@
       "team": "NYY",
       "pos": "RF",
       "color": "#4377D5",
-      "headline": "On a power surge — 6 HR in the last 8 games",
-      "pulse": { "score": 92, "label": "Scorching" },
+      "headline": "On a power surge \u2014 6 HR in the last 8 games",
+      "pulse": {
+        "score": 92,
+        "label": "Scorching"
+      },
       "signals": [
-        { "label": "HR (last 8G)", "value": "6", "tone": "pos" },
-        { "label": "OPS (14d)", "value": "1.180", "tone": "pos" },
-        { "label": "Multi-hit games (8G)", "value": "5", "tone": "pos" }
+        {
+          "label": "HR (last 8G)",
+          "value": "6",
+          "tone": "pos"
+        },
+        {
+          "label": "OPS (14d)",
+          "value": "1.180",
+          "tone": "pos"
+        },
+        {
+          "label": "Multi-hit games (8G)",
+          "value": "5",
+          "tone": "pos"
+        }
       ],
       "summary": "Judge is barreling everything, and a 1.180 OPS over the last two weeks shows the on-base and power moving together, not one carrying the other. The home runs are the headline, but the steady multi-hit games are what make this stretch look repeatable."
     },
@@ -110,11 +239,26 @@
       "pos": "SS",
       "color": "#317DC4",
       "headline": "Doing damage on the bases and in the gaps",
-      "pulse": { "score": 81, "label": "Hot" },
+      "pulse": {
+        "score": 81,
+        "label": "Hot"
+      },
       "signals": [
-        { "label": "XBH (14d)", "value": "11", "tone": "pos" },
-        { "label": "Stolen bases (14d)", "value": "7", "tone": "pos" },
-        { "label": "BABIP", "value": ".390", "tone": "neg" }
+        {
+          "label": "XBH (14d)",
+          "value": "11",
+          "tone": "pos"
+        },
+        {
+          "label": "Stolen bases (14d)",
+          "value": "7",
+          "tone": "pos"
+        },
+        {
+          "label": "BABIP",
+          "value": ".390",
+          "tone": "neg"
+        }
       ],
       "summary": "Witt is impacting games with extra-base hits and aggressive baserunning. The one caution flag is an unusually high BABIP, which suggests some of the batting average may cool even if the underlying contact stays strong."
     },
@@ -124,13 +268,28 @@
       "pos": "SP",
       "color": "#FA4616",
       "headline": "Missing bats at a career-best clip",
-      "pulse": { "score": 88, "label": "Dominant" },
+      "pulse": {
+        "score": 88,
+        "label": "Scorching"
+      },
       "signals": [
-        { "label": "K/9 (last 4 starts)", "value": "11.8", "tone": "pos" },
-        { "label": "Walk rate", "value": "4.1%", "tone": "pos" },
-        { "label": "WHIP (last 4)", "value": "0.90", "tone": "pos" }
+        {
+          "label": "K/9 (last 4 starts)",
+          "value": "11.8",
+          "tone": "pos"
+        },
+        {
+          "label": "Walk rate",
+          "value": "4.1%",
+          "tone": "pos"
+        },
+        {
+          "label": "WHIP (last 4)",
+          "value": "0.90",
+          "tone": "pos"
+        }
       ],
-      "summary": "Skubal is pairing elite strikeout stuff with pinpoint control — a 0.90 WHIP over his last four starts means almost nobody is reaching base. When a starter misses bats and limits traffic like this, the run of dominant outings reads as skill, not variance."
+      "summary": "Skubal is pairing elite strikeout stuff with pinpoint control \u2014 a 0.90 WHIP over his last four starts means almost nobody is reaching base. When a starter misses bats and limits traffic like this, the run of dominant outings reads as skill, not variance."
     }
   ]
 }
