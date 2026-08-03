@@ -9,7 +9,7 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 4,
+        "score": 2,
         "side": "No clear lean"
       },
       "first_five_total": {
@@ -19,12 +19,12 @@
       },
       "game_total": {
         "flags": [],
-        "score": 2,
+        "score": 3,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 0,
+        "score": 1,
         "side": "No clear lean"
       },
       "nrfi_yrfi": {
@@ -34,14 +34,14 @@
       },
       "run_line": {
         "flags": [],
-        "score": 0,
+        "score": 1,
         "side": "No clear lean"
       },
       "team_total": {
         "away": {
           "abbr": "SF",
           "flags": [],
-          "score": 2,
+          "score": 3,
           "side": "No clear lean"
         },
         "home": {
@@ -62,6 +62,10 @@
       "away": {
         "era": "3.97",
         "name": "Logan Webb"
+      },
+      "home": {
+        "era": "3.95",
+        "name": "Cal Quantrill"
       }
     },
     "pulse": {
@@ -83,6 +87,11 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "SF 1-1"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "3.97 vs 3.95"
       }
     ],
     "standout": null,
@@ -636,32 +645,32 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 4,
-        "side": "No clear lean"
+        "score": 18,
+        "side": "LAD"
       },
       "first_five_total": {
         "flags": [],
-        "score": 10,
+        "score": 15,
         "side": "No clear lean"
       },
       "game_total": {
         "flags": [],
-        "score": 7,
+        "score": 10,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 1,
+        "score": 12,
         "side": "No clear lean"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 10,
+        "score": 20,
         "side": "No clear lean"
       },
       "run_line": {
         "flags": [],
-        "score": 1,
+        "score": 15,
         "side": "No clear lean"
       },
       "team_total": {
@@ -674,7 +683,7 @@
         "home": {
           "abbr": "CHC",
           "flags": [],
-          "score": 7,
+          "score": 10,
           "side": "No clear lean"
         }
       }
@@ -686,6 +695,10 @@
       "name": "Cubs"
     },
     "probables": {
+      "away": {
+        "era": "3.50",
+        "name": "Justin Wrobleski"
+      },
       "home": {
         "era": "3.81",
         "name": "Matthew Boyd"
@@ -710,9 +723,20 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "LAD 3-2"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "3.50 vs 3.81"
       }
     ],
-    "standout": null,
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "market": "First Five Moneyline",
+      "score": 18,
+      "side": "LAD"
+    },
     "start": "8:05 PM ET",
     "status": "Preview",
     "story": null,
