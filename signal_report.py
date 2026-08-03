@@ -49,12 +49,13 @@ never recorded at all.
 The pick set
 ------------
 One pick per game: the game's `standout` market -- the highest Signal Score that
-clears `betting_signals.mlb.standout_threshold` (50) -- ranked by score. This is
+clears `betting_signals.mlb.standout_threshold` (20) -- ranked by score. This is
 the same selection `betting_signals.top_market()` makes and the same one the UI
 ranks games by, so the report and the site never disagree about what the pick
 was. `--all-markets` widens to every market carrying a lean at or above
-`--min-score` instead (noisier: run_line shares moneyline's exact config weights,
-so it duplicates that row at the same score on most games).
+`--min-score` instead (noisier, though no longer duplicative: run_line and
+nrfi_yrfi carried byte-identical weights to moneyline and first_five_total until
+they were given their own splits, so they no longer repeat those rows verbatim).
 
 Rows are keyed by gamePk, never by matchup string: split doubleheaders put the
 same matchup on the slate twice (PIT@NYY and BAL@BOS both appear twice on
@@ -93,6 +94,29 @@ the resulting records SEPARATE rather than blending them into one percentage:
     record would therefore optimise for agreeing with implied_total, and bake in
     the exact skew the record is currently reporting. It can tell you whether our
     own number tracks reality; it cannot tell you which way to lean against it.
+
+    AND IT SPANS SEVERAL MODELS. The inputs feeding both the lean and the `point`
+    changed twice on 2026-08-02. The ledger has no `schema_version` -- unlike
+    data/training/*.jsonl, which carries one for exactly this reason -- so its rows
+    cannot be told apart after the fact except by date:
+
+      PR #22  c31d426   team OPS: home/road split -> combined 14-day window.
+                        Moved the standout on 52 of the 96 games checked.
+      PR #24            every rate input shrunk toward a baseline by its own
+                        sample size, with each k measured against this repo's own
+                        data (OPS k=1855 PA, starter ERA k=141 IP, bullpen k=289
+                        IP toward the team's own season-to-date value); bet-type
+                        weights made reliability-proportional; standout_threshold
+                        50 -> 20 to hold the slate size steady across the change.
+
+    (An interim PR #23 shipped the same shrinkage with borrowed player-level
+    constants and was closed unmerged, superseded by #24's measured ones. No
+    ledger row was ever written under it.)
+
+    So a row's verdict is only comparable to another row's if both sit on the same
+    side of both changes. Read any span crossing 2026-08-02 as several records
+    rather than one, and treat the Over/Under figures above as describing the rows
+    they were actually measured on, which predate all of it.
 
 A total whose store predates the estimate work (data/insights.games.json at
 73615c8, the 2026-07-22 slate, was committed ten commits before it) carries no
