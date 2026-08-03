@@ -517,6 +517,7 @@
         section("Signal Scores", Cards.signalScores(g.signal_scores, g.best_angle, away, home)) +
         section((g.compare && g.compare.title) || "Comparison", Cards.compareMetrics(g.compare)) +
         section((g.est_total && g.est_total.label) || "Estimate", Cards.estTotal(g.est_total)) +
+        section((g.f5_total && g.f5_total.label) || "First Five Estimate", Cards.estTotal(g.f5_total)) +
         block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
         "</article>"
       );

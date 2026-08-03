@@ -49,13 +49,14 @@ never recorded at all.
 The pick set
 ------------
 One pick per game: the game's `standout` market -- the highest Signal Score that
-clears `betting_signals.mlb.standout_threshold` (15) -- ranked by score. This is
+clears `betting_signals.mlb.standout_threshold` (17) -- ranked by score. This is
 the same selection `betting_signals.top_market()` makes and the same one the UI
 ranks games by, so the report and the site never disagree about what the pick
 was. `--all-markets` widens to every market carrying a lean at or above
-`--min-score` instead (noisier, though no longer duplicative: run_line and
-nrfi_yrfi carried byte-identical weights to moneyline and first_five_total until
-they were given their own splits, so they no longer repeat those rows verbatim).
+`--min-score` instead (noisier, but no longer duplicative: run_line once carried
+byte-identical weights to moneyline, and nrfi_yrfi to first_five_total, so each
+repeated the other's row verbatim. run_line has its own split now, and
+first_five_total has been retired outright, so nothing doubles up).
 
 Rows are keyed by gamePk, never by matchup string: split doubleheaders put the
 same matchup on the slate twice (PIT@NYY and BAL@BOS both appear twice on
@@ -71,11 +72,16 @@ the resulting records SEPARATE rather than blending them into one percentage:
   * OUTCOME-GRADED -- moneyline, first-five moneyline, first-inning runs. These
     resolve from the box score against what actually happened in the world.
 
-  * ESTIMATE-GRADED -- game total, first-five total, team total, when the store
-    carries the run estimate. `_attach_estimates` (fetchers/mlb.py) mutates the
-    standout in place with implied_total's `point`/`low`/`high`, and
-    generate_insights writes that standout to the store, so the number displayed
-    beside the pick is recoverable. Grading a total against it asks "did the lean
+  * ESTIMATE-GRADED -- game total and team total, when the store carries the run
+    estimate. First-five total was a third until it was retired as a scored
+    market (see the timeline below). Rows already in the ledger stay gradeable,
+    and every grading path for it further down is deliberately kept for that
+    reason, but no NEW first_five_total pick is produced.
+
+    `_attach_estimates` (fetchers/mlb.py) mutates the standout in place with
+    implied_total's `point`/`low`/`high`, and generate_insights writes that
+    standout to the store, so the number displayed beside the pick is
+    recoverable. Grading a total against it asks "did the lean
     agree with the model's own point estimate, against reality" -- a calibration
     check on our own number, NOT evidence of a predictive edge against a market.
     That is a weaker claim than an outcome-graded row makes, so it gets its own
@@ -113,6 +119,17 @@ the resulting records SEPARATE rather than blending them into one percentage:
                         in 29% of games). moneyline, run_line and
                         first_five_moneyline reweighted across the remaining three
                         families; standout_threshold 20 -> 15.
+      PR #27            first_five_total RETIRED as a scored market. Its lean and
+                        the `point` it was graded against are different functions
+                        of the same four raw inputs, so the lean correlates +0.78
+                        with its own target's bar: a stronger lean raises the
+                        number it must clear. Measured r=-0.0199, 95% CI
+                        [-0.077, +0.037] over 1,199 games. That circularity sits
+                        in the target definition, so no reweighting could fix it.
+                        nrfi_yrfi reduced to combined_starter_era alone (its OPS
+                        term measured r=+0.0169, CI spanning zero, and the blend
+                        scored WORSE than starter ERA by itself);
+                        standout_threshold 15 -> 17.
 
     (An interim PR #23 shipped the same shrinkage with borrowed player-level
     constants and was closed unmerged, superseded by #24's measured ones. No

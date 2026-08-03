@@ -1119,6 +1119,7 @@ def _build_games_section(entities, text_map):
             "best_angle": ent.get("best_angle"),
             "compare": ent.get("compare"),
             "est_total": ent.get("est_total"),
+            "f5_total": ent.get("f5_total"),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),

@@ -227,10 +227,19 @@ betting_signals:
     # from four signals to three. Recovering those would mean moving min_threshold
     # or that guard, which is a separate decision and not made here.
     #
-    # NOTE this now EQUALS min_threshold, so the standout is simply the
-    # highest-scoring market that carries any lean at all. The stricter-than-lean
-    # distinction the two thresholds used to express no longer exists.
-    standout_threshold: 15
+    # Then 15 -> 17 when first_five_total was retired and nrfi_yrfi was reduced to
+    # its single surviving signal. That was NOT expected to move the slate much --
+    # first_five_total won only 16 of 850 slots -- but simulated it moved a lot:
+    # nrfi_yrfi's lean is now the undiluted combined_starter_era signal, so its
+    # scores rose and it took 104 -> 322 slots, pushing the slate to 960 (69.2%)
+    # at the old 15. 17 brings it back to 861 of 1,388 (62.0%) against production's
+    # 850 (61.2%), eleven games apart. Worth recording that "this market rarely
+    # wins a slot" did not imply "removing it barely moves the threshold".
+    #
+    # At 17 the standout bar is once again above min_threshold (15), so the
+    # stricter-than-lean distinction the two thresholds express is restored --
+    # it had collapsed when they were briefly equal.
+    standout_threshold: 17
     # tanh normalization: `*_gap` = the home-vs-away spread that reads as a
     # meaningful edge; `*_total`/`*_solo` = league baseline + spread for
     # over/under-style magnitudes.
@@ -271,6 +280,17 @@ betting_signals:
     # head-to-head differential is 0, so shrinking toward that with a median
     # sample of 2 games is removal by a longer route.
     #
+    # first_five_total was RETIRED as a scored market, not reweighted. Its
+    # Over/Under lean is a weighted blend of combined_starter_era and
+    # combined_ops; implied_total.first_five_estimate() computes the `point` it is
+    # graded against from away_ops/home_ops/away_sp/home_sp -- the same four raw
+    # numbers. Measured, the lean correlates +0.78 with its own point estimate, so
+    # a stronger lean RAISES the bar it has to clear. Against the real Over/Under
+    # outcome over 1,199 games it scored r=-0.0199, 95% CI [-0.077, +0.037], with
+    # its dominant starter component at r=-0.0276. That is not a weak market to be
+    # retuned; the circularity is in the target definition, so no reweighting can
+    # fix it. The estimate itself is still computed and shown as information.
+    #
     # Removed weight is NOT redistributed. _raw_lean renormalizes by the weight
     # sum, so only relative weights matter; redistributing would actively promote
     # whatever family received it rather than leave the rest in place. A key simply
@@ -296,16 +316,17 @@ betting_signals:
       first_five_moneyline:
         probable_era: 0.677
         team_ops: 0.323
-      first_five_total:
-        combined_starter_era: 0.667
-        combined_ops: 0.333
-      # No longer a copy of first_five_total. First-inning runs are the starter
-      # facing the top of the order once -- the bullpen never appears and a
-      # full-game team OPS is a weak proxy for one inning -- so the base split is
-      # 0.75/0.25 before reliability scaling, against first_five_total's 0.60/0.40.
+      # First-inning runs are the starter facing the top of the order once, so the
+      # bullpen never appears and a full-game team OPS is a weak proxy for one
+      # inning. Measured against the real YRFI outcome over 1,388 games,
+      # combined_ops contributed nothing -- r=+0.0169 with a 95% CI spanning zero
+      # -- while combined_starter_era ALONE (r=+0.0605, CI [+0.008, +0.113])
+      # measured BETTER than the 0.80/0.20 blend it was part of (r=+0.0588). The
+      # OPS term was diluting, not helping, so it is dropped rather than shrunk:
+      # nothing reliable was there to preserve. A single-signal market is fine --
+      # _finalize's >=2-agreeing guard is bypassed when n_avail < 2.
       nrfi_yrfi:
-        combined_starter_era: 0.800
-        combined_ops: 0.200
+        combined_starter_era: 1.0
       team_total:
         team_ops: 0.502
         opp_bullpen_era: 0.126

@@ -1480,6 +1480,12 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
         "signal_scores": signal_scores,
         "compare": compare,
         "est_total": est_total,
+        # The first-five estimate is a TOP-LEVEL key, not a market-row attachment
+        # like game_total's and team_total's. Those still ride on their own rows
+        # via _attach_estimates, which is correct -- they are still scored markets.
+        # first_five_total is not, so there is no row to hang this on; without a
+        # key of its own the number was computed every run and silently discarded.
+        "f5_total": f5_total,
         # Full both-sides context for the AI payload only -- never shown directly.
         "context": {
             "away_team": away_ref["name"], "home_team": home_ref["name"],
