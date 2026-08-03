@@ -207,9 +207,23 @@ betting_signals:
     run_line_threshold: 35
     # A game's single most-notable market must clear THIS (much stricter than the
     # per-market lean thresholds above) before the AI writes a one-sentence
-    # betting_note about it. Below it, no betting prose is written at all. v1
-    # tunable -- raise to write notes more rarely, lower to write them more often.
-    standout_threshold: 50
+    # betting_note about it. Below it, no betting prose is written at all.
+    #
+    # Recalibrated 50 -> 20 alongside the reliability-proportional bet_types
+    # weights below. That is NOT a decision to show more picks: the weights now
+    # concentrate on fewer, more reliable signals, which raises the typical net
+    # lean and therefore every score, so 50 was measuring a different scale.
+    # The target is to leave the slate SIZE where it already is and change only
+    # what the picks are built from.
+    #
+    # Calibrated against real production, not against a hypothetical: on
+    # unmodified main -- threshold 50, no shrinkage anywhere -- 924 of 1,388 real
+    # 2026 games carry a pick (66.6%). Simulating these weights and shrunk inputs
+    # over the same 1,388 games, threshold 20 gives 928 (66.9%), four games and
+    # 0.3 points off. An earlier draft of this line targeted ~702 / 50.5%; that
+    # figure assumed an interim PR had shipped, it was closed unmerged, so it
+    # never described a state this repo was ever in.
+    standout_threshold: 20
     # tanh normalization: `*_gap` = the home-vs-away spread that reads as a
     # meaningful edge; `*_total`/`*_solo` = league baseline + spread for
     # over/under-style magnitudes.
@@ -226,35 +240,57 @@ betting_signals:
     # Per bet type: which base signals feed it and their weights. Bullpen is
     # excluded from the first-five markets (relievers rarely pitch in the first
     # five innings); NRFI/YRFI and totals lean toward more runs on the (+) side.
+    #
+    # RELIABILITY-PROPORTIONAL. Each weight below is a domain base split scaled by
+    # the MEASURED reliability of the signal family it names, then renormalized:
+    #     starter ERA 0.252 · team OPS 0.189 · bullpen ERA 0.071
+    # Those three come from this repo's own data (predictive validity against real
+    # runs, corrected for the ceiling any team-level predictor can reach).
+    # season_series is left at 1.0 -- not because it is known to be reliable, but
+    # because it has never been measured, and inventing a discount would be worse
+    # than leaving it. It is therefore the largest single weight in the two side
+    # markets, which is a known consequence to revisit once it is measured.
+    #
+    # Removed weight is NOT redistributed. _raw_lean renormalizes by the weight
+    # sum, so only relative weights matter; redistributing to the unmeasured
+    # family would actively promote it rather than leave it in place. See the PR.
     bet_types:
       moneyline:
-        team_ops: 0.30
-        bullpen_era: 0.25
-        probable_era: 0.30
-        season_series: 0.15
+        team_ops: 0.189
+        bullpen_era: 0.059
+        probable_era: 0.252
+        season_series: 0.500
+      # No longer a copy of moneyline. A run line needs a DECISIVE margin, which
+      # tracks the starting-pitching mismatch more than a narrow team-quality
+      # edge, so the base split leans starter (0.25/0.20/0.40/0.15) before the
+      # same reliability scaling is applied.
       run_line:
-        team_ops: 0.30
-        bullpen_era: 0.25
-        probable_era: 0.30
-        season_series: 0.15
+        team_ops: 0.151
+        bullpen_era: 0.045
+        probable_era: 0.323
+        season_series: 0.480
       game_total:
-        combined_ops: 0.35
-        combined_starter_era: 0.35
-        combined_bullpen_era: 0.30
+        combined_ops: 0.377
+        combined_starter_era: 0.502
+        combined_bullpen_era: 0.121
       first_five_moneyline:
-        probable_era: 0.55
-        team_ops: 0.35
-        season_series: 0.10
+        probable_era: 0.455
+        team_ops: 0.217
+        season_series: 0.328
       first_five_total:
-        combined_starter_era: 0.60
-        combined_ops: 0.40
+        combined_starter_era: 0.667
+        combined_ops: 0.333
+      # No longer a copy of first_five_total. First-inning runs are the starter
+      # facing the top of the order once -- the bullpen never appears and a
+      # full-game team OPS is a weak proxy for one inning -- so the base split is
+      # 0.75/0.25 before reliability scaling, against first_five_total's 0.60/0.40.
       nrfi_yrfi:
-        combined_starter_era: 0.60
-        combined_ops: 0.40
+        combined_starter_era: 0.800
+        combined_ops: 0.200
       team_total:
-        team_ops: 0.45
-        opp_bullpen_era: 0.30
-        opp_starter_era: 0.25
+        team_ops: 0.502
+        opp_bullpen_era: 0.126
+        opp_starter_era: 0.372
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 
