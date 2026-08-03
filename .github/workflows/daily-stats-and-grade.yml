@@ -181,7 +181,15 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/insights.games.json data/insights.json
+          # data/boxscores.json rides along with the two insight stores: the same
+          # generate_stats run produces all three, so splitting them into separate
+          # commits would only add noise. It was previously left out, which meant
+          # the correctly-updated local copy died with the runner and every run
+          # restarted from the same stale committed snapshot -- re-fetching every
+          # boxscore in each team's trailing 7-day bullpen window from scratch.
+          # It is self-limiting, not an accumulating log: build_game_entities
+          # returns it pruned to exactly the gamePks the current run touched.
+          git add data/insights.games.json data/insights.json data/boxscores.json
           if git diff --staged --quiet; then
             echo "No changes this run -- nothing to commit."
             exit 0
