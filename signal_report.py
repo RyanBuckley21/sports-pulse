@@ -49,7 +49,7 @@ never recorded at all.
 The pick set
 ------------
 One pick per game: the game's `standout` market -- the highest Signal Score that
-clears `betting_signals.mlb.standout_threshold` (20) -- ranked by score. This is
+clears `betting_signals.mlb.standout_threshold` (15) -- ranked by score. This is
 the same selection `betting_signals.top_market()` makes and the same one the UI
 ranks games by, so the report and the site never disagree about what the pick
 was. `--all-markets` widens to every market carrying a lean at or above
@@ -108,6 +108,11 @@ the resulting records SEPARATE rather than blending them into one percentage:
                         IP toward the team's own season-to-date value); bet-type
                         weights made reliability-proportional; standout_threshold
                         50 -> 20 to hold the slate size steady across the change.
+      PR #26            season_series measured and DROPPED from the weighted set
+                        (r=-0.02 against real results, incremental p=0.291, absent
+                        in 29% of games). moneyline, run_line and
+                        first_five_moneyline reweighted across the remaining three
+                        families; standout_threshold 20 -> 15.
 
     (An interim PR #23 shipped the same shrinkage with borrowed player-level
     constants and was closed unmerged, superseded by #24's measured ones. No
@@ -711,9 +716,14 @@ def _run_line_laying(scored, side):
     falls back to laying -- the assumption grade() previously made unconditionally
     for every run_line pick.
 
-    This is dormant today: run_line shares moneyline's exact config weights, so
-    the two never disagree and every pick resolves to laying, exactly as before.
-    It stops being dormant the moment run_line gets weights of its own.
+    Still dormant today, though no longer for the reason it once was. run_line
+    stopped sharing moneyline's exact weights in PR #24 and no longer shares its
+    signal set either (neither carries season_series as of PR #26), yet across
+    1,388 real 2026 games the two never once disagree on side: reweighting the
+    same signals changes the magnitude of the net lean without flipping its sign.
+    So every pick still resolves to laying. Giving run_line its own weights was
+    predicted to end the dormancy and did not -- it would take run_line reading a
+    genuinely different SIGNAL, not a different weighting of the same ones.
     """
     ml = (scored.get("moneyline") or {}).get("side")
     if not ml or ml == "No clear lean":
