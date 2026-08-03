@@ -726,6 +726,14 @@ def _ops_window(splits, as_of_date, window_days):
     return [s for s in splits if s.get("date") and cutoff <= s["date"] < as_of_date]
 
 
+def _ops_pa(splits):
+    """Plate appearances behind an OPS window: the same AB+BB+HBP+SF denominator
+    _recompute_ops already builds for OBP, returned instead of discarded so the
+    rate can be weighted by the sample it came from."""
+    return sum(int(sp.get("stat", {}).get(f, 0) or 0)
+               for sp in splits for f in ("atBats", "baseOnBalls", "hitByPitch", "sacFlies"))
+
+
 def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache, window_days=14):
     """A team's recomputed OPS over its last `window_days` of completed games on
     one side (home games for the home team, road games for the away team). Cached
@@ -742,9 +750,156 @@ def team_side_ops(session, base_url, team_id, season, is_home, as_of_date, cache
     return ops
 
 
+# --------------------------------------------------------------------------- #
+# Stabilization (shrinkage toward the league baseline by sample size)
+# --------------------------------------------------------------------------- #
+#
+# A rate stat off a thin sample is mostly noise, and until now a 14-innings
+# bullpen ERA was handed to the pick model with exactly the same authority as a
+# 36-innings one. Shrinkage fixes that with the standard empirical-Bayes form:
+#
+#     shrunk = league + (observed - league) * n / (n + k)
+#
+# k is the sample size at which the observed value earns half the weight. That
+# is precisely the published definition of a "stabilization point" -- the point
+# at which a stat "only needs to be regressed about halfway back to the mean"
+# (FanGraphs' reliability work) -- so the sabermetric literature's stabilization
+# numbers can be used as k directly.
+#
+# Every k below is now MEASURED against this repo's own data rather than borrowed
+# from player-level literature. Each was derived by the attenuation identity
+# r(observed, Y) = r(true, Y) * sqrt(reliability), taking r(true, Y) as the
+# ceiling any team-level predictor can reach against single-game runs, then
+# k = n * (1 - reliability) / reliability. Ceilings: 0.0754 for offence, 0.1353
+# for run prevention (they are NOT the same -- teams differ about 3.2x more in
+# run prevention than in run scoring).
+#
+#   OPS_STABILIZE_PA = 1855      r=+.0327 vs ceiling .0754 -> reliability .189
+#   BULLPEN_STABILIZE_IP = 289   r=+.0361 vs ceiling .1353 -> reliability .071
+#   STARTER_STABILIZE_IP = 141   r=+.0679 vs ceiling .1353 -> reliability .252
+#
+# Starter ERA is the STRONGEST of the three, not the weakest, and was previously
+# used raw at any sample size even though its real sample runs from p10 8.7 IP to
+# p90 95.3 IP.
+#
+# BULLPEN_SEASON_STABILIZE_IP = 1119 is the first stage of the bullpen's TWO-stage
+# prior. A 7-day bullpen window is shrunk toward the team's OWN season-to-date
+# bullpen ERA rather than toward the flat league mean, because measured directly
+# the season-to-date value is the better predictor (r=+.0540 vs +.0361) and a
+# blend test moved monotonically toward it. The season-to-date value is itself
+# shrunk toward the league mean first, so a team with little season history still
+# falls back to league average.
+OPS_STABILIZE_PA = 1855
+BULLPEN_STABILIZE_IP = 289
+BULLPEN_SEASON_STABILIZE_IP = 1119
+STARTER_STABILIZE_IP = 141
+
+
+def shrink(observed, n, league, k):
+    """Pull `observed` toward `league` by its own sample size: full weight in the
+    limit, half weight at n == k, league mean at n == 0.
+
+    Returns None when there is nothing to shrink (no observation), and the league
+    baseline itself when the sample is empty but a baseline exists -- never a
+    bare `observed` that quietly claims more precision than its sample supports.
+    """
+    if observed is None or league is None:
+        return observed
+    if not n:
+        return round(float(league), 3)
+    return round(float(league) + (float(observed) - float(league)) * (n / float(n + k)), 3)
+
+
+def league_baseline(config, which):
+    """The league mean to shrink toward: betting_signals.mlb.scales.<which>_solo.base.
+
+    Read from the SCORING baselines rather than team_pulse's, because these are the
+    numbers betting_signals itself centres its solo signals on -- shrinking an input
+    toward a different constant than the scorer measures it against would put the
+    "no information" case somewhere other than that scorer's zero point. The values
+    are identical today (OPS .725, bullpen 4.00, starter ERA 4.00), so this is a
+    provenance fix, not a behaviour change.
+
+    `which` is one of "ops", "bullpen", "era". Note implied_total.LEAGUE_OPS is
+    .720, close but not equal -- that one is a DIVISOR in a multiplicative run
+    model (team_OPS / LEAGUE_OPS), not a centering constant, so the two play
+    different mathematical roles and are not required to agree. Left alone here;
+    implied_total is not this file's to edit.
+    """
+    scales = (((config or {}).get("betting_signals") or {}).get("mlb") or {}).get("scales") or {}
+    return ((scales.get("{}_solo".format(which)) or {}).get("base"))
+
+
+def team_season_bullpen_era(session, base_url, team_id, season, cache):
+    """A team's SEASON-TO-DATE bullpen ERA as `(era, innings)`, for stage one of
+    the bullpen prior. `(None, 0.0)` when unavailable.
+
+    One API call per team, via the relief-pitcher season split, rather than
+    re-deriving the season from boxscores: the GS=0 reconstruction would need every
+    Final game of the season per team, and data/boxscores.json is pruned to the
+    games each run touches (and is committed by no workflow), so that would mean
+    ~1700 boxscore fetches on EVERY run rather than the ~100 the 7-day window costs
+    today.
+
+    The split's definition is role-based ("rp") where team_bullpen_era's is
+    per-game (GS=0), so the two disagree slightly -- measured on NYY through
+    2026-08-02, 3.01 over 398.1 IP here against 3.05 over 407.0 IP there, about
+    1.3%. That gap is immaterial for a shrinkage TARGET, which only has to say
+    roughly where this team's bullpen lives; the graded value is still the
+    boxscore-derived one.
+    """
+    key = ("season_pen", team_id)
+    if key in cache:
+        return cache[key]
+    era = ip = None
+    try:
+        data = _get(session, f"{base_url}/teams/{team_id}/stats",
+                    params={"stats": "statSplits", "group": "pitching",
+                            "season": season, "sitCodes": "rp"})
+        stats = data.get("stats", [])
+        if stats and stats[0].get("splits"):
+            st = stats[0]["splits"][0].get("stat", {})
+            era, ip = st.get("era"), st.get("inningsPitched")
+    except requests.RequestException:
+        era = ip = None
+    try:
+        out = (float(era), _ip_to_outs(ip) / 3.0)
+    except (TypeError, ValueError):
+        out = (None, 0.0)
+    cache[key] = out
+    return out
+
+
+def bullpen_prior(config, pen7, ip7, pen_season, ip_season):
+    """The two-stage bullpen value actually fed to the model.
+
+        prior_team = league + (pen_season - league) * ip_season / (ip_season + 1119)
+        used       = prior_team + (pen7 - prior_team) * ip7 / (ip7 + 289)
+
+    Stage one pulls the team's season-to-date bullpen ERA toward the league mean by
+    its own size; stage two pulls the 7-day window toward THAT team-specific value
+    rather than toward the league mean. A team with no season history falls all the
+    way back to league average, so the two-stage form degrades to the flat-mean one
+    exactly where it should.
+    """
+    league = league_baseline(config, "bullpen")
+    prior = shrink(pen_season, ip_season, league, BULLPEN_SEASON_STABILIZE_IP)
+    if prior is None:
+        prior = league
+    if pen7 is None:
+        return prior
+    return shrink(pen7, ip7, prior, BULLPEN_STABILIZE_IP)
+
+
 def team_window_ops(session, base_url, team_id, season, as_of_date, cache, window_days=14):
     """A team's recomputed OPS over its last `window_days` of completed games,
-    HOME AND ROAD TOGETHER. None if it has no games in the window.
+    HOME AND ROAD TOGETHER, as `(ops, plate_appearances)`. `(None, 0)` if it has
+    no games in the window.
+
+    The sample size is returned rather than discarded because the caller has to
+    shrink the rate toward the league baseline by it -- see `shrink`. Callers
+    that want the bare number must unpack; a tuple reaching arithmetic that
+    expected a float raises rather than silently mis-scoring a pick.
 
     Deliberately not team_side_ops with a flag. The split version exists to frame
     one matchup -- the home team's home form against the away team's road form --
@@ -761,9 +916,10 @@ def team_window_ops(session, base_url, team_id, season, as_of_date, cache, windo
     if key in cache:
         return cache[key]
     splits = _team_hitting_log(session, base_url, team_id, season, cache)
-    ops = _recompute_ops(_ops_window(splits, as_of_date, window_days))
-    cache[key] = ops
-    return ops
+    windowed = _ops_window(splits, as_of_date, window_days)
+    out = (_recompute_ops(windowed), _ops_pa(windowed))
+    cache[key] = out
+    return out
 
 
 def _bullpen_lines_from_boxscore(box):
@@ -792,7 +948,12 @@ def team_bullpen_era(session, base_url, team_id, as_of_date, boxscore_cache, tou
     `window_days`. Reuses the committed boxscore cache -- only Final gamePks NOT
     already cached are fetched; a cached (immutable) final game is never re-fetched.
     Every Final gamePk it considers is recorded in `touched` for cache pruning.
-    Returns a rounded ERA float, or None if the bullpen threw no innings."""
+
+    Returns `(era, innings)`. `(None, 0.0)` if the bullpen threw no innings. The
+    innings come back with the rate because a 7-day bullpen sample is the
+    thinnest input this module produces -- a real median of about 24 innings, and
+    as few as 14 -- so the caller has to shrink it toward the league baseline by
+    its own size rather than trusting it flat. See `shrink`."""
     start = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=window_days)).isoformat()
     end = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=1)).isoformat()
     sched = _get(
@@ -816,8 +977,9 @@ def team_bullpen_era(session, base_url, team_id, as_of_date, boxscore_cache, tou
                 er += line["er"]
                 outs += line["ip_outs"]
     if outs == 0:
-        return None
-    return round(9.0 * er / (outs / 3.0), 2)
+        return None, 0.0
+    innings = outs / 3.0
+    return round(9.0 * er / innings, 2), round(innings, 1)
 
 
 def season_series(session, base_url, team_id, opp_id, season, as_of_date):
@@ -849,11 +1011,18 @@ def season_series(session, base_url, team_id, opp_id, season, as_of_date):
 
 
 def pitcher_season_era(session, base_url, pitcher_id, season, cache):
-    """A pitcher's season ERA as the raw API string ("3.20"), cached per id.
-    None if unavailable (best-effort; never fails the build)."""
+    """A pitcher's season ERA as `(raw API string, innings)` -- ("3.20", 84.0) --
+    cached per id. `(None, 0.0)` if unavailable (best-effort; never fails the build).
+
+    The innings come back with the rate for the same reason team_bullpen_era's do:
+    the caller has to shrink the ERA toward the league baseline by its own sample,
+    and a starter's season innings vary enormously across a slate (p10 8.7, p90
+    95.3 measured over the 2026 season). A tuple reaching arithmetic that expected
+    a bare ERA raises rather than silently mis-scoring a pick.
+    """
     if pitcher_id in cache:
         return cache[pitcher_id]
-    era = None
+    era = ip = None
     try:
         data = _get(
             session,
@@ -862,11 +1031,13 @@ def pitcher_season_era(session, base_url, pitcher_id, season, cache):
         )
         stats = data.get("stats", [])
         if stats and stats[0].get("splits"):
-            era = stats[0]["splits"][0].get("stat", {}).get("era")
+            st = stats[0]["splits"][0].get("stat", {})
+            era, ip = st.get("era"), st.get("inningsPitched")
     except requests.RequestException:
-        era = None
-    cache[pitcher_id] = era
-    return era
+        era = ip = None
+    out = (era, _ip_to_outs(ip) / 3.0 if ip is not None else 0.0)
+    cache[pitcher_id] = out
+    return out
 
 
 def _fmt_ops(v):
@@ -875,6 +1046,15 @@ def _fmt_ops(v):
         return None
     s = "{:.3f}".format(v)
     return s[1:] if s.startswith("0.") else s
+
+
+def _num(v):
+    """The API's numeric-as-string values ("3.20") as a float, or None. Used where
+    a raw stat has to be arithmetic (shrunk) before it is formatted for display."""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
 
 
 def _fmt_era(v):
@@ -1095,26 +1275,55 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     # training_capture's feature row, and the displayed signal badge. Keeping them
     # consistent with each other matters more than tuning any one in isolation, so
     # nothing downstream is adjusted to compensate.
-    home_ops = team_window_ops(session, base_url, home_id, season, game_date, ops_cache) if home_id else None
-    away_ops = team_window_ops(session, base_url, away_id, season, game_date, ops_cache) if away_id else None
+    home_ops_raw, home_ops_pa = team_window_ops(session, base_url, home_id, season, game_date, ops_cache) if home_id else (None, 0)
+    away_ops_raw, away_ops_pa = team_window_ops(session, base_url, away_id, season, game_date, ops_cache) if away_id else (None, 0)
 
     # Bullpen ERA (7d): true bullpen, boxscore-cached.
-    home_pen = team_bullpen_era(session, base_url, home_id, game_date, boxscore_cache, touched) if home_id else None
-    away_pen = team_bullpen_era(session, base_url, away_id, game_date, boxscore_cache, touched) if away_id else None
+    home_pen_raw, home_pen_ip = team_bullpen_era(session, base_url, home_id, game_date, boxscore_cache, touched) if home_id else (None, 0.0)
+    away_pen_raw, away_pen_ip = team_bullpen_era(session, base_url, away_id, game_date, boxscore_cache, touched) if away_id else (None, 0.0)
+
+    # Season-to-date bullpen ERA -- stage one of the two-stage bullpen prior below.
+    home_pen_season, home_pen_season_ip = team_season_bullpen_era(session, base_url, home_id, season, ops_cache) if home_id else (None, 0.0)
+    away_pen_season, away_pen_season_ip = team_season_bullpen_era(session, base_url, away_id, season, ops_cache) if away_id else (None, 0.0)
+
+    # Stabilize every rate by its own sample size, HERE rather than in any one
+    # consumer, so every downstream reader sees the same number:
+    # betting_signals.build_inputs below, implied_total's three estimates,
+    # training_capture's feature row, and the displayed badge. Doing it
+    # per-consumer would leave them disagreeing about what a team's form is,
+    # which is worse than any one of them being individually mis-scaled.
+    #
+    # OPS and starter ERA shrink toward the flat league baseline. The bullpen
+    # does NOT -- it shrinks toward the team's own season-to-date value, which
+    # measured directly is the better predictor of runs allowed than the 7-day
+    # window is (r=+.0540 against +.0361). See bullpen_prior.
+    _ops_base = league_baseline(config, "ops")
+    _era_base = league_baseline(config, "era")
+    home_ops = shrink(home_ops_raw, home_ops_pa, _ops_base, OPS_STABILIZE_PA)
+    away_ops = shrink(away_ops_raw, away_ops_pa, _ops_base, OPS_STABILIZE_PA)
+    home_pen = bullpen_prior(config, home_pen_raw, home_pen_ip, home_pen_season, home_pen_season_ip)
+    away_pen = bullpen_prior(config, away_pen_raw, away_pen_ip, away_pen_season, away_pen_season_ip)
 
     # Season series (counts kept from the away team's perspective).
     series = season_series(session, base_url, away_id, home_id, season, game_date) if (away_id and home_id) else None
 
     # Probable starters + season ERA (best-effort; omit an unannounced side).
+    # The ERA is shrunk toward the league baseline by the starter's own season
+    # innings -- it is the strongest of the three measured inputs (reliability
+    # .252) but was previously trusted flat at any sample size, including an
+    # April call-up with a single start on file.
     away_pp = teams.get("away", {}).get("probablePitcher")
     home_pp = teams.get("home", {}).get("probablePitcher")
     probables = {}
     away_era = home_era = None
+    away_era_ip = home_era_ip = 0.0
     if away_pp and away_pp.get("id"):
-        away_era = _fmt_era(pitcher_season_era(session, base_url, away_pp["id"], season, era_cache))
+        _e, away_era_ip = pitcher_season_era(session, base_url, away_pp["id"], season, era_cache)
+        away_era = _fmt_era(shrink(_num(_e), away_era_ip, _era_base, STARTER_STABILIZE_IP))
         probables["away"] = {"name": away_pp.get("fullName"), **({"era": away_era} if away_era else {})}
     if home_pp and home_pp.get("id"):
-        home_era = _fmt_era(pitcher_season_era(session, base_url, home_pp["id"], season, era_cache))
+        _e, home_era_ip = pitcher_season_era(session, base_url, home_pp["id"], season, era_cache)
+        home_era = _fmt_era(shrink(_num(_e), home_era_ip, _era_base, STARTER_STABILIZE_IP))
         probables["home"] = {"name": home_pp.get("fullName"), **({"era": home_era} if home_era else {})}
 
     # ---- Team-relative framing: surface the single most-notable side per
@@ -1183,7 +1392,13 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     # under way. Guarded: capture must never break the game build.
     if training_rows is not None:
         try:
-            row = training_capture.build_feature_row(g, signal_inputs, availability, game_date)
+            row = training_capture.build_feature_row(
+                g, signal_inputs, availability, game_date,
+                samples={"away_ops_pa": away_ops_pa, "home_ops_pa": home_ops_pa,
+                         "away_bullpen_ip": away_pen_ip, "home_bullpen_ip": home_pen_ip,
+                         "away_bullpen_season_ip": away_pen_season_ip,
+                         "home_bullpen_season_ip": home_pen_season_ip,
+                         "away_starter_ip": away_era_ip, "home_starter_ip": home_era_ip})
             if row is not None:
                 training_rows.append(row)
         except Exception as e:  # noqa: BLE001 -- capture is strictly additive
@@ -1314,10 +1529,17 @@ def _build_team_entities(session, base_url, season, game_date, games, config,
                 continue
             seen.add(team_id)
             meta = team_meta.get_team_meta("mlb", full_name) or {}
-            ops = team_window_ops(session, base_url, team_id, season, game_date,
-                                  ops_cache, window_days=ops_days)
-            pen = team_bullpen_era(session, base_url, team_id, game_date,
-                                   boxscore_cache, touched, window_days=pen_days)
+            # Shrunk on the same terms as the game builder above. A team's form
+            # number must not differ between the Teams view and the game card
+            # that quotes it, so the stabilization applies to both or neither.
+            ops_raw, ops_pa = team_window_ops(session, base_url, team_id, season, game_date,
+                                              ops_cache, window_days=ops_days)
+            pen_raw, pen_ip = team_bullpen_era(session, base_url, team_id, game_date,
+                                               boxscore_cache, touched, window_days=pen_days)
+            pen_season, pen_season_ip = team_season_bullpen_era(session, base_url, team_id,
+                                                                season, ops_cache)
+            ops = shrink(ops_raw, ops_pa, ops_base, OPS_STABILIZE_PA)
+            pen = bullpen_prior(config, pen_raw, pen_ip, pen_season, pen_season_ip)
             abbr = meta.get("abbr") or t.get("abbreviation")
             # Tone is the CONNOTATION, not the raw direction (the convention
             # keySignals documents): a bullpen ERA better than league average

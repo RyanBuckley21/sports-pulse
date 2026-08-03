@@ -33,13 +33,18 @@ recoverable one, since MLB rewrites probablePitcher to the real starter on a
 finished game, so a backfill would cost one hydrated schedule call per
 already-resolved date. Not built here.
 
-Second schema note, and the one that bites silently: `away_ops` / `home_ops`
-mean DIFFERENT THINGS either side of SCHEMA_VERSION 3 (2026-08-02). Up to v2
-they were a home/road split; from v3 they are the team's combined 14-day OPS.
-The field names never changed, so nothing in a row's shape reveals the break --
-a v2 row and a v3 row are indistinguishable by shape. Check `schema_version`
-before pooling rows for anything OPS-dependent. Full detail at the
-SCHEMA_VERSION definition below.
+Second schema note, and the one that bites silently: the RATE features under
+`features` have changed meaning twice, both on 2026-08-02, and the
+row shape never changed either time -- a v2 row and a v4 row are indistinguishable by
+inspection. `schema_version` is the only marker.
+
+    v2 -> v3   away_ops / home_ops: home/road split -> combined 14-day window
+    v3 -> v4   all five rates: raw -> shrunk by their own sample size. OPS and
+               starter ERA toward the league mean; bullpen two-stage toward the
+               team's own season-to-date value. Every k measured, not borrowed.
+
+Check `schema_version` before pooling rows for anything rate-dependent. Full
+detail at the SCHEMA_VERSION definition below.
 
 CRITICAL INVARIANT -- neither store is ever rewritten. There is no "w"-mode
 open and no rebuild-a-dict-then-save anywhere in this module; append is the
@@ -104,7 +109,53 @@ OUTCOMES_PATH = "data/training/mlb_outcomes.jsonl"
 # fabricating a measurement nobody took. Split by `schema_version` at read time
 # instead -- and if the corpus is still thin at v3, prefer discarding the v2 rows
 # for OPS-dependent work over silently mixing them.
-SCHEMA_VERSION = 3
+#
+# v4 (2026-08-02, same day as v3): ALL FIVE rate features are now SHRUNK by their
+# own sample size, and a new top-level `samples` block records what they were
+# shrunk by. The field names under `features` do not change, so again nothing
+# about a row's shape reveals the break.
+#
+#   v3 and earlier: `away_ops` / `home_ops` / `away_bullpen` / `home_bullpen` /
+#     `away_starter_era` / `home_starter_era` were RAW observed rates -- whatever
+#     the 14-day, 7-day and season-to-date windows happened to produce, with no
+#     regard for how thin the window was.
+#   v4 onward: each is stabilized. OPS and starter ERA shrink toward the league
+#     baseline (config's betting_signals scales.*_solo.base: OPS .725, ERA 4.00)
+#     as shrunk = league + (observed - league) * n/(n+k), with k = 1855 PA for OPS
+#     and 141 IP for starter ERA. Bullpen ERA shrinks TWO-STAGE toward the team's
+#     own season-to-date bullpen ERA (itself first shrunk toward league at
+#     k=1119 IP) at k=289 IP -- NOT toward a flat mean. See fetchers/mlb.py's
+#     `shrink` and `bullpen_prior`.
+#
+# Every k is measured against this repo's own data (predictive validity against
+# real runs, corrected for the ceiling a team-level predictor can reach), not
+# borrowed from player-level literature. The reliabilities behind them are
+# starter ERA .252, team OPS .189, bullpen ERA .071.
+#
+# OPS and starter ERA are exactly RECOVERABLE, which is why `samples` exists:
+#     observed = league + (shrunk - league) * (n + k) / n
+# using the n in `samples` and the k above. A v3 row has no `samples` block, so it
+# cannot be converted in either direction -- absence of the key is itself the
+# version marker, and .get() on it is the safe read.
+#
+# The BULLPEN is the exception and is NOT exactly recoverable: its stage-two
+# target is the team-specific stage-one prior, reconstructible only if the
+# season-to-date bullpen ERA itself is known, and that value is not stored --
+# only its innings are. Recording it would make the row self-describing; it was
+# left out to keep `samples` to sizes rather than values. Treat a v4 bullpen
+# figure as DERIVED rather than a raw observation. That is the one place this
+# store's usual raw-observations principle bends, and worth knowing before
+# training on it.
+#
+# The practical warning compounds v3's: bullpen ERA in particular moves a long
+# way, because a 7-day sample is a real median of 24 innings against k=289, so
+# the shrunk value keeps only about 8% of the observed deviation. A v3 bullpen
+# number and a v4 one sit on visibly different scales. Split on schema_version;
+# do not pool.
+#
+# Still no migration and no backfill, for the same reason as v3: these are raw
+# pre-game observations and a v3 row honestly records what was computed that day.
+SCHEMA_VERSION = 4
 
 # MLB Stats API status vocabulary. `abstractGameState` is the coarse bucket
 # (Preview / Live / Final); `statusCode` is the fine-grained one.
@@ -227,14 +278,22 @@ def pregame_gate(game, game_date, now=None):
     return True, None
 
 
-def build_feature_row(game, signal_inputs, availability, game_date, now=None):
+def build_feature_row(game, signal_inputs, availability, game_date, now=None, samples=None):
     """One pre-game feature row, or None if any leakage gate fails (the skip
     is logged, never written).
 
     `signal_inputs` is the dict betting_signals.build_inputs() returned, stored
     verbatim under "features". `availability` is the {away,home}_probable_out
     pair computed at the same callsite -- it is NOT part of build_inputs(), so
-    it is captured alongside rather than by changing betting_signals."""
+    it is captured alongside rather than by changing betting_signals.
+
+    `samples` follows that same pattern: the plate appearances and bullpen
+    innings the OPS and ERA rates in `features` were computed from. They are not
+    part of build_inputs() either, and they matter because from v4 those rates
+    arrive already shrunk toward the league baseline by exactly these numbers --
+    keeping them makes the shrinkage auditable and the raw observation
+    recoverable. Stored beside `features`, never merged into it, so `features`
+    stays a verbatim copy of what the pick model was handed."""
     now = now or _now_utc()
     ok, reason = pregame_gate(game, game_date, now=now)
     if not ok:
@@ -263,6 +322,7 @@ def build_feature_row(game, signal_inputs, availability, game_date, now=None):
             "code": status.get("statusCode"),
         },
         "features": dict(signal_inputs or {}),
+        "samples": dict(samples or {}),
         "availability": {
             "away_probable_out": bool((availability or {}).get("away_probable_out")),
             "home_probable_out": bool((availability or {}).get("home_probable_out")),
