@@ -209,21 +209,28 @@ betting_signals:
     # per-market lean thresholds above) before the AI writes a one-sentence
     # betting_note about it. Below it, no betting prose is written at all.
     #
-    # Recalibrated 50 -> 20 alongside the reliability-proportional bet_types
-    # weights below. That is NOT a decision to show more picks: the weights now
-    # concentrate on fewer, more reliable signals, which raises the typical net
-    # lean and therefore every score, so 50 was measuring a different scale.
-    # The target is to leave the slate SIZE where it already is and change only
-    # what the picks are built from.
+    # Recalibrated twice on real simulation, never guessed. 50 -> 20 when the
+    # bet_types weights below became reliability-proportional (concentrating weight
+    # on fewer, more reliable signals raises every score, so 50 was measuring a
+    # different scale). Then 20 -> 15 when season_series was dropped, which removes
+    # the largest single weight from the two side markets and lowers their scores
+    # again.
     #
-    # Calibrated against real production, not against a hypothetical: on
-    # unmodified main -- threshold 50, no shrinkage anywhere -- 924 of 1,388 real
-    # 2026 games carry a pick (66.6%). Simulating these weights and shrunk inputs
-    # over the same 1,388 games, threshold 20 gives 928 (66.9%), four games and
-    # 0.3 points off. An earlier draft of this line targeted ~702 / 50.5%; that
-    # figure assumed an interim PR had shipped, it was closed unmerged, so it
-    # never described a state this repo was ever in.
-    standout_threshold: 20
+    # 15 is the CLOSEST REACHABLE value, not a free choice. Production before this
+    # change carried 928 of 1,388 real 2026 games (66.9%). Without season_series
+    # the slate plateaus at 850 (61.2%) and no lower standout_threshold recovers
+    # the rest: min_threshold (15) already drops any market below it from
+    # list_markets, so top_market cannot return one, and 15 is where the two
+    # thresholds meet. The remaining 78-game shortfall is structural -- games where
+    # no market carries a lean at all rose from 304 to 538, because _finalize needs
+    # >=2 signals agreeing with the net direction and the side markets just went
+    # from four signals to three. Recovering those would mean moving min_threshold
+    # or that guard, which is a separate decision and not made here.
+    #
+    # NOTE this now EQUALS min_threshold, so the standout is simply the
+    # highest-scoring market that carries any lean at all. The stricter-than-lean
+    # distinction the two thresholds used to express no longer exists.
+    standout_threshold: 15
     # tanh normalization: `*_gap` = the home-vs-away spread that reads as a
     # meaningful edge; `*_total`/`*_solo` = league baseline + spread for
     # over/under-style magnitudes.
@@ -244,39 +251,51 @@ betting_signals:
     # RELIABILITY-PROPORTIONAL. Each weight below is a domain base split scaled by
     # the MEASURED reliability of the signal family it names, then renormalized:
     #     starter ERA 0.252 · team OPS 0.189 · bullpen ERA 0.071
-    # Those three come from this repo's own data (predictive validity against real
-    # runs, corrected for the ceiling any team-level predictor can reach).
-    # season_series is left at 1.0 -- not because it is known to be reliable, but
-    # because it has never been measured, and inventing a discount would be worse
-    # than leaving it. It is therefore the largest single weight in the two side
-    # markets, which is a known consequence to revisit once it is measured.
+    # Those come from this repo's own data (predictive validity against real runs,
+    # corrected for the ceiling any team-level predictor can reach).
+    #
+    # season_series was the fourth family and has been REMOVED, not shrunk. It was
+    # measured the same way the other three were, against real 2026 games, and it
+    # carries no usable signal:
+    #   * point-biserial r with the real home/away result = -0.02, 95% CI
+    #     [-0.083, +0.042] -- not significant, and the point estimate is the WRONG
+    #     SIGN. Bootstrap P(r > 0) = 0.26.
+    #   * adding it to a model already holding the other three does nothing:
+    #     likelihood-ratio test p = 0.291, AUC +0.0016, pseudo-R2 +0.0008.
+    #   * it does not exist in 29% of games (the teams have not met yet), so the
+    #     market silently re-weighted around it for a third of the season.
+    #   * where it does exist the median sample is 2 games, 65% sit at the maximum
+    #     +/-1.0, and 42% of those are ONE game -- it was the only base signal used
+    #     raw, with no tanh scale and no shrinkage.
+    # Shrinking it was not a coherent alternative: the natural centre of a
+    # head-to-head differential is 0, so shrinking toward that with a median
+    # sample of 2 games is removal by a longer route.
     #
     # Removed weight is NOT redistributed. _raw_lean renormalizes by the weight
-    # sum, so only relative weights matter; redistributing to the unmeasured
-    # family would actively promote it rather than leave it in place. See the PR.
+    # sum, so only relative weights matter; redistributing would actively promote
+    # whatever family received it rather than leave the rest in place. A key simply
+    # absent from a market's dict is never looked up -- no scoring-code change is
+    # needed to drop a family.
     bet_types:
       moneyline:
-        team_ops: 0.189
-        bullpen_era: 0.059
-        probable_era: 0.252
-        season_series: 0.500
+        team_ops: 0.378
+        bullpen_era: 0.118
+        probable_era: 0.504
       # No longer a copy of moneyline. A run line needs a DECISIVE margin, which
       # tracks the starting-pitching mismatch more than a narrow team-quality
-      # edge, so the base split leans starter (0.25/0.20/0.40/0.15) before the
-      # same reliability scaling is applied.
+      # edge, so the base split leans starter (ops 0.25 / pen 0.20 / starter 0.40)
+      # before the same reliability scaling is applied.
       run_line:
-        team_ops: 0.151
-        bullpen_era: 0.045
-        probable_era: 0.323
-        season_series: 0.480
+        team_ops: 0.291
+        bullpen_era: 0.088
+        probable_era: 0.621
       game_total:
         combined_ops: 0.377
         combined_starter_era: 0.502
         combined_bullpen_era: 0.121
       first_five_moneyline:
-        probable_era: 0.455
-        team_ops: 0.217
-        season_series: 0.328
+        probable_era: 0.677
+        team_ops: 0.323
       first_five_total:
         combined_starter_era: 0.667
         combined_ops: 0.333
