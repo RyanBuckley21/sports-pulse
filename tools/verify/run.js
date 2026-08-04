@@ -588,11 +588,60 @@ async function detailHistoryChecks(browser, base) {
 // gameInsight, playerInsight, teamInsight and the gallery from ONE function, so
 // forking the behaviour per screen is the regression to watch for: the checks
 // run the same assertions on Games and on Players.
+//
+// GATED ON data.aiInsightsEnabled. config.yaml has ai_insights.enabled: false,
+// so real pipeline output carries the flag false and Cards.aiSummary returns ""
+// for every entity -- there is no note to disclose and every assertion below is
+// unanswerable. That is not a regression, it is the flag doing its job, so the
+// disclosure checks are skipped. What replaces them is the flag's OWN contract,
+// which is just as testable and currently untested: nothing renders a note
+// anywhere. Skipping outright would leave that unverified, and a leak past a
+// disabled flag is the more expensive bug of the two -- it ships AI prose from
+// a build that was configured to have none.
+//
+// The fixture omits the key entirely, which is the third case on purpose:
+// insights.js defaults AI_ENABLED true on absence (mock-insights.json predates
+// the flag), so `node tools/verify/run.js` after make_fixture still runs the
+// full disclosure suite. Point VERIFY_ROOT at a built site/ to exercise the
+// disabled path against what actually deploys.
 async function aiNoteChecks(browser, base) {
   heading("ai-note");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
+
+  // Read from the same data.json the app just fetched, not from config.yaml:
+  // this asserts against the artefact under test, which is the only thing that
+  // can be wrong here. A built site/ carries its own data.json.
+  const aiEnabled = JSON.parse(
+    fs.readFileSync(path.join(WEB, "data.json"), "utf8")).aiInsightsEnabled !== false;
+  if (!aiEnabled) {
+    console.log("  SKIP  disclosure checks -- data.json has aiInsightsEnabled: false");
+    for (const route of ["#/games", "#/players"]) {
+      await goRoute(p, route);
+      await p.waitForTimeout(300);
+      // Open a row: the note is built lazily inside it, so an unopened row
+      // would report zero notes whether the flag worked or not.
+      const row = route === "#/games" ? ".gr-row" : ".pi-row";
+      await p.click(row);
+      await p.waitForTimeout(400);
+      const found = await p.evaluate(() => ({
+        boxes: document.querySelectorAll(".ai-summary").length,
+        heads: document.querySelectorAll("[data-ainote]").length,
+      }));
+      ok("the flag is off, so " + route + " renders no AI note",
+         found.boxes === 0 && found.heads === 0,
+         "ai-summary=" + found.boxes + " data-ainote=" + found.heads);
+      // The gate is on the note alone -- the deterministic card must survive it.
+      const detail = await p.$$eval(
+        route === "#/games" ? ".gr-item.is-open .gr-detail" : ".pi-item.is-open .pi-detail",
+        (e) => e.length);
+      ok("  and the row still opens its deterministic detail", detail === 1,
+         "open details=" + detail);
+    }
+    await p.close();
+    return;
+  }
 
   const state = () => p.evaluate(() => {
     const box = document.querySelector(".ai-summary");
