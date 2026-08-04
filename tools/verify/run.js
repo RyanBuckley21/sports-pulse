@@ -588,11 +588,60 @@ async function detailHistoryChecks(browser, base) {
 // gameInsight, playerInsight, teamInsight and the gallery from ONE function, so
 // forking the behaviour per screen is the regression to watch for: the checks
 // run the same assertions on Games and on Players.
+//
+// GATED ON data.aiInsightsEnabled. config.yaml has ai_insights.enabled: false,
+// so real pipeline output carries the flag false and Cards.aiSummary returns ""
+// for every entity -- there is no note to disclose and every assertion below is
+// unanswerable. That is not a regression, it is the flag doing its job, so the
+// disclosure checks are skipped. What replaces them is the flag's OWN contract,
+// which is just as testable and currently untested: nothing renders a note
+// anywhere. Skipping outright would leave that unverified, and a leak past a
+// disabled flag is the more expensive bug of the two -- it ships AI prose from
+// a build that was configured to have none.
+//
+// The fixture omits the key entirely, which is the third case on purpose:
+// insights.js defaults AI_ENABLED true on absence (mock-insights.json predates
+// the flag), so `node tools/verify/run.js` after make_fixture still runs the
+// full disclosure suite. Point VERIFY_ROOT at a built site/ to exercise the
+// disabled path against what actually deploys.
 async function aiNoteChecks(browser, base) {
   heading("ai-note");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
+
+  // Read from the same data.json the app just fetched, not from config.yaml:
+  // this asserts against the artefact under test, which is the only thing that
+  // can be wrong here. A built site/ carries its own data.json.
+  const aiEnabled = JSON.parse(
+    fs.readFileSync(path.join(WEB, "data.json"), "utf8")).aiInsightsEnabled !== false;
+  if (!aiEnabled) {
+    console.log("  SKIP  disclosure checks -- data.json has aiInsightsEnabled: false");
+    for (const route of ["#/games", "#/players"]) {
+      await goRoute(p, route);
+      await p.waitForTimeout(300);
+      // Open a row: the note is built lazily inside it, so an unopened row
+      // would report zero notes whether the flag worked or not.
+      const row = route === "#/games" ? ".gr-row" : ".pi-row";
+      await p.click(row);
+      await p.waitForTimeout(400);
+      const found = await p.evaluate(() => ({
+        boxes: document.querySelectorAll(".ai-summary").length,
+        heads: document.querySelectorAll("[data-ainote]").length,
+      }));
+      ok("the flag is off, so " + route + " renders no AI note",
+         found.boxes === 0 && found.heads === 0,
+         "ai-summary=" + found.boxes + " data-ainote=" + found.heads);
+      // The gate is on the note alone -- the deterministic card must survive it.
+      const detail = await p.$$eval(
+        route === "#/games" ? ".gr-item.is-open .gr-detail" : ".pi-item.is-open .pi-detail",
+        (e) => e.length);
+      ok("  and the row still opens its deterministic detail", detail === 1,
+         "open details=" + detail);
+    }
+    await p.close();
+    return;
+  }
 
   const state = () => p.evaluate(() => {
     const box = document.querySelector(".ai-summary");
@@ -657,11 +706,23 @@ async function aiNoteChecks(browser, base) {
      "readmore=" + stale.readmore + " clamp=" + stale.clamped);
 
   // ---- Players: same component, so the same behaviour, unforked ----
+  // The players list is an accordion now ("players: collapsible rows, accordion
+  // like Games"), so playerInsight -- and the AI note inside it -- is built
+  // lazily into .pi-detail-inner on first tap, exactly like gameInsight. These
+  // checks used to read the note straight off #/players because the card was
+  // rendered inline there; that is no longer a thing the page does, so the row
+  // gets opened first, the same way the Games half above does.
+  const noteCount = () => p.$$eval(".ai-summary", (e) => e.length);
   await goRoute(p, "#/players");
   await p.waitForTimeout(300);
+  ok("players: the list arrives with no note built yet", (await noteCount()) === 0,
+     "notes=" + (await noteCount()));
+  await p.click(".pi-row");
+  await p.waitForTimeout(400);
   s = await state();
-  ok("players: the note is collapsed on arrival", s !== null && s.revealed === false && s.innerH === 0,
-     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
+  ok("  an expanded row renders one", s !== null);
+  ok("  collapsed on open, same as games", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
   await p.click("[data-ainote]");
   await p.waitForTimeout(450);
   s = await state();
@@ -669,12 +730,20 @@ async function aiNoteChecks(browser, base) {
      "revealed=" + s.revealed + " innerH=" + s.innerH);
 
   // Same guarantee the row accordion has: state is a class on re-rendered DOM,
-  // so leaving and returning must reset it rather than restore it.
+  // so leaving and returning must reset it rather than restore it. With the
+  // accordion that now holds at BOTH levels -- the row closes, and the note
+  // behind it comes back collapsed rather than remembering it was open.
   await goRoute(p, "#/games");
   await goRoute(p, "#/players");
+  await p.waitForTimeout(300);
+  ok("  leaving and returning closes the row that held it", (await noteCount()) === 0,
+     "notes=" + (await noteCount()));
+  await p.click(".pi-row");
+  await p.waitForTimeout(400);
   s = await state();
-  ok("  leaving and returning re-collapses it", s.revealed === false && s.innerH === 0,
-     "revealed=" + s.revealed + " innerH=" + s.innerH);
+  ok("  and its note is rebuilt collapsed, not restored open",
+     s !== null && s.revealed === false && s.innerH === 0,
+     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
 
   await p.close();
 }

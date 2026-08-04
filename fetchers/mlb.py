@@ -12,12 +12,53 @@ category) instead of pulling every boxscore in the window.
 
 import datetime
 import math
+import os
 
 import requests
 
 import pulse
 
 REQUEST_TIMEOUT = 15
+
+
+class SlateBuildError(RuntimeError):
+    """Every game on a non-empty slate failed to build.
+
+    Distinct from a single game failing (which build_game_entities skips and
+    reports) and from an empty slate (a real off-day, which is {} and fine).
+    Raised so callers can tell "there was nothing to build" apart from "the
+    builder is broken" -- the two look identical from an empty return value,
+    and treating the second as the first is how a full slate silently became
+    no slate at all.
+    """
+
+
+def _annotate(title, detail):
+    """Print `detail`, and under GitHub Actions also raise it to the run summary.
+
+    Same convention as capture_training_data._fail: a degraded-but-successful
+    run has to be diagnosable without opening the step logs, since nothing
+    about the exit code says anything happened.
+    """
+    print("insights(games): {}: {}".format(title, detail))
+    if os.environ.get("GITHUB_ACTIONS"):
+        print("::warning title={}::{}".format(title, detail))
+
+
+def _matchup_label(g):
+    """"AWAY @ HOME" from a raw schedule game, for error messages only.
+
+    Deliberately reads the raw payload rather than going through team_meta:
+    this labels a game whose build just failed, so it cannot depend on any of
+    the lookups that might be what failed.
+    """
+    teams = g.get("teams") or {}
+
+    def side(key):
+        t = (teams.get(key) or {}).get("team") or {}
+        return t.get("abbreviation") or t.get("teamName") or t.get("name") or "?"
+
+    return "{} @ {}".format(side("away"), side("home"))
 
 
 def _get(session, url, params=None):
@@ -1604,7 +1645,13 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
         store (Phase 1), one per game that passed training_capture's leakage
         gates. Returned rather than written here so store I/O stays with the
         caller, matching how the boxscore cache is handled. Callers that don't
-        want them can ignore the third element."""
+        want them can ignore the third element.
+
+    Per-game failures are contained: a game that raises is logged with its
+    gamePk, skipped, and reported through _annotate, and the rest of the slate
+    is returned as normal. If EVERY scheduled game fails, that is the builder
+    being broken rather than a bad game, and SlateBuildError is raised -- an
+    empty return is reserved for a genuinely empty slate."""
     mlb_cfg = config["mlb"]
     base_url = mlb_cfg["base_url"]
     season = mlb_cfg["season"]
@@ -1628,13 +1675,44 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     ops_cache, era_cache = {}, {}
     entities = {}
     training_rows = []
-    for d in sched.get("dates", []):
-        for g in d.get("games", []):
-            ent = _build_one_game(
+    scheduled = [g for d in sched.get("dates", []) for g in d.get("games", [])]
+    failed = []
+    for g in scheduled:
+        pk = str(g.get("gamePk"))
+        try:
+            entities[pk] = _build_one_game(
                 session, base_url, season, game_date, g, boxscore_cache, touched,
                 ops_cache, era_cache, config, injured_ids, training_rows=training_rows,
             )
-            entities[str(g.get("gamePk"))] = ent
+        except Exception as e:  # noqa: BLE001 -- one bad game must not cost the slate
+            # THIS is the isolation the caller's guard was believed to provide.
+            # It never did: the loop was bare, so a single game raising here
+            # propagated out of build_game_entities and the caller turned the
+            # WHOLE slate into {}. Skipping the one game keeps the other N-1
+            # games, their signals, and their training rows.
+            failed.append(pk)
+            print("insights(games): game {} ({}) failed to build ({}: {}); skipped"
+                  .format(pk, _matchup_label(g), type(e).__name__, str(e)[:160]))
+
+    # Every game failing is not a partial slate -- it is the build being broken
+    # (schema change, bad config, an endpoint returning something new), and it
+    # must reach the caller as a failure rather than as an empty result. An
+    # empty slate with nothing scheduled is a legitimate off-day and returns {}.
+    # Checked BEFORE the partial-slate annotation below, which would otherwise
+    # promise that "the rest of the slate is unaffected" when there is no rest.
+    if scheduled and not entities:
+        raise SlateBuildError(
+            "all {} games on the {} slate failed to build; see the per-game "
+            "errors above".format(len(scheduled), game_date))
+
+    # A partial slate is survivable but never silent -- under Actions the count
+    # lands on the run summary, so a quietly shrinking slate is visible without
+    # opening the logs.
+    if failed:
+        _annotate("Games missing from the {} slate".format(game_date),
+                  "{} of {} games failed to build and were skipped ({}). The rest of "
+                  "the slate, its signals and its training rows are unaffected."
+                  .format(len(failed), len(scheduled), ", ".join(failed)))
 
     # Teams, from the same session and the same caches the game loop just warmed.
     # Guarded separately: the Teams view is additive, and a failure here must not
