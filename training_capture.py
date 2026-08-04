@@ -50,7 +50,7 @@ CRITICAL INVARIANT -- neither store is ever rewritten. There is no "w"-mode
 open and no rebuild-a-dict-then-save anywhere in this module; append is the
 only write verb. That is the deliberate opposite of data/insights.games.json,
 which is pruned back to today's slate on every run (see
-generate_insights._generate_games) and of data/boxscores.json (pruned to
+generate_insights._carry_forward_games_store) and of data/boxscores.json (pruned to
 `touched` in mlb.build_game_entities). A feature row is written once, before
 first pitch, and never touched again -- which is what makes label leakage
 structurally impossible here rather than merely avoided by convention.
