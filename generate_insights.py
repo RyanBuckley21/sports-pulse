@@ -1,160 +1,58 @@
-"""Phase 3 -- AI Insight Generator.
+"""Phase 3 -- Insight merge + deterministic game/team builder.
 
 Runs as the final step of the generation pipeline (called from
-generate_stats.main). Turns already-computed Sports Pulse player stats into
-short, plain-language INTERPRETATION (story / summary / key-takeaways) via
-Claude Code headless (`claude -p`). The AI never calculates: every number it
-may cite is computed here in code and passed in; the model only writes prose.
+generate_stats.main). Merges the committed insight stores into `data` -- the
+per-row `insight` objects and the card-ready data["insights"] sections -- and
+owns the deterministic game and team builders that run on every pipeline pass.
 
-Change detection: an entity (a unique player) is only re-generated when a new
-game has been played since the last run (or it's new, or the prompt template
-changed). Otherwise its previous text is carried forward with no model call.
+NO AI PROSE IS GENERATED HERE ANY MORE. This module used to shell out to Claude
+Code headless (`claude -p`) to write story/summary/takeaways; config.yaml has
+had ai_insights.enabled false since 2026-07-28, so that path had not run in
+months and was removed. What survives is the merge, which reads whatever text
+the committed stores already hold and carries it forward untouched -- nothing
+here invents, rewrites, or refreshes prose.
+
+The three disable layers are kept intact in run() (see the comment there): the
+config kill switch, SP_SKIP_INSIGHTS, and the `claude` CLI probe. They are what
+guarantee this module makes no AI calls. Note the consequence: with the
+generation code gone, re-enabling the flag surfaces the stores' existing text
+rather than producing new text.
 
 Persistence: a single committed store, data/insights.json, is both the
 change-detection cache and the carry-forward source (output/ is gitignored and
 runs are ephemeral, so the store must be committed to survive).
-
-CI-safe: if the claude CLI isn't available (or SP_SKIP_INSIGHTS is set), the
-step logs a skip and returns without touching anything -- the data pipeline is
-unaffected.
 """
 
-import datetime
 import json
 import os
-import re
 import shutil
-import subprocess
 
 import pulse
 import training_capture
 from fetchers import mlb
 
-# v2: the player call now also returns a one-sentence `matchup_note` (career line
-# vs the next starter, when it clears the player_angle bar) and the general prose
-# gains the betting-tone banned-word list -- output/rules changed, so bump.
+# Stamped onto every player store entry as `template_version`. It used to mean
+# "which prompt produced this text", and bumping it forced regeneration; with the
+# prompts gone it is frozen at the last value that actually generated anything,
+# and survives only so existing store entries keep validating. Nothing bumps it.
 PROMPT_VERSION = "v2"
 STORE_PATH = "data/insights.json"
 # Game insights (full slate every run -- NOT capped like players). Their own
 # committed store (keyed by gamePk), separate from the player store's name|team
 # keys so pruning and change-detection stay clean.
-# v2: the game call now also returns a one-sentence `betting_note` (folded in
-# from the retired separate betting-explanation call). v3: readable market label
-# in the note + the banned-word list extended to the general Story/Summary prose.
+# Same as PROMPT_VERSION, for the games store. Frozen at the last generating
+# value; nothing bumps it.
 GAME_PROMPT_VERSION = "v3"
 GAMES_STORE_PATH = "data/insights.games.json"
 # Committed per-gamePk boxscore cache (lean reliever lines) backing bullpen ERA
 # (7d). A final game's boxscore is immutable, so it's fetched once and reused
 # across runs; see fetchers/mlb.build_game_entities.
 BOXSCORE_CACHE_PATH = "data/boxscores.json"
-# Only the top-N players by pulse score get insights (AI calls, store entries,
-# and rendered cards). Caps generation/CI/merge work and keeps the committed
-# store bounded (stale entries below the cap are pruned each generation run).
+# Only the top-N players by pulse score get insights (store entries and rendered
+# cards). Caps merge work and keeps the committed store bounded -- stale entries
+# below the cap are pruned on each run.
 TOP_N = 20
-# Simple interpretation task -> default to a small, fast, cheap model. Uses the
-# CLI's short model alias ("haiku"); the fully-qualified id is not accepted by
-# --model and hangs. Override with SP_INSIGHTS_MODEL=sonnet for richer prose.
-MODEL = os.environ.get("SP_INSIGHTS_MODEL", "haiku")
-# Pinned per-call timeout. The suggested 30s proved too tight in practice --
-# real interpretation calls were observed at ~25s (CLI spawn + cold model +
-# output), so a timeout would needlessly drop an entity's insight. 60s gives
-# margin; a genuinely stuck call still can't hang the pipeline.
-CALL_TIMEOUT_S = 60
 
-# Auth safety: by default we STRIP these from the subprocess env so `claude`
-# authenticates via the logged-in Claude *subscription* session, never against
-# paid API billing. Opt into API-key auth deliberately with SP_ALLOW_API_BILLING=1.
-API_KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
-# Second auth gap, same principle: stripping API keys only guarantees a
-# subscription session when the ONLY other option is a local login. In a
-# host-managed or remote environment the CLI authenticates through a credential
-# this script never sees (an injected token and/or a redirected endpoint), so
-# there is nothing to strip and the API-key check passes while calls still spend
-# against someone else's provisioning. Detect those environments and abort.
-#
-# Deliberately narrow. Running generation from inside a LOCAL Claude Code
-# session is a supported workflow (it's the documented same-day regen pattern),
-# and that sets CLAUDECODE / assorted CLAUDE_CODE_* vars -- so those must NOT
-# trigger. Only unambiguous "not your local subscription" markers belong here:
-# a redirected API endpoint, an explicitly remote environment, or cloud-provider
-# routing (which is paid billing by definition).
-MANAGED_AUTH_VARS = (
-    "ANTHROPIC_BASE_URL",     # calls redirected off the default endpoint
-    "CLAUDE_CODE_REMOTE",     # remote/hosted container, not this user's machine
-    "CLAUDE_CODE_USE_BEDROCK",
-    "CLAUDE_CODE_USE_VERTEX",
-)
-
-# Hard banned-word list (recommendation/action tone) enforced on ALL generated
-# text -- betting_note, matchup_note, AND the general story/summary/takeaways.
-# The prompts instruct against these; this is the belt-and-suspenders check that
-# lets a call self-heal (bounded retry) when the model slips, so the daily job
-# never ships e.g. "series edge" or a "bullpen unit". AI-prose-only: _has_banned
-# is called solely from _call_claude/_call_claude_game, so it never runs (and
-# never needs to) when ai_insights.enabled is false -- there's no deterministic
-# text anywhere else in the pipeline that this check scans.
-_BANNED_SINGLE = ("bet", "back", "fade", "play", "take", "tail", "hammer", "consider",
-                  "recommend", "pick", "lock", "value", "edge", "unit", "units", "odds",
-                  "cover", "juice", "chalk", "you", "your")
-_BANNED_PHRASES = ("lean into", "the play is", "you should", "+ev")
-_BANNED_RE = re.compile(r"\b(" + "|".join(_BANNED_SINGLE) + r")\b", re.I)
-BANNED_RETRIES = 2  # extra attempts (only spent when a slip actually occurs)
-
-
-def _has_banned(*texts):
-    """True if any banned single-word or phrase appears in any of `texts`."""
-    for t in texts:
-        if not t:
-            continue
-        if _BANNED_RE.search(t):
-            return True
-        low = t.lower()
-        if any(p in low for p in _BANNED_PHRASES):
-            return True
-    return False
-
-PROMPT_TEMPLATE = """You are a baseball analyst writing brief, factual context for a "who's hot" dashboard. You are given ONE player's already-computed recent stats as JSON. Your job is INTERPRETATION ONLY.
-
-Hard rules:
-- Never compute, estimate, round, or invent any number. Use only numbers that appear verbatim in the input. If unsure, omit the number.
-- Never predict outcomes, games, or future performance. No "will", no odds, no projections. Describe what has happened and why it's notable.
-- Plain language, no hype, no cliches.
-- BANNED words anywhere in any field (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood.
-
-matchup_note (one optional sentence about the player's history vs the pitcher they face next):
-- The input MAY include an "angle" object: the player's CAREER line against their next opponent's probable starter -- our system already judged it notable. It has "pitcher_name", integer "ab"/"hits"/"hr"/"rbi", a string "avg", and a "tilt" ("strong" = the hitter has handled this pitcher; "weak" = the pitcher has handled the hitter). It is NOT a prediction and NOT advice.
-- If "angle" is present: matchup_note MUST be a non-empty single sentence -- a present angle with an empty matchup_note is INVALID output. Name the pitcher, cite the career line using the EXACT integers/avg verbatim (e.g. "9-for-22 with 4 home runs"), tie it to the hitter's current form, and reflect the tilt (a favorable history when "strong", a struggle when "weak"). Do NOT predict tonight's result.
-- If "angle" is null or absent: matchup_note MUST be an empty string "". Do not mention the upcoming pitcher or any head-to-head history at all.
-
-Return STRICT JSON only (no prose, no markdown), exactly:
-{ "story": "<2-3 sentences>", "summary": "<1 sentence>", "takeaways": ["<short>", "<short>", "<short>"], "matchup_note": "<one sentence, or empty string \"\">" }
-
-Player JSON:
-"""
-
-PROMPT_TEMPLATE_GAME = """You are a baseball analyst writing brief, factual context for one of today's games on a "who's hot" dashboard. You are given ONE game's already-computed matchup context as JSON. Your job is INTERPRETATION ONLY.
-
-Hard rules:
-- Never compute, estimate, round, or invent any number. Use only numbers that appear verbatim in the input. If unsure, omit the number.
-- Never predict the outcome, score, or winner. No "will", no odds, no projections. Describe the form and context each side brings in, and why it's notable.
-- Both teams' numbers are provided; write even-handed context, not a pick.
-- Plain language, no hype, no cliches.
-- BANNED words anywhere in any field, including story and summary (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood.
-
-betting_note (one optional sentence about a single pre-computed betting-signal score):
-- The input MAY include a "standout" object: the ONE market our system already scored as most notable, with an exact integer "score" (0-100), a "side", and a readable "market" name. It is NOT a prediction and NOT advice; you are only describing what that computed signal shows.
-- If "standout" is present: betting_note MUST be a non-empty single sentence -- a present standout with an empty betting_note is INVALID output. Name the market (use the readable "market" text verbatim -- never the raw key) and side, cite the score as the EXACT integer verbatim, and attribute it to the driving stat from the context (the relevant ERA, OPS, or bullpen gap). Use this shape: "The signal points to <side> on the <market> at a score of <score>, driven by <driver stat from context>." If "standout" carries a flag naming a scratched/absent probable starter (e.g. "away_probable_out"/"home_probable_out"/"starter_scratched"), you MUST state that scratch in the sentence.
-- If "standout" is null or absent: betting_note MUST be an empty string "". Do not mention betting, markets, signals, or scores at all.
-- betting_note BANNED words anywhere (hard constraint): bet, back, fade, play, take, tail, hammer, lean into, "the play is", "you should", consider, recommend, pick, lock, value, edge, unit, units, odds, "+EV", cover, juice, chalk. No second person ("you"/"your"). No imperative/command mood. Say what the signal SHOWS ("the signal points to X because Y"), never what to do about it.
-
-Return STRICT JSON only (no prose, no markdown), exactly:
-{ "story": "<2-3 sentences>", "summary": "<1 sentence>", "betting_note": "<one sentence, or empty string \"\">" }
-
-Game JSON:
-"""
-
-
-# ---------------- entity builder (deterministic; "AI never calculates") ----------------
 
 def _entity_key(name, team_abbr):
     return "{}|{}".format((name or "").strip().lower(), (team_abbr or "").strip().lower())
@@ -271,252 +169,6 @@ def _player_angle(ent, config):
     return None
 
 
-def _prompt_payload(ent):
-    """The trimmed entity object sent to the model (no internal/display-only keys)."""
-    payload = {
-        "name": ent.get("entity"),
-        "team": ent.get("team"),
-        "position": ent.get("position"),
-        "pulse": ent.get("pulse"),
-        "signals": ent.get("signals"),
-        "stats": ent.get("stats"),
-    }
-    # Only the GATED vs-pitcher angle reaches the model -> the note fires solely
-    # when it clears the bar, and story/summary can't cite an unvetted small sample.
-    if ent.get("angle"):
-        payload["angle"] = ent["angle"]
-    return payload
-
-
-# ---------------- Claude headless invocation ----------------
-
-def _parse_json_object(text):
-    text = (text or "").strip()
-    if text.startswith("```"):
-        text = text.strip("`")
-        text = re.sub(r"^json\s*", "", text, flags=re.I).strip()
-    try:
-        return json.loads(text)
-    except ValueError:
-        m = re.search(r"\{.*\}", text, re.S)
-        if not m:
-            raise
-        return json.loads(m.group(0))
-
-
-class _AuthError(RuntimeError):
-    """Auth could not be established via the subscription session."""
-
-
-class _ManagedAuthError(_AuthError):
-    """The environment authenticates `claude` through a host-managed credential
-    (remote container, redirected endpoint, cloud provider) rather than this
-    user's local subscription session. Raised BEFORE any call is made."""
-
-
-def _managed_auth_reason(env):
-    """Return a human-readable reason if this environment would authenticate the
-    `claude` subprocess through something other than a local subscription
-    session, else None. Pure inspection -- makes no calls."""
-    present = [v for v in MANAGED_AUTH_VARS if env.get(v)]
-    if not present:
-        return None
-    return "host-managed auth environment detected ({} set)".format(", ".join(present))
-
-
-def _subprocess_env():
-    """Env for the `claude` subprocess. By default removes any API-key vars so
-    the CLI must use the logged-in Claude subscription session -- this guarantees
-    we never silently run against paid API billing. SP_ALLOW_API_BILLING=1 is an
-    explicit opt-in to keep the key."""
-    env = dict(os.environ)
-    present = [v for v in API_KEY_VARS if env.get(v)]
-    if present and not os.environ.get("SP_ALLOW_API_BILLING"):
-        for v in present:
-            env.pop(v, None)
-        print("insights: NOTE {} set in env -> stripped so calls use your Claude "
-              "subscription, not paid API billing (set SP_ALLOW_API_BILLING=1 to override)."
-              .format(", ".join(present)))
-    elif present:
-        print("insights: SP_ALLOW_API_BILLING=1 -> using API-key auth; this MAY incur API charges.")
-    return env
-
-
-def _preflight(env):
-    """One tiny call to confirm the session authenticates before the loop. Raises
-    _AuthError (loud abort) rather than letting the run limp on -- and because the
-    API key is already stripped, a failure here means only an API key was
-    available, which we refuse to use silently.
-
-    Gated first on the environment itself: a host-managed/remote context is
-    rejected without making any call at all, since there the CLI would
-    authenticate through a credential we never see and cannot strip."""
-    managed = _managed_auth_reason(env)
-    if managed and not os.environ.get("SP_ALLOW_MANAGED_AUTH"):
-        raise _ManagedAuthError(managed)
-    if managed:
-        print("insights: SP_ALLOW_MANAGED_AUTH=1 -> {}; proceeding anyway, so calls "
-              "spend against that environment's provisioning.".format(managed))
-    proc = subprocess.run(
-        ["claude", "-p", "--output-format", "json", "--model", MODEL],
-        input="Reply with exactly: ok", capture_output=True, text=True,
-        timeout=CALL_TIMEOUT_S, env=env,
-    )
-    if proc.returncode != 0:
-        raise _AuthError((proc.stderr or proc.stdout or "").strip()[:300])
-    try:
-        envelope = json.loads(proc.stdout)
-    except ValueError:
-        raise _AuthError("unparseable preflight response")
-    if envelope.get("is_error"):
-        raise _AuthError("claude reported error: {}".format(envelope.get("subtype")))
-
-
-def _invoke_claude(prompt, env, timeout=CALL_TIMEOUT_S, usage_log=None):
-    """Run one `claude -p` headless call and return the parsed JSON object from
-    its result envelope. Raises on non-zero exit / error envelope / unparseable
-    output (caller decides carry-forward). Shared by the player and game paths.
-
-    When `usage_log` is a list, one record of the call's REAL cost/token usage
-    (straight off the envelope -- never estimated) is appended to it. Recorded
-    before the is_error check, because a failed call still spends tokens, and
-    wrapped in try/except so accounting can never break a real run."""
-    proc = subprocess.run(
-        ["claude", "-p", "--output-format", "json", "--model", MODEL],
-        input=prompt, capture_output=True, text=True, timeout=timeout, env=env,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError("claude exit {}: {}".format(proc.returncode, (proc.stderr or "")[:200]))
-    envelope = json.loads(proc.stdout)
-    if usage_log is not None:
-        try:
-            usage = envelope.get("usage") or {}
-            usage_log.append({
-                "cost_usd": envelope.get("total_cost_usd"),
-                "input_tokens": usage.get("input_tokens"),
-                "output_tokens": usage.get("output_tokens"),
-                "cache_read_input_tokens": usage.get("cache_read_input_tokens"),
-                "cache_creation_input_tokens": usage.get("cache_creation_input_tokens"),
-            })
-        except Exception:  # noqa: BLE001 -- accounting must never break generation
-            pass
-    if envelope.get("is_error"):
-        raise RuntimeError("claude reported error: {}".format(envelope.get("subtype")))
-    return _parse_json_object(envelope.get("result", ""))
-
-
-def _matchup_fallback_note(angle):
-    """Deterministic, rule-compliant one-liner used ONLY when the model returns an
-    empty matchup_note for a player that HAS an angle -- enforces "angle present =>
-    note present". Cites the exact career line (no banned words)."""
-    hr = int(angle.get("hr") or 0)
-    hrpart = " with {} HR".format(hr) if hr else ""
-    return "Career line vs {}: {}-for-{}{} ({}).".format(
-        angle.get("pitcher_name"), angle.get("hits"), angle.get("ab"), hrpart, angle.get("avg"))
-
-
-def _call_claude(ent, env, usage_log=None):
-    """One headless call for one player entity. Returns
-    {story,summary,takeaways,matchup_note} or raises (caller decides carry-forward).
-    Enforces the angle=>note invariant with a deterministic fallback, and retries
-    (bounded) if any generated field trips the banned-word check.
-    `usage_log` is passed straight through to _invoke_claude (see there)."""
-    prompt = PROMPT_TEMPLATE + json.dumps(_prompt_payload(ent), ensure_ascii=False)
-    angle = ent.get("angle")
-    result = None
-    for attempt in range(BANNED_RETRIES + 1):
-        obj = _invoke_claude(prompt, env, usage_log=usage_log)
-        takeaways = obj.get("takeaways") or []
-        if not isinstance(takeaways, list):
-            takeaways = [str(takeaways)]
-        takeaways = [str(t).strip() for t in takeaways][:3]
-        story = str(obj.get("story", "")).strip()
-        summary = str(obj.get("summary", "")).strip()
-        note = str(obj.get("matchup_note", "")).strip()
-        if angle and not note:
-            note = _matchup_fallback_note(angle)  # deterministic, always clean
-        elif not angle:
-            note = ""  # no angle -> never carry stray head-to-head prose
-        result = {"story": story, "summary": summary, "takeaways": takeaways, "matchup_note": note}
-        if not _has_banned(story, summary, note, *takeaways):
-            return result
-        print("      banned word in player output; retry {}/{}".format(attempt + 1, BANNED_RETRIES))
-    return result  # best-effort after retries (caller-side scan is the final gate)
-
-
-def _game_prompt_payload(ent):
-    """The trimmed game object sent to the model. Includes BOTH sides' full
-    context (framing surfaces one side per signal; the AI gets everything)."""
-    return {
-        "matchup": "{} @ {}".format((ent.get("away") or {}).get("name"), (ent.get("home") or {}).get("name")),
-        "start": ent.get("start"),
-        "venue": ent.get("venue"),
-        "status": ent.get("status"),
-        "probables": ent.get("probables"),
-        "pulse": ent.get("pulse"),
-        "context": ent.get("context"),
-        # The single most-notable market (deterministic) or None -> the model
-        # writes exactly one betting_note sentence, or "" when this is null. A
-        # human-readable `market` label is injected so notes don't echo the raw
-        # snake_case key (e.g. "first five moneyline", not "first_five_moneyline").
-        "standout": _standout_for_prompt(ent.get("standout")),
-    }
-
-
-def _standout_for_prompt(standout):
-    """Shape the standout for the model: send ONLY the readable `market` label
-    (resolved from sport config at build time -- never the raw snake_case key), so
-    a note can't echo an underscore. Lowercased for natural mid-sentence prose."""
-    if not standout:
-        return None
-    market = (standout.get("market") or standout.get("bet_type") or "").lower()
-    return {
-        "market": market,
-        "side": standout.get("side"),
-        "score": standout.get("score"),
-        "flags": standout.get("flags", []),
-    }
-
-
-def _fallback_betting_note(standout):
-    """Deterministic, rule-compliant one-liner, used ONLY when the model returns an
-    empty betting_note for a game that HAS a standout market -- the invariant is
-    "standout present => note present". Cites the exact market/side/score (no
-    driver attribution, no banned words); a barebones but correct backstop for
-    haiku occasionally dropping the field. The market label is the sport-config
-    one resolved onto the standout at build time."""
-    label = (standout.get("market") or standout.get("bet_type") or "signal").lower()
-    return "The {} signal reads {} at a score of {}.".format(
-        label, standout.get("side"), standout.get("score"))
-
-
-def _call_claude_game(ent, env, usage_log=None):
-    """One headless call for one game entity. Returns {story,summary,betting_note}
-    (games carry no takeaways; betting_note is "" unless a standout market exists)
-    or raises on any failure (caller decides carry-forward). Enforces the
-    standout=>note invariant with a deterministic fallback when the model drops it.
-    `usage_log` is passed straight through to _invoke_claude (see there)."""
-    prompt = PROMPT_TEMPLATE_GAME + json.dumps(_game_prompt_payload(ent), ensure_ascii=False)
-    standout = ent.get("standout")
-    result = None
-    for attempt in range(BANNED_RETRIES + 1):
-        obj = _invoke_claude(prompt, env, usage_log=usage_log)
-        story = str(obj.get("story", "")).strip()
-        summary = str(obj.get("summary", "")).strip()
-        note = str(obj.get("betting_note", "")).strip()
-        if standout and not note:
-            note = _fallback_betting_note(standout)  # deterministic, always clean
-        elif not standout:
-            note = ""  # no standout -> never carry stray betting prose
-        result = {"story": story, "summary": summary, "betting_note": note}
-        if not _has_banned(story, summary, note):
-            return result
-        print("      banned word in game output; retry {}/{}".format(attempt + 1, BANNED_RETRIES))
-    return result  # best-effort after retries (caller-side scan is the final gate)
-
-
-# ---------------- store I/O ----------------
-
 def _load_store(path):
     if os.path.exists(path):
         try:
@@ -532,55 +184,6 @@ def _save_store(path, store):
     with open(path, "w") as f:
         json.dump(store, f, indent=2, sort_keys=True)
 
-
-def _report_usage(usage_log):
-    """Summarize real cost/token usage for this run (player + game calls combined)
-    and write the full per-call detail to output/usage_report.json. No-op on an
-    empty log (e.g. everything was cached, nothing needed regen). The file write
-    is guarded so a disk/permissions issue can never interrupt a real run -- same
-    principle as the try/except around capturing usage in _invoke_claude."""
-    if not usage_log:
-        return
-    calls = len(usage_log)
-    cost = sum(r.get("cost_usd") or 0 for r in usage_log)
-    in_tok = sum(r.get("input_tokens") or 0 for r in usage_log)
-    out_tok = sum(r.get("output_tokens") or 0 for r in usage_log)
-    cache_r = sum(r.get("cache_read_input_tokens") or 0 for r in usage_log)
-    cache_w = sum(r.get("cache_creation_input_tokens") or 0 for r in usage_log)
-    print("insights: usage -- {} calls, ${:.4f}, {} in / {} out tokens, {} cache-read / {} cache-write"
-          .format(calls, cost, in_tok, out_tok, cache_r, cache_w))
-    try:
-        os.makedirs("output", exist_ok=True)
-        with open("output/usage_report.json", "w") as f:
-            json.dump(usage_log, f, indent=2)
-    except OSError as e:
-        print("insights: usage report not written ({})".format(e))
-
-
-def _needs_regen(ent, prev):
-    if prev is None:
-        return True
-    if prev.get("template_version") != PROMPT_VERSION:
-        return True
-    cur, old = ent.get("last_game_date"), prev.get("last_game_date")
-    if cur and (old is None or cur > old):  # a newer game has been played
-        return True
-    return False
-
-
-def _needs_regen_game(ent, prev):
-    """Games regenerate every run UNTIL they're final. A completed game's data
-    never changes, so once the store has it as Final it's carried forever; a
-    not-yet-final game (probables/form still moving) is refreshed each run. New
-    games and prompt-template bumps always regenerate."""
-    if prev is None:
-        return True
-    if prev.get("template_version") != GAME_PROMPT_VERSION:
-        return True
-    return prev.get("status") != "Final"
-
-
-# ---------------- entry point ----------------
 
 def ai_insights_enabled(config):
     """Whether the AI-prose path (Claude calls, the banned-word scan that
@@ -618,27 +221,10 @@ def _top_n(entities, n):
     return dict(ordered[:n])
 
 
-def _print_auth_abort(e):
-    print("\n" + "!" * 70)
-    print("insights: AUTH PREFLIGHT FAILED -- making no AI calls this run.")
-    print("  reason: {}".format(str(e)[:220]))
-    if isinstance(e, _ManagedAuthError):
-        print("  This step runs ONLY on your local Claude subscription session.")
-        print("  Here `claude` would authenticate through a credential supplied by")
-        print("  the environment, so generation would spend against that instead.")
-        print("  -> run generation locally, or set SP_ALLOW_MANAGED_AUTH=1 to")
-        print("     deliberately spend this environment's provisioning.")
-    else:
-        print("  This step runs ONLY on your Claude subscription session. If just an")
-        print("  API key is available, log in with `claude`, or deliberately opt into")
-        print("  API billing with SP_ALLOW_API_BILLING=1.")
-    print("  -> merging committed insights only (no generation this run).")
-    print("!" * 70 + "\n")
-
-
 def _build_game_entities(config, generated_at, team_entities=None):
-    """Deterministic game builder + its stores. Runs in CI too (only the AI calls
-    are gated later). Returns (game_entities, games_store, game_date).
+    """Deterministic game builder + its stores. Runs everywhere, CI included --
+    there is no longer any gated step after it.
+    Returns (game_entities, games_store, game_date).
 
     A single bad game does NOT reach here -- mlb.build_game_entities skips it,
     reports it, and returns the rest of the slate. What reaches here is the
@@ -742,15 +328,14 @@ def _resolve_training_outcomes(config, generated_at):
 
 
 def run(data, generated_at, config=None, store_path=STORE_PATH):
-    """Enrich `data` with per-player AND per-game insight, return a Markdown addendum.
+    """Enrich `data` in place with per-player AND per-game insight. Returns nothing.
 
     The MERGE (writing committed insight text into `data` -- the per-row `insight`
-    objects and the card-ready `data["insights"]["players"|"games"]` sections)
-    ALWAYS happens. Only the AI *generation* is skipped when `claude` is
-    unavailable or SP_SKIP_INSIGHTS is set -- that's what lets deployed builds
-    (which never have Claude) still surface the committed insights. The
-    deterministic game builder itself runs even in CI; only its AI calls are gated.
-    A single auth preflight covers both players and games."""
+    objects and the card-ready `data["insights"]["players"|"games"]` sections) is
+    now the whole job, and it always happens: it is what lets deployed builds
+    surface the committed insights. There is no generation branch left to skip,
+    so the three disable layers below select what gets logged rather than
+    choosing a path. The deterministic game and team builders run unconditionally."""
     now_iso = generated_at.isoformat()
     # Phase 1 outcome capture runs BEFORE anything else: yesterday's labels are
     # resolved from completed games first, so today's feature capture can never
@@ -778,60 +363,50 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
               "its pre-game snapshot; data.json still has live state."
               .format(GAMES_STORE_PATH, why_frozen))
 
-    # Config kill switch is checked FIRST and short-circuits the other two --
-    # when it's off, this branch must never reach _subprocess_env/_preflight
-    # (SP_ALLOW_API_BILLING included), never run _needs_regen/_needs_regen_game,
-    # and never call _generate_all/_generate_games. Only the merge below runs.
+    # THE THREE DISABLE LAYERS, KEPT INTACT AND IN ORDER: the config kill switch
+    # is evaluated first and short-circuits SP_SKIP_INSIGHTS, which short-circuits
+    # the `claude` CLI probe. That ordering is why `reason` reports the FIRST
+    # layer that fired rather than every applicable one.
+    #
+    # They no longer choose between two behaviours. What they used to gate --
+    # _subprocess_env/_preflight, the _needs_regen change detection, and the
+    # _generate_all/_generate_games loops -- was removed, so every path below is
+    # merge-only and `skip_generation` now selects what gets logged. Deliberately
+    # left computing exactly as before: these are the layers that guarantee this
+    # module makes no AI calls, and rewriting them into something shorter would
+    # mean re-earning that guarantee for no functional gain.
+    #
+    # Note what this costs: flipping ai_insights.enabled back to true no longer
+    # produces new prose, it just un-hides whatever text the committed stores
+    # already hold. Restoring generation means restoring the deleted code.
     ai_disabled = not ai_insights_enabled(config)
     skip_generation = ai_disabled or bool(os.environ.get("SP_SKIP_INSIGHTS")) or shutil.which("claude") is None
-    if skip_generation:
-        if ai_disabled:
-            reason = "AI Insights disabled via config"
-        elif os.environ.get("SP_SKIP_INSIGHTS"):
-            reason = "SP_SKIP_INSIGHTS set"
-        else:
-            reason = "`claude` CLI not found"
-        with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
-        g_with_text = sum(1 for pk in game_entities if (games_store.get(pk) or {}).get("summary"))
-        print("insights: {} -> merge-only: top {} players ({} w/ text), {} games ({} w/ text), no AI calls"
-              .format(reason, total, with_text, len(game_entities), g_with_text))
-        insight_map = {k: _carry(store.get(k)) for k in entities}
-        game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
-        # Persist the deterministic build even though generation is skipped --
-        # skip_generation is now the permanent default (ai_disabled), so
-        # without this the committed stores would never advance again.
-        # The PLAYER store is written unconditionally, as before: it carries AI
-        # carry-forward text and change-detection fields only, nothing grades
-        # against it, and it has no pre-game snapshot semantics to protect.
-        _save_store(store_path, _carry_forward_store(entities, store, now_iso))
-        if games_writable:
-            _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
+    if ai_disabled:
+        reason = "AI Insights disabled via config"
+    elif os.environ.get("SP_SKIP_INSIGHTS"):
+        reason = "SP_SKIP_INSIGHTS set"
+    elif skip_generation:
+        reason = "`claude` CLI not found"
     else:
-        # One preflight for the whole run, iff anything (player or game) needs regen.
-        needs = (any(_needs_regen(e, store.get(k)) for k, e in entities.items())
-                 or any(_needs_regen_game(e, games_store.get(pk)) for pk, e in game_entities.items()))
-        child_env, auth_ok = None, True
-        if needs:
-            child_env = _subprocess_env()
-            try:
-                _preflight(child_env)
-            except Exception as e:  # noqa: BLE001 -- loud abort, never fall back to paid billing
-                _print_auth_abort(e)
-                auth_ok = False
-        if not auth_ok:
-            insight_map = {k: _carry(store.get(k)) for k in entities}
-            game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
-        else:
-            print("insights: top {} of {} players; {} games; model={}"
-                  .format(total, len(all_entities), len(game_entities), MODEL))
-            # One log shared by both loops -> the report covers the whole run.
-            usage_log = []
-            insight_map = _generate_all(entities, store, now_iso, total, store_path, child_env,
-                                        usage_log=usage_log)
-            game_text = (_generate_games(game_entities, games_store, now_iso, GAMES_STORE_PATH, child_env,
-                                         usage_log=usage_log, may_write=games_writable)
-                         if game_entities else {})
-            _report_usage(usage_log)
+        # No layer fired, and there is still nothing to generate: the prose path
+        # was removed, so this is the case that used to run it. Said out loud
+        # rather than logged as though a layer had stopped it, because "no AI
+        # calls" is true here for a different reason than in the three above.
+        reason = "no AI prose path in this build"
+    with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
+    g_with_text = sum(1 for pk in game_entities if (games_store.get(pk) or {}).get("summary"))
+    print("insights: {} -> merge-only: top {} players ({} w/ text), {} games ({} w/ text), no AI calls"
+          .format(reason, total, with_text, len(game_entities), g_with_text))
+    insight_map = {k: _carry(store.get(k)) for k in entities}
+    game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
+    # Persist the deterministic build. Without this the committed stores would
+    # never advance again.
+    # The PLAYER store is written unconditionally, as before: it carries AI
+    # carry-forward text and change-detection fields only, nothing grades
+    # against it, and it has no pre-game snapshot semantics to protect.
+    _save_store(store_path, _carry_forward_store(entities, store, now_iso))
+    if games_writable:
+        _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
 
     _write_back(data, insight_map)
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
@@ -843,7 +418,6 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     if team_entities:
         data["insights"]["teams"] = team_entities
     data["insights"]["ui"] = _ui_meta(config)
-    return _markdown_addendum(data, insight_map)
 
 
 def _ui_meta(config):
@@ -862,12 +436,11 @@ def _ui_meta(config):
 
 
 def _carry_forward_store(entities, store, now_iso):
-    """The player store persisted when AI generation is skipped: same shape
-    _generate_all writes (pruned to the current entity set), but with only
-    previously-generated text carried forward -- nothing is invented here.
-    Lets the deterministic build (pulse/signals) reach the committed store
-    even when generation never runs, instead of leaving it frozen at
-    whichever date AI generation last actually executed."""
+    """The player store this module persists, pruned to the current entity
+    set, with only previously-generated text carried forward -- nothing is
+    invented here. Lets the deterministic build (pulse/signals) reach the
+    committed store, instead of leaving it frozen at whichever date AI
+    generation last actually executed (2026-07-28)."""
     new_store = {}
     for key, ent in entities.items():
         prev = store.get(key)
@@ -950,9 +523,8 @@ def _games_store_writable(game_entities, games_store, game_date):
 
 
 def _carry_forward_games_store(entities, store, now_iso):
-    """The games store persisted when AI generation is skipped: same shape
-    _generate_games writes (pruned to today's slate), but with only
-    previously-generated text carried forward. See _carry_forward_store."""
+    """The games store this module persists, pruned to today's slate, with
+    only previously-generated text carried forward. See _carry_forward_store."""
     new_store = {}
     for pk, ent in entities.items():
         prev = store.get(pk)
@@ -970,48 +542,6 @@ def _carry_forward_games_store(entities, store, now_iso):
             "betting_note": text.get("betting_note"),
         }
     return new_store
-
-
-def _generate_all(entities, store, now_iso, total, store_path, child_env, usage_log=None):
-    """Run the player AI generation loop (regenerate changed entities, carry the
-    rest). Returns the insight_map. Auth preflight is handled once by run(), so
-    child_env is already validated (or None when nothing needs regen).
-    `usage_log` is passed straight through to the per-entity call."""
-    gen = carried = failed = 0
-    insight_map = {}
-    new_store = {}  # rebuilt from the current (top-N) entity set -> prunes stale entries
-    for i, (key, ent) in enumerate(sorted(entities.items()), start=1):
-        prev = store.get(key)
-        if _needs_regen(ent, prev):
-            print("  [{}/{}] {} -- regenerating".format(i, total, ent.get("entity")))
-            try:
-                text = _call_claude(ent, child_env, usage_log=usage_log)
-                gen += 1
-            except Exception as e:  # noqa: BLE001 -- never let one entity break the run
-                print("      call failed ({}); {}".format(
-                    str(e)[:120], "carrying previous" if prev else "leaving empty"))
-                failed += 1
-                text = _carry(prev) or {"story": None, "summary": None, "takeaways": [], "matchup_note": None}
-        else:
-            print("  [{}/{}] {} -- cached".format(i, total, ent.get("entity")))
-            carried += 1
-            text = _carry(prev)
-
-        new_store[key] = {
-            "entity": ent.get("entity"), "team": ent.get("team"),
-            "last_game_date": ent.get("last_game_date"),
-            "template_version": PROMPT_VERSION,
-            "generated_at": now_iso if prev is None or _needs_regen(ent, prev) else prev.get("generated_at", now_iso),
-            "story": text["story"], "summary": text["summary"], "takeaways": text["takeaways"],
-            "matchup_note": text.get("matchup_note"),
-        }
-        insight_map[key] = {"story": text["story"], "summary": text["summary"],
-                            "takeaways": text["takeaways"], "matchup_note": text.get("matchup_note")}
-
-    _save_store(store_path, new_store)
-    print("insights: generated {}, carried forward {}, failed {} (store pruned to {} entries)"
-          .format(gen, carried, failed, len(new_store)))
-    return insight_map
 
 
 def _build_players_section(entities, insight_map, generated_at):
@@ -1040,67 +570,6 @@ def _build_players_section(entities, insight_map, generated_at):
         })
     players.sort(key=lambda p: (p.get("pulse") or {}).get("score", 0), reverse=True)
     return {"generated_at": generated_at.isoformat(), "players": players}
-
-
-def _generate_games(entities, store, now_iso, store_path, child_env, usage_log=None,
-                    may_write=True):
-    """Game AI generation loop: regenerate non-final games each run, carry final
-    ones. Mirrors _generate_all -- rebuilds the store pruned to today's gamePks
-    (yesterday's slate drops off). Returns {gamePk: {story, summary}}.
-    `usage_log` is passed straight through to the per-game call.
-
-    `may_write=False` (the pre-first-pitch gate in run(); see
-    _games_store_writable) suppresses ONLY the store write. Generation, the
-    returned text_map, and therefore data.json are unaffected -- the caller
-    still gets everything it would otherwise get."""
-    gen = carried = failed = 0
-    text_map = {}
-    new_store = {}  # rebuilt from today's slate -> prunes yesterday's games
-    total = len(entities)
-    for i, (pk, ent) in enumerate(entities.items(), start=1):
-        prev = store.get(pk)
-        label = "{} @ {}".format((ent.get("away") or {}).get("abbr"), (ent.get("home") or {}).get("abbr"))
-        if _needs_regen_game(ent, prev):
-            print("  [game {}/{}] {} -- regenerating".format(i, total, label))
-            # One call per game: Story/Summary plus the optional one-sentence
-            # betting_note (folded in). On failure, carry the whole prior text.
-            try:
-                text = _call_claude_game(ent, child_env, usage_log=usage_log)
-                gen += 1
-            except Exception as e:  # noqa: BLE001 -- never let one game break the run
-                print("      game call failed ({}); {}".format(
-                    str(e)[:120], "carrying previous" if prev else "leaving empty"))
-                failed += 1
-                text = _carry_game(prev) or {"story": None, "summary": None, "betting_note": None}
-        else:
-            print("  [game {}/{}] {} -- cached (final)".format(i, total, label))
-            carried += 1
-            text = _carry_game(prev)
-
-        new_store[pk] = {
-            "away": ent.get("away"), "home": ent.get("home"),
-            "start": ent.get("start"), "venue": ent.get("venue"),
-            "probables": ent.get("probables"), "signals": ent.get("signals"),
-            "pulse": ent.get("pulse"), "betting_signals": ent.get("betting_signals"),
-            "standout": ent.get("standout"),
-            "status": ent.get("status"),
-            "template_version": GAME_PROMPT_VERSION,
-            "generated_at": now_iso if (prev is None or _needs_regen_game(ent, prev)) else prev.get("generated_at", now_iso),
-            "story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
-            "betting_note": (text or {}).get("betting_note"),
-        }
-        text_map[pk] = {"story": (text or {}).get("story"), "summary": (text or {}).get("summary"),
-                        "betting_note": (text or {}).get("betting_note")}
-
-    if may_write:
-        _save_store(store_path, new_store)
-        print("insights(games): generated {}, carried forward {}, failed {} (store pruned to {} entries)"
-              .format(gen, carried, failed, len(new_store)))
-    else:
-        print("insights(games): generated {}, carried forward {}, failed {} (store NOT written -- "
-              "slate already under way, see the pre-first-pitch gate above)"
-              .format(gen, carried, failed))
-    return text_map
 
 
 def _build_games_section(entities, text_map):
@@ -1163,22 +632,3 @@ def _write_back(data, insight_map):
             for p in cat.get("players", []):
                 key = _entity_key(p.get("entity"), p.get("team_abbr"))
                 p["insight"] = insight_map.get(key)
-
-
-def _markdown_addendum(data, insight_map):
-    """A compact '## Insights' section listing each player's one-line summary."""
-    seen, lines = set(), []
-    for sport in data.get("sports", {}).values():
-        for cat in sport.get("categories", []):
-            for p in cat.get("players", []):
-                key = _entity_key(p.get("entity"), p.get("team_abbr"))
-                if key in seen:
-                    continue
-                seen.add(key)
-                ins = insight_map.get(key) or {}
-                if ins.get("summary"):
-                    lines.append("- **{}** ({}): {}".format(
-                        p.get("entity"), p.get("team_abbr") or p.get("team") or "-", ins["summary"]))
-    if not lines:
-        return ""
-    return "\n## Insights\n\n" + "\n".join(lines) + "\n"

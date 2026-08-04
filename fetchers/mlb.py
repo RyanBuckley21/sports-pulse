@@ -1791,14 +1791,3 @@ def fetch(config, game_date=None):
         else:
             raise ValueError(f"Unknown MLB stat category mode: {cat_cfg['mode']}")
     return records
-
-
-if __name__ == "__main__":
-    import yaml
-
-    with open("config.yaml") as f:
-        cfg = yaml.safe_load(f)
-    results = fetch(cfg)
-    print(f"Fetched {len(results)} raw MLB records")
-    for r in results[:5]:
-        print(r)

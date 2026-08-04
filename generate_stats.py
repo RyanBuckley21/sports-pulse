@@ -75,7 +75,6 @@ CATEGORY_META = {
     "clean_sheets": {"kind": "count", "sub": "Goalkeepers", "title": "Clean Sheets"},
 }
 
-CATEGORY_LABELS = {}
 CATEGORY_SHORT_LABELS = {}
 CATEGORY_UNITS = {}
 
@@ -119,7 +118,6 @@ def load_config(path=CONFIG_PATH):
 def index_category_labels(config):
     for sport_key in ("mlb", "worldcup"):
         for cat_cfg in config.get(sport_key, {}).get("stat_categories", []):
-            CATEGORY_LABELS[cat_cfg["key"]] = cat_cfg.get("label", cat_cfg["key"])
             CATEGORY_SHORT_LABELS[cat_cfg["key"]] = cat_cfg.get("short_label", cat_cfg["key"])
             CATEGORY_UNITS[cat_cfg["key"]] = cat_cfg.get("unit", "")
 
@@ -145,29 +143,6 @@ def rank_records(records, top_n):
             r["total_qualified"] = total_qualified
             ranked.append(r)
     return ranked
-
-
-def render_markdown(ranked_records, generated_at):
-    by_category = {}
-    for r in ranked_records:
-        by_category.setdefault(r["stat_category"], []).append(r)
-
-    lines = [f"# Who's Hot -- {generated_at.strftime('%Y-%m-%d')}", ""]
-    for category, records in by_category.items():
-        records.sort(key=lambda r: r["rank"])
-        label = CATEGORY_LABELS.get(category, category)
-        lines.append(f"## {label}")
-        lines.append("")
-        lines.append("| Rank | Player | Team | Value | Last Game |")
-        lines.append("|---|---|---|---|---|")
-        for r in records:
-            last_game = r["last_game_date"] or "-"
-            value = f"{r['value']:.2f}" if isinstance(r["value"], float) else r["value"]
-            lines.append(
-                f"| {r['rank']} | {r['entity']} | {r['team'] or '-'} | {value} | {last_game} |"
-            )
-        lines.append("")
-    return "\n".join(lines)
 
 
 def build_data(ranked_records, generated_at):
@@ -268,26 +243,15 @@ def main():
     # CLI is unavailable (e.g. in CI) or ai_insights.enabled is false; the
     # deterministic game build still runs either way.
     data["aiInsightsEnabled"] = generate_insights.ai_insights_enabled(config)
-    insights_md = generate_insights.run(data, generated_at, config=config)
-    markdown = render_markdown(ranked, generated_at) + insights_md
+    generate_insights.run(data, generated_at, config=config)
 
     output_dir = config.get("output_dir", "output")
     os.makedirs(output_dir, exist_ok=True)
-    date_stamp = generated_at.strftime("%Y-%m-%d")
-
-    md_path = os.path.join(output_dir, f"{date_stamp}-whos-hot.md")
-    with open(md_path, "w") as f:
-        f.write(markdown)
-
-    latest_md_path = os.path.join(output_dir, "latest-whos-hot.md")
-    with open(latest_md_path, "w") as f:
-        f.write(markdown)
-
     data_path = os.path.join(output_dir, "data.json")
     with open(data_path, "w") as f:
         json.dump(data, f, indent=2)
 
-    print(f"Wrote {md_path}, latest-whos-hot.md, and {data_path} ({len(ranked)} ranked rows)")
+    print(f"Wrote {data_path} ({len(ranked)} ranked rows)")
 
 
 if __name__ == "__main__":
