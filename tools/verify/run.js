@@ -657,11 +657,23 @@ async function aiNoteChecks(browser, base) {
      "readmore=" + stale.readmore + " clamp=" + stale.clamped);
 
   // ---- Players: same component, so the same behaviour, unforked ----
+  // The players list is an accordion now ("players: collapsible rows, accordion
+  // like Games"), so playerInsight -- and the AI note inside it -- is built
+  // lazily into .pi-detail-inner on first tap, exactly like gameInsight. These
+  // checks used to read the note straight off #/players because the card was
+  // rendered inline there; that is no longer a thing the page does, so the row
+  // gets opened first, the same way the Games half above does.
+  const noteCount = () => p.$$eval(".ai-summary", (e) => e.length);
   await goRoute(p, "#/players");
   await p.waitForTimeout(300);
+  ok("players: the list arrives with no note built yet", (await noteCount()) === 0,
+     "notes=" + (await noteCount()));
+  await p.click(".pi-row");
+  await p.waitForTimeout(400);
   s = await state();
-  ok("players: the note is collapsed on arrival", s !== null && s.revealed === false && s.innerH === 0,
-     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
+  ok("  an expanded row renders one", s !== null);
+  ok("  collapsed on open, same as games", s.revealed === false && s.innerH === 0,
+     "revealed=" + s.revealed + " innerH=" + s.innerH);
   await p.click("[data-ainote]");
   await p.waitForTimeout(450);
   s = await state();
@@ -669,12 +681,20 @@ async function aiNoteChecks(browser, base) {
      "revealed=" + s.revealed + " innerH=" + s.innerH);
 
   // Same guarantee the row accordion has: state is a class on re-rendered DOM,
-  // so leaving and returning must reset it rather than restore it.
+  // so leaving and returning must reset it rather than restore it. With the
+  // accordion that now holds at BOTH levels -- the row closes, and the note
+  // behind it comes back collapsed rather than remembering it was open.
   await goRoute(p, "#/games");
   await goRoute(p, "#/players");
+  await p.waitForTimeout(300);
+  ok("  leaving and returning closes the row that held it", (await noteCount()) === 0,
+     "notes=" + (await noteCount()));
+  await p.click(".pi-row");
+  await p.waitForTimeout(400);
   s = await state();
-  ok("  leaving and returning re-collapses it", s.revealed === false && s.innerH === 0,
-     "revealed=" + s.revealed + " innerH=" + s.innerH);
+  ok("  and its note is rebuilt collapsed, not restored open",
+     s !== null && s.revealed === false && s.innerH === 0,
+     s && "revealed=" + s.revealed + " innerH=" + s.innerH);
 
   await p.close();
 }
