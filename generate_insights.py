@@ -328,7 +328,7 @@ def _resolve_training_outcomes(config, generated_at):
 
 
 def run(data, generated_at, config=None, store_path=STORE_PATH):
-    """Enrich `data` with per-player AND per-game insight, return a Markdown addendum.
+    """Enrich `data` in place with per-player AND per-game insight. Returns nothing.
 
     The MERGE (writing committed insight text into `data` -- the per-row `insight`
     objects and the card-ready `data["insights"]["players"|"games"]` sections) is
@@ -418,7 +418,6 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     if team_entities:
         data["insights"]["teams"] = team_entities
     data["insights"]["ui"] = _ui_meta(config)
-    return _markdown_addendum(data, insight_map)
 
 
 def _ui_meta(config):
@@ -633,22 +632,3 @@ def _write_back(data, insight_map):
             for p in cat.get("players", []):
                 key = _entity_key(p.get("entity"), p.get("team_abbr"))
                 p["insight"] = insight_map.get(key)
-
-
-def _markdown_addendum(data, insight_map):
-    """A compact '## Insights' section listing each player's one-line summary."""
-    seen, lines = set(), []
-    for sport in data.get("sports", {}).values():
-        for cat in sport.get("categories", []):
-            for p in cat.get("players", []):
-                key = _entity_key(p.get("entity"), p.get("team_abbr"))
-                if key in seen:
-                    continue
-                seen.add(key)
-                ins = insight_map.get(key) or {}
-                if ins.get("summary"):
-                    lines.append("- **{}** ({}): {}".format(
-                        p.get("entity"), p.get("team_abbr") or p.get("team") or "-", ins["summary"]))
-    if not lines:
-        return ""
-    return "\n## Insights\n\n" + "\n".join(lines) + "\n"
