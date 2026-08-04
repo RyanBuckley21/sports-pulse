@@ -22,6 +22,26 @@
  *   standalone                 The home-screen/PWA declarations whose absence
  *                              was the original bug.
  *
+ * Groups run INDEPENDENTLY (see GROUPS near the bottom). A group that throws --
+ * a page.click timing out on a selector the app no longer renders is the real
+ * case -- is reported as CRASH, counted as a failure, and the remaining groups
+ * still run. Before that, one such throw killed the process: the ai-note group
+ * timing out meant router, safe-area and standalone never executed at all, and
+ * the suite reported a Node stack trace instead of results. That silence is
+ * unaffordable for a check meant to gate PRs, where the groups that vanish are
+ * invisible precisely when something is already broken.
+ *
+ * A crashed group is PARTIALLY REPORTED -- whatever it never reached is neither
+ * passed nor failed -- so crashes are surfaced separately from assertion
+ * failures rather than folded into the same count. Exit code is unchanged: 0
+ * only when everything ran and passed, 1 for any failure or crash, 2 when the
+ * harness itself cannot start (no Playwright, no data.json), since there is
+ * nothing to isolate if nothing can run.
+ *
+ * VERIFY_TIMEOUT_MS overrides the per-action timeout (default 30000, matching
+ * Playwright's own). It bounds what a hung group costs before the runner moves
+ * on, so CI can trade a slower runner's headroom for a faster red.
+ *
  * Playwright is resolved from node_modules if present, otherwise from the
  * global install. This repo intentionally has no package.json; wiring the suite
  * into CI is a separate decision from having it runnable.
@@ -81,6 +101,9 @@ function serve(root) {
 // ------------------------------------------------------------------- harness
 let pass = 0, fail = 0, group = "";
 const failures = [];
+// Groups that threw rather than merely failing. Tracked apart from `failures`
+// because the two say different things about how much of the suite actually ran.
+const crashed = [];
 
 function heading(name) { group = name; console.log("\n" + name); }
 function ok(name, cond, detail) {
@@ -89,10 +112,20 @@ function ok(name, cond, detail) {
          console.log("  FAIL  " + name + (detail ? "  (" + detail + ")" : "")); }
 }
 
+// How long any single Playwright action may block. Stated explicitly rather
+// than left to Playwright's implicit default, because with per-group isolation
+// this is the ONLY thing bounding a crashed group -- every way this suite can
+// hang goes through an action, so it is what a hung group costs before the
+// runner moves on to the next one. The value IS Playwright's 30s default, so
+// timing is unchanged; it lives here so CI can dial it down
+// (VERIFY_TIMEOUT_MS=10000) without editing the suite.
+const ACTION_TIMEOUT_MS = Number(process.env.VERIFY_TIMEOUT_MS) || 30000;
+
 // Fonts are remote; blocking them keeps the suite offline-deterministic and
 // stops networkidle waits hanging on a host that cannot reach Google.
 async function newPage(browser, opts) {
   const p = await browser.newPage(Object.assign({ viewport: { width: 430, height: 900 } }, opts));
+  p.setDefaultTimeout(ACTION_TIMEOUT_MS);
   await p.route("**://fonts.*/**", (r) => r.abort());
   return p;
 }
@@ -128,7 +161,6 @@ async function goRoute(page, hash) {
 // the computed values the Who's Hot player detail depends on, with the scope
 // class off and on. Off must equal app.css; on must equal insights.css.
 async function scopeLeakCheck(browser, base) {
-  heading("insights-scope-leak-check");
   const p = await newPage(browser);
   // "load", not "domcontentloaded": computed styles are only meaningful once
   // the stylesheets have applied.
@@ -201,7 +233,6 @@ async function scopeLeakCheck(browser, base) {
 
 // ------------------------------------------------------------------ re-entry
 async function reEntryChecks(browser, base) {
-  heading("re-entry");
   const p = await newPage(browser);
   let json = [];
   p.on("request", (r) => { if (/\.json/.test(r.url())) json.push(r.url().replace(base, "")); });
@@ -310,7 +341,6 @@ async function reEntryChecks(browser, base) {
 // player DIFFERENT ranks per board (1/2/3/4/6), because a fixture where
 // everyone is #1 everywhere lets a broken sort pass.
 async function playerDetailChecks(browser, base) {
-  heading("player-detail");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
@@ -457,7 +487,6 @@ async function playerDetailChecks(browser, base) {
 // the fix's popstate listener exists for, and precisely the path the original
 // bug happened on.
 async function detailHistoryChecks(browser, base) {
-  heading("detail-history");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
@@ -605,7 +634,6 @@ async function detailHistoryChecks(browser, base) {
 // full disclosure suite. Point VERIFY_ROOT at a built site/ to exercise the
 // disabled path against what actually deploys.
 async function aiNoteChecks(browser, base) {
-  heading("ai-note");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(600);
@@ -750,7 +778,6 @@ async function aiNoteChecks(browser, base) {
 
 // -------------------------------------------------------------------- router
 async function routerChecks(browser, base) {
-  heading("router");
 
   // Cold launch with no hash.
   let p = await newPage(browser);
@@ -867,7 +894,6 @@ const INSET_TOP = 59;      // iPhone 15 Pro Dynamic Island
 const INSET_BOTTOM = 34;   // home indicator
 
 async function safeAreaChecks(browser, base) {
-  heading("safe-area");
   // iPhone 15 Pro logical viewport.
   const p = await newPage(browser, { viewport: { width: 393, height: 852 } });
   const cdp = await p.context().newCDPSession(p);
@@ -997,7 +1023,6 @@ async function safeAreaChecks(browser, base) {
 
 // ---------------------------------------------------------------- standalone
 async function standaloneChecks(browser, base) {
-  heading("standalone");
   const p = await newPage(browser);
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   const meta = await p.evaluate(() => ({
@@ -1068,6 +1093,28 @@ function htmlFilesUnder(dir) {
   });
 }
 
+// --------------------------------------------------------------------- groups
+// Every group, in run order, and the single source of their names -- the driver
+// prints the heading from here rather than each group printing its own. That
+// matters for the failure this table exists to survive: a group that throws
+// before it can announce itself would otherwise be reported under the PREVIOUS
+// group's name, which is exactly backwards when the point is to say which one
+// broke.
+//
+// Groups are independent by construction -- each opens its own page(s) and
+// asserts against a freshly loaded app -- so the driver is free to run the rest
+// after one of them dies. Adding a group means adding a row here.
+const GROUPS = [
+  ["insights-scope-leak-check", scopeLeakCheck],
+  ["re-entry", reEntryChecks],
+  ["player-detail", playerDetailChecks],
+  ["detail-history", detailHistoryChecks],
+  ["ai-note", aiNoteChecks],
+  ["router", routerChecks],
+  ["safe-area", safeAreaChecks],
+  ["standalone", standaloneChecks],
+];
+
 // ------------------------------------------------------------------- fixtures
 // The leak check needs a page with both stylesheets and the markup app.js emits
 // for the player detail. Written next to the app so relative hrefs resolve.
@@ -1094,21 +1141,51 @@ const LEAK_PAGE = `<!doctype html><meta charset="utf-8">
   const { server, base } = await serve(WEB);
   const browser = await chromium.launch();
   try {
-    await scopeLeakCheck(browser, base);
-    await reEntryChecks(browser, base);
-    await playerDetailChecks(browser, base);
-    await detailHistoryChecks(browser, base);
-    await aiNoteChecks(browser, base);
-    await routerChecks(browser, base);
-    await safeAreaChecks(browser, base);
-    await standaloneChecks(browser, base);
+    for (const [name, run] of GROUPS) {
+      heading(name);
+      try {
+        await run(browser, base);
+      } catch (e) {
+        // A crash is NOT the same as a failed assertion and is not reported as
+        // one: a FAIL is one known answer being wrong, a CRASH is an unknown
+        // number of this group's remaining assertions never having run. It
+        // still counts toward `fail`, so the exit code is unchanged.
+        crashed.push(name);
+        fail++;
+        const why = (e && e.message ? String(e.message) : String(e)).split("\n")[0];
+        // The first real stack frame, not stack[1]: a Playwright error folds its
+        // whole call log into .stack ahead of the frames, so the naive second
+        // line is "Call log:" rather than the line that actually threw -- which
+        // is the one thing worth printing here.
+        const frame = ((e && e.stack ? e.stack : "").split("\n")
+          .find((l) => /^\s*at /.test(l)) || "").trim();
+        failures.push(name + " / GROUP CRASHED: " + why);
+        console.log("  CRASH " + name + " -- " + why);
+        if (frame) console.log("         " + frame);
+        console.log("         remaining checks in this group did not run");
+      } finally {
+        // Groups close their own pages on the way out; one that threw did not.
+        // newPage() gives each page its own context, so a leaked page would
+        // otherwise stay live -- with its timers, its routes and its console
+        // listeners -- inside every group that follows.
+        for (const ctx of browser.contexts()) {
+          await ctx.close().catch(() => {});
+        }
+      }
+    }
   } finally {
     await browser.close();
     server.close();
     fs.unlinkSync(leakPath);
   }
 
-  console.log("\n" + pass + " passed, " + fail + " failed");
+  console.log("\n" + pass + " passed, " + fail + " failed" +
+              (crashed.length ? ", " + crashed.length + " group(s) crashed" : ""));
+  if (crashed.length) {
+    console.log("crashed: " + crashed.join(", ") +
+                " -- those groups are PARTIALLY REPORTED; counts above exclude " +
+                "whatever they never reached");
+  }
   if (fail) {
     console.log("\nfailures:");
     failures.forEach((f) => console.log("  " + f));
