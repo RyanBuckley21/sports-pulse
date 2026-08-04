@@ -919,41 +919,29 @@
     "betting_note": null,
     "betting_signals": {
       "first_five_moneyline": {
-        "flags": [
-          "away_probable_out",
-          "starter_scratched"
-        ],
-        "score": 0,
+        "flags": [],
+        "score": 24,
         "side": "No clear lean"
       },
       "game_total": {
-        "flags": [
-          "away_probable_out"
-        ],
-        "score": 20,
-        "side": "Over"
-      },
-      "moneyline": {
-        "flags": [
-          "away_probable_out"
-        ],
-        "score": 51,
-        "side": "CIN"
-      },
-      "nrfi_yrfi": {
-        "flags": [
-          "away_probable_out",
-          "starter_scratched"
-        ],
+        "flags": [],
         "score": 0,
         "side": "No clear lean"
       },
+      "moneyline": {
+        "flags": [],
+        "score": 11,
+        "side": "No clear lean"
+      },
+      "nrfi_yrfi": {
+        "flags": [],
+        "score": 2,
+        "side": "No clear lean"
+      },
       "run_line": {
-        "flags": [
-          "away_probable_out"
-        ],
-        "score": 51,
-        "side": "CIN"
+        "flags": [],
+        "score": 18,
+        "side": "No clear lean"
       },
       "team_total": {
         "away": {
@@ -1012,15 +1000,7 @@
         "value": "3.76 vs 4.29"
       }
     ],
-    "standout": {
-      "bet_type": "moneyline",
-      "flags": [
-        "away_probable_out"
-      ],
-      "market": "Moneyline",
-      "score": 51,
-      "side": "CIN"
-    },
+    "standout": null,
     "start": "6:40 PM ET",
     "status": "Preview",
     "story": null,
@@ -1240,34 +1220,34 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 5,
-        "side": "No clear lean"
+        "score": 42,
+        "side": "BAL"
       },
       "game_total": {
         "flags": [],
-        "score": 14,
+        "score": 13,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 1,
-        "side": "No clear lean"
+        "score": 30,
+        "side": "BAL"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 0,
-        "side": "No clear lean"
+        "score": 41,
+        "side": "YRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 1,
-        "side": "No clear lean"
+        "score": 37,
+        "side": "BAL"
       },
       "team_total": {
         "away": {
           "abbr": "LAA",
           "flags": [],
-          "score": 15,
+          "score": 6,
           "side": "No clear lean"
         },
         "home": {
@@ -1288,6 +1268,10 @@
       "away": {
         "era": "4.95",
         "name": "Grayson Rodriguez"
+      },
+      "home": {
+        "era": "4.13",
+        "name": "Cade Povich"
       }
     },
     "pulse": {
@@ -1309,9 +1293,20 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "LAA 2-1"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "4.95 vs 4.13"
       }
     ],
-    "standout": null,
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "market": "First Five Moneyline",
+      "score": 42,
+      "side": "BAL"
+    },
     "start": "6:35 PM ET",
     "status": "Preview",
     "story": null,
