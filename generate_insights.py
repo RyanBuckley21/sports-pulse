@@ -638,8 +638,17 @@ def _print_auth_abort(e):
 
 def _build_game_entities(config, generated_at, team_entities=None):
     """Deterministic game builder + its stores. Runs in CI too (only the AI calls
-    are gated later). Guarded: any failure yields empty games (players unaffected).
-    Returns (game_entities, games_store, game_date).
+    are gated later). Returns (game_entities, games_store, game_date).
+
+    A single bad game does NOT reach here -- mlb.build_game_entities skips it,
+    reports it, and returns the rest of the slate. What reaches here is the
+    build itself failing, and that is raised rather than absorbed: this used to
+    be an `except Exception` returning empty games, which meant a broken builder
+    and a genuine off-day produced byte-identical output, and the run exited 0
+    either way. Nothing downstream can tell those apart -- run() goes on to
+    write a {} games store over the committed pre-game snapshot that
+    signal_report.py grades against, and the site deploys with no games at all.
+    A red run that leaves yesterday's data.json served is the better failure.
 
     `team_entities`, when a list is passed, is filled with the Team entities built
     from the SAME slate and caches -- see mlb.build_game_entities. It stays an
@@ -670,9 +679,18 @@ def _build_game_entities(config, generated_at, team_entities=None):
             print("training(features): capture failed ({}); games section unaffected"
                   .format(str(e)[:160]))
         return game_entities, games_store, game_date
-    except Exception as e:  # noqa: BLE001 -- never let the games path break the pipeline
-        print("insights(games): builder failed ({}); games section skipped".format(str(e)[:160]))
-        return {}, {}, game_date
+    except Exception as e:
+        # Caught only to say WHICH stage died before re-raising. Without this the
+        # caller sees a bare traceback from somewhere inside a fetcher and the
+        # Actions summary shows nothing at all; the games build is the one stage
+        # here that makes network calls, so it is worth naming explicitly.
+        detail = "{}: {}".format(type(e).__name__, str(e)[:200])
+        print("insights(games): builder FAILED for {} ({})".format(game_date, detail))
+        if os.environ.get("GITHUB_ACTIONS"):
+            print("::error title=Game slate build failed for {}::{}. No games were "
+                  "produced, so data.json and the committed games store are NOT "
+                  "being written from this run.".format(game_date, detail))
+        raise
 
 
 def schedule_fetcher(config):
