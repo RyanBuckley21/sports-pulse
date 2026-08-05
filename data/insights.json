@@ -1,19 +1,30 @@
 {
-  "brady singer|cin": {
-    "entity": "Brady Singer",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
+  "brandon lowe|pit": {
+    "entity": "Brandon Lowe",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Cincinnati Reds",
+    "team": "Pittsburgh Pirates",
+    "template_version": "v2"
+  },
+  "bryan woo|sea": {
+    "entity": "Bryan Woo",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-30",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Seattle Mariners",
     "template_version": "v2"
   },
   "ceddanne rafaela|bos": {
     "entity": "Ceddanne Rafaela",
     "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-02",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -21,25 +32,32 @@
     "team": "Boston Red Sox",
     "template_version": "v2"
   },
-  "cj abrams|wsh": {
-    "entity": "CJ Abrams",
-    "generated_at": "2026-07-22T12:33:09.492054+00:00",
-    "last_game_date": "2026-08-03",
-    "matchup_note": "",
-    "story": "Abrams leads his cohort with 5 home runs, ranking first among 40 players. He's averaging 3.0 combined hits, runs, and RBIs per game, which ranks fifth among 77 peers. His 3.0 total bases per game places him third among 41 players.",
-    "summary": "Abrams is ranking at the top across home runs and multiple offensive production categories.",
-    "takeaways": [
-      "Leads with 5 home runs (1st of 40)",
-      "3.0 H+R+RBI/G ranks 5th of 77",
-      "3.0 TB/G ranks 3rd of 41"
-    ],
-    "team": "Washington Nationals",
+  "christian scott|nym": {
+    "entity": "Christian Scott",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-29",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "New York Mets",
+    "template_version": "v2"
+  },
+  "eury p\u00e9rez|mia": {
+    "entity": "Eury P\u00e9rez",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-30",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Miami Marlins",
     "template_version": "v2"
   },
   "freddie freeman|lad": {
     "entity": "Freddie Freeman",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -50,7 +68,7 @@
   "george springer|tor": {
     "entity": "George Springer",
     "generated_at": "2026-08-03T19:10:47.060217+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -58,21 +76,21 @@
     "team": "Toronto Blue Jays",
     "template_version": "v2"
   },
-  "jake bauers|mil": {
-    "entity": "Jake Bauers",
-    "generated_at": "2026-08-02T18:46:30.235720+00:00",
-    "last_game_date": "2026-08-03",
+  "jackson merrill|sd": {
+    "entity": "Jackson Merrill",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Milwaukee Brewers",
+    "team": "San Diego Padres",
     "template_version": "v2"
   },
   "jeremy pe\u00f1a|hou": {
     "entity": "Jeremy Pe\u00f1a",
     "generated_at": "2026-07-31T18:53:43.029696+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -80,10 +98,10 @@
     "team": "Houston Astros",
     "template_version": "v2"
   },
-  "jes\u00fas luzardo|phi": {
-    "entity": "Jes\u00fas Luzardo",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
+  "luis arraez|phi": {
+    "entity": "Luis Arraez",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -91,65 +109,21 @@
     "team": "Philadelphia Phillies",
     "template_version": "v2"
   },
-  "joe ryan|min": {
-    "entity": "Joe Ryan",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
+  "luis garc\u00eda jr.|nyy": {
+    "entity": "Luis Garc\u00eda Jr.",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Minnesota Twins",
-    "template_version": "v2"
-  },
-  "joey cantillo|cle": {
-    "entity": "Joey Cantillo",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Cleveland Guardians",
-    "template_version": "v2"
-  },
-  "jung hoo lee|sf": {
-    "entity": "Jung Hoo Lee",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-03",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "San Francisco Giants",
-    "template_version": "v2"
-  },
-  "kevin mcgonigle|det": {
-    "entity": "Kevin McGonigle",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-02",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Detroit Tigers",
-    "template_version": "v2"
-  },
-  "mackenzie gore|tex": {
-    "entity": "MacKenzie Gore",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Texas Rangers",
+    "team": "New York Yankees",
     "template_version": "v2"
   },
   "matt olson|atl": {
     "entity": "Matt Olson",
     "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-02",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -160,7 +134,40 @@
   "munetaka murakami|cws": {
     "entity": "Munetaka Murakami",
     "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-02",
+    "last_game_date": "2026-08-04",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Chicago White Sox",
+    "template_version": "v2"
+  },
+  "paul skenes|pit": {
+    "entity": "Paul Skenes",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Pittsburgh Pirates",
+    "template_version": "v2"
+  },
+  "reid detmers|laa": {
+    "entity": "Reid Detmers",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-28",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Los Angeles Angels",
+    "template_version": "v2"
+  },
+  "sean burke|cws": {
+    "entity": "Sean Burke",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-07-30",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -171,7 +178,7 @@
   "seiya suzuki|chc": {
     "entity": "Seiya Suzuki",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -179,32 +186,10 @@
     "team": "Chicago Cubs",
     "template_version": "v2"
   },
-  "steven kwan|cle": {
-    "entity": "Steven Kwan",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-02",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Cleveland Guardians",
-    "template_version": "v2"
-  },
-  "tarik skubal|lad": {
-    "entity": "Tarik Skubal",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-07-29",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Los Angeles Dodgers",
-    "template_version": "v2"
-  },
   "ty france|sd": {
     "entity": "Ty France",
     "generated_at": "2026-08-01T16:42:47.912355+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -212,10 +197,21 @@
     "team": "San Diego Padres",
     "template_version": "v2"
   },
+  "wilyer abreu|bos": {
+    "entity": "Wilyer Abreu",
+    "generated_at": "2026-08-05T15:49:44.109981+00:00",
+    "last_game_date": "2026-08-04",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Boston Red Sox",
+    "template_version": "v2"
+  },
   "yordan alvarez|hou": {
     "entity": "Yordan Alvarez",
     "generated_at": "2026-08-02T18:46:30.235720+00:00",
-    "last_game_date": "2026-08-03",
+    "last_game_date": "2026-08-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
