@@ -9,8 +9,8 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 4,
-        "side": "No clear lean"
+        "score": 18,
+        "side": "WSH"
       },
       "game_total": {
         "flags": [],
@@ -19,17 +19,17 @@
       },
       "moneyline": {
         "flags": [],
-        "score": 0,
+        "score": 13,
         "side": "No clear lean"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 0,
+        "score": 5,
         "side": "No clear lean"
       },
       "run_line": {
         "flags": [],
-        "score": 0,
+        "score": 16,
         "side": "No clear lean"
       },
       "team_total": {
@@ -42,7 +42,7 @@
         "home": {
           "abbr": "WSH",
           "flags": [],
-          "score": 2,
+          "score": 4,
           "side": "No clear lean"
         }
       }
@@ -54,6 +54,10 @@
       "name": "Nationals"
     },
     "probables": {
+      "away": {
+        "era": "4.09",
+        "name": "Chase Petty"
+      },
       "home": {
         "era": "3.78",
         "name": "Cade Cavalli"
@@ -78,9 +82,20 @@
         "label": "Season series",
         "tone": "neutral",
         "value": "WSH 2-1"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "4.09 vs 3.78"
       }
     ],
-    "standout": null,
+    "standout": {
+      "bet_type": "first_five_moneyline",
+      "flags": [],
+      "market": "First Five Moneyline",
+      "score": 18,
+      "side": "WSH"
+    },
     "start": "6:45 PM ET",
     "status": "Preview",
     "story": null,
@@ -399,35 +414,35 @@
     "betting_signals": {
       "first_five_moneyline": {
         "flags": [],
-        "score": 43,
+        "score": 22,
         "side": "DET"
       },
       "game_total": {
         "flags": [],
-        "score": 15,
+        "score": 5,
         "side": "No clear lean"
       },
       "moneyline": {
         "flags": [],
-        "score": 34,
+        "score": 23,
         "side": "DET"
       },
       "nrfi_yrfi": {
         "flags": [],
-        "score": 0,
-        "side": "No clear lean"
+        "score": 24,
+        "side": "NRFI"
       },
       "run_line": {
         "flags": [],
-        "score": 34,
+        "score": 21,
         "side": "No clear lean"
       },
       "team_total": {
         "away": {
           "abbr": "DET",
           "flags": [],
-          "score": 32,
-          "side": "Over"
+          "score": 13,
+          "side": "No clear lean"
         },
         "home": {
           "abbr": "SF",
@@ -447,6 +462,10 @@
       "away": {
         "era": "3.62",
         "name": "Keider Montero"
+      },
+      "home": {
+        "era": "3.77",
+        "name": "JT Brubaker"
       }
     },
     "pulse": {
@@ -463,14 +482,19 @@
         "label": "SF bullpen ERA (7d)",
         "tone": "neg",
         "value": "4.01"
+      },
+      {
+        "label": "Probables ERA",
+        "tone": "neutral",
+        "value": "3.62 vs 3.77"
       }
     ],
     "standout": {
-      "bet_type": "first_five_moneyline",
+      "bet_type": "nrfi_yrfi",
       "flags": [],
-      "market": "First Five Moneyline",
-      "score": 43,
-      "side": "DET"
+      "market": "First-Inning Runs",
+      "score": 24,
+      "side": "NRFI"
     },
     "start": "10:15 PM ET",
     "status": "Preview",
