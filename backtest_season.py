@@ -45,6 +45,105 @@ SOURCE = "backtest:fetchers.mlb.build_game_entities"
 DEFAULT_START = "2026-03-25"  # 2026 MLB regular-season opener (gameType=R)
 
 
+# --------------------------------------------------------------------------- #
+# Point-in-time team bullpen ERA: backtest-only, never touches fetchers/mlb.py
+# --------------------------------------------------------------------------- #
+#
+# fetchers.mlb.team_season_bullpen_era queries the relief-pitcher ("rp")
+# situational split, which the MLB Stats API only ever answers UNBOUNDED --
+# "as of right now." That is exactly right for live generation, which only
+# ever asks about today, and exactly wrong for a backtest asking about a past
+# date: it silently includes relief outings that had not happened yet as of
+# that date.
+#
+# There is no single-call fix. `byDateRange` (the stat type that DOES take a
+# date range) does not honor `sitCodes` -- verified directly against the live
+# API: `stats=byDateRange&sitCodes=rp` for a real team returns
+# `gamesStarted=59`, the FULL pitching staff, not the reliever-only split's 0.
+# The only mechanism that is genuinely point-in-time is boxscore
+# reconstruction -- team_bullpen_era's own existing technique for its 7-day
+# window, extended to a season-length one -- and that changes the NUMBER even
+# for today: measured live for a real team, 3.13 ERA / 414.2 IP from the
+# current statSplits call vs 3.38 / 594.7 reconstructed through yesterday,
+# because GS=0 boxscore reconstruction and the official "rp" situational code
+# simply disagree on what counts as bullpen work (a smaller version of this
+# same gap is already documented in team_bullpen_era's own docstring).
+# Shipping that into fetchers/mlb.py would shift live output and add
+# thousands of boxscore fetches to every daily production run for a number
+# the live path never asked to have changed.
+#
+# So it lives here instead, as a monkeypatch of `mlb.team_season_bullpen_era`
+# installed only inside THIS process. generate_stats.py and
+# generate_insights.py import fetchers.mlb fresh in their own process and
+# never load backtest_season.py, so they never see this patch -- the diff
+# this file makes to fetchers/mlb.py is exactly zero; see the commit.
+#
+# _build_one_game calls `team_season_bullpen_era(session, base_url, team_id,
+# season, cache)` by bare name, resolved from fetchers.mlb's own module
+# globals at call time -- reassigning `mlb.team_season_bullpen_era` redirects
+# that call without touching a line of fetchers/mlb.py. The replacement needs
+# an `as_of_date` the original signature has no room for; smuggled in through
+# the small piece of module state below rather than widening the signature,
+# which would break the drop-in match _build_one_game's call site expects.
+
+_pit_state = {"as_of_date": None, "boxscore_cache": None, "era_cache": {}}
+
+
+def _point_in_time_team_season_bullpen_era(session, base_url, team_id, season, cache):
+    """Drop-in replacement for mlb.team_season_bullpen_era, active only while
+    this script's monkeypatch is installed (see bottom of this section).
+    Reconstructs the team's GS=0 (relief) ERA from real boxscores for every
+    Final game from `{season}-01-01` through the day BEFORE
+    `_pit_state["as_of_date"]` -- team_bullpen_era's own mechanism, just with
+    a season-length window instead of a 7-day one.
+
+    Boxscores are cached in `_pit_state["boxscore_cache"]` -- the SAME dict
+    object threaded through this script's whole date loop (see main()), never
+    pruned the way build_game_entities' own returned cache is. A game fetched
+    once, for any team's window on any date, is never fetched again for the
+    rest of the run: the total cost this adds over a full season is bounded
+    by the number of distinct games in it (~1,774 for 2026), not by
+    teams x days x a season-length window.
+    """
+    as_of_date = _pit_state["as_of_date"]
+    key = (team_id, as_of_date)
+    if key in _pit_state["era_cache"]:
+        return _pit_state["era_cache"][key]
+    boxscore_cache = _pit_state["boxscore_cache"]
+    start = "{}-01-01".format(season)
+    end = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=1)).isoformat()
+    er = outs = 0
+    try:
+        sched = mlb._get(session, "{}/schedule".format(base_url),
+                         params={"sportId": 1, "teamId": team_id, "startDate": start, "endDate": end})
+        for d in sched.get("dates", []):
+            for g in d.get("games", []):
+                if g.get("status", {}).get("abstractGameState") != "Final":
+                    continue
+                pk = str(g.get("gamePk"))
+                entry = boxscore_cache.get(pk)
+                if entry is None:
+                    entry = mlb._bullpen_lines_from_boxscore(
+                        mlb._get(session, "{}/game/{}/boxscore".format(base_url, pk)))
+                    boxscore_cache[pk] = entry
+                line = entry.get(str(team_id))
+                if line:
+                    er += line["er"]
+                    outs += line["ip_outs"]
+    except requests.RequestException:
+        pass  # best-effort, matching the original function's own fallback
+    out = (None, 0.0) if outs == 0 else (round(9.0 * er / (outs / 3.0), 2), round(outs / 3.0, 1))
+    _pit_state["era_cache"][key] = out
+    return out
+
+
+# Installed at import time, not inside main(): every entry point this module
+# offers (CLI, a future caller importing backtest_date directly) should get
+# the point-in-time version, and there is no live entry point that imports
+# this module at all.
+mlb.team_season_bullpen_era = _point_in_time_team_season_bullpen_era
+
+
 def daterange(start, end):
     d = datetime.date.fromisoformat(start)
     stop = datetime.date.fromisoformat(end)
@@ -77,8 +176,19 @@ def backtest_date(date, config, session, base_url, boxscore_cache, min_score):
     would. Returns (rows, boxscore_cache, status), where `rows` is a list of
     (pick, game, result, verdict, basis) tuples and `status` is None (rows are
     real picks), "no_games" (nothing scheduled -- an off day), or "no_picks"
-    (games happened, nothing cleared the score floor)."""
-    entities, boxscore_cache, _training_rows = mlb.build_game_entities(
+    (games happened, nothing cleared the score floor).
+
+    `boxscore_cache` is returned UNPRUNED -- deliberately not the pruned dict
+    build_game_entities itself returns (which keeps only the 7-day window's
+    gamePks, by design, to keep the live committed cache small). This script
+    never commits the cache anywhere, so there is no size to protect, and the
+    point-in-time bullpen reconstruction above needs exactly the games
+    pruning would discard: a game far outside any team's 7-day window today
+    is often still inside some team's season-to-date window.
+    """
+    _pit_state["as_of_date"] = date
+    _pit_state["boxscore_cache"] = boxscore_cache
+    entities, _pruned_cache, _training_rows = mlb.build_game_entities(
         config, date, boxscore_cache, team_entities=None)
     if not entities:
         return [], boxscore_cache, "no_games"
