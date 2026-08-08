@@ -1051,9 +1051,25 @@ def season_series(session, base_url, team_id, opp_id, season, as_of_date):
     return (wins, losses)
 
 
-def pitcher_season_era(session, base_url, pitcher_id, season, cache):
+def pitcher_season_era(session, base_url, pitcher_id, season, as_of_date, cache):
     """A pitcher's season ERA as `(raw API string, innings)` -- ("3.20", 84.0) --
     cached per id. `(None, 0.0)` if unavailable (best-effort; never fails the build).
+
+    Bounded to games through the day BEFORE `as_of_date` -- same end-dated
+    convention team_bullpen_era and team_window_ops already use, via `byDateRange`
+    instead of the unbounded `season` split. `season` always answers as of
+    whenever it happens to be called, which is exactly right when that call
+    happens today, during live generation, but wrong for a backtest asking about
+    a past date: it would silently include starts made AFTER that date. Bounding
+    the query removes that leakage without touching a live call at all -- live
+    generation always asks about today, and a pitcher cannot have started a game
+    that has not happened yet, so `byDateRange` through yesterday and the
+    unbounded `season` split agree on every value on every date this runs for
+    real. Verified directly: for a real 2026 starter, `byDateRange` bounded
+    through the day before today reproduces `season`'s era/innings/starts
+    exactly, while bounded through an earlier date it reports a different
+    (necessarily smaller) line -- e.g. 2.22 ERA/56.2 IP through 2026-06-14
+    against 2.69/110.1 for the full season, for the same pitcher.
 
     The innings come back with the rate for the same reason team_bullpen_era's do:
     the caller has to shrink the ERA toward the league baseline by its own sample,
@@ -1063,12 +1079,14 @@ def pitcher_season_era(session, base_url, pitcher_id, season, cache):
     """
     if pitcher_id in cache:
         return cache[pitcher_id]
+    end = (datetime.date.fromisoformat(as_of_date) - datetime.timedelta(days=1)).isoformat()
     era = ip = None
     try:
         data = _get(
             session,
             f"{base_url}/people/{pitcher_id}/stats",
-            params={"stats": "season", "group": "pitching", "season": season},
+            params={"stats": "byDateRange", "group": "pitching",
+                    "startDate": f"{season}-01-01", "endDate": end},
         )
         stats = data.get("stats", [])
         if stats and stats[0].get("splits"):
@@ -1359,11 +1377,11 @@ def _build_one_game(session, base_url, season, game_date, g, boxscore_cache, tou
     away_era = home_era = None
     away_era_ip = home_era_ip = 0.0
     if away_pp and away_pp.get("id"):
-        _e, away_era_ip = pitcher_season_era(session, base_url, away_pp["id"], season, era_cache)
+        _e, away_era_ip = pitcher_season_era(session, base_url, away_pp["id"], season, game_date, era_cache)
         away_era = _fmt_era(shrink(_num(_e), away_era_ip, _era_base, STARTER_STABILIZE_IP))
         probables["away"] = {"name": away_pp.get("fullName"), **({"era": away_era} if away_era else {})}
     if home_pp and home_pp.get("id"):
-        _e, home_era_ip = pitcher_season_era(session, base_url, home_pp["id"], season, era_cache)
+        _e, home_era_ip = pitcher_season_era(session, base_url, home_pp["id"], season, game_date, era_cache)
         home_era = _fmt_era(shrink(_num(_e), home_era_ip, _era_base, STARTER_STABILIZE_IP))
         probables["home"] = {"name": home_pp.get("fullName"), **({"era": home_era} if home_era else {})}
 
