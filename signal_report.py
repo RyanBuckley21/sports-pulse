@@ -37,7 +37,10 @@ A date with nothing to grade is written down explicitly rather than left as an
 absence: `no_picks` (a store, but no market cleared the bar) and `no_store` (no
 committed store covers that date -- the common case, since the generator only
 runs when someone runs it). Both are reported as gaps, never as losses. A date
-with no row at all means the report was simply never run for it.
+with no row at all means the report was simply never run for it. A gap is
+written down ONCE: a later run that rediscovers a date already answered -- by
+picks or by a status row -- reports that and exits clean rather than appending a
+duplicate and failing again.
 
 Only a canonical run is recorded: `--all-markets` or a moved `--min-score`
 change the pick set, and `--store` points at a fixture rather than the project's
@@ -1035,19 +1038,49 @@ def main(argv=None):
         # --no-record run asked to read one specific store, and "that store does
         # not cover this date" remains the answer it needs.
         if recordable:
-            graded = [row for row in load_ledger()
-                      if row.get("date") == args.date and _has_pick(row)]
+            dated = [row for row in load_ledger() if row.get("date") == args.date]
+            graded = [row for row in dated if _has_pick(row)]
             if graded:
                 print("signal_report: {} is already graded -- {} pick{} recorded at {}. "
                       "This store covers {}; nothing to do.".format(
                           args.date, len(graded), "" if len(graded) == 1 else "s",
                           max(row.get("run_id") or "" for row in graded), "/".join(stamps)))
                 return EXIT_OK
+            # A gap that is ALREADY WRITTEN DOWN is equally not news. The two
+            # reasons above -- the ledger and the exit code should not claim a
+            # discovery a run did not make -- apply verbatim to a date whose
+            # absence some earlier run already recorded, and the trigger is not
+            # hypothetical: this workflow runs on TWO cron entries a day
+            # (scheduler-outage insurance, see daily-stats-and-grade.yml), and
+            # a store that has rolled past the date is still rolled past it two
+            # hours later. Without this branch the second entry re-derives the
+            # same gap, appends a second no_store row for it, and reds a second
+            # workflow run -- so one real outage produces N rows and N failures,
+            # N being however many entries happen to fire that day. That is the
+            # same "trains everyone to ignore the failure" problem, arriving by
+            # repetition rather than by mis-attribution. One gap, one row, one
+            # failed run: the FIRST run to find it records it and dies loudly,
+            # and every later rediscovery of that same recorded fact exits clean.
+            #
+            # Any status row counts, not just no_store: a `no_picks` date has a
+            # recorded answer too, so a later store-less run has nothing to add
+            # to it (and overwriting that answer with a vaguer no_store one would
+            # actively lose information).
+            recorded_gap = [row for row in dated
+                            if row.get("status") in (STATUS_NO_STORE, STATUS_NO_PICKS)]
+            if recorded_gap:
+                newest = max(recorded_gap, key=lambda row: row.get("run_id") or "")
+                print("signal_report: {} is already recorded as {} at {}. "
+                      "This store covers {}; nothing to do.".format(
+                          args.date, newest.get("status"), newest.get("run_id") or "unknown",
+                          "/".join(stamps)))
+                return EXIT_OK
         # Write the gap down before exiting. A date with no store is a fact about
         # the record -- left unwritten it is indistinguishable from a date nobody
         # ever asked about, and these accumulate every day the generator is not run.
-        # A genuine gap has no pick-bearing run above to find, so it lands here and
-        # is recorded, and fails loudly, exactly as it always has.
+        # A genuinely first-seen gap has neither a pick-bearing run nor a status row
+        # above to find, so it lands here and is recorded, and fails loudly, exactly
+        # as it always has.
         if recordable:
             append_ledger([build_status_row(args.date, STATUS_NO_STORE, source, run_id,
                                             note="store covers {}".format("/".join(stamps)))])
