@@ -1,8 +1,8 @@
 {
-  "ceddanne rafaela|bos": {
-    "entity": "Ceddanne Rafaela",
-    "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-06",
+  "andruw monasterio|bos": {
+    "entity": "Andruw Monasterio",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -10,10 +10,43 @@
     "team": "Boston Red Sox",
     "template_version": "v2"
   },
+  "ceddanne rafaela|bos": {
+    "entity": "Ceddanne Rafaela",
+    "generated_at": "2026-08-04T17:16:18.578896+00:00",
+    "last_game_date": "2026-08-07",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Boston Red Sox",
+    "template_version": "v2"
+  },
+  "chase burns|cin": {
+    "entity": "Chase Burns",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cincinnati Reds",
+    "template_version": "v2"
+  },
+  "chris sale|atl": {
+    "entity": "Chris Sale",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-07-29",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Atlanta Braves",
+    "template_version": "v2"
+  },
   "christian walker|hou": {
     "entity": "Christian Walker",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -24,7 +57,7 @@
   "dillon dingler|det": {
     "entity": "Dillon Dingler",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-06",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -32,43 +65,32 @@
     "team": "Detroit Tigers",
     "template_version": "v2"
   },
-  "drew rasmussen|tb": {
-    "entity": "Drew Rasmussen",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
+  "gavin williams|cle": {
+    "entity": "Gavin Williams",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cleveland Guardians",
+    "template_version": "v2"
+  },
+  "jacob degrom|tex": {
+    "entity": "Jacob deGrom",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
     "last_game_date": "2026-08-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Tampa Bay Rays",
-    "template_version": "v2"
-  },
-  "freddie freeman|lad": {
-    "entity": "Freddie Freeman",
-    "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-08-05",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Los Angeles Dodgers",
-    "template_version": "v2"
-  },
-  "jake bauers|mil": {
-    "entity": "Jake Bauers",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-03",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Milwaukee Brewers",
+    "team": "Texas Rangers",
     "template_version": "v2"
   },
   "junior caminero|tb": {
     "entity": "Junior Caminero",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -79,7 +101,7 @@
   "kevin mcgonigle|det": {
     "entity": "Kevin McGonigle",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-06",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -87,32 +109,10 @@
     "team": "Detroit Tigers",
     "template_version": "v2"
   },
-  "logan gilbert|sea": {
-    "entity": "Logan Gilbert",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-01",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Seattle Mariners",
-    "template_version": "v2"
-  },
-  "luis arraez|phi": {
-    "entity": "Luis Arraez",
-    "generated_at": "2026-08-05T15:49:44.109981+00:00",
-    "last_game_date": "2026-08-06",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
-    "template_version": "v2"
-  },
   "luis garc\u00eda jr.|nyy": {
     "entity": "Luis Garc\u00eda Jr.",
     "generated_at": "2026-08-05T15:49:44.109981+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -123,7 +123,7 @@
   "matt olson|atl": {
     "entity": "Matt Olson",
     "generated_at": "2026-08-04T17:16:18.578896+00:00",
-    "last_game_date": "2026-08-06",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -131,32 +131,21 @@
     "team": "Atlanta Braves",
     "template_version": "v2"
   },
-  "nathan eovaldi|tex": {
-    "entity": "Nathan Eovaldi",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-07-31",
+  "pete crow-armstrong|chc": {
+    "entity": "Pete Crow-Armstrong",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Texas Rangers",
-    "template_version": "v2"
-  },
-  "payton tolle|bos": {
-    "entity": "Payton Tolle",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-01",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Boston Red Sox",
+    "team": "Chicago Cubs",
     "template_version": "v2"
   },
   "seiya suzuki|chc": {
     "entity": "Seiya Suzuki",
     "generated_at": "2026-07-28T20:22:55.943518+00:00",
-    "last_game_date": "2026-08-06",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -167,7 +156,7 @@
   "shohei ohtani|lad": {
     "entity": "Shohei Ohtani",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -178,7 +167,7 @@
   "steven kwan|cle": {
     "entity": "Steven Kwan",
     "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -186,10 +175,32 @@
     "team": "Cleveland Guardians",
     "template_version": "v2"
   },
+  "taj bradley|min": {
+    "entity": "Taj Bradley",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Minnesota Twins",
+    "template_version": "v2"
+  },
+  "willi castro|col": {
+    "entity": "Willi Castro",
+    "generated_at": "2026-08-08T14:17:07.277807+00:00",
+    "last_game_date": "2026-08-07",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Colorado Rockies",
+    "template_version": "v2"
+  },
   "wilyer abreu|bos": {
     "entity": "Wilyer Abreu",
     "generated_at": "2026-08-05T15:49:44.109981+00:00",
-    "last_game_date": "2026-08-06",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -200,23 +211,12 @@
   "yordan alvarez|hou": {
     "entity": "Yordan Alvarez",
     "generated_at": "2026-08-02T18:46:30.235720+00:00",
-    "last_game_date": "2026-08-05",
+    "last_game_date": "2026-08-07",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "Houston Astros",
-    "template_version": "v2"
-  },
-  "zack wheeler|phi": {
-    "entity": "Zack Wheeler",
-    "generated_at": "2026-08-07T14:39:28.534703+00:00",
-    "last_game_date": "2026-08-02",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
     "template_version": "v2"
   }
 }
