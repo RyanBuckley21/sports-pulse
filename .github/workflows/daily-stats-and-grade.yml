@@ -111,6 +111,19 @@ concurrency:
 jobs:
   grade-and-regenerate:
     runs-on: ubuntu-latest
+    # A normal run (grade + regenerate + both commits) finishes in well under
+    # two minutes -- every observed successful run has landed between 42s and
+    # 71s end to end. Left at the GitHub default (360 min), a hang has nothing
+    # to stop it but a human noticing and hitting Cancel: on 2026-08-06 both
+    # cron entries stalled on something (no commit of any kind came out of
+    # either) and sat for ~15 minutes each before a manual cancel ended them --
+    # long enough that the date they were grading was left with no ledger row
+    # at all, not even the self-documenting no_store one a clean die() would
+    # have written. 10 minutes is generous headroom over the ~1-minute norm
+    # while still failing on its own, loudly, well inside that same run's
+    # window -- instead of quietly occupying the concurrency slot until
+    # someone happens to look.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
