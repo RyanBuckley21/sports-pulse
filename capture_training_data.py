@@ -38,14 +38,23 @@ CONFIG_PATH = "config.yaml"
 
 
 def _load_boxscore_cache():
-    """The committed boxscore cache, read-only. Feeds bullpen-ERA (7d) lookups;
-    the pruned copy build_game_entities returns is intentionally NOT written
-    back here -- see the module docstring."""
+    """The committed boxscore cache's MLB partition, read-only, as the flat
+    {gamePk: entry} shape mlb.build_game_entities expects. Feeds bullpen-ERA
+    (7d) lookups; the pruned copy build_game_entities returns is intentionally
+    NOT written back here -- see the module docstring.
+
+    The file on disk is sport-keyed ({sport: {gamePk: entry}}, matching
+    data.json's own `sports` dict -- see generate_insights.GAME_BUILDERS) so
+    this unwraps the "mlb" partition before handing it to mlb.build_game_entities,
+    which knows nothing about that envelope. Passing the raw nested dict through
+    unwrapped would not error -- every gamePk lookup would just silently miss,
+    degrading to a 100% cache miss (a full boxscore re-fetch every run) rather
+    than a crash, which is exactly the kind of failure that stays quiet."""
     if not os.path.exists(BOXSCORE_CACHE_PATH):
         return {}
     try:
         with open(BOXSCORE_CACHE_PATH) as f:
-            return json.load(f)
+            return (json.load(f) or {}).get("mlb", {})
     except (ValueError, OSError):
         print("capture: boxscore cache unreadable; continuing without it")
         return {}
