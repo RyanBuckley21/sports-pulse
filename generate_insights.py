@@ -48,6 +48,22 @@ GAMES_STORE_PATH = "data/insights.games.json"
 # (7d). A final game's boxscore is immutable, so it's fetched once and reused
 # across runs; see fetchers/mlb.build_game_entities.
 BOXSCORE_CACHE_PATH = "data/boxscores.json"
+# Both GAMES_STORE_PATH and BOXSCORE_CACHE_PATH are sport-keyed on disk --
+# {sport: {gamePk: entry}} -- the same convention data.json's own top-level
+# `sports` dict already uses. Each per-sport builder in GAME_BUILDERS still
+# takes/returns a FLAT {gamePk: entry} dict (fetchers/mlb.py is untouched and
+# knows nothing about other sports); the nesting is purely an on-disk envelope
+# unwrapped/rewrapped at this module's boundary. See _build_game_entities and
+# run()'s games-store section.
+
+# Registered per-sport game/team builders, mirroring generate_stats.py's
+# SPORT_FETCHERS registry for the leaderboard pipeline. Each entry is
+# `fn(config, game_date, boxscore_cache, team_entities=None) -> (entities,
+# pruned_boxscore_cache, training_rows)`, the shape mlb.build_game_entities
+# already returns. Only mlb is registered today; a second sport joins this
+# pipeline (Signal Score games, Team Pulse, training capture) by adding its own
+# entry here -- same mechanism, deliberately, as SPORT_FETCHERS.
+GAME_BUILDERS = {"mlb": mlb.build_game_entities}
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
 # below the cap are pruned on each run.
@@ -221,36 +237,69 @@ def _top_n(entities, n):
     return dict(ordered[:n])
 
 
+def _active_game_sports(config):
+    """Sports this run's game/team builders should attempt, in active_sports
+    order: config's active_sports (or every registered builder, if unset --
+    same fallback generate_stats.SPORT_FETCHERS uses), filtered to those
+    actually registered in GAME_BUILDERS. mlb is both today, so this resolves
+    to exactly ["mlb"] in production."""
+    configured = (config or {}).get("active_sports") or list(GAME_BUILDERS)
+    return [s for s in configured if s in GAME_BUILDERS]
+
+
 def _build_game_entities(config, generated_at, team_entities=None):
-    """Deterministic game builder + its stores. Runs everywhere, CI included --
-    there is no longer any gated step after it.
+    """Deterministic game builder + its stores, dispatched per sport over
+    GAME_BUILDERS (mirroring generate_stats.SPORT_FETCHERS). Runs everywhere,
+    CI included -- there is no longer any gated step after it.
     Returns (game_entities, games_store, game_date).
 
-    A single bad game does NOT reach here -- mlb.build_game_entities skips it,
-    reports it, and returns the rest of the slate. What reaches here is the
-    build itself failing, and that is raised rather than absorbed: this used to
-    be an `except Exception` returning empty games, which meant a broken builder
-    and a genuine off-day produced byte-identical output, and the run exited 0
-    either way. Nothing downstream can tell those apart -- run() goes on to
-    write a {} games store over the committed pre-game snapshot that
-    signal_report.py grades against, and the site deploys with no games at all.
-    A red run that leaves yesterday's data.json served is the better failure.
+    `game_entities` is the MERGE of every attempted sport's own entities into
+    one flat {key: entity} dict -- not a new shape, since data.json's games
+    section has always mixed sports this way (every entity already carries its
+    own "sport") and downstream consumers (_build_games_section etc.) already
+    treat it as sport-mixed. `games_store` is the FULL nested {sport: {key:
+    entity}} store as loaded from disk (see GAMES_STORE_PATH); the per-sport
+    writability/carry-forward decision is made one layer up, in run(), exactly
+    where it was already being made before this function existed in its
+    generalized form.
 
-    `team_entities`, when a list is passed, is filled with the Team entities built
-    from the SAME slate and caches -- see mlb.build_game_entities. It stays an
-    out-parameter rather than a fourth return value so the existing three-value
-    unpacking at every other call site keeps working untouched."""
+    A single bad game does NOT reach here -- mlb.build_game_entities skips it,
+    reports it, and returns the rest of the slate. What reaches here is one
+    SPORT's build failing outright, and that is raised rather than absorbed:
+    this used to be an `except Exception` returning empty games, which meant a
+    broken builder and a genuine off-day produced byte-identical output, and
+    the run exited 0 either way. Nothing downstream can tell those apart --
+    run() goes on to write a {} games store over the committed pre-game
+    snapshot that signal_report.py grades against, and the site deploys with
+    no games at all. A red run that leaves yesterday's data.json served is the
+    better failure -- true per sport today exactly as it was true overall
+    before, since one sport is all that is registered.
+
+    `team_entities`, when a list is passed, is filled with the Team entities
+    built from the SAME slates and caches -- see mlb.build_game_entities. It
+    stays an out-parameter rather than a fourth return value so the existing
+    three-value unpacking at every other call site keeps working untouched;
+    every attempted sport's teams land in the SAME shared list, passed to each
+    builder in turn (each one only ever .extend()s it)."""
     if config is None:
         return {}, {}, None
     game_date = generated_at.date().isoformat()
     try:
-        box_cache = _load_store(BOXSCORE_CACHE_PATH)
-        game_entities, box_cache, training_rows = mlb.build_game_entities(
-            config, game_date, box_cache, team_entities=team_entities)
-        _save_store(BOXSCORE_CACHE_PATH, box_cache)
+        box_cache_all = _load_store(BOXSCORE_CACHE_PATH)
+        game_entities = {}
+        training_rows = []
+        for sport_key in _active_game_sports(config):
+            builder = GAME_BUILDERS[sport_key]
+            sport_entities, pruned_cache, sport_training_rows = builder(
+                config, game_date, box_cache_all.get(sport_key, {}), team_entities=team_entities)
+            box_cache_all[sport_key] = pruned_cache
+            game_entities.update(sport_entities)
+            training_rows.extend(sport_training_rows)
+        _save_store(BOXSCORE_CACHE_PATH, box_cache_all)
         games_store = _load_store(GAMES_STORE_PATH)
         print("insights(games): built {} games for {} (boxscore cache: {} final games)"
-              .format(len(game_entities), game_date, len(box_cache)))
+              .format(len(game_entities), game_date,
+                      sum(len(v) for v in box_cache_all.values())))
         if team_entities is not None:
             print("insights(teams): built {} team profiles for {}"
                   .format(len(team_entities), game_date))
@@ -353,15 +402,37 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     game_entities, games_store, game_date = _build_game_entities(
         config, generated_at, team_entities=team_entities)
 
-    # Decided ONCE, before either branch below, and only about the COMMITTED
-    # games store. The build above always ran and `game_entities` is always
-    # returned in full, so data.json (and the live site) still reflect current,
-    # in-progress state regardless of what this says.
-    games_writable, why_frozen = _games_store_writable(game_entities, games_store, game_date)
-    if why_frozen:
-        print("insights(games): NOT overwriting {} -- {}. The committed store keeps "
-              "its pre-game snapshot; data.json still has live state."
-              .format(GAMES_STORE_PATH, why_frozen))
+    # Partition this run's game_entities by their own "sport" tag (every entity
+    # already carries one -- see mlb.build_game_entities' return shape) so each
+    # sport's slate is checked against ITS OWN store partition independently.
+    # One sport's slate having already started must not freeze another sport's
+    # still-pregame partition, and vice versa -- with one sport registered this
+    # collapses to exactly the single check that used to run here.
+    entities_by_sport = {}
+    for pk, ent in game_entities.items():
+        entities_by_sport.setdefault(ent.get("sport"), {})[pk] = ent
+
+    # Decided ONCE PER SPORT, before either branch below, and only about the
+    # COMMITTED games store. The build above always ran and `game_entities` is
+    # always returned in full, so data.json (and the live site) still reflect
+    # current, in-progress state regardless of what this says. Iterated over
+    # EVERY attempted sport (not just entities_by_sport's keys), so a sport
+    # with zero games today still gets its writability decision -- an off day
+    # clears that sport's partition to {}, same as an off day always cleared
+    # the (then-single, now per-sport) store.
+    updated_games_store = dict(games_store)
+    for sport_key in _active_game_sports(config):
+        sport_entities = entities_by_sport.get(sport_key, {})
+        sport_store = games_store.get(sport_key) or {}
+        writable, why_frozen = _games_store_writable(sport_entities, sport_store, game_date)
+        if why_frozen:
+            print("insights(games): NOT overwriting {}'s {!r} slate -- {}. The "
+                  "committed store keeps its pre-game snapshot; data.json still "
+                  "has live state.".format(GAMES_STORE_PATH, sport_key, why_frozen))
+        if writable:
+            updated_games_store[sport_key] = _carry_forward_games_store(
+                sport_entities, sport_store, now_iso)
+        # else: leave updated_games_store[sport_key] exactly as committed.
 
     # THE THREE DISABLE LAYERS, KEPT INTACT AND IN ORDER: the config kill switch
     # is evaluated first and short-circuits SP_SKIP_INSIGHTS, which short-circuits
@@ -394,19 +465,24 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
         # calls" is true here for a different reason than in the three above.
         reason = "no AI prose path in this build"
     with_text = sum(1 for k in entities if (store.get(k) or {}).get("summary"))
-    g_with_text = sum(1 for pk in game_entities if (games_store.get(pk) or {}).get("summary"))
+    g_with_text = sum(1 for pk, ent in game_entities.items()
+                      if ((games_store.get(ent.get("sport")) or {}).get(pk) or {}).get("summary"))
     print("insights: {} -> merge-only: top {} players ({} w/ text), {} games ({} w/ text), no AI calls"
           .format(reason, total, with_text, len(game_entities), g_with_text))
     insight_map = {k: _carry(store.get(k)) for k in entities}
-    game_text = {pk: _carry_game(games_store.get(pk)) for pk in game_entities}
+    game_text = {pk: _carry_game((games_store.get(ent.get("sport")) or {}).get(pk))
+                for pk, ent in game_entities.items()}
     # Persist the deterministic build. Without this the committed stores would
     # never advance again.
     # The PLAYER store is written unconditionally, as before: it carries AI
     # carry-forward text and change-detection fields only, nothing grades
     # against it, and it has no pre-game snapshot semantics to protect.
     _save_store(store_path, _carry_forward_store(entities, store, now_iso))
-    if games_writable:
-        _save_store(GAMES_STORE_PATH, _carry_forward_games_store(game_entities, games_store, now_iso))
+    # The GAMES store is always saved now -- the per-sport writability decision
+    # above is already baked into updated_games_store (a frozen partition is
+    # copied through unchanged), so this reproduces byte-identical content on a
+    # no-op write rather than needing its own gate.
+    _save_store(GAMES_STORE_PATH, updated_games_store)
 
     _write_back(data, insight_map)
     data["insights"] = _build_players_section(entities, insight_map, generated_at)

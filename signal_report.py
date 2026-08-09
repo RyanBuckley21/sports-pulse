@@ -169,7 +169,18 @@ import betting_signals  # read-only: ranking (list_markets / top_market)
 CONFIG_PATH = "config.yaml"
 STORE_PATH = "data/insights.games.json"
 LEDGER_PATH = "data/signal_report_history.jsonl"
-SPORT_KEY = "mlb"
+# The sport to grade, resolved per invocation via --sport (see parse_args) --
+# NOT a fixed-at-import global. DEFAULT_SPORT_KEY only supplies the CLI
+# default (today's only behavior, "mlb"); every lookup that used to read a
+# bare SPORT_KEY now takes the resolved value as a parameter instead. The
+# ledger schema (build_pick_rows/build_status_row) is untouched by this --
+# rows carry no sport tag yet, so a `--sport` other than "mlb" is not yet
+# distinguishable in data/signal_report_history.jsonl. That is a real gap for
+# whenever a second sport's grading actually ships, deliberately left for that
+# change rather than folded in here, since adding a field would move every
+# future row's shape -- out of scope for a refactor that must not touch
+# output at all.
+DEFAULT_SPORT_KEY = "mlb"
 
 # Reference lines used ONLY under --assume-lines. These are conventional round
 # numbers, not real market lines, and not derived from anything in this repo.
@@ -230,6 +241,27 @@ def load_store(path, rev=None):
             return json.load(f)
     except FileNotFoundError:
         die("no store at {}".format(path))
+
+
+def _sport_partition(raw_store, sport_key):
+    """One sport's flat {gamePk: entry} partition out of the committed games
+    store, which is sport-keyed on disk ({sport: {gamePk: entry}}, matching
+    data.json's own `sports` dict -- see generate_insights.GAME_BUILDERS).
+
+    A `--rev` pointed at a commit before the sport-keyed migration still
+    returns the store's OLD flat shape (git history does not rewrite itself
+    retroactively), so this detects that case -- a top-level value that is
+    itself a per-game entry (carries "away"/"home") rather than a
+    further-nested {gamePk: entry} map -- and treats the whole thing as an
+    implicit "mlb" partition, the only sport that ever wrote to this store
+    before the migration. A store that is already nested reads normally.
+    """
+    if not raw_store:
+        return {}
+    sample = next(iter(raw_store.values()))
+    if isinstance(sample, dict) and ("away" in sample or "home" in sample):
+        return raw_store if sport_key == "mlb" else {}
+    return raw_store.get(sport_key, {})
 
 
 SCHEMA_VERSION = 2
@@ -751,11 +783,11 @@ def _run_line_laying(scored, side):
     return ml == side
 
 
-def collect_picks(store, config, min_score, all_markets):
+def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT_KEY):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
     what the site showed."""
-    labels = dict((config.get("insights_ui") or {}).get(SPORT_KEY, {}).get("market_labels") or {})
+    labels = dict((config.get("insights_ui") or {}).get(sport_key, {}).get("market_labels") or {})
     labels.update(SHORT_LABELS)
     picks = []
     for pk, entry in store.items():
@@ -973,6 +1005,10 @@ def parse_args(argv=None):
         description="Report how a date's top Signal Score picks actually did (read-only).")
     p.add_argument("--date", default=None, metavar="YYYY-MM-DD",
                    help="slate date to report on (default: yesterday, US/Eastern)")
+    p.add_argument("--sport", default=DEFAULT_SPORT_KEY, metavar="SPORT",
+                   help="sport key to grade, resolved against config's sport-keyed "
+                        "blocks and the store's sport partition (default: {})"
+                        .format(DEFAULT_SPORT_KEY))
     p.add_argument("--store", default=STORE_PATH, help="insights game store path")
     p.add_argument("--rev", default=None, metavar="GIT_REV",
                    help="read the store from a git revision (the store only ever holds one slate)")
@@ -998,17 +1034,21 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     config = load_config()
-    base_url = config[SPORT_KEY]["base_url"]
-    threshold = (config.get("betting_signals") or {}).get(SPORT_KEY, {}).get("standout_threshold", 50)
+    sport_key = args.sport
+    if sport_key not in config:
+        die("--sport {!r} is not configured (config.yaml has no {!r} block)"
+            .format(sport_key, sport_key))
+    base_url = config[sport_key]["base_url"]
+    threshold = (config.get("betting_signals") or {}).get(sport_key, {}).get("standout_threshold", 50)
     min_score = args.min_score if args.min_score is not None else threshold
 
     run_id, source = _now_iso(), (
         "{}@{}".format(args.store, args.rev) if args.rev else args.store)
     recordable, why_not = is_recordable(args, min_score, threshold)
 
-    store = load_store(args.store, args.rev)
+    store = _sport_partition(load_store(args.store, args.rev), sport_key)
     if not store:
-        die("store {} is empty".format(args.store))
+        die("store {} is empty (no {!r} games)".format(args.store, sport_key))
 
     session = requests.Session()
     try:
@@ -1090,7 +1130,7 @@ def main(argv=None):
                 args.store, " @ " + args.rev if args.rev else "",
                 "/".join(stamps), len(store), args.date, stamps[0], args.date))
 
-    picks = collect_picks(store, config, min_score, args.all_markets)
+    picks = collect_picks(store, config, min_score, args.all_markets, sport_key=sport_key)
     if len(overlap) < len(store):
         sys.stderr.write("signal_report: warning: {} of {} stored games are not on the {} "
                          "schedule; their picks are listed as UNRESOLVED\n".format(
