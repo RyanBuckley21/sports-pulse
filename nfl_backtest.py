@@ -79,6 +79,16 @@ SPORT_KEY = "nfl"
 N_BOOT_DEFAULT = 2000
 BOOT_SEED = 20260810  # fixed, so a re-run reproduces the same CI rather than jittering
 
+# Manually excluded from weighting despite clearing the CI-based drop rule:
+# a real decision made from the first 2021-2025 run's pairwise-correlation
+# table (r=0.71 with off_epa, 0.60 with def_epa_allowed, 0.50 with
+# turnover_diff), not a statistical result -- reliability-proportional
+# weighting assumes each signal is independent evidence, and scoring_margin
+# measurably is not: it is largely a restatement of what off_epa/def_epa
+# already capture, differently aggregated. See derive_calibration's
+# docstring for how this is kept distinct from rest_diff's CI-based drop.
+DEFAULT_EXCLUDED = {"scoring_margin"}
+
 
 # --------------------------------------------------------------------------- #
 # Data collection -- point-in-time signal inputs for every graded game.
@@ -281,7 +291,7 @@ def pairwise_signal_correlations(records):
     return out
 
 
-def derive_calibration(measurements):
+def derive_calibration(measurements, excluded=()):
     """Reliability-proportional weights from measured r, mirroring
     config.yaml's mlb block: "weights ... scaled by the MEASURED reliability
     of the signal family". No hand-set "domain base split" is applied on
@@ -296,17 +306,34 @@ def derive_calibration(measurements):
     Establishing an equivalent NFL ceiling is its own research project, not
     attempted here; flagged, not silently assumed away.
 
-    A signal is DROPPED (not shrunk) when its bootstrap 95% CI spans zero --
-    the same treatment season_series got for MLB, once measured. Survivors'
-    reliabilities are renormalized to sum to 1.
+    Two DIFFERENT reasons a signal can end up unweighted, kept distinct in
+    the return value and the report -- collapsing them would hide which
+    judgment call did what:
+      * DROPPED -- its bootstrap 95% CI spans zero (rest_diff): a
+        STATISTICAL result, the same treatment season_series got for MLB
+        once measured.
+      * EXCLUDED -- `excluded` names it (scoring_margin): a MANUAL decision
+        made from the pairwise-correlation table (r=0.71 with off_epa),
+        because reliability-proportional weighting assumes each signal is
+        independent evidence and scoring_margin measurably is not. Its own
+        r-vs-outcome measurement is not in question -- it is excluded
+        despite having a real, CI-clears-zero correlation, which a reader
+        conflating this with DROPPED would misread as "this signal doesn't
+        predict anything," the opposite of why it's out.
 
-    Returns (weights: {signal: float}, dropped: [signal names], scales:
-    {signal: stdev of its own raw gap} -- every SIGNAL_SPECS entry, dropped
-    or not, since _base_signals looks up every scale key unconditionally
-    regardless of which signals end up weighted).
+    Survivors' reliabilities are renormalized to sum to 1 over whichever
+    signals remain after BOTH exclusion rules.
+
+    Returns (weights: {signal: float}, dropped: [signal names, CI-based],
+    excluded: [signal names, manual], scales: {signal: stdev of its own raw
+    gap} -- every SIGNAL_SPECS entry, whether weighted or not, since
+    _base_signals looks up every scale key unconditionally regardless of
+    which signals end up weighted).
     """
     survivors, dropped = [], []
     for m in measurements:
+        if m["signal"] in excluded:
+            continue
         if m["r"] is None or m["ci_lo"] is None:
             dropped.append(m["signal"])
             continue
@@ -329,7 +356,7 @@ def derive_calibration(measurements):
         # unweighted (and therefore inert) anyway.
         scales[m["signal"]] = round(m["stdev_gap"], 4) if m["stdev_gap"] else _PLACEHOLDER_SCALES[spec["scale_key"]]
 
-    return weights, dropped, scales
+    return weights, dropped, list(excluded), scales
 
 
 # Only used as a fallback for a signal with too little data to measure a
@@ -455,6 +482,10 @@ def parse_args(argv=None):
     p.add_argument("--seasons", type=int, nargs="+", default=DEFAULT_SEASONS,
                    help="seasons to backtest (default: {})".format(DEFAULT_SEASONS))
     p.add_argument("--n-boot", type=int, default=N_BOOT_DEFAULT, help="bootstrap resamples per signal")
+    p.add_argument("--exclude", nargs="*", default=DEFAULT_EXCLUDED,
+                   help="signals to manually exclude from weighting despite a real r-vs-outcome "
+                        "correlation (default: {} -- see derive_calibration's docstring for why "
+                        "this differs from the CI-based auto-drop)".format(sorted(DEFAULT_EXCLUDED)))
     p.add_argument("--min-threshold", type=int, default=None, help="override the auto-picked min_threshold")
     p.add_argument("--standout-threshold", type=int, default=None, help="override the auto-picked standout_threshold")
     p.add_argument("--out", default=OUTPUT_PATH, help="output JSONL path (default: {})".format(OUTPUT_PATH))
@@ -496,8 +527,10 @@ def main(argv=None):
             flag = "  <-- collinear" if r is not None and abs(r) >= 0.5 else ""
             print("  {:<18} x {:<18} r={:>+.4f}  n={}{}".format(a, b, r if r is not None else float("nan"), n, flag))
 
-    weights, dropped, scales = derive_calibration(measurements)
+    weights, dropped, excluded, scales = derive_calibration(measurements, excluded=args.exclude)
     print()
+    if excluded:
+        print("nfl_backtest: EXCLUDED (manual, collinearity -- see pairwise table above): {}".format(", ".join(excluded)))
     if dropped:
         print("nfl_backtest: DROPPED (95% CI spans zero, or unmeasurable): {}".format(", ".join(dropped)))
     print("nfl_backtest: calibrated weights (reliability-proportional, renormalized over survivors):")
