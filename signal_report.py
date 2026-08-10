@@ -333,10 +333,30 @@ def _has_pick(row):
     return row.get("status") == STATUS_RECORDED and bool(row.get("bet_type"))
 
 
+def _row_sport(row):
+    """The sport a ledger row belongs to. Rows written before NFL's ledger
+    tagging carry no `sport` field at all -- mlb was the only sport that
+    ever wrote to this ledger, so a missing tag defaults to "mlb" here
+    (read-time only; existing rows are never rewritten to add the field --
+    see build_pick_rows/build_status_row)."""
+    return row.get("sport") or "mlb"
+
+
 def latest_run_rows(all_rows):
-    """The rows that currently describe each date: those from that date's most
-    recent run THAT RECORDED PICKS, falling back to its most recent run overall
-    only when no run for that date ever recorded one.
+    """The rows that currently describe each (date, sport) slate: those from
+    that slate's most recent run THAT RECORDED PICKS, falling back to its
+    most recent run overall only when no run for that slate ever recorded
+    one.
+
+    Keyed by (date, sport) rather than bare date -- once a second sport's
+    grading writes to this same ledger file, a calendar date can carry BOTH
+    an mlb slate and an nfl slate as two independent entries. Keying by date
+    alone would let one sport's later run "supersede" (and, in
+    ledger_totals, silently drop) the OTHER sport's already-recorded rows
+    for that same date, which is exactly the kind of silent cross-sport
+    corruption this file must not produce. With only mlb ever writing here
+    so far, every date maps to exactly one sport and this is unobservable --
+    it matters the moment a second sport's rows start arriving.
 
     The ledger is append-only (it merges cleanly across machines, unlike a single
     mutated object), so re-reporting a date does not erase the earlier attempt --
@@ -366,18 +386,21 @@ def latest_run_rows(all_rows):
         date, run = row.get("date"), row.get("run_id") or ""
         if not date:
             continue
-        if date not in newest or run > newest[date]:
-            newest[date] = run
-        if _has_pick(row) and (date not in picked or run > picked[date]):
-            picked[date] = run
-    # Per date: the newest pick-bearing run when there is one, else newest overall.
+        key = (date, _row_sport(row))
+        if key not in newest or run > newest[key]:
+            newest[key] = run
+        if _has_pick(row) and (key not in picked or run > picked[key]):
+            picked[key] = run
+    # Per (date, sport): the newest pick-bearing run when there is one, else
+    # newest overall.
     chosen = dict(newest)
     chosen.update(picked)
     out = {}
     for row in all_rows:
         date = row.get("date")
-        if date and (row.get("run_id") or "") == chosen.get(date):
-            out.setdefault(date, []).append(row)
+        key = (date, _row_sport(row)) if date else None
+        if key and (row.get("run_id") or "") == chosen.get(key):
+            out.setdefault(key, []).append(row)
     return out
 
 
@@ -402,15 +425,19 @@ def observed_facts(game):
     }
 
 
-def build_pick_rows(date, rows, source, run_id):
+def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY):
     """One ledger row per pick -- the grain that makes "how have moneyline picks
     done" and "do 90+ scores outperform 60s" answerable later. Aggregates are
-    computed on read; none are stored as truth."""
+    computed on read; none are stored as truth.
+
+    `sport_key` is stamped onto every new row going forward (see _row_sport
+    for how a reader treats a row written before this field existed)."""
     out = []
     for pick, game, result, verdict, basis in rows:
         out.append({
             "schema_version": SCHEMA_VERSION,
             "date": date, "status": STATUS_RECORDED, "run_id": run_id, "source": source,
+            "sport": sport_key,
             "gamePk": pick["gamePk"],
             "away": pick["away_abbr"], "home": pick["home_abbr"],
             "game_number": (game or {}).get("gameNumber"),
@@ -423,12 +450,12 @@ def build_pick_rows(date, rows, source, run_id):
     return out
 
 
-def build_status_row(date, status, source, run_id, note=None):
+def build_status_row(date, status, source, run_id, note=None, sport_key=DEFAULT_SPORT_KEY):
     """A date with no picks to record, written down explicitly so the gap reads
     as a known fact rather than an absence indistinguishable from never having
-    run the report."""
+    run the report. `sport_key` is stamped the same way build_pick_rows does."""
     row = {"schema_version": SCHEMA_VERSION, "date": date, "status": status,
-           "run_id": run_id, "source": source}
+           "run_id": run_id, "source": source, "sport": sport_key}
     if note:
         row["note"] = note
     return row
@@ -1078,7 +1105,8 @@ def main(argv=None):
         # --no-record run asked to read one specific store, and "that store does
         # not cover this date" remains the answer it needs.
         if recordable:
-            dated = [row for row in load_ledger() if row.get("date") == args.date]
+            dated = [row for row in load_ledger()
+                    if row.get("date") == args.date and _row_sport(row) == sport_key]
             graded = [row for row in dated if _has_pick(row)]
             if graded:
                 print("signal_report: {} is already graded -- {} pick{} recorded at {}. "
@@ -1123,7 +1151,8 @@ def main(argv=None):
         # as it always has.
         if recordable:
             append_ledger([build_status_row(args.date, STATUS_NO_STORE, source, run_id,
-                                            note="store covers {}".format("/".join(stamps)))])
+                                            note="store covers {}".format("/".join(stamps)),
+                                            sport_key=sport_key)])
         die("store {}{} covers {} ({} games), not {} — no gamePk overlap.\n"
             "  Try: --date {}   or   --rev <commit whose store covers {}>\n"
             "  (the store is pruned to one slate per run; past slates live in git history)".format(
@@ -1157,8 +1186,8 @@ def main(argv=None):
     # The standing record. Only a canonical run may add to it; every run still
     # displays it, so the all-time number is visible even from a fixture run.
     if recordable:
-        append_ledger(build_pick_rows(args.date, rows, source, run_id) if rows
-                      else [build_status_row(args.date, STATUS_NO_PICKS, source, run_id)])
+        append_ledger(build_pick_rows(args.date, rows, source, run_id, sport_key=sport_key) if rows
+                      else [build_status_row(args.date, STATUS_NO_PICKS, source, run_id, sport_key=sport_key)])
 
     render(args.date, picks, rows, len(store), args.assume_lines, load_ledger(), why_not)
     return EXIT_PENDING if any(r[3] in RERUNNABLE for r in rows) else EXIT_OK

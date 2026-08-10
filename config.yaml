@@ -331,6 +331,51 @@ betting_signals:
         team_ops: 0.502
         opp_bullpen_era: 0.126
         opp_starter_era: 0.372
+  # NFL -- moneyline only, v1 (see nfl_signals.py; run against fetchers/nfl.py's
+  # nflverse-derived team form). NOT in active_sports yet -- built and wired,
+  # not live, same staged-rollout precedent worldcup already sets below.
+  #
+  # EVERY NUMBER BELOW IS A FLAT, PRE-CALIBRATION PLACEHOLDER, not a measured
+  # one. mlb's weights/scales above were arrived at by measuring each signal's
+  # predictive validity against real outcomes over months of production (see
+  # the mlb block's own comments for that history: reliability-proportional
+  # weights, a season_series signal actually REMOVED after measurement showed
+  # it carried no signal, a standout_threshold walked 50 -> 20 -> 15 -> 17 as
+  # the signal set changed under it). None of that measurement exists yet for
+  # NFL -- backtesting against real past seasons is the explicit next step
+  # (not this PR), so this block intentionally does NOT imitate mlb's
+  # reliability-proportional split. Equal weights are the honest way to encode
+  # "we have not yet measured which of these matters more."
+  #
+  # scales are not config the backtest can leave untouched either -- the tanh
+  # normalization needs SOME gap-that-reads-as-meaningful number to produce
+  # any score at all. These five are ballpark figures grounded in public NFL
+  # analytics convention (typical full-season spreads: team offensive/
+  # defensive EPA per play roughly spans +/-0.15, turnover margin roughly
+  # +/-1/game, scoring margin roughly +/-10/game, rest gaps of a few days from
+  # a Thursday game or a bye week) -- NOT measured against this repo's own
+  # data the way mlb's are. Expect the backtest to move every value in this
+  # block, weights, scales, and threshold alike.
+  nfl:
+    # Deliberately near-zero: with nothing measured yet, the goal is a large
+    # gradeable sample for the backtest step, not a defensible live cutoff.
+    # The >=2-signals-agree guard in nfl_signals._finalize is the real gate
+    # at this threshold, not the score.
+    min_threshold: 1
+    standout_threshold: 1
+    scales:
+      off_epa_gap: 0.10
+      def_epa_gap: 0.10
+      turnover_gap: 0.50
+      margin_gap: 7.0
+      rest_gap: 3.0
+    bet_types:
+      moneyline:
+        off_epa: 0.20
+        def_epa_allowed: 0.20
+        turnover_diff: 0.20
+        scoring_margin: 0.20
+        rest_diff: 0.20
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 

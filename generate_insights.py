@@ -29,7 +29,7 @@ import shutil
 
 import pulse
 import training_capture
-from fetchers import mlb
+from fetchers import mlb, nfl
 
 # Stamped onto every player store entry as `template_version`. It used to mean
 # "which prompt produced this text", and bumping it forced regeneration; with the
@@ -60,10 +60,17 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # SPORT_FETCHERS registry for the leaderboard pipeline. Each entry is
 # `fn(config, game_date, boxscore_cache, team_entities=None) -> (entities,
 # pruned_boxscore_cache, training_rows)`, the shape mlb.build_game_entities
-# already returns. Only mlb is registered today; a second sport joins this
-# pipeline (Signal Score games, Team Pulse, training capture) by adding its own
-# entry here -- same mechanism, deliberately, as SPORT_FETCHERS.
-GAME_BUILDERS = {"mlb": mlb.build_game_entities}
+# already returns. A second sport joins this pipeline (Signal Score games,
+# Team Pulse, training capture) by adding its own entry here -- same
+# mechanism, deliberately, as SPORT_FETCHERS.
+#
+# nfl is REGISTERED but NOT in config.yaml's active_sports -- _active_game_sports
+# only attempts a sport that is both registered here AND active, so nfl.build_game_entities
+# never runs in production until active_sports says so (same staged-rollout
+# precedent worldcup already sets in the stat-categories pipeline). It is
+# wired and ready, pending the backtest-calibration step that comes after
+# this PR.
+GAME_BUILDERS = {"mlb": mlb.build_game_entities, "nfl": nfl.build_game_entities}
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
 # below the cap are pruned on each run.
