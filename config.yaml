@@ -332,50 +332,103 @@ betting_signals:
         opp_bullpen_era: 0.126
         opp_starter_era: 0.372
   # NFL -- moneyline only, v1 (see nfl_signals.py; run against fetchers/nfl.py's
-  # nflverse-derived team form). NOT in active_sports yet -- built and wired,
-  # not live, same staged-rollout precedent worldcup already sets below.
+  # nflverse-derived team form). NOT in active_sports yet -- built, wired, and
+  # NOW BACKTEST-CALIBRATED, but still not live; going live in active_sports
+  # is a separate decision made after these numbers have been reviewed, same
+  # staged-rollout precedent worldcup already sets below.
   #
-  # EVERY NUMBER BELOW IS A FLAT, PRE-CALIBRATION PLACEHOLDER, not a measured
-  # one. mlb's weights/scales above were arrived at by measuring each signal's
-  # predictive validity against real outcomes over months of production (see
-  # the mlb block's own comments for that history: reliability-proportional
-  # weights, a season_series signal actually REMOVED after measurement showed
-  # it carried no signal, a standout_threshold walked 50 -> 20 -> 15 -> 17 as
-  # the signal set changed under it). None of that measurement exists yet for
-  # NFL -- backtesting against real past seasons is the explicit next step
-  # (not this PR), so this block intentionally does NOT imitate mlb's
-  # reliability-proportional split. Equal weights are the honest way to encode
-  # "we have not yet measured which of these matters more."
+  # CALIBRATED against real 2021-2025 seasons (nfl_backtest.py), the same
+  # "measure, don't guess" discipline mlb's own weights/scales/threshold
+  # history above documents -- but this is a SINGLE BACKTEST PASS, not months
+  # of live production measurement the way mlb's numbers are. Treat every
+  # value below as a first-pass starting point subject to revision once real
+  # production data accumulates, exactly like mlb's standout_threshold walked
+  # 50 -> 20 -> 15 -> 17 as its signal set changed under it -- this is where
+  # that walk STARTS for NFL, not where it ends.
   #
-  # scales are not config the backtest can leave untouched either -- the tanh
-  # normalization needs SOME gap-that-reads-as-meaningful number to produce
-  # any score at all. These five are ballpark figures grounded in public NFL
-  # analytics convention (typical full-season spreads: team offensive/
-  # defensive EPA per play roughly spans +/-0.15, turnover margin roughly
-  # +/-1/game, scoring margin roughly +/-10/game, rest gaps of a few days from
-  # a Thursday game or a bye week) -- NOT measured against this repo's own
-  # data the way mlb's are. Expect the backtest to move every value in this
-  # block, weights, scales, and threshold alike.
+  # Measured against 1,424 real games (1,359 regular season + 65 postseason,
+  # 2021-2025): point-biserial r of each signal's direction-corrected raw
+  # gap against the real home-win outcome, with a 2000-sample bootstrap 95%
+  # CI. Two signals are NOT in bet_types.moneyline below, for two DIFFERENT
+  # reasons kept distinct on purpose:
+  #   * rest_diff -- DROPPED. r=+0.0417, 95% CI [-0.0100, +0.0924] spans
+  #     zero: not distinguishable from no signal at all. Same treatment
+  #     mlb's season_series got once measured (r=-0.02, also dropped, not
+  #     shrunk).
+  #   * scoring_margin -- EXCLUDED, not dropped. Its own correlation clears
+  #     zero cleanly (r=+0.2245, CI [+0.1723, +0.2776]) -- the reason it's
+  #     out is NOT that it doesn't predict anything, it measurably does.
+  #     It is heavily collinear with the signals that survive: r=+0.71 with
+  #     off_epa, +0.60 with def_epa_allowed, +0.50 with turnover_diff
+  #     (pairwise correlation among the signals THEMSELVES, not vs.
+  #     outcome) -- expected, since a team's scoring margin is largely a
+  #     restatement of what its EPA numbers already capture, aggregated
+  #     differently. Reliability-proportional weighting assumes each
+  #     signal is INDEPENDENT evidence; scoring_margin measurably is not,
+  #     so including it would double-count the same underlying "team
+  #     quality" information under two different names. No equivalent
+  #     multivariate check (partial correlation / logistic regression
+  #     controlling for the other signals) was run to confirm this more
+  #     rigorously -- this was a judgment call from the pairwise-correlation
+  #     table, not a statistical drop, and is flagged as the single biggest
+  #     open methodological question in this calibration.
+  #
+  # Survivors' weights are r^2 (variance explained), renormalized to sum to
+  # 1 -- NOT ceiling-corrected the way mlb's weights are (mlb's account for
+  # "the ceiling any team-level predictor can reach", established against
+  # this repo's own multi-month MLB production data; an equivalent NFL
+  # ceiling has not been established, so this is plain reliability-
+  # proportional weighting, not ceiling-corrected reliability):
+  #     off_epa r=+0.2473 -> 0.8380 · turnover_diff r=+0.0851 -> 0.0992 ·
+  #     def_epa_allowed r=+0.0677 -> 0.0628
+  # off_epa's weight looks stark relative to the other two because r^2
+  # weighting is sensitive to relative gaps, not because the other two were
+  # judged unimportant -- both cleared their own CI independently.
+  #
+  # scales are the measured sample stdev of each signal's own raw home-away
+  # gap (replacing the earlier ballpark placeholders). All five are still
+  # populated, including scoring_margin's and rest_diff's -- nfl_signals.
+  # _base_signals computes a directional value for every SIGNAL_SPECS entry
+  # unconditionally and divides by its scale, whether or not that entry is
+  # ever looked up by a bet_type's weights.
+  #
+  # min_threshold/standout_threshold recomputed from the resulting score
+  # distribution under the NEW (3-signal) weights -- the distribution shifts
+  # whenever the weights do, so the OLD threshold from a different weight
+  # set would not mean the same thing here. 50 is the largest threshold in
+  # the tested sensitivity table (0/5/.../70) that still keeps >=33% of the
+  # 1,424 games gradeable (552, 38.8%), and it also happened to be a local
+  # peak in win rate (67.8%) rather than a step down from a nearby option --
+  # not a coincidence this backtest engineered for, just what the table
+  # showed. Set equal (v1 has exactly one market, so there is no second,
+  # noisier market for standout_threshold to be stricter than the way mlb's
+  # run_line/nrfi_yrfi give its two thresholds room to differ).
+  #
+  # FINAL GRADED RESULT under these weights/thresholds, outcome-graded (real
+  # final scores, not an estimate): 374-178 (67.8%) on 552 decided picks,
+  # combined. Regular season alone: 363-173 (67.7%) on 536 decided picks.
+  # POSTSEASON: 11-5 (68.8%) on just 16 decided picks -- reported because
+  # postseason play can differ meaningfully from the regular season, NOT
+  # because 16 picks is enough to independently validate or refute that;
+  # read it as "here is what the same model does on playoff games," not as
+  # its own settled finding. Naive always-pick-home baseline over the same
+  # 2021-2025 window: 54.6% (776/1420 decided games) -- the calibrated model
+  # clears that baseline at every threshold tested, combined and regular-
+  # season alike.
   nfl:
-    # Deliberately near-zero: with nothing measured yet, the goal is a large
-    # gradeable sample for the backtest step, not a defensible live cutoff.
-    # The >=2-signals-agree guard in nfl_signals._finalize is the real gate
-    # at this threshold, not the score.
-    min_threshold: 1
-    standout_threshold: 1
+    min_threshold: 50
+    standout_threshold: 50
     scales:
-      off_epa_gap: 0.10
-      def_epa_gap: 0.10
-      turnover_gap: 0.50
-      margin_gap: 7.0
-      rest_gap: 3.0
+      off_epa_gap: 0.1566
+      def_epa_gap: 0.1356
+      turnover_gap: 1.1357
+      margin_gap: 10.1113
+      rest_gap: 2.3662
     bet_types:
       moneyline:
-        off_epa: 0.20
-        def_epa_allowed: 0.20
-        turnover_diff: 0.20
-        scoring_margin: 0.20
-        rest_diff: 0.20
+        off_epa: 0.8380
+        turnover_diff: 0.0992
+        def_epa_allowed: 0.0628
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 
