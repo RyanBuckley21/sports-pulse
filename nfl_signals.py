@@ -100,22 +100,39 @@ def _finalize(L, n_avail, n_agree, threshold, labels, flags=(), force_aligned=Fa
     return {"side": side, "score": score, "flags": flags}
 
 
+# Each base signal's definition -- which raw build_inputs() keys feed it,
+# which config scale key normalizes it, and which direction favors home
+# ("higher" raw home-minus-away value leans home; "lower" leans home the
+# other way, e.g. a lower EPA allowed is better defense). This is the SINGLE
+# place that mapping is defined: _base_signals (below) reads it to build the
+# live, config-scaled, tanh-squashed lean, and nfl_backtest.py's reliability
+# measurement reads the SAME table to build the raw, unscaled gap it
+# correlates against real outcomes -- so a signal's definition cannot drift
+# between what score_game actually computes and what the backtest measured
+# to calibrate it. Order here is display/iteration order only; it carries no
+# weighting meaning (weights live in config).
+SIGNAL_SPECS = {
+    "off_epa": {"home_key": "home_off_epa", "away_key": "away_off_epa",
+                "scale_key": "off_epa_gap", "favors": "higher"},
+    "def_epa_allowed": {"home_key": "home_def_epa_allowed", "away_key": "away_def_epa_allowed",
+                        "scale_key": "def_epa_gap", "favors": "lower"},
+    "turnover_diff": {"home_key": "home_turnover_diff", "away_key": "away_turnover_diff",
+                      "scale_key": "turnover_gap", "favors": "higher"},
+    "scoring_margin": {"home_key": "home_scoring_margin", "away_key": "away_scoring_margin",
+                       "scale_key": "margin_gap", "favors": "higher"},
+    "rest_diff": {"home_key": "home_rest", "away_key": "away_rest",
+                 "scale_key": "rest_gap", "favors": "higher"},
+}
+
+
 def _base_signals(inp, scales):
     """Every base signal's directional value toward HOME, or None where
     inputs are missing. Availability is NOT applied here -- it's the later
-    override (see score_game)."""
-    ho, ao = inp.get("home_off_epa"), inp.get("away_off_epa")
-    hd, ad = inp.get("home_def_epa_allowed"), inp.get("away_def_epa_allowed")
-    ht, at = inp.get("home_turnover_diff"), inp.get("away_turnover_diff")
-    hm, am = inp.get("home_scoring_margin"), inp.get("away_scoring_margin")
-    hr, ar = inp.get("home_rest"), inp.get("away_rest")
-    return {
-        "off_epa": _paired(ho, ao, scales["off_epa_gap"], "higher"),
-        "def_epa_allowed": _paired(hd, ad, scales["def_epa_gap"], "lower"),
-        "turnover_diff": _paired(ht, at, scales["turnover_gap"], "higher"),
-        "scoring_margin": _paired(hm, am, scales["margin_gap"], "higher"),
-        "rest_diff": _paired(hr, ar, scales["rest_gap"], "higher"),
-    }
+    override (see score_game). Iterates SIGNAL_SPECS rather than hardcoding
+    each signal's extraction -- see that table's docstring for why."""
+    return {name: _paired(inp.get(spec["home_key"]), inp.get(spec["away_key"]),
+                          scales[spec["scale_key"]], spec["favors"])
+            for name, spec in SIGNAL_SPECS.items()}
 
 
 def _qb_flags(availability):

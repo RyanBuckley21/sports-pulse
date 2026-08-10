@@ -435,6 +435,7 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
             "away_off_epa": away_form.get("off_epa"), "home_off_epa": home_form.get("off_epa"),
             "away_def_epa_allowed": away_form.get("def_epa_allowed"), "home_def_epa_allowed": home_form.get("def_epa_allowed"),
             "away_turnover_diff": away_form.get("turnover_diff"), "home_turnover_diff": home_form.get("turnover_diff"),
+            "away_scoring_margin": margins.get(away), "home_scoring_margin": margins.get(home),
             "away_rest": g.get("away_rest"), "home_rest": g.get("home_rest"),
         },
     }
