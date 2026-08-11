@@ -157,13 +157,28 @@ OUTCOMES_PATH = "data/training/mlb_outcomes.jsonl"
 # pre-game observations and a v3 row honestly records what was computed that day.
 SCHEMA_VERSION = 4
 
-# MLB Stats API status vocabulary. `abstractGameState` is the coarse bucket
-# (Preview / Live / Final); `statusCode` is the fine-grained one.
 PREGAME_ABSTRACT = "Preview"
 FINAL_ABSTRACT = "Final"
-# F = Final, O = Game Over (terminal but not yet reconciled). Both are safe to
-# label; anything else (S/P/PW pre-game, I/IR live, D*/postponed) is not.
+
+# MLB Stats API status vocabulary. `abstractGameState` is the coarse bucket
+# (Preview / Live / Final); `statusCode` is the fine-grained one, and it
+# FRAGMENTS a single coarse state into variants -- a rain-shortened final is
+# statusCode "FR" ("Completed Early"), not "F", even though abstractGameState
+# is still "Final". A resolver keyed on statusCode alone silently orphans that
+# game: it re-queues forever (still "pending" every run) until it ages out of
+# the lookback window and is lost, despite being a genuine official result.
+#
+# `codedGameState` is the fix: a coarser single-letter mirror of
+# abstractGameState that does NOT fragment. Surveyed across 7 real dates /
+# 84 games in this store (62 "F"/"F" Final, 1 "F"/"FR" Completed Early-Rain,
+# 6 "I"/"I" Live, 15 "S"/"S" Preview) -- codedGameState was "F" on every
+# single completed game, including the one statusCode missed. F = Final,
+# O = Game Over (terminal but not yet reconciled). Both fields are checked
+# (either counts as final) rather than replacing statusCode outright, so this
+# can only ADD correct acceptances the old check missed, never remove a
+# correct rejection (S/P/PW pre-game, I/IR live, D*/postponed all stay excluded).
 FINAL_STATUS_CODES = frozenset({"F", "O"})
+FINAL_CODED_STATES = frozenset({"F", "O"})
 # Postponed/cancelled games never produce a result on this date. They get a
 # marker row so the resolver stops retrying them and so the row is *visibly*
 # excluded from training rather than silently blank forever.
@@ -418,6 +433,7 @@ def build_outcome_row(game, date_str, now=None):
     abstract = status.get("abstractGameState")
     detailed = status.get("detailedState")
     code = status.get("statusCode")
+    coded = status.get("codedGameState")
 
     if detailed in VOID_DETAILED_STATES:
         return {
@@ -429,9 +445,11 @@ def build_outcome_row(game, date_str, now=None):
             "final_status": {"abstract": abstract, "detailed": detailed, "code": code},
         }
 
-    # Completion gate: coarse state, fine status code, and real scores must all
-    # agree before anything is labelled.
-    if abstract != FINAL_ABSTRACT or code not in FINAL_STATUS_CODES:
+    # Completion gate: coarse state, real scores, and EITHER status field
+    # reading final -- see the FINAL_STATUS_CODES comment for why statusCode
+    # alone (which fragments into variants like "FR") misses genuine finals
+    # that codedGameState catches.
+    if abstract != FINAL_ABSTRACT or (code not in FINAL_STATUS_CODES and coded not in FINAL_CODED_STATES):
         return None
     teams = game.get("teams") or {}
     away_score = (teams.get("away") or {}).get("score")
