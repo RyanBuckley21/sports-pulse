@@ -310,35 +310,35 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 34,
+          "score": 25,
           "side": "HOU"
         },
         "game_total": {
           "flags": [],
-          "score": 3,
+          "score": 2,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 30,
+          "score": 26,
           "side": "HOU"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 7,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 31,
+          "score": 25,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "HOU",
             "flags": [],
-            "score": 13,
-            "side": "No clear lean"
+            "score": 15,
+            "side": "Over"
           },
           "home": {
             "abbr": "SF",
@@ -358,6 +358,10 @@
         "away": {
           "era": "3.96",
           "name": "Bryan King"
+        },
+        "home": {
+          "era": "4.22",
+          "name": "Adrian Houser"
         }
       },
       "pulse": {
@@ -379,13 +383,18 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "HOU 1-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.96 vs 4.22"
         }
       ],
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "moneyline",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 34,
+        "market": "Moneyline",
+        "score": 26,
         "side": "HOU"
       },
       "start": "3:45 PM ET",
