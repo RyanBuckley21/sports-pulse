@@ -150,6 +150,133 @@ mlb:
       starters_only: true
       window_starts_only: true
 
+# NFL "Who's Hot" leaderboard categories (fetchers/nfl.py's fetch(), via
+# generate_stats.SPORT_FETCHERS). Structurally parallel to the mlb block above.
+#
+# THIS IS A DIFFERENT NAMESPACE FROM `betting_signals.nfl` further down, and
+# the two must not be conflated. This block describes leaderboards: which raw
+# stats to rank players by, over what window. That block describes a scored
+# betting market: weights, scales, conviction thresholds. Nothing here is a
+# weight and nothing here is graded against an outcome.
+#
+# Not fetched or shown while `nfl` is absent from active_sports (same gate the
+# worldcup block below sits behind).
+nfl:
+  season: 2025
+  # Most recent games a player ACTUALLY PLAYED, not calendar weeks -- so a bye
+  # week or an inactive week shifts the window back rather than punching a hole
+  # in it. 4 is about a quarter of a 17-game season; MLB's last-10-of-162 is
+  # about 6%. There is no NFL window that reproduces that proportion (6% of 17
+  # is one game), so an NFL board is inherently less "recent-form" and more
+  # "recent-season" than an MLB one. That is a property of the sport, not a
+  # tuning choice to be corrected later.
+  window_games: 4
+
+  stat_categories:
+    # ---- per-game rate boards (per_game: true) ----------------------------
+    # min_games: 2 -- enough to kill a one-game fluke topping a board, low
+    # enough that boards appear from week 2 and that a player returning from a
+    # bye still qualifies. Measured on real 2024 data (weeks 6-9), requiring a
+    # full 4-of-4 window would have discarded ~40% of otherwise-qualified
+    # receivers, most of them simply on bye.
+    - key: passing_yards
+      label: Passing Yards per Game (last 4 G)
+      short_label: Pass Yds/G
+      unit: YDS/G
+      mode: rolling_sum
+      fields: [passing_yards]
+      per_game: true
+      min_games: 2
+
+    # positions: RB -- measured across all 15 four-week windows of 2024, a
+    # mobile QB cracked the rushing top 10 in 3 of them (Lamar Jackson twice,
+    # Jayden Daniels once), always at rank 9-10. Correct numbers, but "top
+    # rushers" listing a QB reads as a bug to a football audience, so the board
+    # is filtered to the position it claims to rank.
+    - key: rushing_yards
+      label: Rushing Yards per Game (last 4 G, RB only)
+      short_label: Rush Yds/G
+      unit: YDS/G
+      mode: rolling_sum
+      fields: [rushing_yards]
+      per_game: true
+      min_games: 2
+      positions: [RB]
+
+    # WR/TE for the two receiving boards: pass-catching RBs otherwise land on
+    # a board that reads as a wideout ranking. Same reasoning as rushing above.
+    - key: receiving_yards
+      label: Receiving Yards per Game (last 4 G, WR/TE only)
+      short_label: Rec Yds/G
+      unit: YDS/G
+      mode: rolling_sum
+      fields: [receiving_yards]
+      per_game: true
+      min_games: 2
+      positions: [WR, TE]
+
+    - key: receptions
+      label: Receptions per Game (last 4 G, WR/TE only)
+      short_label: Rec/G
+      unit: REC/G
+      mode: rolling_sum
+      fields: [receptions]
+      per_game: true
+      min_games: 2
+      positions: [WR, TE]
+
+    # ---- counting boards (touchdowns) ------------------------------------
+    # tiebreak_fields: a TD board over four games is a small integer, so ties
+    # pile up (a dozen players at 2 TDs is a normal week). Without a tiebreak
+    # those resolve in arbitrary dict order; the underlying yardage settles
+    # them on real production, reusing rank_records' existing `tiebreak` key.
+    #
+    # min_games: 2 here is NOT one of the locked review decisions -- those
+    # named a floor only for the per-game rate boards. Applied anyway because
+    # a counting board with no floor lets a single-game player top it (one
+    # 3-TD game beats everyone else's four-game total of 2), which is the exact
+    # failure the rate boards' floor exists to prevent. Flagged for review
+    # rather than assumed settled.
+    #
+    # These four boards are deliberately NOT position-filtered: the locked
+    # decision named only the three yardage/reception boards. The visible
+    # consequence is that rushing QBs and receiving RBs DO appear here.
+    - key: passing_tds
+      label: Passing TDs (last 4 G)
+      short_label: Pass TD
+      unit: TD
+      mode: rolling_sum
+      fields: [passing_tds]
+      tiebreak_fields: [passing_yards]
+      min_games: 2
+
+    - key: rushing_tds
+      label: Rushing TDs (last 4 G)
+      short_label: Rush TD
+      unit: TD
+      mode: rolling_sum
+      fields: [rushing_tds]
+      tiebreak_fields: [rushing_yards]
+      min_games: 2
+
+    - key: receiving_tds
+      label: Receiving TDs (last 4 G)
+      short_label: Rec TD
+      unit: TD
+      mode: rolling_sum
+      fields: [receiving_tds]
+      tiebreak_fields: [receiving_yards]
+      min_games: 2
+
+    - key: total_tds
+      label: Total TDs (rushing + receiving, last 4 G)
+      short_label: Total TD
+      unit: TD
+      mode: rolling_sum
+      fields: [rushing_tds, receiving_tds]
+      tiebreak_fields: [rushing_yards, receiving_yards]
+      min_games: 2
+
 # INACTIVE -- preserved as a template for future soccer leagues (see
 # active_sports above and docs/leagues.md). Not fetched or shown while its key
 # is absent from active_sports.

@@ -12,9 +12,10 @@ requests + PyYAML, matching fetchers/mlb.py's own style):
     home_rest/away_rest directly -- no derivation needed, unlike MLB's OPS
     windows. LIVE-VERIFIED against the real 2025 season while building this
     fetcher (see the PR description).
-  * Team weekly stats and injuries -- nflverse-data's `stats_team` and
-    `injuries` GitHub Releases, one CSV per season each
-    (`stats_team_week_{season}.csv`, `injuries_{season}.csv`). URL
+  * Team weekly stats, player weekly stats, and injuries -- nflverse-data's
+    `stats_team`, `stats_player` and `injuries` GitHub Releases, one CSV per
+    season each (`stats_team_week_{season}.csv`,
+    `stats_player_week_{season}.csv`, `injuries_{season}.csv`). URL
     construction verified against nflreadr's own R source
     (github.com/nflverse/nflreadr/R/load_stats.R, load_injuries.R) and
     live-fetched against the real 2025 season while building this fetcher --
@@ -25,13 +26,21 @@ credits/footer needs a visible "NFL data via nflverse (CC BY 4.0)" line
 before this fetcher's output ships to production -- not added here, since
 that is a site-wide presentation change outside this module's job.
 
-Scope: schedule + team-form signals for the MONEYLINE market only (see
-nfl_signals.py) -- CFB, and every other NFL bet type, are deliberately not
-this pass. This module does NOT build the stat_categories "who's hot"
-leaderboard pipeline fetchers/mlb.py's fetch() feeds (see docs/leagues.md);
-nothing here registers into generate_stats.SPORT_FETCHERS. It registers only
-into generate_insights.GAME_BUILDERS, the games/Signal-Score path the
-precursor PR made sport-aware.
+This module feeds TWO independent pipelines, and the split is deliberate --
+they share these HTTP helpers and nothing else:
+
+  * build_game_entities() -> generate_insights.GAME_BUILDERS. Scored Game
+    entities for the MONEYLINE market: weights, thresholds, graded picks, the
+    ledger. See nfl_signals.py.
+  * fetch() -> generate_stats.SPORT_FETCHERS. The "Who's Hot" leaderboard:
+    players ranked by raw production over a trailing window. No weights, no
+    thresholds-as-conviction, nothing graded, nothing written to a ledger.
+
+Neither calls into the other, and a change to one market's weights cannot
+move a leaderboard (or vice versa). See the "Who's Hot" section header at the
+bottom of this file for the full boundary note.
+
+Still out of scope here: CFB, and every NFL bet type other than moneyline.
 """
 
 import csv
@@ -56,6 +65,13 @@ def _team_stats_url(season):
 
 def _injuries_url(season):
     return "{}/injuries/injuries_{}.csv".format(NFLVERSE_RELEASES, season)
+
+
+def _player_stats_url(season):
+    """One row per (player, game) for a whole season -- the Who's Hot
+    leaderboard's only data source. Same release/naming convention as the
+    team file above, just the player summary level."""
+    return "{}/stats_player/stats_player_week_{}.csv".format(NFLVERSE_RELEASES, season)
 
 
 def _num(v):
@@ -135,6 +151,14 @@ def get_injuries(session, season):
     """Every (player, week) injury-report row for that season (practice
     participation + game status), or [] if none published yet."""
     return _get_csv(session, _injuries_url(season), required=False)
+
+
+def get_player_stats(session, season):
+    """Every (player, game) stat row for that season, or [] if the season has
+    no completed games yet. One fetch (~8MB for a full season, ~19k rows)
+    covers every player and every week -- see the Who's Hot section below for
+    why that single bulk file removes the candidate-pool seeding MLB needs."""
+    return _get_csv(session, _player_stats_url(season), required=False)
 
 
 # --------------------------------------------------------------------------- #
@@ -485,3 +509,197 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                           type(e).__name__, str(e)[:160]))
 
     return entities, {}, []
+
+
+# --------------------------------------------------------------------------- #
+# "Who's Hot" leaderboard -- generate_stats.SPORT_FETCHERS path.
+# --------------------------------------------------------------------------- #
+#
+# DELIBERATELY SEPARATE FROM EVERYTHING ABOVE. The section above builds scored
+# Game entities for the moneyline market (nfl_signals.py, weights/thresholds,
+# graded picks, the ledger); this section ranks players by raw production over
+# a trailing window and stops there. No weights, no thresholds-as-conviction,
+# no config from betting_signals, nothing graded, nothing written to a ledger.
+# The two share this module and its HTTP helpers, and nothing else -- they are
+# registered into two different registries (GAME_BUILDERS vs SPORT_FETCHERS)
+# and neither calls into the other.
+#
+# fetchers/mlb.py's equivalent path carries a large candidate_pool_size /
+# seed_leaderboards / recent_seed_leaderboards machinery. That exists ONLY
+# because statsapi has no league-wide "last N games" leaderboard, so MLB has
+# to seed a pool from season leaders and then re-query each player's rolling
+# window one at a time. nflverse publishes every player-week of a season in a
+# single CSV, so the exact window is computable for the entire league from one
+# fetch. None of that seeding is reproduced here; copying it would be carrying
+# a workaround for a constraint this data source does not have.
+
+
+def _cat_num(row, field):
+    """A stat field as a float, with blank/absent counted as 0.0.
+
+    Distinct from the module-level `_num`, which returns None for a missing
+    value so scoring inputs can tell "no data" from "zero". Here a blank IS a
+    real zero: a player's row exists because they were active for that game,
+    so an empty receiving_yards means they gained none, not that the figure is
+    unknown."""
+    return _num(row.get(field)) or 0.0
+
+
+def _rows_by_player(player_stats, season):
+    """{player_id: [rows]} for one season, each player's rows oldest-first.
+
+    A row exists per game the player was actually active for -- verified
+    against the real 2024 file: players carry between 1 and 17 regular-season
+    rows, and a player who dressed but recorded nothing still has a row (all
+    zeros). So "the last N rows" IS "the last N games they actually played",
+    which is what makes byes and inactive weeks self-handling without any
+    calendar arithmetic.
+
+    Sorted by week, which orders postseason after regular season for free
+    (nflverse numbers playoff weeks 19-22, continuing from the 18-week regular
+    season) -- so a January board reads a player's genuinely most recent four
+    games, whichever season type they fell in."""
+    season_s = str(season)
+    by_player = {}
+    for row in player_stats:
+        if row.get("season") != season_s:
+            continue
+        # Preseason is not published in this file at all (verified: the 2024
+        # season_type values are only REG and POST), so there is nothing to
+        # leak into a Week 1 window. Filtered explicitly anyway, so an upstream
+        # schema change cannot quietly start counting exhibition production.
+        if row.get("season_type") not in ("REG", "POST"):
+            continue
+        pid = row.get("player_id")
+        if not pid:
+            continue
+        by_player.setdefault(pid, []).append(row)
+    for rows in by_player.values():
+        rows.sort(key=lambda r: int(r.get("week") or 0))
+    return by_player
+
+
+def _position_ok(row, positions, position_groups):
+    """Whether a row survives a category's position filter. No filter
+    configured means every position qualifies."""
+    if positions and row.get("position") not in positions:
+        return False
+    if position_groups and row.get("position_group") not in position_groups:
+        return False
+    return True
+
+
+def aggregate_category(by_player, cat_cfg, default_window, gameday_by_game_id):
+    """Rank-ready raw records for ONE category, from the already-grouped
+    per-player rows.
+
+    The window is the player's most recent `window_games` rows -- games
+    actually played, not calendar weeks (see _rows_by_player). `min_games`
+    then drops anyone whose window is too thin to mean anything; without it a
+    player returning from injury for one big game would top a four-game board
+    off a single sample.
+
+    `per_game: true` divides by the number of games IN THE PLAYER'S OWN
+    WINDOW, not by window_games -- the same true-average rule
+    fetchers/mlb.py's compute_category_value applies, so a player with 3 games
+    in a 4-game window is averaged over 3.
+
+    The position filter is applied HERE, at aggregation time, against the
+    `position`/`position_group` already on every row -- no second fetch and no
+    separate roster lookup. It is applied per ROW rather than once per player
+    because position is a property of the row in this data; in practice a
+    player's position is stable across a season, so this is equivalent to
+    filtering the player, just without assuming it.
+    """
+    fields = cat_cfg["fields"]
+    tiebreak_fields = cat_cfg.get("tiebreak_fields") or []
+    window_games = cat_cfg.get("window_games", default_window)
+    min_games = cat_cfg.get("min_games", 1)
+    per_game = bool(cat_cfg.get("per_game"))
+    positions = cat_cfg.get("positions")
+    position_groups = cat_cfg.get("position_groups")
+
+    records = []
+    for pid, all_rows in by_player.items():
+        rows = [r for r in all_rows if _position_ok(r, positions, position_groups)]
+        window = rows[-window_games:]
+        if len(window) < min_games:
+            continue
+
+        per_game_values = [sum(_cat_num(r, f) for f in fields) for r in window]
+        total = sum(per_game_values)
+        value = round(total / len(window), 2) if per_game else int(round(total))
+        # Every window value being zero is not "hot" by any reading -- it is a
+        # player who appeared and did nothing in this category (a WR with no
+        # catches in four games, or any of the ~1,900 defenders whose rows
+        # carry 0 for every offensive field). Dropping them here is what keeps
+        # a low-volume board from filling its tail with zeroes.
+        if total <= 0:
+            continue
+
+        latest = window[-1]
+        records.append({
+            "entity": latest.get("player_display_name") or latest.get("player_name"),
+            "entity_id": pid,
+            # Traded mid-season: the most recent row's team is the current one.
+            "team": latest.get("team"),
+            "team_id": None,
+            "position": latest.get("position"),
+            "stat_category": cat_cfg["key"],
+            "window": "last_{}_games".format(window_games) + ("_per_game" if per_game else ""),
+            "value": value,
+            # Small-integer boards (all four TD categories) pile up on ties --
+            # a dozen players at 2 TDs is normal over four games. Ranking those
+            # alphabetically by dict order would be arbitrary, so the
+            # underlying yardage breaks it, reusing rank_records' existing
+            # `tiebreak` key rather than adding a second sort mechanism.
+            "tiebreak": sum(_cat_num(r, f) for r in window for f in tiebreak_fields) or None,
+            "last_game_date": gameday_by_game_id.get(latest.get("game_id")),
+            # The weekly rows ARE the per-game series, so it comes free here --
+            # no post-ranking enrichment pass like fetchers/mlb.py needs. Same
+            # as the World Cup fetcher, which also supplies its own series.
+            "series": [
+                {"date": gameday_by_game_id.get(r.get("game_id")), "value": v}
+                for r, v in zip(window, per_game_values)
+            ],
+        })
+    return records
+
+
+def fetch(config, season=None):
+    """Raw (unranked) Who's Hot records for every configured NFL stat
+    category -- generate_stats.SPORT_FETCHERS' entry point for this sport.
+
+    Two fetches total for the whole board set, regardless of how many
+    categories are configured: the season's player-week file (every category
+    aggregates from those same rows in memory) and the schedule (only to map
+    game_id -> calendar date for `last_game_date` and the series labels).
+
+    Returns [] when the season has no completed games yet -- get_player_stats
+    passes required=False, so a 404 in the preseason is an empty board set
+    rather than a failed build, and generate_stats simply emits no NFL section.
+    """
+    nfl_cfg = config["nfl"]
+    season = season or nfl_cfg["season"]
+    default_window = nfl_cfg.get("window_games", 4)
+
+    session = requests.Session()
+    player_stats = get_player_stats(session, season)
+    if not player_stats:
+        print("whos-hot(nfl): no player stats published for {} yet -- no boards".format(season))
+        return []
+
+    gameday_by_game_id = {g["game_id"]: g.get("gameday")
+                          for g in get_schedule(session, season) if g.get("game_id")}
+    by_player = _rows_by_player(player_stats, season)
+
+    records = []
+    for cat_cfg in nfl_cfg["stat_categories"]:
+        if cat_cfg["mode"] != "rolling_sum":
+            # v1 ships four per-game rate boards and four counting boards, all
+            # rolling_sum. threshold_rate/streak modes exist in MLB's config
+            # and would need their own branch here; raising keeps a typo or a
+            # half-added category from silently producing an empty board.
+            raise ValueError("Unknown NFL stat category mode: {}".format(cat_cfg["mode"]))
+        records.extend(aggregate_category(by_player, cat_cfg, default_window, gameday_by_game_id))
+    return records

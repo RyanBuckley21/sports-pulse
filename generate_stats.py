@@ -11,14 +11,24 @@ import yaml
 import generate_insights
 import normalizer
 import team_meta
-from fetchers import mlb, worldcup
+from fetchers import mlb, nfl, worldcup
 
 CONFIG_PATH = "config.yaml"
 
+# The LEADERBOARD registry ("Who's Hot"): one fetch() per sport returning raw,
+# unranked player records. Deliberately distinct from
+# generate_insights.GAME_BUILDERS, which registers the same sports' SCORED
+# per-game pick builders -- a sport can appear in one, the other, or both, and
+# the two never call into each other. nfl is in both as of this change:
+# nfl.build_game_entities there (moneyline), nfl.fetch here (leaderboards).
 SPORT_FETCHERS = {
     "mlb": {
         "fetch": mlb.fetch,
         "competition": lambda cfg: f"MLB Regular Season {cfg['mlb']['season']}",
+    },
+    "nfl": {
+        "fetch": nfl.fetch,
+        "competition": lambda cfg: f"NFL {cfg['nfl']['season']}",
     },
     "worldcup": {
         "fetch": worldcup.fetch,
@@ -26,7 +36,7 @@ SPORT_FETCHERS = {
     },
 }
 
-SPORT_LABELS = {"mlb": "MLB", "worldcup": "World Cup"}
+SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "worldcup": "World Cup"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.
@@ -34,6 +44,13 @@ APPROVED_CATEGORIES = {
     "mlb": [
         "home_runs", "hits_runs_rbi", "total_bases", "hit_rate",
         "run_producer_rate", "hit_streak", "strikeouts", "k_rate",
+    ],
+    # Yardage/reception boards first (the everyday "who's producing" read),
+    # then the four touchdown boards. Total TDs last: it is a combination of
+    # the two boards immediately before it, so it reads as their summary.
+    "nfl": [
+        "passing_yards", "rushing_yards", "receiving_yards", "receptions",
+        "passing_tds", "rushing_tds", "receiving_tds", "total_tds",
     ],
     "worldcup": ["goals", "goal_or_assist", "assists", "shots", "shots_on_goal", "clean_sheets"],
 }
@@ -67,6 +84,26 @@ CATEGORY_META = {
     "hit_rate": {"kind": "threshold", "sub": "1+ H · Last 20 G", "title": "Hit Rate"},
     "run_producer_rate": {"kind": "threshold", "sub": "2+ H+R+RBI · Last 20 G", "title": "Run Producer Rate"},
     "k_rate": {"kind": "threshold", "sub": "6+ K · Last 10 starts", "title": "K Rate"},
+    # NFL. `sub` deliberately says "Last 4 G" and never implies daily
+    # freshness: NFL plays weekly, so these boards are genuinely static from
+    # Tuesday through Saturday even though the pipeline regenerates daily.
+    # "G" is games the player actually played, not calendar weeks -- a bye
+    # shifts the window rather than emptying it (see config.yaml's nfl block).
+    #
+    # The four yardage/reception boards are `rate` (config marks them
+    # per_game: true, so their ranked value is already a true per-game
+    # average). The four TD boards are `count` -- raw four-game totals, which
+    # is what the `count` breakdown formula expects. Same rate-vs-count
+    # distinction, and the same reason for it, as MLB's hits_runs_rbi note
+    # above.
+    "passing_yards": {"kind": "rate", "sub": "Last 4 G", "title": "Passing Yards / G"},
+    "rushing_yards": {"kind": "rate", "sub": "Last 4 G · RB", "title": "Rushing Yards / G"},
+    "receiving_yards": {"kind": "rate", "sub": "Last 4 G · WR/TE", "title": "Receiving Yards / G"},
+    "receptions": {"kind": "rate", "sub": "Last 4 G · WR/TE", "title": "Receptions / G"},
+    "passing_tds": {"kind": "count", "sub": "Last 4 G", "title": "Passing TDs"},
+    "rushing_tds": {"kind": "count", "sub": "Last 4 G", "title": "Rushing TDs"},
+    "receiving_tds": {"kind": "count", "sub": "Last 4 G", "title": "Receiving TDs"},
+    "total_tds": {"kind": "count", "sub": "Rush + Rec · Last 4 G", "title": "Total TDs"},
     "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
     "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
     "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},
@@ -116,7 +153,12 @@ def load_config(path=CONFIG_PATH):
 
 
 def index_category_labels(config):
-    for sport_key in ("mlb", "worldcup"):
+    # Driven by SPORT_FETCHERS rather than a hardcoded sport tuple, so
+    # registering a fetcher is the single step that makes a sport's labels
+    # resolve. The tuple this replaced was ("mlb", "worldcup"); an NFL board
+    # added without touching it would have silently fallen back to raw
+    # snake_case category keys as its short labels, with an empty unit.
+    for sport_key in SPORT_FETCHERS:
         for cat_cfg in config.get(sport_key, {}).get("stat_categories", []):
             CATEGORY_SHORT_LABELS[cat_cfg["key"]] = cat_cfg.get("short_label", cat_cfg["key"])
             CATEGORY_UNITS[cat_cfg["key"]] = cat_cfg.get("unit", "")
