@@ -1247,35 +1247,35 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 9,
-          "side": "No clear lean"
+          "score": 34,
+          "side": "ATL"
         },
         "game_total": {
           "flags": [],
-          "score": 9,
-          "side": "No clear lean"
+          "score": 16,
+          "side": "Under"
         },
         "moneyline": {
           "flags": [],
-          "score": 7,
-          "side": "No clear lean"
+          "score": 27,
+          "side": "ATL"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 41,
+          "side": "NRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 8,
+          "score": 32,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "ARI",
             "flags": [],
-            "score": 6,
-            "side": "No clear lean"
+            "score": 19,
+            "side": "Under"
           },
           "home": {
             "abbr": "ATL",
@@ -1295,6 +1295,10 @@
         "away": {
           "era": "3.76",
           "name": "Brandon Pfaadt"
+        },
+        "home": {
+          "era": "3.16",
+          "name": "Chris Sale"
         }
       },
       "pulse": {
@@ -1316,9 +1320,20 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "ARI 2-2"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.76 vs 3.16"
         }
       ],
-      "standout": null,
+      "standout": {
+        "bet_type": "nrfi_yrfi",
+        "flags": [],
+        "market": "First-Inning Runs",
+        "score": 41,
+        "side": "NRFI"
+      },
       "start": "7:15 PM ET",
       "status": "Preview",
       "story": null,
