@@ -9,9 +9,15 @@ it's designed to run on a GitHub Actions runner instead.
 
 Writes:
   assets/logos/mlb/{team_id}.png
+  assets/logos/nfl/{abbr}.png
   assets/logos/worldcup/{slug}.png
   assets/logos/manifest.json  -- {"mlb": {team_name: relative_path, ...},
+                                   "nfl": {team_abbr: relative_path, ...},
                                    "worldcup": {team_name: relative_path, ...}}
+
+Note the NFL section is keyed by ABBREVIATION, not full club name, because
+that is the identifier nflverse emits and therefore the one team_meta.py and
+generate_stats.team_logo_path look up. See team_meta.NFL_TEAMS.
 """
 
 import io
@@ -73,6 +79,49 @@ def fetch_mlb_logos(session, browser, manifest):
     page.close()
 
 
+def fetch_nfl_logos(session, manifest):
+    """Cache all 32 NFL club logos from ESPN's team list.
+
+    Keyed in the manifest by the abbreviation nflverse uses, which is what
+    every NFL row in the pipeline carries -- NOT ESPN's own abbreviation,
+    which disagrees on a couple of clubs (ESPN says WSH and LAR where
+    nflverse says WAS and LA). _NFLVERSE_ABBR translates the handful that
+    differ; anything not in it passes through unchanged. Without that step
+    those clubs would cache fine and then never resolve at lookup time.
+    """
+    _NFLVERSE_ABBR = {"WSH": "WAS", "LAR": "LA"}
+
+    data = session.get(
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams",
+        timeout=REQUEST_TIMEOUT,
+    ).json()
+
+    out_dir = os.path.join(LOGOS_DIR, "nfl")
+    os.makedirs(out_dir, exist_ok=True)
+    manifest.setdefault("nfl", {})
+
+    entries = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
+    for entry in entries:
+        team = entry.get("team", {})
+        espn_abbr = team.get("abbreviation")
+        logos = team.get("logos") or []
+        if not espn_abbr or not logos:
+            print(f"  FAILED: {team.get('displayName')} (no abbreviation/logo in payload)")
+            continue
+        abbr = _NFLVERSE_ABBR.get(espn_abbr, espn_abbr)
+        logo_url = logos[0].get("href")
+        dest_path = os.path.join(out_dir, f"{abbr}.png")
+        try:
+            resp = session.get(logo_url, timeout=REQUEST_TIMEOUT)
+            resp.raise_for_status()
+            img = Image.open(io.BytesIO(resp.content))
+            pad_to_square(img, LOGO_SIZE).save(dest_path, "PNG", optimize=True)
+            manifest["nfl"][abbr] = f"logos/nfl/{abbr}.png"
+            print(f"  ok: {team.get('displayName')} [{abbr}] -> {dest_path}")
+        except Exception as e:
+            print(f"  FAILED: {team.get('displayName')} ({logo_url}): {e}")
+
+
 def fetch_worldcup_logos(session, manifest):
     data = session.get(
         "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
@@ -121,13 +170,18 @@ def main():
         fetch_mlb_logos(session, browser, manifest)
         browser.close()
 
+    print("Fetching NFL team logos...")
+    fetch_nfl_logos(session, manifest)
+
     print("Fetching World Cup team logos...")
     fetch_worldcup_logos(session, manifest)
 
     os.makedirs(LOGOS_DIR, exist_ok=True)
     with open(MANIFEST_PATH, "w") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
-    print(f"Wrote manifest with {len(manifest.get('mlb', {}))} MLB and {len(manifest.get('worldcup', {}))} World Cup logos")
+    print("Wrote manifest with {} MLB, {} NFL and {} World Cup logos".format(
+        len(manifest.get("mlb", {})), len(manifest.get("nfl", {})),
+        len(manifest.get("worldcup", {}))))
 
 
 if __name__ == "__main__":

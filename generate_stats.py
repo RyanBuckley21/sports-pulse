@@ -11,14 +11,24 @@ import yaml
 import generate_insights
 import normalizer
 import team_meta
-from fetchers import mlb, worldcup
+from fetchers import mlb, nfl, worldcup
 
 CONFIG_PATH = "config.yaml"
 
+# The LEADERBOARD registry ("Who's Hot"): one fetch() per sport returning raw,
+# unranked player records. Deliberately distinct from
+# generate_insights.GAME_BUILDERS, which registers the same sports' SCORED
+# per-game pick builders -- a sport can appear in one, the other, or both, and
+# the two never call into each other. nfl is in both as of this change:
+# nfl.build_game_entities there (moneyline), nfl.fetch here (leaderboards).
 SPORT_FETCHERS = {
     "mlb": {
         "fetch": mlb.fetch,
         "competition": lambda cfg: f"MLB Regular Season {cfg['mlb']['season']}",
+    },
+    "nfl": {
+        "fetch": nfl.fetch,
+        "competition": lambda cfg: f"NFL {cfg['nfl']['season']}",
     },
     "worldcup": {
         "fetch": worldcup.fetch,
@@ -26,7 +36,7 @@ SPORT_FETCHERS = {
     },
 }
 
-SPORT_LABELS = {"mlb": "MLB", "worldcup": "World Cup"}
+SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "worldcup": "World Cup"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.
@@ -34,6 +44,13 @@ APPROVED_CATEGORIES = {
     "mlb": [
         "home_runs", "hits_runs_rbi", "total_bases", "hit_rate",
         "run_producer_rate", "hit_streak", "strikeouts", "k_rate",
+    ],
+    # Yardage/reception boards first (the everyday "who's producing" read),
+    # then the four touchdown boards. Total TDs last: it is a combination of
+    # the two boards immediately before it, so it reads as their summary.
+    "nfl": [
+        "passing_yards", "rushing_yards", "receiving_yards", "receptions",
+        "passing_tds", "rushing_tds", "receiving_tds", "total_tds",
     ],
     "worldcup": ["goals", "goal_or_assist", "assists", "shots", "shots_on_goal", "clean_sheets"],
 }
@@ -67,6 +84,32 @@ CATEGORY_META = {
     "hit_rate": {"kind": "threshold", "sub": "1+ H · Last 20 G", "title": "Hit Rate"},
     "run_producer_rate": {"kind": "threshold", "sub": "2+ H+R+RBI · Last 20 G", "title": "Run Producer Rate"},
     "k_rate": {"kind": "threshold", "sub": "6+ K · Last 10 starts", "title": "K Rate"},
+    # NFL. `sub` never implies daily freshness: NFL plays weekly, so these
+    # boards are genuinely static from Tuesday through Saturday even though
+    # the pipeline regenerates daily. "G" is games the player actually
+    # played, not calendar weeks -- a bye shifts the window rather than
+    # emptying it (see config.yaml's nfl block).
+    #
+    # `{n}` is resolved per build by _resolve_sub to the board's REAL window
+    # depth rather than hardcoding the configured 4. In week 2 no one has
+    # four games yet, so the board reads "Last 2 G" and stops advertising a
+    # four-game trend that does not exist; from week 4 on it settles at 4 and
+    # reads exactly as a static label would.
+    #
+    # The four yardage/reception boards are `rate` (config marks them
+    # per_game: true, so their ranked value is already a true per-game
+    # average). The four TD boards are `count` -- raw window totals, which
+    # is what the `count` breakdown formula expects. Same rate-vs-count
+    # distinction, and the same reason for it, as MLB's hits_runs_rbi note
+    # above.
+    "passing_yards": {"kind": "rate", "sub": "Last {n} G", "title": "Passing Yards / G"},
+    "rushing_yards": {"kind": "rate", "sub": "Last {n} G · RB", "title": "Rushing Yards / G"},
+    "receiving_yards": {"kind": "rate", "sub": "Last {n} G · WR/TE", "title": "Receiving Yards / G"},
+    "receptions": {"kind": "rate", "sub": "Last {n} G · WR/TE", "title": "Receptions / G"},
+    "passing_tds": {"kind": "count", "sub": "Last {n} G", "title": "Passing TDs"},
+    "rushing_tds": {"kind": "count", "sub": "Last {n} G", "title": "Rushing TDs"},
+    "receiving_tds": {"kind": "count", "sub": "Last {n} G", "title": "Receiving TDs"},
+    "total_tds": {"kind": "count", "sub": "Rush + Rec · Last {n} G", "title": "Total TDs"},
     "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
     "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
     "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},
@@ -116,10 +159,58 @@ def load_config(path=CONFIG_PATH):
 
 
 def index_category_labels(config):
-    for sport_key in ("mlb", "worldcup"):
+    # Driven by SPORT_FETCHERS rather than a hardcoded sport tuple, so
+    # registering a fetcher is the single step that makes a sport's labels
+    # resolve. The tuple this replaced was ("mlb", "worldcup"); an NFL board
+    # added without touching it would have silently fallen back to raw
+    # snake_case category keys as its short labels, with an empty unit.
+    for sport_key in SPORT_FETCHERS:
         for cat_cfg in config.get(sport_key, {}).get("stat_categories", []):
             CATEGORY_SHORT_LABELS[cat_cfg["key"]] = cat_cfg.get("short_label", cat_cfg["key"])
             CATEGORY_UNITS[cat_cfg["key"]] = cat_cfg.get("unit", "")
+
+
+def _resolve_sub(sub, records):
+    """A category's `sub` label with the `{n}` placeholder resolved to the
+    board's real window depth, for categories whose window can be shallower
+    than its configured cap.
+
+    NFL's boards are "last 4 games", but in week 2 nobody has played four
+    games, so a literal "Last 4 G" would promise a four-game trend that does
+    not exist yet. `{n}` resolves to the DEEPEST window any ranked player on
+    the board actually has -- i.e. the cap genuinely in effect. It can never
+    exceed the configured window (the fetcher slices to it), so mid-season
+    this settles on the configured number and the label reads exactly as a
+    static one would.
+
+    Deepest, not shallowest or average, because the label describes the
+    BOARD's window rather than any one player's: individual variation (a
+    player back from a bye with only two games) is already shown correctly
+    per player -- app.js builds its bar-chart title from that player's own
+    series length, and build_data emits their `window` count alongside.
+
+    Categories with no `{n}` in their `sub` are returned untouched, so this
+    is inert for MLB and the World Cup and needs no per-sport special-casing.
+
+    A category using `{n}` whose records carry no depth at all is
+    structurally unreachable -- build_data skips empty categories, and any
+    fetcher emitting `{n}` emits the depth with it -- but if it ever happens
+    the placeholder is left visible rather than replaced by a guess, so the
+    bug shows up in the UI instead of shipping a confidently wrong number.
+    """
+    if "{n}" not in sub:
+        return sub
+    depths = []
+    for r in records:
+        # games_window is the fetcher's own count; series length is the same
+        # quantity arrived at independently, so it backstops a record that
+        # carried the series but not the count.
+        depth = r.get("games_window") or len(r.get("series") or [])
+        if depth:
+            depths.append(depth)
+    if not depths:
+        return sub
+    return sub.replace("{n}", str(max(depths)))
 
 
 def rank_records(records, top_n):
@@ -192,7 +283,7 @@ def build_data(ranked_records, generated_at):
                     "short_label": CATEGORY_SHORT_LABELS.get(cat_key, cat_key),
                     "unit": CATEGORY_UNITS.get(cat_key, ""),
                     "kind": meta["kind"],
-                    "sub": meta["sub"],
+                    "sub": _resolve_sub(meta["sub"], records),
                     "players": players_out,
                 }
             )
