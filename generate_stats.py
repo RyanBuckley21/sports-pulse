@@ -209,6 +209,14 @@ def main():
     # Only build the sports listed in config's active_sports (in order); others
     # (e.g. the preserved worldcup template) stay wired up but dormant. Falls
     # back to every registered fetcher if the key is absent.
+    #
+    # `active_sports` gates THE LEADERBOARDS ONLY. Its counterpart for scored
+    # per-game picks is `active_game_sports`, read by
+    # generate_insights._active_game_sports. The two were one key until they
+    # were split, which meant listing a sport here to publish its "Who's Hot"
+    # boards also switched on its betting markets. `active_game_sports` falls
+    # back to this key when absent, so nothing here changed behaviour -- see
+    # that function's docstring for the full resolution order.
     active_sports = config.get("active_sports") or list(SPORT_FETCHERS)
 
     all_normalized = []
