@@ -648,6 +648,14 @@ def aggregate_category(by_player, cat_cfg, default_window, gameday_by_game_id):
             "stat_category": cat_cfg["key"],
             "window": "last_{}_games".format(window_games) + ("_per_game" if per_game else ""),
             "value": value,
+            # How many games this player's window ACTUALLY spans, which is
+            # <= window_games: early in a season nobody has four games yet,
+            # and a bye or an inactive stretch leaves a returning player
+            # short of the cap. Surfaced (rather than left implicit in
+            # len(series)) so the rendered board label can state the real
+            # depth instead of promising a four-game trend that does not
+            # exist yet -- see generate_stats._resolve_sub.
+            "games_window": len(window),
             # Small-integer boards (all four TD categories) pile up on ties --
             # a dozen players at 2 TDs is normal over four games. Ranking those
             # alphabetically by dict order would be arbitrary, so the
