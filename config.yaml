@@ -231,12 +231,12 @@ nfl:
     # those resolve in arbitrary dict order; the underlying yardage settles
     # them on real production, reusing rank_records' existing `tiebreak` key.
     #
-    # min_games: 2 here is NOT one of the locked review decisions -- those
-    # named a floor only for the per-game rate boards. Applied anyway because
-    # a counting board with no floor lets a single-game player top it (one
-    # 3-TD game beats everyone else's four-game total of 2), which is the exact
-    # failure the rate boards' floor exists to prevent. Flagged for review
-    # rather than assumed settled.
+    # min_games: 2 applies here as well as to the rate boards. It was raised
+    # in review as an addition beyond the originally-locked decision (which
+    # named a floor only for the per-game rate boards) and was RATIFIED: a
+    # counting board with no floor lets a single-game player top it -- one
+    # 3-TD game beats everyone else's four-game total of 2 -- which is the
+    # exact failure the rate boards' floor exists to prevent.
     #
     # These four boards are deliberately NOT position-filtered: the locked
     # decision named only the three yardage/reception boards. The visible
