@@ -64,12 +64,16 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # Team Pulse, training capture) by adding its own entry here -- same
 # mechanism, deliberately, as SPORT_FETCHERS.
 #
-# nfl is REGISTERED but NOT in config.yaml's active_sports -- _active_game_sports
-# only attempts a sport that is both registered here AND active, so nfl.build_game_entities
-# never runs in production until active_sports says so (same staged-rollout
-# precedent worldcup already sets in the stat-categories pipeline). It is
-# wired and ready, pending the backtest-calibration step that comes after
-# this PR.
+# nfl is REGISTERED but not ACTIVE -- _active_game_sports only attempts a
+# sport that is both registered here AND listed by the config key it reads,
+# so nfl.build_game_entities never runs in production until that key says so
+# (same staged-rollout precedent worldcup already sets in the stat-categories
+# pipeline). It is wired and calibrated, pending the decision to go live.
+#
+# That key is `active_game_sports`, which is SEPARATE from the `active_sports`
+# key gating generate_stats.py's leaderboards -- see _active_game_sports for
+# why the two were split and how `active_game_sports` falls back when absent.
+# Publishing a sport's leaderboards no longer switches on its betting markets.
 GAME_BUILDERS = {"mlb": mlb.build_game_entities, "nfl": nfl.build_game_entities}
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
@@ -245,12 +249,40 @@ def _top_n(entities, n):
 
 
 def _active_game_sports(config):
-    """Sports this run's game/team builders should attempt, in active_sports
-    order: config's active_sports (or every registered builder, if unset --
-    same fallback generate_stats.SPORT_FETCHERS uses), filtered to those
-    actually registered in GAME_BUILDERS. mlb is both today, so this resolves
-    to exactly ["mlb"] in production."""
-    configured = (config or {}).get("active_sports") or list(GAME_BUILDERS)
+    """Sports this run's game/team builders should attempt, in configured
+    order, filtered to those actually registered in GAME_BUILDERS.
+
+    Reads `active_game_sports`, NOT `active_sports`. Those were the same key
+    until this function was split off it, which meant one list silently gated
+    two unrelated pipelines: generate_stats.py's leaderboards ("Who's Hot" --
+    descriptive boards of raw production) and this module's scored per-game
+    picks (weights, thresholds, graded outcomes, the ledger). Adding a sport
+    to `active_sports` to publish its leaderboards therefore also switched on
+    its betting markets, which is not a choice anyone should make by accident.
+
+    Resolution order, and why each step is what it is:
+
+      1. `active_game_sports`, when the key is PRESENT -- including when it is
+         an empty list, which means "no scored picks at all" and is honoured
+         as the explicit kill switch it reads as. That is why this is an
+         `is None` check and not an `or` chain: `[] or <fallback>` would
+         quietly resolve an intentional shutoff into "every sport".
+      2. `active_sports`, when `active_game_sports` is absent -- so every
+         config written before this key existed behaves exactly as it did,
+         with no migration and no edit required.
+      3. every registered builder, if neither key is set -- the pre-existing
+         fallback, preserved verbatim (including its `or` semantics, so an
+         empty `active_sports` still widens to all builders exactly as it
+         did before; that edge case is not this change's to redefine).
+
+    Production config sets `active_sports: [mlb]` and no `active_game_sports`,
+    so this resolves to exactly ["mlb"] -- the same list, by the same path,
+    as before this split.
+    """
+    cfg = config or {}
+    configured = cfg.get("active_game_sports")
+    if configured is None:
+        configured = cfg.get("active_sports") or list(GAME_BUILDERS)
     return [s for s in configured if s in GAME_BUILDERS]
 
 

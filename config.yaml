@@ -8,7 +8,32 @@ top_n: 10
 # fetched and written to data.json. The worldcup block below is kept intact as
 # a working reference/template for future soccer leagues (e.g. Premier League)
 # but stays off until its key is listed here. See docs/leagues.md.
+#
+# THIS KEY GATES THE LEADERBOARDS ONLY -- generate_stats.py's SPORT_FETCHERS
+# pipeline ("Who's Hot": players ranked by raw production). The scored per-game
+# picks (Signal Scores, weights, thresholds, graded outcomes, the ledger) are
+# gated separately by `active_game_sports` below.
 active_sports: [mlb]
+
+# Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
+# GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
+# above: the two were one list until they were split, which meant adding a
+# sport to publish its leaderboards silently switched on its betting markets
+# too. They are now independently gate-able in both directions -- leaderboards
+# without picks, picks without leaderboards, or both.
+#
+# COMMENTED OUT ON PURPOSE. When this key is absent it falls back to
+# `active_sports`, which reproduces the old shared-gate behaviour exactly, so
+# production keeps resolving to [mlb] with nothing to migrate. Uncomment it
+# only when the two lists genuinely need to differ -- e.g. to publish NFL
+# leaderboards while keeping NFL betting markets off:
+#
+#     active_sports:      [mlb, nfl]
+#     active_game_sports: [mlb]
+#
+# An explicitly EMPTY list (`active_game_sports: []`) is honoured as a real
+# kill switch -- no scored picks for any sport -- rather than falling back.
+# active_game_sports: [mlb]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
