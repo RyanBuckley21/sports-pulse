@@ -36,27 +36,52 @@ as a kill switch (no scored picks at all) rather than falling back.
 
 - **mlb** — MLB via the public StatsAPI (`fetchers/mlb.py`).
 
-## Preserved (inactive) — World Cup
+## Archived — World Cup (pending the 2030 cycle)
 
-The World Cup was removed from the live site on 2026-07-19 but its full
-implementation is **kept intact as a working template for soccer leagues**
-(Premier League, etc.). Nothing was deleted — it's simply not in
-`active_sports`. What's preserved:
+The 2026 tournament is over, and the next one is roughly four years out. The
+World Cup is therefore **archived, not abandoned**: it has been *unregistered*
+from the active registries so it stops occupying shared namespaces, but every
+piece of its implementation is still in the repo and recoverable.
 
-- `fetchers/worldcup.py` — an ESPN soccer fetcher (scoreboard + per-match
-  summary parsing, position classification, per-player stat summing). The
-  Premier League uses the **same ESPN JSON shape**, just a different
-  competition path (`soccer/eng.1` instead of `soccer/fifa.world`), so this is
-  the natural starting point for an EPL fetcher.
-- `worldcup:` block in `config.yaml` (marked INACTIVE) — the soccer stat
-  category definitions (goals, assists, goal involvements, shots, shots on
-  goal, clean sheets) with their `tournament_total` mode.
-- `APPROVED_CATEGORIES["worldcup"]` and the `CATEGORY_META` soccer entries in
-  `generate_stats.py`.
-- `WORLDCUP_TEAMS` (nation colors/abbreviations) in `team_meta.py` and the
-  cached nation logos under `assets/logos/`.
+**Removed from `generate_stats.py`** (this is what "unregistered" means):
 
-To bring the World Cup back: add `worldcup` to `active_sports`.
+- its `SPORT_FETCHERS` entry and the `worldcup` import
+- its `SPORT_LABELS` entry
+- `APPROVED_CATEGORIES["worldcup"]`
+- its six `CATEGORY_META` entries
+
+That last one is the point of the exercise. `CATEGORY_META`,
+`CATEGORY_SHORT_LABELS` and `CATEGORY_UNITS` are **flat dicts keyed by
+category key, not namespaced by sport**, so as long as the World Cup held
+`goals` / `assists` / `goal_or_assist` / `shots` / `shots_on_goal` /
+`clean_sheets`, no other league could use those obvious names without
+colliding. Freeing them is what lets a real soccer league (EPL) claim them.
+
+**Kept, untouched, in the repo:**
+
+- `fetchers/worldcup.py` — the whole ESPN soccer fetcher, including the
+  `limit=1000` truncation fix. Still the reference implementation for ESPN
+  soccer parsing (`classify_position`, per-match roster stat extraction, the
+  two-signal clean-sheet safeguard).
+- the `worldcup:` block in `config.yaml` — stat category definitions
+- `WORLDCUP_TEAMS` in `team_meta.py` and the cached nation logos under
+  `assets/logos/worldcup/`
+- `fetch_worldcup_logos()` in `scripts/fetch_logos.py`
+
+### Reviving it for 2030
+
+Adding `worldcup` back to `active_sports` is **no longer sufficient on its
+own** — `main()` skips any sport with no `SPORT_FETCHERS` entry and logs
+"no fetcher registered". Revival means:
+
+1. Re-add the `SPORT_FETCHERS` + `SPORT_LABELS` entries and the import.
+2. Re-add `APPROVED_CATEGORIES["worldcup"]` and its `CATEGORY_META` entries —
+   **checking first whether the category keys are still free**, since another
+   league may have claimed them in the meantime. If so, the World Cup's
+   entries need distinct keys.
+3. Point `config.yaml`'s `worldcup:` block at the 2030 competition path and
+   refresh `WORLDCUP_TEAMS` for the new field.
+4. Add `worldcup` to `active_sports`.
 
 ## Adding a new league (e.g. Premier League)
 
