@@ -11,10 +11,12 @@ Writes:
   assets/logos/mlb/{team_id}.png
   assets/logos/nfl/{abbr}.png
   assets/logos/epl/{slug}.png
+  assets/logos/cfb/{slug}.png
   assets/logos/worldcup/{slug}.png
   assets/logos/manifest.json  -- {"mlb": {team_name: relative_path, ...},
                                    "nfl": {team_abbr: relative_path, ...},
                                    "epl": {team_displayName: relative_path, ...},
+                                   "cfb": {school: relative_path, ...},
                                    "worldcup": {team_name: relative_path, ...}}
 
 Note the NFL section is keyed by ABBREVIATION, not full club name, because
@@ -33,6 +35,9 @@ from playwright.sync_api import sync_playwright
 
 REQUEST_TIMEOUT = 20
 LOGO_SIZE = 64
+# The FBS field is season-scoped (see fetch_cfb_logos). Bump this each August
+# alongside a team_meta.CFB_TEAMS refresh so the crests and the table agree.
+CFB_SEASON = 2025
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGOS_DIR = os.path.join(ROOT, "assets", "logos")
@@ -172,6 +177,74 @@ def fetch_epl_logos(session, manifest):
             print(f"  FAILED: {name} ({logo_url}): {e}")
 
 
+def fetch_cfb_logos(session, manifest, season):
+    """Cache all 136 FBS crests from CollegeFootballData.
+
+    Crests matter more here than anywhere else in this repo. EPL colour is
+    weakly identifying; FBS colour is not identifying AT ALL -- 110 of 136
+    programs collide perceptually with another program after the lightness
+    floor (see team_meta.CFB_TEAMS' header for the measurements). The crest
+    is the only thing that tells two programs apart, so a missing one is a
+    functional failure, not a cosmetic one.
+
+    NO RESIZING, unlike every other fetcher here. CFBD publishes each crest
+    pre-rendered at eight sizes in light and dark, including exactly the
+    64px LOGO_SIZE this repo uses, so the 64px light variant is written
+    straight to disk. That also means no Pillow dependency on this path.
+
+    SEASON-SCOPED for the same reason team_meta.CFB_TEAMS is: /teams?year=
+    returns the point-in-time FBS field, while the unscoped endpoint runs
+    ahead of the data and would cache crests for programs the schedule does
+    not yet contain -- while missing ones it does. Pass the same season the
+    table was generated for, or the two drift apart.
+
+    Keyed in the manifest by `school`, which is what CFBD returns and what
+    cfbfastR's schedule emits as home_team/away_team -- the single identifier
+    the whole CFB pipeline already uses. Unlike fetch_nfl_logos this needs no
+    translation table.
+
+    Needs CFBD_API_KEY, same as fetchers/cfb.py. Re-run each August alongside
+    a table refresh; a program that joins FBS without a cached crest renders
+    with a colour chip that identifies nothing."""
+    key = os.environ.get("CFBD_API_KEY")
+    if not key:
+        print("  SKIPPED: CFBD_API_KEY not set -- no CFB crests fetched")
+        return
+
+    data = session.get(
+        "https://api.collegefootballdata.com/teams",
+        params={"year": season},
+        headers={"Authorization": "Bearer " + key, "Accept": "application/json"},
+        timeout=REQUEST_TIMEOUT,
+    ).json()
+    fbs = [t for t in data if t.get("classification") == "fbs"]
+
+    out_dir = os.path.join(LOGOS_DIR, "cfb")
+    os.makedirs(out_dir, exist_ok=True)
+    manifest.setdefault("cfb", {})
+
+    for team in fbs:
+        school = team.get("school")
+        # The light 64px variant specifically -- the dark ones are for light
+        # backgrounds and would render as near-invisible on this app's
+        # near-black surface.
+        urls = [u for u in (team.get("logos") or []) if "/logos/64/" in u]
+        if not school or not urls:
+            print("  FAILED: {} (no school/64px-light logo in payload)".format(school or "(unnamed)"))
+            continue
+        slug = slugify(school)
+        dest_path = os.path.join(out_dir, "{}.png".format(slug))
+        try:
+            resp = session.get(urls[0], timeout=REQUEST_TIMEOUT)
+            resp.raise_for_status()
+            with open(dest_path, "wb") as f:
+                f.write(resp.content)
+            manifest["cfb"][school] = "logos/cfb/{}.png".format(slug)
+            print("  ok: {} -> {}".format(school, dest_path))
+        except Exception as e:
+            print("  FAILED: {} ({}): {}".format(school, urls[0], e))
+
+
 def fetch_worldcup_logos(session, manifest):
     data = session.get(
         "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
@@ -226,15 +299,19 @@ def main():
     print("Fetching Premier League club crests...")
     fetch_epl_logos(session, manifest)
 
+    print("Fetching FBS crests...")
+    fetch_cfb_logos(session, manifest, CFB_SEASON)
+
     print("Fetching World Cup team logos...")
     fetch_worldcup_logos(session, manifest)
 
     os.makedirs(LOGOS_DIR, exist_ok=True)
     with open(MANIFEST_PATH, "w") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
-    print("Wrote manifest with {} MLB, {} NFL, {} EPL and {} World Cup logos".format(
+    print("Wrote manifest with {} MLB, {} NFL, {} EPL, {} FBS and {} World Cup logos".format(
         len(manifest.get("mlb", {})), len(manifest.get("nfl", {})),
-        len(manifest.get("epl", {})), len(manifest.get("worldcup", {}))))
+        len(manifest.get("epl", {})), len(manifest.get("cfb", {})),
+        len(manifest.get("worldcup", {}))))
 
 
 if __name__ == "__main__":

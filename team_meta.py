@@ -174,6 +174,193 @@ EPL_TEAMS = {
     "Wolverhampton Wanderers": ("WOL", "#FDB913"),  # relegated after 2025-26
 }
 
+
+# GENERATED, NOT HAND-WRITTEN -- regenerate with:
+#     python3 scripts/gen_cfb_teams.py --season <season>
+# and paste the result here. This is the only branding table in this file that
+# is machine-produced, and the reason is scale: 30 MLB clubs, 32 NFL and 23
+# Premier League are all reviewable by eye in a diff; 136 FBS programs are not.
+# The committed literal below is what gets imported -- the script never runs at
+# runtime.
+#
+# SEASON-SCOPED to the season the schedule actually reads (2025), from CFBD's
+# /teams?year=, NOT its unscoped endpoint. The unscoped endpoint returns the
+# CURRENT classification, which runs ahead of the data: it lists North Dakota
+# State and Sacramento State as FBS while the 2025 schedule still has them as
+# FCS. ?year= returns the point-in-time field -- 136 programs, matching the
+# 2025 schedule exactly.
+#
+# That is not a hypothetical worry. The same forward-looking-field problem is
+# live in the Premier League table above: ESPN serves the 2026-27 club list
+# while the lookback window still reads 2025-26 matches, leaving Burnley, West
+# Ham and Wolves with no cached crest across 93 of 697 real rows (13.3%). EPL
+# absorbs that because colour still identifies those clubs. CFB cannot -- see
+# below -- so a program missing here loses its only working identifier.
+#
+# REFRESH EACH AUGUST once the new FBS field is final, same cadence and same
+# reason as the Premier League table: programs move between FBS and FCS in both
+# directions every year. A program in the schedule but missing here degrades to
+# no abbr/colour rather than erroring (see get_team_meta).
+#
+# COLOUR CANNOT IDENTIFY AN FBS PROGRAM, and unlike the Premier League table
+# this one does not even try to fix collisions. Measured across all 136 real
+# official primaries after the lightness floor: 93 pairs are perceptually
+# IDENTICAL (CIE76 dE < 2.3), 208 pairs sit under dE 5, and 110 of the 136
+# programs fall in at least one sub-5 collision spread over 23 clusters -- the
+# largest being 17 programs sharing one red. Six programs share #000000
+# outright and all lift to the same grey.
+#
+# EPL needed 4 hand-picked official alternates to break its exact ties. The
+# equivalent here would be 87, and it would not work: there are not 136
+# mutually distinguishable colours at a fixed 55% lightness. CFBD's
+# alternateColor makes it strictly worse (662 identical pairs, up from 93 --
+# the alternates are overwhelmingly white/black/grey, which all collapse to the
+# same lifted tone).
+#
+# So colour here is an ACCENT ONLY. The crest is the identifier -- see
+# scripts/fetch_logos.py's fetch_cfb_logos. Every value below is the program's
+# real published primary, validated as #RRGGBB by the generator (CFBD emits the
+# literal string "#null" for missing colours, which a truthiness check would
+# pass straight through).
+CFB_TEAMS = {
+    "Air Force": ("AF", "#003594"),
+    "Akron": ("AKR", "#041E42"),
+    "Alabama": ("ALA", "#9E1B32"),
+    "App State": ("APP", "#000000"),
+    "Arizona": ("ARIZ", "#CC0033"),
+    "Arizona State": ("ASU", "#FFC627"),
+    "Arkansas": ("ARK", "#A32136"),
+    "Arkansas State": ("ARST", "#CC092F"),
+    "Army": ("ARMY", "#000000"),
+    "Auburn": ("AUB", "#0C2340"),
+    "BYU": ("BYU", "#003DA5"),
+    "Ball State": ("BALL", "#BA0C2F"),
+    "Baylor": ("BAY", "#154734"),
+    "Boise State": ("BOIS", "#0033A0"),
+    "Boston College": ("BC", "#8C2232"),
+    "Bowling Green": ("BGSU", "#FD5000"),
+    "Buffalo": ("BUF", "#005BBB"),
+    "California": ("CAL", "#041E42"),
+    "Central Michigan": ("CMU", "#6A0032"),
+    "Charlotte": ("CLT", "#005035"),
+    "Cincinnati": ("CIN", "#000000"),
+    "Clemson": ("CLEM", "#F56600"),
+    "Coastal Carolina": ("CCU", "#006F71"),
+    "Colorado": ("COLO", "#CFB87C"),
+    "Colorado State": ("CSU", "#1E4D2B"),
+    "Delaware": ("DEL", "#00539F"),
+    "Duke": ("DUKE", "#00539B"),
+    "East Carolina": ("ECU", "#592A8A"),
+    "Eastern Michigan": ("EMU", "#046A38"),
+    "Florida": ("FLA", "#0021A5"),
+    "Florida Atlantic": ("FAU", "#003366"),
+    "Florida International": ("FIU", "#091F3F"),
+    "Florida State": ("FSU", "#782F40"),
+    "Fresno State": ("FRES", "#C41230"),
+    "Georgia": ("UGA", "#BA0C2F"),
+    "Georgia Southern": ("GASO", "#041E42"),
+    "Georgia State": ("GAST", "#0039A6"),
+    "Georgia Tech": ("GT", "#B3A369"),
+    "Hawai'i": ("HAW", "#024731"),
+    "Houston": ("HOU", "#C8102E"),
+    "Illinois": ("ILL", "#FF5F05"),
+    "Indiana": ("IU", "#990000"),
+    "Iowa": ("IOWA", "#000000"),
+    "Iowa State": ("ISU", "#C8102E"),
+    "Jacksonville State": ("JXST", "#CC0000"),
+    "James Madison": ("JMU", "#450084"),
+    "Kansas": ("KU", "#0051BA"),
+    "Kansas State": ("KSU", "#512888"),
+    "Kennesaw State": ("KENN", "#FDBB30"),
+    "Kent State": ("KENT", "#002664"),
+    "Kentucky": ("UK", "#0033A0"),
+    "LSU": ("LSU", "#461D7C"),
+    "Liberty": ("LIB", "#0A254E"),
+    "Louisiana": ("UL", "#CE181E"),
+    "Louisiana Tech": ("LT", "#003087"),
+    "Louisville": ("LOU", "#C9001F"),
+    "Marshall": ("MRSH", "#00B140"),
+    "Maryland": ("MD", "#CE1126"),
+    "Massachusetts": ("MASS", "#881C1C"),
+    "Memphis": ("MEM", "#00498F"),
+    "Miami": ("MIA", "#F47321"),
+    "Miami (OH)": ("M-OH", "#C41230"),
+    "Michigan": ("MICH", "#00274C"),
+    "Michigan State": ("MSU", "#173F35"),
+    "Middle Tennessee": ("MTSU", "#036EB7"),
+    "Minnesota": ("MINN", "#7A0019"),
+    "Mississippi State": ("MSST", "#5D1725"),
+    "Missouri": ("MIZ", "#F1B82D"),
+    "Missouri State": ("MOST", "#5E0009"),
+    "NC State": ("NCSU", "#CC0000"),
+    "Navy": ("NAVY", "#00225B"),
+    "Nebraska": ("NEB", "#D00000"),
+    "Nevada": ("NEV", "#041E42"),
+    "New Mexico": ("UNM", "#BA0C2F"),
+    "New Mexico State": ("NMSU", "#8C0B42"),
+    "North Carolina": ("UNC", "#7BAFD4"),
+    "North Texas": ("UNT", "#00853E"),
+    "Northern Illinois": ("NIU", "#C8102E"),
+    "Northwestern": ("NU", "#582C83"),
+    "Notre Dame": ("ND", "#0C2340"),
+    "Ohio": ("OHIO", "#024230"),
+    "Ohio State": ("OSU", "#BA0C2F"),
+    "Oklahoma": ("OU", "#841617"),
+    "Oklahoma State": ("OKST", "#FE5C00"),
+    "Old Dominion": ("ODU", "#043657"),
+    "Ole Miss": ("MISS", "#13294B"),
+    "Oregon": ("ORE", "#007030"),
+    "Oregon State": ("ORST", "#DC4405"),
+    "Penn State": ("PSU", "#001E44"),
+    "Pittsburgh": ("PITT", "#003594"),
+    "Purdue": ("PUR", "#CEB888"),
+    "Rice": ("RICE", "#00205B"),
+    "Rutgers": ("RUTG", "#CE0E2D"),
+    "SMU": ("SMU", "#D70000"),
+    "Sam Houston": ("SHSU", "#F56423"),
+    "San Diego State": ("SDSU", "#A6192E"),
+    "San José State": ("SJSU", "#0055A2"),
+    "South Alabama": ("USA", "#00205B"),
+    "South Carolina": ("SC", "#73000A"),
+    "South Florida": ("USF", "#006747"),
+    "Southern Miss": ("USM", "#FFC72C"),
+    "Stanford": ("STAN", "#8C1515"),
+    "Syracuse": ("SYR", "#F76900"),
+    "TCU": ("TCU", "#4D1979"),
+    "Temple": ("TEM", "#A41E35"),
+    "Tennessee": ("TENN", "#FF8200"),
+    "Texas": ("TEX", "#BF5700"),
+    "Texas A&M": ("TA&M", "#500000"),
+    "Texas State": ("TXST", "#501214"),
+    "Texas Tech": ("TTU", "#C30020"),
+    "Toledo": ("TOL", "#0B2240"),
+    "Troy": ("TROY", "#862633"),
+    "Tulane": ("TULN", "#006747"),
+    "Tulsa": ("TLSA", "#003595"),
+    "UAB": ("UAB", "#1A5632"),
+    "UCF": ("UCF", "#000000"),
+    "UCLA": ("UCLA", "#2774AE"),
+    "UConn": ("CONN", "#000E2F"),
+    "UL Monroe": ("ULM", "#840029"),
+    "UNLV": ("UNLV", "#CF0A2C"),
+    "USC": ("USC", "#990000"),
+    "UTEP": ("UTEP", "#FF8200"),
+    "UTSA": ("UTSA", "#0C2340"),
+    "Utah": ("UTAH", "#BE0000"),
+    "Utah State": ("USU", "#0F2439"),
+    "Vanderbilt": ("VAN", "#000000"),
+    "Virginia": ("UVA", "#232D4B"),
+    "Virginia Tech": ("VT", "#861F41"),
+    "Wake Forest": ("WAKE", "#CEB888"),
+    "Washington": ("WASH", "#33006F"),
+    "Washington State": ("WSU", "#A60F2D"),
+    "West Virginia": ("WVU", "#EAAA00"),
+    "Western Kentucky": ("WKU", "#C60C30"),
+    "Western Michigan": ("WMU", "#532E1F"),
+    "Wisconsin": ("WIS", "#A00000"),
+    "Wyoming": ("WYO", "#492F24"),
+}
+
 # name (must match assets/logos/manifest.json keys) -> (FIFA code, kit primary hex)
 WORLDCUP_TEAMS = {
     "Algeria": ("ALG", "#006233"),
@@ -264,7 +451,7 @@ def _ensure_legible(hex_color):
 # an unrelated one. No live behaviour changes: mlb and worldcup were the
 # only keys ever passed, and both resolve to the same tables as before.
 _TEAM_TABLES = {"mlb": MLB_TEAMS, "nfl": NFL_TEAMS, "epl": EPL_TEAMS,
-                "worldcup": WORLDCUP_TEAMS}
+                "cfb": CFB_TEAMS, "worldcup": WORLDCUP_TEAMS}
 
 
 def get_team_meta(sport_key, team_name):
