@@ -722,34 +722,73 @@ betting_signals:
   # a flat prior is the honest starting point and makes the calibration
   # delta interpretable.
   cfb:
-    # Deliberately near-zero, same reasoning as NFL's initial block: with
-    # nothing measured yet the goal is a large gradeable sample for the
-    # backtest, not a defensible live cutoff. The >=2-signals-agree guard in
-    # cfb_signals._finalize is the real gate at this threshold, not the score
-    # -- and unlike NFL's, that guard has no override that can bypass it,
-    # because CFB has no availability input. See cfb_signals._finalize.
-    min_threshold: 1
-    standout_threshold: 1
-    # Round-number placeholders, NOT measured league dispersion. PPA is a
-    # per-play rate on roughly the same scale as NFL's EPA/play, so the two
-    # PPA gaps start from NFL's pre-calibration 0.10; college football's
-    # talent spread is far wider than the NFL's, so these are the values most
-    # likely to move under calibration.
+    # BACKTEST-DERIVED, replacing the flat placeholders this block shipped
+    # with. Measured by cfb_backtest.py over 2023-2025, FBS-vs-FBS only,
+    # 2,398 games (2,264 regular season + 134 postseason). Same procedure
+    # NFL's calibration used: point-biserial r of each signal's
+    # direction-corrected raw gap against the real home-win outcome, 95%
+    # bootstrap CI, reliability-proportional (r^2) weights renormalized over
+    # survivors, thresholds read off a sensitivity table.
+    #
+    # Measured performance at these values: 76.9% combined / 77.4% regular
+    # season, outcome-graded against real final scores, versus a 58.6% naive
+    # always-pick-home baseline over the same games. Per-season spread was
+    # 77.5 / 76.1 / 77.2, which is the main reason to believe this is not
+    # fitted noise.
+    #
+    # THIS IS A MONEYLINE HIT RATE, NOT A PROFITABILITY CLAIM. No odds, line
+    # or price data enters this repo anywhere. CFB moneyline picks concentrate
+    # on heavy favourites, so a high hit rate says nothing about whether these
+    # picks beat the vig -- do not read 76.9% as an edge over the market.
+    #
+    # FIRST PASS, SUBJECT TO REVISION AFTER REAL PRODUCTION DATA -- same
+    # framing as NFL's calibrated block. One backtest is not the same
+    # evidence as months of graded live picks; MLB's constants took several
+    # rounds of real production measurement to settle, and these have had
+    # none. Known gaps, all flagged rather than assumed away: no ceiling
+    # correction (weights are raw r^2), pairwise rather than multivariate
+    # collinearity testing, and no shrinkage (a week-2 team's one-game form
+    # is weighted like a week-12 team's).
+    #
+    # 40, up from the deliberately near-zero placeholder of 1. Picked as the
+    # most selective candidate still leaving at least a third of games
+    # gradeable: coverage falls monotonically as the threshold rises (t>=0
+    # 68.3% on 1,788 picks; t>=40 76.9% on 901; t>=70 85.4% on 280), so this
+    # trades volume for precision at the point the curve is still cheap. A
+    # judgment call, not a measurement.
+    min_threshold: 40
+    standout_threshold: 40
+    # MEASURED dispersion -- the stdev of each signal's own raw home-away gap
+    # across all 2,398 games, replacing the round-number guesses. turnover_gap
+    # moved most (0.50 -> 1.3292, 2.7x): college turnover margins swing far
+    # wider than the placeholder assumed, so the old scale was saturating the
+    # tanh on ordinary games.
     scales:
-      off_ppa_gap: 0.10
-      def_ppa_gap: 0.10
-      turnover_gap: 0.50
+      off_ppa_gap: 0.1686
+      def_ppa_gap: 0.1568
+      turnover_gap: 1.3292
     bet_types:
-      # Moneyline only in v1. Three signals, matching what CFBD's bulk
-      # endpoints publish per team-game. Scoring margin is deliberately
-      # absent: NFL's calibration found it strongly collinear with offensive
-      # EPA and dropped it, so CFB ships it unweighted in each game's
-      # `context` (see fetchers/cfb.build_scoring_margins) where the backtest
-      # can measure it without it moving a live pick first.
+      # Moneyline only in v1. Weights are reliability-proportional over the
+      # three signals that survived measurement: r = 0.3351 / 0.2612 / 0.1891
+      # respectively, all with 95% CIs clearing zero comfortably, so nothing
+      # was auto-dropped (unlike NFL, which lost rest_diff that way).
+      #
+      # scoring_margin is STILL ABSENT, but for a reason now measured for CFB
+      # rather than inherited from NFL. It has the HIGHEST individual r of any
+      # candidate (0.4155) and on reliability alone would take the largest
+      # weight -- but it is collinear with all three others (r = +0.70 off_ppa,
+      # +0.69 def_ppa_allowed, +0.54 turnover_diff), where those three are only
+      # mildly correlated with each other (0.18-0.34). A points differential is
+      # definitionally a summary of what the other three measure, and
+      # reliability-proportional weighting assumes independent evidence.
+      # Grading both variants settles it: including it changes the outcome by
+      # ONE pick in 901 (693 HIT / 208 MISS either way). It stays computed and
+      # unweighted in each game's `context` (fetchers/cfb.build_scoring_margins)
+      # so a future backtest can re-test it cheaply.
       moneyline:
-        off_ppa: 0.3333
-        def_ppa_allowed: 0.3333
-        turnover_diff: 0.3334
+        off_ppa: 0.5193
+        def_ppa_allowed: 0.3154
+        turnover_diff: 0.1654
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 
