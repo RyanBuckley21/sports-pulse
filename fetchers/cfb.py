@@ -298,6 +298,39 @@ def fbs_matchup_index(schedule_rows):
 # Team form -- season-to-date, point-in-time, FBS-vs-FBS only.
 # --------------------------------------------------------------------------- #
 
+def max_regular_week(fbs_index):
+    """The highest regular-season week present in `fbs_index`, or 0 if it is
+    empty. `fbs_index` is regular-season-only by construction, so this is
+    "the last week that had been played by the end of the regular season"."""
+    weeks = [e["week"] for e in fbs_index.values()]
+    return max(weeks) if weeks else 0
+
+
+def form_cutoff(game, max_reg_week):
+    """The `upto_week` value that gives `game` a correct point-in-time form
+    window.
+
+    For a REGULAR-SEASON game this is just its own week: form must use
+    strictly earlier weeks.
+
+    For a POSTSEASON game it is max_reg_week + 1, i.e. the whole regular
+    season, and getting this wrong is not a rounding error. CFBD renumbers
+    postseason weeks from 1 -- every FBS-vs-FBS bowl and playoff game in a
+    season carries week=1 -- so using the raw week would filter `fbs_index`
+    down to games before regular-season week 1, which is nothing at all.
+    Every form value would come back None and every bowl would score "No
+    clear lean", which is exactly what this function was added to fix.
+
+    The two filters are complementary and both are needed: fbs_matchup_index
+    decides WHICH games may contribute to form (regular season, FBS-vs-FBS),
+    and this decides HOW MANY of them a given game may see. cfb_backtest.py
+    applies the same rule -- it is imported from here rather than duplicated,
+    so the backtest and production cannot drift apart on it again."""
+    if game.get("season_type") == "postseason":
+        return max_reg_week + 1
+    return int(game["week"])
+
+
 def build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week):
     """Season-to-date per-game form for every FBS team, using only FBS-vs-FBS
     regular-season games STRICTLY BEFORE `upto_week`.
@@ -532,16 +565,20 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     """CFB's entry in generate_insights.GAME_BUILDERS -- same calling
     convention and return shape as fetchers.mlb/nfl.build_game_entities.
 
-    CALL BUDGET: 2 + (W-1) network requests per run, where W is the latest
-    week on the slate -- one schedule CSV, one bulk /ppa/games for the season
-    (bare `year=`), and one /games/teams per PRIOR week. It does not scale
-    with slate size: every game on the date is built from those in memory.
+    CALL BUDGET: 2 + (C-1) network requests per run, where C is the largest
+    form_cutoff on the slate -- one schedule CSV, one bulk /ppa/games for the
+    season (bare `year=`), and one /games/teams per week the slate is allowed
+    to see. It does not scale with slate size: every game on the date is
+    built from those in memory.
 
     That is more than the 2-3 the design assumed, and the reason is measured
     rather than guessed: /games/teams rejects a bare `year=` (see
-    get_team_game_stats). A typical mid-season Saturday is week ~8, so ~9
-    requests; the week-16 worst case is 17. The per-team fan-out this still
-    avoids would be ~134 calls per season for a full FBS field.
+    get_team_game_stats). Real measured figures: week 1 costs 1 request (both
+    CFBD calls skipped), a typical mid-season Saturday around week 8 costs 9,
+    and a POSTSEASON slate costs 18 -- the most expensive case, because
+    form_cutoff gives every bowl the whole regular season. The per-team
+    fan-out this still avoids would be ~134 calls per season for a full FBS
+    field.
 
     `boxscore_cache` is accepted for interface parity but unused, and the
     second return value is always {}: CFB's signals come pre-aggregated from
@@ -566,28 +603,42 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
         return {}, {}, []
 
     fbs_index = fbs_matchup_index(schedule)
+    max_reg_week = max_regular_week(fbs_index)
     # Fetch the union of prior weeks ONCE for the whole slate, rather than
     # per game: a single date is normally one week, but a week boundary can
     # split it, and re-fetching per game would multiply the call count by the
     # slate size for no new data.
-    max_week = max(int(g["week"]) for g in games)
-    if max_week <= 1:
-        # Week 1: there are no prior games, so every form value would be None
-        # regardless. Skip BOTH CFBD calls rather than paying for data that
-        # cannot be used -- which also means an opening-weekend slate builds
-        # with no API key at all, instead of failing on a call whose result
-        # would have been discarded.
+    #
+    # Driven by form_cutoff, NOT by the raw week: a bowl slate's raw weeks
+    # are all 1, which would fetch nothing and leave every postseason game
+    # with no form at all.
+    cutoffs = {form_cutoff(g, max_reg_week) for g in games}
+    max_cutoff = max(cutoffs)
+    if max_cutoff <= 1:
+        # Week 1 of the regular season: there are no prior games, so every
+        # form value would be None regardless. Skip BOTH CFBD calls rather
+        # than paying for data that cannot be used -- which also means an
+        # opening-weekend slate builds with no API key at all, instead of
+        # failing on a call whose result would have been discarded.
         ppa_rows, team_stats = [], []
     else:
         ppa_rows = get_ppa_games(session, season)
-        team_stats = get_team_game_stats(session, season, range(1, max_week))
+        team_stats = get_team_game_stats(session, season, range(1, max_cutoff))
+
+    # One form table per distinct cutoff, not per game. A slate normally has
+    # a single cutoff, so this is usually one build either way -- but a bowl
+    # slate now aggregates the entire regular season, and repeating that per
+    # game would redo the same full-season pass dozens of times.
+    form_by_cutoff, margins_by_cutoff = {}, {}
+    for cutoff in sorted(cutoffs):
+        form_by_cutoff[cutoff] = build_team_form(ppa_rows, team_stats, fbs_index, cutoff)
+        margins_by_cutoff[cutoff] = build_scoring_margins(schedule, fbs_index, cutoff)
 
     entities = {}
     for g in games:
         try:
-            week = int(g["week"])
-            form = build_team_form(ppa_rows, team_stats, fbs_index, week)
-            margins = build_scoring_margins(schedule, fbs_index, week)
+            cutoff = form_cutoff(g, max_reg_week)
+            form, margins = form_by_cutoff[cutoff], margins_by_cutoff[cutoff]
             entities[str(g["game_id"])] = _build_one_game(config, g, form, margins)
         except Exception as e:  # noqa: BLE001 -- one bad game must not cost the slate
             print("insights(games): cfb game {} ({} @ {}) failed to build ({}: {}); skipped"
