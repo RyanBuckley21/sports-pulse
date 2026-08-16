@@ -20,7 +20,19 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt -r scripts/requirements.txt
       - run: playwright install --with-deps chromium
+      # CFBD_API_KEY is needed by fetch_cfb_logos alone -- the MLB, NFL, EPL
+      # and World Cup fetchers are all keyless. Step-scoped, matching the
+      # pattern in daily-stats-and-grade.yml and deploy-pages.yml.
+      #
+      # Its absence here is why run #3 (2026-08-16) went green having fetched
+      # ZERO CFB crests: fetch_cfb_logos skips when the key is unset so that a
+      # local run can still cache the other four sports, and that skip was
+      # invisible in a successful run. The skip now emits a ::warning::
+      # annotation as well, so a future keyless run says so in the summary
+      # rather than only in the logs.
       - run: python3 scripts/fetch_logos.py
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
