@@ -174,15 +174,32 @@ jobs:
           echo "push failed after 3 attempts"
           exit 1
 
-      # Deterministic game builder only -- no AI calls, no auth needed. Runs
-      # regardless of the grading step's outcome (`!cancelled()` overrides
-      # the default success()-over-the-whole-job gating) -- a grading
-      # failure must not also cost tomorrow's grading run its store.
+      # Deterministic game builder only -- no AI calls. Runs regardless of the
+      # grading step's outcome (`!cancelled()` overrides the default
+      # success()-over-the-whole-job gating) -- a grading failure must not
+      # also cost tomorrow's grading run its store.
+      #
+      # CFBD_API_KEY is scoped to THIS STEP rather than the job or workflow,
+      # matching the only other env block here (SP_SKIP_INSIGHTS, directly
+      # below it). This is the sole step in this workflow that can reach the
+      # CFB fetcher: generate_stats.py -> generate_insights.run() ->
+      # GAME_BUILDERS. The grading step above cannot -- signal_report.py
+      # imports no fetchers at all, and its schedule lookup is MLB StatsAPI-
+      # shaped -- so widening the secret to the job would expose it to a step
+      # that has no use for it.
+      #
+      # Inert today and safe to ship ahead of any activation: `cfb` is
+      # registered in GAME_BUILDERS but absent from active_sports and
+      # active_game_sports, so cfb.build_game_entities is never invoked and
+      # the key is never read. fetchers/cfb.py demands it lazily inside
+      # cfbd_key(), never at import time, so an unset or empty secret cannot
+      # break the MLB pipeline -- it can only surface once CFB is switched on.
       - name: Regenerate stats and signals
         id: generate_stats
         if: ${{ !cancelled() }}
         env:
           SP_SKIP_INSIGHTS: "1"
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: python3 generate_stats.py
 
       # Independent of the grading step: commits only if regeneration itself

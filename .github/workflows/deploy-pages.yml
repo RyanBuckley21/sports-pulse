@@ -236,8 +236,30 @@ jobs:
           path: output/data.json
           key: ${{ steps.throttle.outputs.key }}
 
+      # CFBD_API_KEY is scoped to this step, matching daily-stats-and-grade.yml's
+      # own wiring. This workflow runs the SAME entry point as that one
+      # (generate_stats.py -> generate_insights.run() -> GAME_BUILDERS), and the
+      # throttle comment above already notes that _build_game_entities() is
+      # called unconditionally at the top of run(), before the SP_SKIP_INSIGHTS
+      # and ai_insights gating -- so this is a genuine second call site for the
+      # CFB fetcher, not a theoretical one. Wiring only the daily workflow would
+      # leave the site build failing on a missing key the moment CFB is switched
+      # on, in the workflow least likely to be watched for it.
+      #
+      # Secrets are readable here despite this workflow's `permissions:
+      # contents: read` -- that block scopes the GITHUB_TOKEN, not repository
+      # secrets, which are injected independently.
+      #
+      # Inert until activation, exactly as in the daily workflow: `cfb` is
+      # registered in GAME_BUILDERS but absent from active_sports and
+      # active_game_sports, so cfb.build_game_entities is never invoked and the
+      # key is never read. fetchers/cfb.py demands it lazily inside cfbd_key()
+      # and treats an empty string the same as unset -- which is what GitHub
+      # injects for an undefined secret -- so this cannot break the MLB build.
       - name: Regenerate stats and signals
         if: ${{ success() && steps.restore_data.outputs.cache-hit != 'true' }}
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: python3 generate_stats.py
 
       - name: Reuse this window's data.json
