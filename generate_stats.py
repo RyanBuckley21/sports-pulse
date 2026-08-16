@@ -11,7 +11,7 @@ import yaml
 import generate_insights
 import normalizer
 import team_meta
-from fetchers import mlb, nfl
+from fetchers import epl, mlb, nfl
 
 CONFIG_PATH = "config.yaml"
 
@@ -30,9 +30,16 @@ SPORT_FETCHERS = {
         "fetch": nfl.fetch,
         "competition": lambda cfg: f"NFL {cfg['nfl']['season']}",
     },
+    "epl": {
+        "fetch": epl.fetch,
+        # No season number: the fetcher windows by rolling date rather than
+        # anchoring to a season, and an EPL season spans two calendar years
+        # anyway, so a single year would be misleading rather than helpful.
+        "competition": lambda cfg: "Premier League",
+    },
 }
 
-SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL"}
+SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "epl": "Premier League"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.
@@ -47,6 +54,13 @@ APPROVED_CATEGORIES = {
     "nfl": [
         "passing_yards", "rushing_yards", "receiving_yards", "receptions",
         "passing_tds", "rushing_tds", "receiving_tds", "total_tds",
+    ],
+    # Unfiltered production boards first, then the position-filtered ones:
+    # attacking (Fwd/Mid), then goalkeeping.
+    "epl": [
+        "goals", "assists", "goal_or_assist",
+        "goals_per_appearance", "shots_on_goal",
+        "clean_sheets", "saves",
     ],
 }
 
@@ -105,6 +119,31 @@ CATEGORY_META = {
     "rushing_tds": {"kind": "count", "sub": "Last {n} G", "title": "Rushing TDs"},
     "receiving_tds": {"kind": "count", "sub": "Last {n} G", "title": "Receiving TDs"},
     "total_tds": {"kind": "count", "sub": "Rush + Rec · Last {n} G", "title": "Total TDs"},
+    # EPL. `sub` counts APPEARANCES ("App"), not matchdays -- rotation,
+    # injury and suspension shift a player's window back rather than leaving
+    # gaps in it, so "Last 5 App" is the honest unit. `{n}` resolves per build
+    # to the board's real depth, same mechanism as NFL's: early in a season,
+    # or for a board whose qualifiers are all newly returned, it reads lower
+    # than the configured 5 rather than promising a five-match trend that
+    # does not exist.
+    #
+    # Position qualifiers are spelled out in `sub` because they are the whole
+    # reason two players on different boards are not comparable: a keeper's
+    # clean sheets and a striker's goals answer different questions.
+    #
+    # goals_per_appearance is `rate` (config marks it per_appearance, so its
+    # ranked value is already an average) -- same rate-vs-count distinction as
+    # MLB's hits_runs_rbi and NFL's yardage boards. Its title says "per
+    # Appearance" and never "per 90": ESPN publishes no minutes played, so a
+    # 10-minute cameo and a full 90 count identically, and calling it per-90
+    # would claim a normalisation the data cannot support.
+    "goals": {"kind": "count", "sub": "Last {n} App", "title": "Goals"},
+    "assists": {"kind": "count", "sub": "Last {n} App", "title": "Assists"},
+    "goal_or_assist": {"kind": "count", "sub": "Last {n} App", "title": "Goal Contributions"},
+    "goals_per_appearance": {"kind": "rate", "sub": "Last {n} App · Fwd/Mid", "title": "Goals / Appearance"},
+    "shots_on_goal": {"kind": "count", "sub": "Last {n} App · Fwd/Mid", "title": "Shots on Target"},
+    "clean_sheets": {"kind": "count", "sub": "Last {n} App · GK", "title": "Clean Sheets"},
+    "saves": {"kind": "count", "sub": "Last {n} App · GK", "title": "Saves"},
 }
 
 CATEGORY_SHORT_LABELS = {}

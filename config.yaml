@@ -278,6 +278,123 @@ nfl:
       tiebreak_fields: [rushing_yards, receiving_yards]
       min_games: 2
 
+# Premier League "Who's Hot" leaderboard categories (fetchers/epl.py's
+# fetch(), via generate_stats.SPORT_FETCHERS). Structurally parallel to the
+# mlb and nfl blocks above.
+#
+# LEADERBOARD ONLY. There is deliberately NO `betting_signals.epl` block
+# anywhere in this file, and no EPL entry in generate_insights.GAME_BUILDERS.
+# Nothing here is a weight, a conviction threshold, or graded against an
+# outcome. Its absence is the clearest available statement of that boundary.
+#
+# Not fetched or shown while `epl` is absent from active_sports.
+epl:
+  scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard
+  summary_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary
+
+  # A player's most recent 5 APPEARANCES, not matchdays -- rotation, injury
+  # and suspension shift the window back rather than leaving gaps.
+  #
+  # 5, not NFL's 4: goals are low-frequency, and over four matches a striker's
+  # total is often 0-3, too coarse to separate a board. 5 of 38 is ~13% of a
+  # season, between NFL's 4-of-17 (~24%) and MLB's 10-of-162 (~6%).
+  window_games: 5
+  # Calendar span searched to find those appearances. Generous on purpose: a
+  # rotated or recently-injured player needs a wider span to accumulate five,
+  # and matches outside every player's window are simply never selected.
+  # Each match in range costs one summary call (~8s per 50 matches measured).
+  lookback_days: 75
+
+  stat_categories:
+    # ---- unfiltered boards ------------------------------------------------
+    # No position filter: a goal counts the same whoever scores it, so these
+    # are the boards where bench-only players (16% of the pool, whose real
+    # position ESPN never reports -- see fetchers/epl.stable_position) stay
+    # fully eligible.
+    #
+    # min_games: 3, not NFL's 2. EPL rotation is heavier -- cup and European
+    # fixtures plus a congested festive period mean a fringe player can make
+    # two short cameos in a five-match span, and a 2-game floor would let that
+    # top a board.
+    - key: goals
+      label: Goals (last 5 appearances)
+      short_label: Goals
+      unit: G
+      mode: rolling_sum
+      fields: [totalGoals]
+      min_games: 3
+
+    - key: assists
+      label: Assists (last 5 appearances)
+      short_label: Assists
+      unit: A
+      mode: rolling_sum
+      fields: [goalAssists]
+      min_games: 3
+
+    - key: goal_or_assist
+      label: Goal Contributions (last 5 appearances)
+      short_label: Goal Contributions
+      unit: G+A
+      mode: rolling_sum
+      fields: [totalGoals, goalAssists]
+      min_games: 3
+
+    # ---- attacking boards, Forward/Midfielder only ------------------------
+    # Filtered because these rank attacking output: a defender or keeper on
+    # the same board is not a meaningful comparison. Position is resolved as
+    # the player's modal non-bench position across the window, so a striker
+    # who came off the bench once is still a Forward.
+    #
+    # per_appearance -- NOT per 90, and the label must never say otherwise.
+    # ESPN's payload carries no minutes played, only an appearances flag, so a
+    # 10-minute cameo and a full 90 count identically. Naming this "per 90"
+    # would claim a normalisation the data cannot support.
+    - key: goals_per_appearance
+      label: Goals per Appearance (last 5 appearances, Fwd/Mid)
+      short_label: Goals/App
+      unit: G/APP
+      mode: rolling_sum
+      fields: [totalGoals]
+      per_appearance: true
+      min_games: 3
+      positions: [Forward, Midfielder]
+
+    - key: shots_on_goal
+      label: Shots on Target (last 5 appearances, Fwd/Mid)
+      short_label: Shots on Target
+      unit: SOT
+      mode: rolling_sum
+      fields: [shotsOnTarget]
+      min_games: 3
+      positions: [Forward, Midfielder]
+
+    # ---- goalkeeper boards ------------------------------------------------
+    # cleanSheets is not an ESPN field. It is derived per match by
+    # fetchers/epl.extract_clean_sheet_credits, which credits a starting
+    # keeper only when they conceded nothing AND were never subbed off AND no
+    # goalkeeper substitution occurred for their team -- because goalsConceded
+    # alone is ambiguous when a backup comes on. The adjacent shotsFaced field
+    # is outright wrong (a keeper conceding 2 with 1 save reported 0), which is
+    # why no board is built on it.
+    - key: clean_sheets
+      label: Clean Sheets (last 5 appearances, GK)
+      short_label: Clean Sheets
+      unit: CS
+      mode: rolling_sum
+      fields: [cleanSheets]
+      min_games: 3
+      positions: [Goalkeeper]
+
+    - key: saves
+      label: Saves (last 5 appearances, GK)
+      short_label: Saves
+      unit: SV
+      mode: rolling_sum
+      fields: [saves]
+      min_games: 3
+      positions: [Goalkeeper]
+
 # ARCHIVED -- the 2026 tournament is over and the next cycle is ~2030. This
 # block is KEPT (nothing here is deleted) but the sport is no longer REGISTERED
 # in generate_stats.py: its SPORT_FETCHERS, SPORT_LABELS, APPROVED_CATEGORIES
