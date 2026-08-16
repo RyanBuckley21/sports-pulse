@@ -707,6 +707,49 @@ betting_signals:
         off_epa: 0.8380
         turnover_diff: 0.0992
         def_epa_allowed: 0.0628
+  # ------------------------------------------------------------------------ #
+  # CFB (FBS) -- EVERY NUMBER BELOW IS A FLAT, PRE-CALIBRATION PLACEHOLDER.
+  #
+  # Nothing here has been backtested against anything. This block is the exact
+  # counterpart of the nfl block as it shipped in PR #34, before PR #35
+  # measured reliability and replaced it: equal weights across the available
+  # signals, round-number scales, and a near-zero threshold. Read every value
+  # as "not yet measured", not as a tuned number. The calibration pass is its
+  # own follow-up PR, same sequencing NFL had.
+  #
+  # Weights are EQUAL (1/3 each) on purpose. Hand-picking a starting split
+  # would bake in a guess that the backtest then has to argue its way out of;
+  # a flat prior is the honest starting point and makes the calibration
+  # delta interpretable.
+  cfb:
+    # Deliberately near-zero, same reasoning as NFL's initial block: with
+    # nothing measured yet the goal is a large gradeable sample for the
+    # backtest, not a defensible live cutoff. The >=2-signals-agree guard in
+    # cfb_signals._finalize is the real gate at this threshold, not the score
+    # -- and unlike NFL's, that guard has no override that can bypass it,
+    # because CFB has no availability input. See cfb_signals._finalize.
+    min_threshold: 1
+    standout_threshold: 1
+    # Round-number placeholders, NOT measured league dispersion. PPA is a
+    # per-play rate on roughly the same scale as NFL's EPA/play, so the two
+    # PPA gaps start from NFL's pre-calibration 0.10; college football's
+    # talent spread is far wider than the NFL's, so these are the values most
+    # likely to move under calibration.
+    scales:
+      off_ppa_gap: 0.10
+      def_ppa_gap: 0.10
+      turnover_gap: 0.50
+    bet_types:
+      # Moneyline only in v1. Three signals, matching what CFBD's bulk
+      # endpoints publish per team-game. Scoring margin is deliberately
+      # absent: NFL's calibration found it strongly collinear with offensive
+      # EPA and dropped it, so CFB ships it unweighted in each game's
+      # `context` (see fetchers/cfb.build_scoring_margins) where the backtest
+      # can measure it without it moving a live pick first.
+      moneyline:
+        off_ppa: 0.3333
+        def_ppa_allowed: 0.3333
+        turnover_diff: 0.3334
   # Reserved for future sports (e.g. Premier League); empty = no betting layer.
   worldcup: {}
 
