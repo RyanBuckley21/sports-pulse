@@ -36,6 +36,16 @@ as a kill switch (no scored picks at all) rather than falling back.
 
 - **mlb** — MLB via the public StatsAPI (`fetchers/mlb.py`).
 
+**Registered but not activated:**
+
+- **nfl** — nflverse (`fetchers/nfl.py`). Registered in both `SPORT_FETCHERS`
+  and `GAME_BUILDERS`; in neither active list.
+- **epl** — Premier League via ESPN's soccer API (`fetchers/epl.py`).
+  Registered in `SPORT_FETCHERS` only — leaderboards, no scored picks.
+
+A registered-but-inactive sport costs nothing per run: `main()` only calls
+fetchers for keys in the relevant active list, so its `fetch` is never invoked.
+
 ## Archived — World Cup (pending the 2030 cycle)
 
 The 2026 tournament is over, and the next one is roughly four years out. The
@@ -82,6 +92,47 @@ own** — `main()` skips any sport with no `SPORT_FETCHERS` entry and logs
 3. Point `config.yaml`'s `worldcup:` block at the 2030 competition path and
    refresh `WORLDCUP_TEAMS` for the new field.
 4. Add `worldcup` to `active_sports`.
+
+## Seasonal maintenance
+
+Most of this repo is season-agnostic, but a promotion/relegation league is not:
+its membership changes every summer, and nothing in the pipeline notices.
+
+### EPL club table — refresh every August
+
+`team_meta.EPL_TEAMS` is a **union of two seasons' fields (23 clubs), not a
+20-club snapshot**, and that is deliberate. ESPN's `/teams` endpoint flips to
+the *upcoming* season's field as soon as promotion/relegation is confirmed,
+while matches inside `epl.lookback_days` (75) can still belong to the season
+just finished. A strict 20-club table therefore drops branding for exactly the
+clubs a summer window is still reading — relegated clubs go colourless and
+crestless mid-window.
+
+Once the 2026-27 field is final (late May, after the play-off final):
+
+1. **Add the three promoted clubs** to `EPL_TEAMS` — name, abbreviation, primary
+   kit hex. The name **must match ESPN's `displayName` byte-for-byte**: it is
+   the join key for both `team_meta.get_team_meta` and the logo manifest, and a
+   near-miss ("Wolves" vs "Wolverhampton Wanderers") silently yields no branding
+   rather than an error.
+2. **Re-run the "Fetch team logos" workflow** so the promoted clubs have crests.
+   This matters more in the EPL than anywhere else in the repo: club colour is
+   not identifying (six near-identical reds, six near-identical blues), so the
+   crest is the primary visual identifier and colour is only an accent. A
+   promoted club with no cached crest renders as a colour chip alone.
+3. **Prune the three relegated clubs** — but not until `lookback_days` has
+   fully cleared their final match. With a 75-day window and a late-May final
+   matchday, that lands in early-to-mid August, effectively the week the new
+   season starts. Pruning earlier breaks live boards; leaving them indefinitely
+   just carries dead entries.
+
+The inline `# promoted for 2026-27` / `# relegated after 2025-26` comments in
+`EPL_TEAMS` mark which rows each step applies to. Keep them current — they are
+the only record of which of the 23 are transitional.
+
+Nothing here is automated, and nothing fails loudly if it is skipped: a missing
+club produces a board row with no chip, no colour and no crest. Worth a calendar
+reminder rather than trusting it to be noticed.
 
 ## Adding a new league (e.g. Premier League)
 
