@@ -493,14 +493,38 @@ def _display_signals(away, home, away_form, home_form):
     return signals
 
 
+def _team_ref(school):
+    """Branding for one program, mirroring fetchers/mlb._build_one_game's
+    `teamref` -- the only other place the PICKS path (as opposed to
+    generate_stats' leaderboard path) consumes team_meta.
+
+    Degrades to exactly the previous behaviour for a program missing from
+    CFB_TEAMS: abbr falls back to the school name and colour stays None,
+    which is what every CFB entity carried before this existed. A program
+    that joins FBS mid-refresh therefore renders plainly rather than
+    breaking.
+
+    Note the abbr this returns is also what gets used as the MARKET SIDE
+    label (see _build_one_game), not just the chip text -- web/insights'
+    sideColor() matches the leading token of `side` against these abbrs to
+    tint a Signal Score row, so the two have to be the same string."""
+    import team_meta  # local import, matching fetchers/mlb.py's convention
+    meta = team_meta.get_team_meta("cfb", school) or {}
+    return {"abbr": meta.get("abbr") or school,
+            "name": school, "color": meta.get("color")}
+
+
 def _build_one_game(config, g, form, margins):
     import cfb_signals
 
     away, home = g["away_team"], g["home_team"]
+    away_ref, home_ref = _team_ref(away), _team_ref(home)
+    # Form is keyed by SCHOOL (what CFBD and the schedule both emit); the
+    # abbreviations below are presentation only and never a lookup key.
     away_form, home_form = form.get(away, {}), form.get(home, {})
 
     inputs = cfb_signals.build_inputs(
-        away_abbr=away, home_abbr=home,
+        away_abbr=away_ref["abbr"], home_abbr=home_ref["abbr"],
         away_off_ppa=away_form.get("off_ppa"), home_off_ppa=home_form.get("off_ppa"),
         away_def_ppa_allowed=away_form.get("def_ppa_allowed"),
         home_def_ppa_allowed=home_form.get("def_ppa_allowed"),
@@ -527,15 +551,12 @@ def _build_one_game(config, g, form, margins):
         # state, so like nflverse this is only ever "not yet played" or
         # "final" -- there is no "Live" this source can report.
         "status": "Final" if str(g.get("completed", "")).upper() == "TRUE" else "Preview",
-        # No team_meta table for CFB (130+ FBS programs, and no branding pass
-        # in this PR), so name doubles as abbr and color is None -- the same
-        # posture fetchers/nfl.py shipped with before NFL_TEAMS existed.
-        "away": {"abbr": away, "name": away, "color": None},
-        "home": {"abbr": home, "name": home, "color": None},
+        "away": away_ref,
+        "home": home_ref,
         "start": _format_kickoff(g.get("start_date")),
         "venue": g.get("venue"),
         "probables": None,   # no starter feed for CFB -- see module docstring
-        "signals": _display_signals(away, home, away_form, home_form),
+        "signals": _display_signals(away_ref["abbr"], home_ref["abbr"], away_form, home_form),
         "pulse": None,       # no team_pulse.cfb config block
         "betting_signals": betting,
         "standout": standout,

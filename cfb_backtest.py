@@ -179,9 +179,17 @@ def collect_season(session, season, cache_dir=None):
         form, margins = form_at(cutoff)
         away, home = g["away_team"], g["home_team"]
         away_form, home_form = form.get(away, {}), form.get(home, {})
+        # Same abbreviation labels production uses, resolved through the same
+        # helper. The label never touches the scoring math -- it only decides
+        # what string `side` comes back as -- but if this script graded
+        # school names while production emits abbreviations, the two would
+        # disagree about what a pick LOOKS like, which is exactly the kind of
+        # production/backtest drift the postseason cutoff bug came from.
+        away_abbr = cfb._team_ref(away)["abbr"]
+        home_abbr = cfb._team_ref(home)["abbr"]
 
         inputs = cfb_signals.build_inputs(
-            away_abbr=away, home_abbr=home,
+            away_abbr=away_abbr, home_abbr=home_abbr,
             away_off_ppa=away_form.get("off_ppa"), home_off_ppa=home_form.get("off_ppa"),
             away_def_ppa_allowed=away_form.get("def_ppa_allowed"),
             home_def_ppa_allowed=home_form.get("def_ppa_allowed"),
@@ -196,6 +204,7 @@ def collect_season(session, season, cache_dir=None):
             "game_id": str(g["game_id"]), "season": season,
             "week": raw_week, "cutoff": cutoff, "postseason": postseason,
             "away": away, "home": home,
+            "away_abbr": away_abbr, "home_abbr": home_abbr,
             "away_score": a_pts, "home_score": h_pts,
             "home_win": None if h_pts == a_pts else (h_pts > a_pts),
             "inputs": inputs,
@@ -404,7 +413,9 @@ def grade_moneyline(rec, scored):
         return "NO_LEAN", None
     if rec["home_win"] is None:
         return "PUSH", side
-    winner = rec["home"] if rec["home_win"] else rec["away"]
+    # Compare against the ABBREVIATION, matching what score_game now returns
+    # as `side` (see collect_season).
+    winner = rec["home_abbr"] if rec["home_win"] else rec["away_abbr"]
     return ("HIT" if side == winner else "MISS"), side
 
 
