@@ -135,6 +135,32 @@ def _finalize(L, n_avail, n_agree, threshold, labels, flags=(), force_aligned=Fa
     return {"side": side, "score": score, "flags": flags}
 
 
+def _apply_run_line_guard(out):
+    """Same-side invariant between run_line and moneyline, applied in place to
+    `out` after both are computed. Covering the run line requires winning
+    outright, so when both lean the same team, that's the favorite/"laying"
+    side (see _run_line_laying in signal_report.py -- empirically, across 1,388
+    real 2026 games, run_line and moneyline never disagree on side; reweighting
+    the same signals changes the magnitude of the lean, not its sign). run_line's
+    score should therefore never structurally outrank moneyline's for that side
+    -- but moneyline and run_line are independently weighted blends of the same
+    signals, so nothing about the scoring math enforces that on its own; a
+    starter-ERA gap large enough can push run_line above moneyline even though
+    covering by 2+ is strictly harder than just winning. One-directional on
+    purpose: run_line CAN legitimately score lower than moneyline (that's the
+    normal case, reflecting the harder bar) -- it just can't score higher.
+    "run_line_hot" is the readable signal that this fired, kept on the
+    (now-clamped) entry since the raw pre-clamp score isn't needed anywhere else
+    once it's been read."""
+    if "run_line" not in out or "moneyline" not in out:
+        return
+    ml, rl = out["moneyline"], out["run_line"]
+    if ml["side"] not in (None, "No clear lean") and rl["side"] == ml["side"] \
+            and rl["score"] > ml["score"]:
+        rl["flags"] = sorted(set(rl["flags"] + ["run_line_hot"]))
+        rl["score"] = min(rl["score"], ml["score"])
+
+
 def _labels_for(bet_type, home_abbr, away_abbr):
     if bet_type in _SIDE_MARKETS:
         return (home_abbr, away_abbr)
@@ -216,6 +242,8 @@ def score_game(config, sport_key, inputs, availability=None):
                                 flags=_availability_flags(availability), force_aligned=True)
         else:
             out[bt] = _finalize(L, n, agree, threshold, labels)
+
+    _apply_run_line_guard(out)
 
     # Game total: an opener/bullpen game leans Over -- push after the base calc.
     if any_out and "game_total" in out:
