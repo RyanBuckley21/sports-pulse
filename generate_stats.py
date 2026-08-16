@@ -11,7 +11,7 @@ import yaml
 import generate_insights
 import normalizer
 import team_meta
-from fetchers import mlb, nfl, worldcup
+from fetchers import mlb, nfl
 
 CONFIG_PATH = "config.yaml"
 
@@ -30,13 +30,9 @@ SPORT_FETCHERS = {
         "fetch": nfl.fetch,
         "competition": lambda cfg: f"NFL {cfg['nfl']['season']}",
     },
-    "worldcup": {
-        "fetch": worldcup.fetch,
-        "competition": lambda cfg: cfg["worldcup"]["competition"],
-    },
 }
 
-SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "worldcup": "World Cup"}
+SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.
@@ -52,7 +48,6 @@ APPROVED_CATEGORIES = {
         "passing_yards", "rushing_yards", "receiving_yards", "receptions",
         "passing_tds", "rushing_tds", "receiving_tds", "total_tds",
     ],
-    "worldcup": ["goals", "goal_or_assist", "assists", "shots", "shots_on_goal", "clean_sheets"],
 }
 
 # Presentation metadata that isn't tied to fetch mechanics, so it stays out
@@ -110,12 +105,6 @@ CATEGORY_META = {
     "rushing_tds": {"kind": "count", "sub": "Last {n} G", "title": "Rushing TDs"},
     "receiving_tds": {"kind": "count", "sub": "Last {n} G", "title": "Receiving TDs"},
     "total_tds": {"kind": "count", "sub": "Rush + Rec · Last {n} G", "title": "Total TDs"},
-    "goals": {"kind": "count", "sub": "This tournament", "title": "Goals"},
-    "goal_or_assist": {"kind": "count", "sub": "This tournament", "title": "Goal Involvements"},
-    "assists": {"kind": "count", "sub": "This tournament", "title": "Assists"},
-    "shots": {"kind": "rate", "sub": "This tournament", "title": "Shots / Game"},
-    "shots_on_goal": {"kind": "rate", "sub": "This tournament", "title": "Shots on Goal / G"},
-    "clean_sheets": {"kind": "count", "sub": "Goalkeepers", "title": "Clean Sheets"},
 }
 
 CATEGORY_SHORT_LABELS = {}
@@ -190,7 +179,7 @@ def _resolve_sub(sub, records):
     series length, and build_data emits their `window` count alongside.
 
     Categories with no `{n}` in their `sub` are returned untouched, so this
-    is inert for MLB and the World Cup and needs no per-sport special-casing.
+    is inert for MLB and needs no per-sport special-casing.
 
     A category using `{n}` whose records carry no depth at all is
     structurally unreachable -- build_data skips empty categories, and any
@@ -298,8 +287,13 @@ def main():
     top_n = config.get("top_n", 10)
 
     # Only build the sports listed in config's active_sports (in order); others
-    # (e.g. the preserved worldcup template) stay wired up but dormant. Falls
-    # back to every registered fetcher if the key is absent.
+    # (e.g. NFL, registered but not yet listed) stay wired up but dormant.
+    # Falls back to every registered fetcher if the key is absent.
+    #
+    # A sport must be REGISTERED in SPORT_FETCHERS as well as listed here.
+    # worldcup is archived and no longer registered, so listing it would log
+    # "no fetcher registered" and build nothing -- reviving it means
+    # re-registering it here too, not just editing config. See docs/leagues.md.
     #
     # `active_sports` gates THE LEADERBOARDS ONLY. Its counterpart for scored
     # per-game picks is `active_game_sports`, read by

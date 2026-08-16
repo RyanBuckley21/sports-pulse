@@ -5,9 +5,10 @@ output_dir: output
 top_n: 10
 
 # Sports the site actually builds and shows, in toggle order. Only these are
-# fetched and written to data.json. The worldcup block below is kept intact as
-# a working reference/template for future soccer leagues (e.g. Premier League)
-# but stays off until its key is listed here. See docs/leagues.md.
+# fetched and written to data.json, and only if they are also registered in
+# generate_stats.SPORT_FETCHERS -- listing a sport here that is not registered
+# builds nothing. (The archived worldcup block below is exactly that case.)
+# See docs/leagues.md.
 #
 # THIS KEY GATES THE LEADERBOARDS ONLY -- generate_stats.py's SPORT_FETCHERS
 # pipeline ("Who's Hot": players ranked by raw production). The scored per-game
@@ -277,9 +278,17 @@ nfl:
       tiebreak_fields: [rushing_yards, receiving_yards]
       min_games: 2
 
-# INACTIVE -- preserved as a template for future soccer leagues (see
-# active_sports above and docs/leagues.md). Not fetched or shown while its key
-# is absent from active_sports.
+# ARCHIVED -- the 2026 tournament is over and the next cycle is ~2030. This
+# block is KEPT (nothing here is deleted) but the sport is no longer REGISTERED
+# in generate_stats.py: its SPORT_FETCHERS, SPORT_LABELS, APPROVED_CATEGORIES
+# and CATEGORY_META entries were removed so its category keys (goals, assists,
+# shots, ...) stop occupying those flat, sport-agnostic namespaces and a real
+# soccer league can claim them.
+#
+# Consequence worth knowing: adding `worldcup` back to active_sports is NO
+# LONGER ENOUGH on its own -- with no SPORT_FETCHERS entry, main() logs
+# "no fetcher registered" and builds nothing. See docs/leagues.md's
+# "Reviving it for 2030" for the full checklist.
 worldcup:
   competition: FIFA World Cup 2026
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
