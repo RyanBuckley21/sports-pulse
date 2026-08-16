@@ -17,6 +17,20 @@ import requests
 
 REQUEST_TIMEOUT = 15
 
+# ESPN's scoreboard returns at most 100 events per response unless `limit` is
+# passed, and it TRUNCATES SILENTLY -- no error, no flag, no pagination cursor
+# in the payload to notice. Measured against the real 2026 World Cup: the same
+# date range returns 100 events without this parameter and 104 with it, so the
+# tournament's last four matches simply did not exist as far as this fetcher
+# was concerned.
+#
+# 1000 is not a tuned number -- it is just comfortably past any plausible
+# single-competition season (a 20-team league plays 380). It is passed on
+# every call that ITERATES `events`; get_tournament_start_date reads only
+# `leagues[0].season` metadata and never touches the event list, so it does
+# not need it and does not pass it.
+SCOREBOARD_LIMIT = 1000
+
 # Single-elimination rounds, in order, after the group stage. Any team that
 # doesn't turn up in one of these once the bracket is set has failed to
 # advance; any team that loses one of these matches is out.
@@ -61,8 +75,18 @@ def get_eliminated_teams(session, scoreboard_url, start_compact, end_compact):
     reached the knockout bracket once it was set, or lost a knockout match.
     `end_compact` should reach well past today, since a team's advancement
     into the next round is visible as soon as it's slotted in -- not just
-    from completed matches -- and the query is otherwise cheap (one call)."""
-    data = _get(session, scoreboard_url, params={"dates": f"{start_compact}-{end_compact}"})
+    from completed matches -- and the query is otherwise cheap (one call).
+
+    Passes SCOREBOARD_LIMIT for the reason that constant documents, and this
+    is the call site where truncation did the most damage: dropping matches
+    here does not just lose their stats, it corrupts the eligibility filter
+    that every board is then restricted by. Measured on the real 2026
+    tournament, the truncated response produced 44 eliminated teams against
+    47 -- Argentina, England and France were all knocked out in matches that
+    fell outside the first 100 events, so their players stayed on the boards
+    after they were out."""
+    data = _get(session, scoreboard_url,
+                params={"dates": f"{start_compact}-{end_compact}", "limit": SCOREBOARD_LIMIT})
     group_teams = set()
     knockout_teams = set()
     eliminated = set()
@@ -94,8 +118,14 @@ def get_completed_events(session, scoreboard_url, start, end):
     time or penalties get a different status name (STATUS_FINAL_AET,
     STATUS_FINAL_PENALTIES, ...) than a regular STATUS_FULL_TIME game, so we
     check the type's `completed` flag rather than matching one exact name --
-    otherwise any match decided beyond 90 minutes silently drops out."""
-    data = _get(session, scoreboard_url, params={"dates": f"{start}-{end}"})
+    otherwise any match decided beyond 90 minutes silently drops out.
+
+    Passes SCOREBOARD_LIMIT for the same reason: without it this returned the
+    first 100 events only, so the tournament's last four matches contributed
+    no player stats at all. Note both failure modes bite hardest at the END of
+    a tournament -- the extra-time status check above and this cap both drop
+    exactly the knockout matches that matter most."""
+    data = _get(session, scoreboard_url, params={"dates": f"{start}-{end}", "limit": SCOREBOARD_LIMIT})
     events = []
     for event in data.get("events", []):
         if not event.get("status", {}).get("type", {}).get("completed"):
