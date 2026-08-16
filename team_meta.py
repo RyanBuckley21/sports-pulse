@@ -1,6 +1,6 @@
 """Static team/nation branding lookup: official abbreviation + primary brand
-color for every team we track (30 MLB clubs, 32 NFL clubs, current World Cup
-field).
+color for every team we track (30 MLB clubs, 32 NFL clubs, 23 Premier League
+clubs across the 2025-26/2026-27 transition, archived World Cup field).
 
 Colors are each team's real, publicly documented brand color (jersey/cap/kit
 primary) -- not tuned or invented for legibility. Several official colors
@@ -103,6 +103,77 @@ NFL_TEAMS = {
     "WAS": ("WAS", "#5A1414"),
 }
 
+# ESPN displayName (must match assets/logos/manifest.json keys) -> (abbr, hex).
+#
+# Keyed by ESPN's `displayName` because that is what fetchers/epl.py reads off
+# each match roster ("Tottenham Hotspur", "AFC Bournemouth") -- the same
+# key-by-what-the-source-emits rule as MLB (full name) and NFL (abbreviation).
+#
+# MEMBERSHIP CHANGES EVERY SEASON. Three clubs are relegated and three promoted
+# each summer, unlike the fixed 30/32 of MLB and NFL, so this table needs a
+# refresh each August. A club that has left the division simply stops appearing
+# in the data; a newly promoted one that is missing here degrades to no
+# abbr/colour rather than erroring (see get_team_meta).
+#
+# This holds the UNION of the 2025-26 and 2026-27 fields (23 clubs, not 20) --
+# deliberately, because the two disagree and both are live concerns right now.
+# ESPN's team list already reports the 2026-27 division (Coventry, Hull and
+# Ipswich up; Burnley, West Ham and Wolves down) while every completed match
+# available to read is still 2025-26. A 20-club table for either season alone
+# would be wrong for the other: pick 2025-26 and the promoted clubs render with
+# no branding the moment the new season kicks off; pick 2026-27 and every
+# historical board loses three clubs. Carrying both costs three unused entries
+# and nothing else, since a club not in the division simply never appears.
+#
+# Prune the relegated three at the next refresh, once no window can still
+# reach a match they played in.
+#
+# COLOUR CANNOT IDENTIFY AN EPL CLUB, and this table does not pretend
+# otherwise -- crests are the primary identifier (see scripts/fetch_logos.py's
+# fetch_epl_logos), colour is an accent. The division has six clubs in
+# near-identical red and six in near-identical blue; after the lightness floor
+# lifts them they cluster within a few degrees of hue no matter what is chosen.
+# What IS fixed here is exact collisions: with each club's official primary,
+# Bournemouth and Manchester United both landed on #DD463B. Four clubs
+# therefore use a documented official alternate instead of their primary:
+#
+#   AFC Bournemouth   the darker official red, to break the exact tie with
+#                     Manchester United
+#   Aston Villa       their sky blue rather than claret, which would otherwise
+#                     be a third indistinguishable claret alongside Burnley
+#                     and West Ham
+#   Fulham            their red trim; the white/black primary lifts to a grey
+#                     that identifies nothing
+#   Leeds United      their yellow; same reason, the primary is white
+#
+# Newcastle keeps black (lifting to grey) because it is then the ONLY grey, so
+# it stays distinguishable. All 23 resolve to 23 distinct colours.
+EPL_TEAMS = {
+    "AFC Bournemouth": ("BOU", "#B50E12"),
+    "Arsenal": ("ARS", "#EF0107"),
+    "Aston Villa": ("AVL", "#95BFE5"),
+    "Brentford": ("BRE", "#D20000"),
+    "Brighton & Hove Albion": ("BHA", "#0057B8"),
+    "Burnley": ("BUR", "#6C1D45"),               # relegated after 2025-26
+    "Chelsea": ("CHE", "#034694"),
+    "Coventry City": ("COV", "#78D0F3"),         # promoted for 2026-27
+    "Crystal Palace": ("CRY", "#1B458F"),
+    "Everton": ("EVE", "#003399"),
+    "Fulham": ("FUL", "#CC0000"),
+    "Hull City": ("HUL", "#F5A12D"),             # promoted for 2026-27
+    "Ipswich Town": ("IPS", "#3A64A3"),          # promoted for 2026-27
+    "Leeds United": ("LEE", "#FFCD00"),
+    "Liverpool": ("LIV", "#C8102E"),
+    "Manchester City": ("MCI", "#6CABDD"),
+    "Manchester United": ("MUN", "#DA291C"),
+    "Newcastle United": ("NEW", "#241F20"),
+    "Nottingham Forest": ("NFO", "#DD0000"),
+    "Sunderland": ("SUN", "#EB172B"),
+    "Tottenham Hotspur": ("TOT", "#132257"),
+    "West Ham United": ("WHU", "#7A263A"),        # relegated after 2025-26
+    "Wolverhampton Wanderers": ("WOL", "#FDB913"),  # relegated after 2025-26
+}
+
 # name (must match assets/logos/manifest.json keys) -> (FIFA code, kit primary hex)
 WORLDCUP_TEAMS = {
     "Algeria": ("ALG", "#006233"),
@@ -192,7 +263,8 @@ def _ensure_legible(hex_color):
 # returns None because it genuinely has no table, not by falling through to
 # an unrelated one. No live behaviour changes: mlb and worldcup were the
 # only keys ever passed, and both resolve to the same tables as before.
-_TEAM_TABLES = {"mlb": MLB_TEAMS, "nfl": NFL_TEAMS, "worldcup": WORLDCUP_TEAMS}
+_TEAM_TABLES = {"mlb": MLB_TEAMS, "nfl": NFL_TEAMS, "epl": EPL_TEAMS,
+                "worldcup": WORLDCUP_TEAMS}
 
 
 def get_team_meta(sport_key, team_name):
