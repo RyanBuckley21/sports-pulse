@@ -77,6 +77,12 @@ CFBD_KEY_ENV = "CFBD_API_KEY"
 # 'NA' for a handful of non-NCAA opponents). Only this one counts as FBS.
 FBS_DIVISION = "fbs"
 
+# A week whose last scheduled kickoff is older than this counts as final even
+# if some game never reported complete -- see final_regular_weeks. Two weeks is
+# far longer than any in-week rescheduling window and far shorter than the
+# offseason, so it can only ever promote genuinely-dead weeks.
+STALE_WEEK_DAYS = 14
+
 
 def _schedule_url(season):
     return CFBFASTR_SCHEDULE_URL.format(season=season)
@@ -292,6 +298,208 @@ def fbs_matchup_index(schedule_rows):
                                "home": row.get("home_team"),
                                "away": row.get("away_team")}
     return index
+
+
+# --------------------------------------------------------------------------- #
+# Persisted team-form cache.
+#
+# WHY THIS IS WORTH IT: every /games/teams call this fetcher makes is for a
+# week that is ALREADY FINAL. Point-in-time discipline means a week-W slate
+# only ever fetches weeks 1..W-1, so the slate's own in-progress week is
+# never requested at all. Measured on the real 2025 season: 7 of 7 fetched
+# weeks final for a week-8 date, 13 of 13 for a week-14 date -- 100%
+# cacheable, and re-fetched in full on every single run.
+#
+# WHERE IT LIVES: the cache dict generate_insights already hands every game
+# builder and already persists. It loads data/boxscores.json, passes
+# box_cache_all.get("cfb", {}) in as `boxscore_cache`, stores whatever the
+# builder returns back under that key, and saves. CFB returned {} until now,
+# so the channel was wired and unused. Reusing it means no new file, no new
+# _load_store/_save_store, no circular import (fetchers/ cannot import
+# generate_insights, which imports fetchers), and -- decisively -- no
+# workflow change: data/boxscores.json is already in the daily workflow's
+# `git add` list, so the cache survives the runner being torn down. A new
+# file would silently never persist until that list was updated too.
+#
+# WHAT IT STORES: the reduced projection build_team_form actually reads, not
+# the raw API response. That is the same choice data/boxscores.json already
+# makes for MLB, which holds {gamePk: {teamId: {er, ip_outs}}} rather than
+# raw boxscores. The size difference is not marginal: one week of raw
+# /games/teams is ~398 KB, so a season is ~6.2 MB of weekly-churning
+# committed JSON, against ~255 KB for the projection (4.0%). The largest
+# data file in this repo today is 563 KB.
+# --------------------------------------------------------------------------- #
+
+def final_regular_weeks(schedule_rows, today=None):
+    """Regular-season weeks in which every FBS-vs-FBS game is complete.
+
+    Finality is judged on FBS-vs-FBS games only, because those are the only
+    games build_team_form ever consumes -- fbs_matchup_index drops the rest
+    before they can reach an average. A week whose FCS-vs-FCS filler is
+    unreported is still safe to cache for our purposes. Measured on 2025 the
+    two definitions agree anyway (weeks 1-13 final under both), so this is
+    the looser rule only in principle.
+
+    A week missing from this set is never written to the cache, so an
+    in-progress or postponed week can never be frozen half-finished."""
+    today = today or datetime.date.today()
+    if isinstance(today, str):
+        today = datetime.date.fromisoformat(today)
+    cutoff_date = (today - datetime.timedelta(days=STALE_WEEK_DAYS)).isoformat()
+
+    by_week = {}
+    for row in schedule_rows:
+        if row.get("season_type") != "regular":
+            continue
+        if not _is_fbs_matchup(row):
+            continue
+        try:
+            week = int(row["week"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        by_week.setdefault(week, []).append(row)
+    final = set()
+    for week, rows in by_week.items():
+        if not rows:
+            continue
+        if all(str(r.get("completed", "")).upper() == "TRUE" for r in rows):
+            final.add(week)
+            continue
+        # STALENESS FALLBACK. A completion flag alone leaves a permanent hole:
+        # a CANCELLED game never flips to TRUE, so its week would be re-fetched
+        # on every run forever. This is real, not hypothetical -- Liberty @ App
+        # State on 2024-09-28 was cancelled (Hurricane Helene) and still reads
+        # completed=FALSE with no score, which alone kept all of 2024 week 5
+        # out of the cache.
+        #
+        # A game not played within STALE_WEEK_DAYS of its scheduled date is not
+        # going to be. A genuine POSTPONEMENT is safe here because a rescheduled
+        # game carries its new date in the schedule, so the week's latest
+        # kickoff moves forward with it and the week stays non-final until the
+        # new date has passed too.
+        latest = max((et_date(r.get("start_date")) or "") for r in rows)
+        if latest and latest < cutoff_date:
+            final.add(week)
+    return final
+
+
+def _cache_bucket(cache, kind, season):
+    return ((cache or {}).get(kind) or {}).get(str(season)) or {}
+
+
+def _ppa_rows_from_cache(entry):
+    """Rebuild the row shape build_team_form expects from the projection.
+    Reconstructing rather than changing build_team_form's contract keeps the
+    form math provably untouched by caching."""
+    return [{"gameId": gid, "team": team, "offense": {"overall": off}, "defense": {"overall": dfn}}
+            for gid, teams in entry.items() for team, (off, dfn) in teams.items()]
+
+
+def _ppa_rows_to_cache(rows, week_of):
+    """{week: {game_id: {team: [off, def]}}} for the given rows."""
+    out = {}
+    for r in rows:
+        gid = str(r.get("gameId"))
+        week = week_of.get(gid)
+        if week is None:
+            continue
+        team = r.get("team")
+        if not team:
+            continue
+        out.setdefault(week, {}).setdefault(gid, {})[team] = [
+            _num((r.get("offense") or {}).get("overall")),
+            _num((r.get("defense") or {}).get("overall")),
+        ]
+    return out
+
+
+def _stats_rows_from_cache(entry):
+    return [{"id": gid,
+             "teams": [{"team": t, "stats": [{"category": "turnovers", "stat": v}]}
+                       for t, v in teams.items()]}
+            for gid, teams in entry.items()]
+
+
+def _stats_rows_to_cache(games):
+    out = {}
+    for g in games or []:
+        gid = str(g.get("id"))
+        teams = {}
+        for t in (g.get("teams") or []):
+            name = t.get("team")
+            if name:
+                teams[name] = _team_turnovers(t)
+        if teams:
+            out[gid] = teams
+    return out
+
+
+def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
+    """(ppa_rows, team_stat_rows, updated_cache) for `weeks`, serving whatever
+    the cache already holds and fetching only what it does not.
+
+    Shared by build_game_entities and cfb_backtest.py so the two cannot
+    diverge on cache semantics, the same reason form_cutoff is shared.
+
+    Two different fetch strategies, because the endpoints differ:
+
+      * /games/teams has NO bulk mode (a bare year= is a 400), so each
+        missing week costs one call.
+      * /ppa/games DOES accept a bare year=, so ANY number of missing weeks
+        costs exactly ONE call -- the response is then split per week and
+        cached. Per-week PPA fetching was verified to work and to match the
+        bulk subset exactly, but it would turn a cold 13-week start into 13
+        calls instead of 1, which is strictly worse for a first run and for
+        the backtest's three-season sweep.
+
+    Only FINAL weeks are written to the cache. A week still in progress is
+    fetched and used but never stored, so it cannot be frozen incomplete."""
+    cache = dict(cache or {})
+    weeks = sorted(set(weeks))
+    if not weeks:
+        return [], [], cache
+    final = final_regular_weeks(schedule_rows)
+    week_of = {gid: entry["week"] for gid, entry in fbs_matchup_index(schedule_rows).items()}
+
+    ppa_cached = dict(_cache_bucket(cache, "ppa", season))
+    stats_cached = dict(_cache_bucket(cache, "games_teams", season))
+
+    ppa_rows, stat_rows = [], []
+    missing_ppa, missing_stats = [], []
+    for w in weeks:
+        key = str(w)
+        if key in ppa_cached:
+            ppa_rows.extend(_ppa_rows_from_cache(ppa_cached[key]))
+        else:
+            missing_ppa.append(w)
+        if key in stats_cached:
+            stat_rows.extend(_stats_rows_from_cache(stats_cached[key]))
+        else:
+            missing_stats.append(w)
+
+    if missing_ppa:
+        fresh = get_ppa_games(session, season)          # ONE call, all weeks
+        split = _ppa_rows_to_cache(fresh, week_of)
+        for w in missing_ppa:
+            entry = split.get(w) or {}
+            ppa_rows.extend(_ppa_rows_from_cache(entry))
+            if w in final and entry:
+                ppa_cached[str(w)] = entry
+
+    for w in missing_stats:
+        fresh = _cfbd_get(session, "/games/teams",
+                          {"year": season, "week": w, "seasonType": "regular"}) or []
+        entry = _stats_rows_to_cache(fresh)
+        stat_rows.extend(_stats_rows_from_cache(entry))
+        if w in final and entry:
+            stats_cached[str(w)] = entry
+
+    # Single-season retention: a stale season's weeks can never be needed
+    # again by a live build, and keeping them would grow the committed store
+    # without bound.
+    cache["ppa"] = {str(season): ppa_cached}
+    cache["games_teams"] = {str(season): stats_cached}
+    return ppa_rows, stat_rows, cache
 
 
 # --------------------------------------------------------------------------- #
@@ -601,10 +809,12 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     fan-out this still avoids would be ~134 calls per season for a full FBS
     field.
 
-    `boxscore_cache` is accepted for interface parity but unused, and the
-    second return value is always {}: CFB's signals come pre-aggregated from
-    CFBD, so there is no per-game boxscore to reconstruct and cache across
-    runs. `team_entities` is likewise left untouched -- there is no
+    `boxscore_cache` carries the persisted team-form cache across runs (see
+    the cache section above) and the updated cache is returned as the second
+    value, which generate_insights writes back into data/boxscores.json under
+    the "cfb" key. It is NOT a boxscore cache in MLB's sense -- CFB's signals
+    come pre-aggregated from CFBD -- it reuses the same channel because the
+    load/save/commit plumbing already exists and is already persisted. `team_entities` is likewise left untouched -- there is no
     team_pulse.cfb config to build a Team profile from.
 
     Returns (entities, {}, training_rows), keyed by CFBD's own game id as a
@@ -641,10 +851,10 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
         # than paying for data that cannot be used -- which also means an
         # opening-weekend slate builds with no API key at all, instead of
         # failing on a call whose result would have been discarded.
-        ppa_rows, team_stats = [], []
+        ppa_rows, team_stats, form_cache = [], [], dict(boxscore_cache or {})
     else:
-        ppa_rows = get_ppa_games(session, season)
-        team_stats = get_team_game_stats(session, season, range(1, max_cutoff))
+        ppa_rows, team_stats, form_cache = fetch_team_form_data(
+            session, season, range(1, max_cutoff), schedule, boxscore_cache)
 
     # One form table per distinct cutoff, not per game. A slate normally has
     # a single cutoff, so this is usually one build either way -- but a bowl
@@ -666,4 +876,4 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
                           type(e).__name__, str(e)[:160]))
 
-    return entities, {}, []
+    return entities, form_cache, []

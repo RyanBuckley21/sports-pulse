@@ -133,10 +133,17 @@ def collect_season(session, season, cache_dir=None):
     reg_weeks = sorted({e["week"] for e in fbs_index.values()})
     max_reg_week = cfb.max_regular_week(fbs_index)
 
-    ppa = _cache_get(cache_dir, "ppa_{}".format(season),
-                     lambda: cfb.get_ppa_games(session, season))
-    team_stats = _cache_get(cache_dir, "gt_{}".format(season),
-                            lambda: cfb.get_team_game_stats(session, season, reg_weeks))
+    # Routed through the same persisted-cache helper production uses, so the
+    # two cannot diverge on cache semantics (the form_cutoff lesson). The
+    # on-disk memo below still wraps it: --cache-dir keeps whole seasons
+    # between runs, while fetch_team_form_data avoids re-fetching final weeks
+    # within one.
+    week_cache = _cache_get(cache_dir, "form_{}".format(season), lambda: {})
+    ppa, team_stats, week_cache = cfb.fetch_team_form_data(
+        session, season, reg_weeks, schedule, week_cache)
+    if cache_dir:
+        with open(os.path.join(cache_dir, "form_{}.json".format(season)), "w") as f:
+            json.dump(week_cache, f)
 
     print("cfb_backtest: {} -- {} schedule rows, {} FBS-vs-FBS regular games, "
           "weeks {}-{}, {} ppa rows, {} team-stat games"
