@@ -381,6 +381,25 @@ def _display_signals(away, home, away_form, home_form):
     return signals
 
 
+def _team_ref(abbr):
+    """Branding for one club, following fetchers/cfb._team_ref and, behind it,
+    fetchers/mlb._build_one_game's `teamref` -- the picks path's way of
+    consuming team_meta, as distinct from generate_stats' leaderboard path.
+
+    NFL_TEAMS is keyed by the SAME nflverse abbreviation every NFL row in this
+    pipeline already carries, and its abbr value is that key, so the only
+    field this actually changes is `color`. `name` deliberately stays the
+    abbreviation: team_meta holds no full club name for the NFL (unlike MLB's
+    table, which is keyed by name), and inventing one here would be a
+    presentation change beyond closing the colour gap.
+
+    Degrades to the previous behaviour for an unknown abbreviation -- abbr
+    falls back to the input, colour stays None."""
+    import team_meta  # local import, matching mlb.py's and cfb.py's convention
+    meta = team_meta.get_team_meta("nfl", abbr) or {}
+    return {"abbr": meta.get("abbr") or abbr, "name": abbr, "color": meta.get("color")}
+
+
 def _build_one_game(config, g, schedule, team_stats, injuries):
     import nfl_signals
 
@@ -435,8 +454,8 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
         # that is a known, flagged limitation rather than something fixed
         # here.
         "status": "Final" if g.get("home_score") not in (None, "") else "Preview",
-        "away": {"abbr": away, "name": away, "color": None},
-        "home": {"abbr": home, "name": home, "color": None},
+        "away": _team_ref(away),
+        "home": _team_ref(home),
         "start": _format_kickoff(g.get("gameday"), g.get("gametime")),
         "venue": g.get("stadium"),
         "probables": probables,
