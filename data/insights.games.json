@@ -898,6 +898,9 @@
         "away": {
           "era": "3.99",
           "name": "Quinn Mathews"
+        },
+        "home": {
+          "name": "Kent Emanuel"
         }
       },
       "pulse": {
@@ -1043,34 +1046,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 1,
+          "score": 11,
           "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 13,
+          "score": 0,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 2,
+          "score": 10,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 12,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 2,
+          "score": 11,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "ARI",
             "flags": [],
-            "score": 12,
+            "score": 0,
             "side": "No clear lean"
           },
           "home": {
@@ -1091,6 +1094,10 @@
         "away": {
           "era": "3.95",
           "name": "Mitch Bratt"
+        },
+        "home": {
+          "era": "3.74",
+          "name": "Alec Gamboa"
         }
       },
       "pulse": {
@@ -1107,6 +1114,11 @@
           "label": "ARI bullpen ERA (7d)",
           "tone": "neg",
           "value": "3.93"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.95 vs 3.74"
         }
       ],
       "standout": null,
