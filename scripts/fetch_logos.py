@@ -208,6 +208,15 @@ def fetch_cfb_logos(session, manifest, season):
     with a colour chip that identifies nothing."""
     key = os.environ.get("CFBD_API_KEY")
     if not key:
+        # A skip rather than a hard failure, so a local run with no CFBD key
+        # still caches the other four sports -- but LOUD, because a quiet one
+        # already cost a full run: the workflow completed successfully with
+        # zero CFB crests and nothing in the summary said so. The ::warning::
+        # form surfaces in the Actions run summary; it is inert locally.
+        print("::warning title=CFB crests skipped::CFBD_API_KEY is not set, so no FBS "
+              "crests were fetched. FBS colour does not identify a program on its own, "
+              "so CFB picks will render with an unidentifiable colour chip until this "
+              "runs with the key present.")
         print("  SKIPPED: CFBD_API_KEY not set -- no CFB crests fetched")
         return
 
