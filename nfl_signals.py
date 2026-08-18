@@ -3,14 +3,15 @@ bet types. v1 scores ONLY moneyline (see the design review); other markets
 (spread, totals) are deliberately not built here, same as CFB is deliberately
 not this pass.
 
-Mirrors betting_signals.py's math (tanh-squashed weighted lean -> threshold ->
-side), DUPLICATED rather than shared: betting_signals.py's generic scoring
-helpers are interleaved with MLB-specific bet-type wiring (_SIDE_MARKETS,
-run_line, nrfi_yrfi, the probable-pitcher override) throughout a single flat
-module, so sharing them would mean editing that already-tuned,
-calibration-history-laden file, which the precursor PR's design review
-deliberately left untouched. This is NFL's own copy of the same ~80 lines of
-math, with NFL's own signal names and its own single-market bet_types set.
+The generic scoring math (tanh-squashed weighted lean -> threshold -> side)
+now comes from signal_core.py, shared with cfb_signals.py. It used to be a
+local copy; the extraction was verified equivalent over exhaustive input
+grids before the switch (see the migration PR).
+
+What stays HERE is the sport wiring: SIGNAL_SPECS, _base_signals,
+list_markets, score_game, build_inputs and the QB-availability override.
+betting_signals.py (MLB) still carries its own copy of the core and is
+migrated separately, deliberately last, because it is the live sport.
 betting_signals.py and implied_total.py are untouched by this module.
 
 Config-driven and sport-keyed like betting_signals: config["betting_signals"]["nfl"]
@@ -34,70 +35,12 @@ this is "whoever started last week", checked against the current injury
 report -- not a fabricated signal, but an approximation worth knowing about).
 """
 
-import math
+import signal_core
+from signal_core import (coerce as _coerce, finalize as _finalize,
+                         paired as _paired, raw_lean as _raw_lean,
+                         round_half_up as _round)
 
 _SIDE_MARKETS = ("moneyline",)
-
-
-def _coerce(v):
-    """Parse a numeric input to float, or None if absent/unparseable."""
-    if v is None:
-        return None
-    try:
-        return float(v)
-    except (TypeError, ValueError):
-        return None
-
-
-def _round(x):
-    """Round half UP (not banker's rounding), same convention
-    betting_signals._round uses."""
-    return int(math.floor(x + 0.5))
-
-
-def _paired(val_home, val_away, scale, favors):
-    """Directional value toward HOME (+1) from a home-vs-away gap, tanh-
-    squashed by `scale`. favors='higher' -> a higher home value leans home;
-    favors='lower' -> a lower home value leans home. None if either side is
-    missing."""
-    if val_home is None or val_away is None:
-        return None
-    d = math.tanh((val_home - val_away) / scale)
-    return d if favors == "higher" else -d
-
-
-def _raw_lean(sig, weights):
-    """Weighted net lean L in [-1, 1] over the available (non-None) signals,
-    renormalized by their weights. A signal present with value 0 still
-    counts toward the weight sum -- a real neutral input, not a missing one.
-    Returns (L, n_available, n_agreeing) or (None, 0, 0)."""
-    pairs = [(sig.get(k), w) for k, w in weights.items() if sig.get(k) is not None]
-    if not pairs:
-        return None, 0, 0
-    wsum = sum(w for _, w in pairs)
-    if wsum <= 0:
-        return None, 0, 0
-    L = sum(d * w for d, w in pairs) / wsum
-    agree = sum(1 for d, _ in pairs if abs(d) > 1e-9 and (d > 0) == (L > 0))
-    return L, len(pairs), agree
-
-
-def _finalize(L, n_avail, n_agree, threshold, labels, flags=(), force_aligned=False):
-    """Turn a net lean into {side, score, flags}. 'No clear lean' when the
-    score is under threshold, or (for multi-signal bets) fewer than 2
-    signals agree with the net direction. `force_aligned` bypasses the
-    alignment guard when an exogenous availability penalty has been
-    applied."""
-    flags = sorted(set(flags))
-    if L is None:
-        return {"side": "No clear lean", "score": 0, "flags": flags}
-    score = _round(100 * min(1.0, abs(L)))
-    aligned = True if (force_aligned or n_avail < 2) else (n_agree >= 2)
-    if score >= threshold and aligned:
-        side = labels[0] if L >= 0 else labels[1]
-    else:
-        side = "No clear lean"
-    return {"side": side, "score": score, "flags": flags}
 
 
 # Each base signal's definition -- which raw build_inputs() keys feed it,
@@ -214,13 +157,14 @@ def list_markets(scored):
 
 
 def top_market(scored, threshold):
-    """Deterministically pick a game's single most-notable market: the
-    highest Signal Score among markets that carry a real lean AND clear
-    `threshold`. Returns {bet_type, side, score, flags} or None."""
-    for m in list_markets(scored):
-        if m["score"] >= threshold:
-            return dict(m)
-    return None
+    """Delegates to signal_core.top_market, passing THIS module's ranking in.
+
+    The shared helper takes an already-ranked list rather than the raw
+    `scored` dict on purpose: list_markets differs per sport (MLB expands
+    team_total into per-side candidates; NFL does not), and a shared function
+    that called list_markets itself would bind to the wrong sport's rules.
+    See signal_core.top_market."""
+    return signal_core.top_market(list_markets(scored), threshold)
 
 
 def build_inputs(away_abbr, home_abbr, away_off_epa, home_off_epa,
