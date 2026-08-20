@@ -61,6 +61,16 @@ SCOREBOARD_LIMIT = 1000
 # is a per-match role here, not a player attribute -- see stable_positions.
 _BENCH_POSITION = "Substitute"
 
+# How far back find_last_completed_date may hunt for the most recent finished
+# match when the live window is empty. A full year, because the thing being
+# searched for is on the far side of an offseason and its distance varies with
+# where in that offseason the run happens.
+#
+# Costs ONE scoreboard call and no summary calls, so the span is cheap to
+# overshoot -- and `limit=1000` (see SCOREBOARD_LIMIT) covers a 380-match
+# season plus the surrounding fixtures without truncating.
+OFFSEASON_SEARCH_DAYS = 365
+
 
 def classify_position(position_name):
     """Granular ESPN position name -> one of the four broad buckets the UI
@@ -109,6 +119,27 @@ def get_completed_events(session, scoreboard_url, start_compact, end_compact):
         events.append({"id": event["id"], "date": event["date"][:10]})
     events.sort(key=lambda e: e["date"])
     return events
+
+
+def find_last_completed_date(session, scoreboard_url, today,
+                             search_days=OFFSEASON_SEARCH_DAYS):
+    """Date of the most recent completed match on or before `today`, or None if
+    the league has played nothing in `search_days`.
+
+    Exists to anchor the offseason fallback in fetch(): between seasons there is
+    no "last 75 days of football" to window over, so the window has to be hung
+    off the last day football actually happened instead of off today.
+
+    Deliberately one scoreboard call and ZERO summary calls -- it answers "when
+    did the league last play" and nothing else. The expensive per-match walk
+    still happens once, afterwards, over the narrow window this anchors."""
+    start = today - datetime.timedelta(days=search_days)
+    events = get_completed_events(session, scoreboard_url,
+                                  start.strftime("%Y%m%d"), today.strftime("%Y%m%d"))
+    if not events:
+        return None
+    # get_completed_events sorts oldest-first, so the newest is last.
+    return datetime.date.fromisoformat(events[-1]["date"])
 
 
 def get_match_summary(session, summary_url, event_id):
@@ -334,6 +365,33 @@ def aggregate_category(by_player, cat_cfg, default_window):
     return records
 
 
+def _build_records(by_player, epl_cfg, default_window):
+    """Rank-ready records for every configured stat category, or [] when the
+    appearances given fill no board at all.
+
+    Split out of fetch() because "did this window produce a board?" is the
+    condition the offseason fallback turns on, and that is NOT the same
+    question as "did this window contain any matches". A window can hold real
+    football and still yield nothing: on 2026-08-07 the 75-day window reached
+    back to exactly 2026-05-24, catching one matchday, so every player had a
+    single appearance and `min_games: 3` filtered all of them out. Keying the
+    fallback on the matches found would leave that day's board empty; keying it
+    on the records built is what makes the guard mean what it says.
+
+    ONE DELIBERATE SIDE EFFECT: the unknown-mode ValueError below now fires even
+    when the window held no matches. fetch() used to return [] before reaching
+    this loop on such a day, so a typo'd `mode` in config was silently masked by
+    the calendar and surfaced only once football resumed. Validating regardless
+    of what the window happened to contain is the more useful behaviour -- a
+    misconfiguration should not be discoverable only in season."""
+    records = []
+    for cat_cfg in epl_cfg["stat_categories"]:
+        if cat_cfg["mode"] != "rolling_sum":
+            raise ValueError("Unknown EPL stat category mode: {}".format(cat_cfg["mode"]))
+        records.extend(aggregate_category(by_player, cat_cfg, default_window))
+    return records
+
+
 def fetch(config, today=None):
     """Raw (unranked) Who's Hot records for every configured EPL stat category
     -- generate_stats.SPORT_FETCHERS' entry point for this sport.
@@ -344,6 +402,47 @@ def fetch(config, today=None):
     purpose: a player who has been rotated or injured needs a wider calendar
     span to accumulate five appearances, and matches outside anyone's window
     are simply never selected by aggregate_category.
+
+    OFFSEASON FALLBACK. A rolling window anchored to TODAY holds nothing at all
+    between seasons, and the gap is much wider than the window: measured live,
+    2025-26 ended 2026-05-24 and 2026-27 begins 2026-08-21, an 89-day gap
+    against a 75-day lookback. So on 2026-08-20 the primary window began
+    2026-06-06 -- thirteen days AFTER the last match ever played -- and the
+    boards rendered empty rather than stale.
+
+    When the primary window FILLS NO BOARD, the window is therefore re-anchored
+    to the last day the league actually played and the same `lookback_days` span
+    is taken backwards from there. That yields the closing matchdays of the
+    previous season, which is the honest answer to "who is hot" when nobody has
+    kicked a ball since May -- last season's form is the only form there is.
+
+    "Fills no board" and "found no matches" are not the same test, and the
+    difference is load-bearing for three days a year. On 2026-08-07 the 75-day
+    window reached back to exactly 2026-05-24 and caught a single matchday: real
+    football, so a matches-found test would pass and the fallback would stay
+    down, but every player held one appearance against `min_games: 3` and the
+    board came out empty anyway. The condition is therefore the records built,
+    not the matches seen -- see _build_records.
+
+    Re-anchoring rather than simply WIDENING the window is what keeps this
+    cheap and self-correcting. Widening enough to clear an offseason (~121 days
+    on 2026-08-20) would fetch every match in that span -- ~130 summary calls
+    for data aggregate_category then throws away, since it only ever keeps each
+    player's last `window_games` appearances -- and the number needed would
+    depend on the calendar date of the run. Anchoring keeps the fetch at its
+    usual ~75 matches whatever the date, and needs no tuning per offseason.
+
+    The fallback is self-limiting: it fires only when the live window fills no
+    board, so it costs nothing in-season, and it stops firing on its own once
+    the new season has enough matches to fill one.
+
+    IT DOES NOT COVER THE CROSSOVER. Between the new season's first match and
+    the point where players reach `min_games`, the anchor lands INSIDE the live
+    window -- there is no earlier football to fall back to that this window does
+    not already hold -- so the board stays empty rather than reverting to last
+    season. Carrying the previous season across that crossover means boards
+    mixing two seasons, which is a UI/labelling decision and not one to make
+    silently inside a fetcher. See the equal-windows branch below.
     """
     epl_cfg = config["epl"]
     scoreboard_url = epl_cfg["scoreboard_url"]
@@ -360,14 +459,43 @@ def fetch(config, today=None):
     by_player = collect_appearances(
         session, scoreboard_url, summary_url,
         start.strftime("%Y%m%d"), today.strftime("%Y%m%d"))
-    if not by_player:
-        print("whos-hot(epl): no completed matches in the last {} days -- no boards"
-              .format(lookback_days))
-        return []
+    records = _build_records(by_player, epl_cfg, default_window)
 
-    records = []
-    for cat_cfg in epl_cfg["stat_categories"]:
-        if cat_cfg["mode"] != "rolling_sum":
-            raise ValueError("Unknown EPL stat category mode: {}".format(cat_cfg["mode"]))
-        records.extend(aggregate_category(by_player, cat_cfg, default_window))
+    if not records:
+        # Offseason, or a window catching too little football to fill a board.
+        # See the OFFSEASON FALLBACK note above.
+        anchor = find_last_completed_date(session, scoreboard_url, today)
+        anchored_start = (anchor - datetime.timedelta(days=lookback_days)) if anchor else None
+
+        if anchor is None:
+            print("whos-hot(epl): no completed matches in the last {} days, and none in "
+                  "the {} days searched behind that -- no boards"
+                  .format(lookback_days, OFFSEASON_SEARCH_DAYS))
+            return []
+        if anchored_start == start:
+            # The anchored window IS the window just tried, so re-fetching it
+            # would spend the same summary calls to reach the same empty board.
+            # This is the new season's opening matchdays: football has resumed
+            # (so there is nothing to fall back FROM -- the anchor is inside the
+            # live window) but no player has yet reached `min_games`. Carrying
+            # the previous season across that crossover is a different feature
+            # with a UI question attached -- what a board mixing two seasons is
+            # called -- and is deliberately not decided here.
+            print("whos-hot(epl): matches found in the last {} days but no player has "
+                  "enough appearances to fill a board yet -- no boards"
+                  .format(lookback_days))
+            return []
+
+        print("whos-hot(epl): the last {} days fill no board; the league last played {} "
+              "({} days ago), so windowing the {} days ending then"
+              .format(lookback_days, anchor, (today - anchor).days, lookback_days))
+        by_player = collect_appearances(
+            session, scoreboard_url, summary_url,
+            anchored_start.strftime("%Y%m%d"), anchor.strftime("%Y%m%d"))
+        records = _build_records(by_player, epl_cfg, default_window)
+        if not records:
+            print("whos-hot(epl): the {} days ending {} filled no board either -- no boards"
+                  .format(lookback_days, anchor))
+            return []
+
     return records

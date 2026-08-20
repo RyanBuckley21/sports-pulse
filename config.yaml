@@ -303,6 +303,16 @@ epl:
   # rotated or recently-injured player needs a wider span to accumulate five,
   # and matches outside every player's window are simply never selected.
   # Each match in range costs one summary call (~8s per 50 matches measured).
+  #
+  # This span is NOT required to cover the offseason, and deliberately does not
+  # try to. The gap between seasons is wider than any sane in-season window
+  # (89 days from 2026-05-24 to 2026-08-21, measured live), so between seasons
+  # fetchers/epl.py re-anchors this same span to the last day the league
+  # actually played instead of to today, and the boards carry the closing
+  # matchdays of the previous season until the new one has matches of its own.
+  # See fetch()'s OFFSEASON FALLBACK note. Raising this number to reach across
+  # a summer is therefore unnecessary, and would cost a summary call per extra
+  # match all season long.
   lookback_days: 75
 
   stat_categories:
