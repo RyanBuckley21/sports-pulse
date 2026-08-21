@@ -232,12 +232,41 @@ nfl:
     # those resolve in arbitrary dict order; the underlying yardage settles
     # them on real production, reusing rank_records' existing `tiebreak` key.
     #
-    # min_games: 2 applies here as well as to the rate boards. It was raised
-    # in review as an addition beyond the originally-locked decision (which
-    # named a floor only for the per-game rate boards) and was RATIFIED: a
-    # counting board with no floor lets a single-game player top it -- one
-    # 3-TD game beats everyone else's four-game total of 2 -- which is the
-    # exact failure the rate boards' floor exists to prevent.
+    # min_games: DELIBERATELY ABSENT HERE, AND THIS REVERSES AN EARLIER
+    # RATIFIED DECISION. Recording both sides, because the earlier one was
+    # argued and accepted rather than overlooked.
+    #
+    # The earlier position: min_games: 2 was raised in review as an addition
+    # beyond the originally-locked decision (which named a floor only for the
+    # per-game rate boards) and was ratified on the grounds that "a counting
+    # board with no floor lets a single-game player top it -- one 3-TD game
+    # beats everyone else's four-game total of 2 -- which is the exact failure
+    # the rate boards' floor exists to prevent."
+    #
+    # Why it is reversed: that reasoning imports a rate board's failure mode
+    # into a board that does not have it. A floor exists to stop a small
+    # DENOMINATOR manufacturing a rank, and a counting board has no
+    # denominator. One 3-TD game outranking a four-game total of 2 is not a
+    # distortion -- the player did score more touchdowns in the window the
+    # board covers -- whereas 3 TDs in one game shown as 3.0 TD/G genuinely is.
+    # The predicted failure also does not occur. Measured on the real 2025
+    # nflverse file, replaying every week 5-18 across all four TD boards: of
+    # 560 top-10 slots, a player with fewer than two games took ZERO of them.
+    # Reaching a TD top-10 mid-season takes 3-4 scores in the window, and a
+    # player back from injury for one game essentially never posts that -- the
+    # scenario the floor was ratified to prevent is one the data does not
+    # produce. What the floor did produce was measurable loss: every TD board
+    # sat blank for the whole of week 1 (0 rows vs 147 with the floor removed),
+    # and it kept dropping legitimately-returning players thereafter.
+    #
+    # The board still states its own depth rather than hiding it:
+    # CATEGORY_META's "Last {n} G" resolves per build from games_window, so a
+    # week-1 board reads "Last 1 G" and never claims a four-game trend. Ties
+    # among low counts are settled by tiebreak_fields below, which sum real
+    # yardage over the same window -- so a one-game player at 1 TD ranks below
+    # a four-game player at 1 TD with more yardage behind it.
+    #
+    # Same rule, same argument, as the EPL block's stat_categories header.
     #
     # These four boards are deliberately NOT position-filtered: the locked
     # decision named only the three yardage/reception boards. The visible
@@ -249,7 +278,6 @@ nfl:
       mode: rolling_sum
       fields: [passing_tds]
       tiebreak_fields: [passing_yards]
-      min_games: 2
 
     - key: rushing_tds
       label: Rushing TDs (last 4 G)
@@ -258,7 +286,6 @@ nfl:
       mode: rolling_sum
       fields: [rushing_tds]
       tiebreak_fields: [rushing_yards]
-      min_games: 2
 
     - key: receiving_tds
       label: Receiving TDs (last 4 G)
@@ -267,7 +294,6 @@ nfl:
       mode: rolling_sum
       fields: [receiving_tds]
       tiebreak_fields: [receiving_yards]
-      min_games: 2
 
     - key: total_tds
       label: Total TDs (rushing + receiving, last 4 G)
@@ -276,7 +302,6 @@ nfl:
       mode: rolling_sum
       fields: [rushing_tds, receiving_tds]
       tiebreak_fields: [rushing_yards, receiving_yards]
-      min_games: 2
 
 # Premier League "Who's Hot" leaderboard categories (fetchers/epl.py's
 # fetch(), via generate_stats.SPORT_FETCHERS). Structurally parallel to the
