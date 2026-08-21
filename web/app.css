@@ -138,24 +138,78 @@ body {
 .status-text { font: 500 11.5px/1 var(--font-body); color: var(--text-tertiary); }
 .status-text.stale-1 { color: var(--warning); }
 .status-text.stale-old { color: var(--critical); }
-/* ---------- sport toggle ---------- */
-.sport-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
-.sport-btn {
-  text-align: center; padding: 11px; border-radius: var(--r-lg); font: 500 14px var(--font-body);
-  cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-tertiary);
-}
-/* Active is a glass pill with an accent line ACROSS ITS TOP, not a
-   bottom-border underline. Two reasons it moved to the top edge: it matches
-   the tab bar's old indicator position, which the floating pill gave up, so
-   the gesture survives somewhere; and a bottom border on a filled pill reads
-   as the pill being underlined rather than as the pill being selected. */
-.sport-btn.active {
-  background: var(--glass-active-soft);
+/* ---------- sport picker ---------- */
+/* Was a two-up grid of full-width pills on its own row below the header. It
+   became an icon in the header row instead: the control has one bit of state,
+   is touched rarely, and was spending a full row of vertical rhythm plus 24px
+   of margin to say so. See renderSportPicker in app.js for the markup contract
+   this styling depends on -- in particular that the ACTIVE option is rendered
+   LAST, which is what pins it to the right edge while the row opens leftward.
+
+   margin-left:auto right-aligns it against the header's flex row, so a
+   widening container grows away from the title rather than pushing into it. */
+.sport-picker {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--glass-fill-soft);
   backdrop-filter: blur(var(--glass-blur-soft));
   -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--glass-border);
+}
+.sport-opt {
+  flex: none;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  /* The glyph must not spill while the button animates to zero width. */
+  overflow: hidden;
+  transition: width 0.22s ease, margin 0.22s ease, opacity 0.16s ease,
+              color 0.16s ease, background-color 0.16s ease;
+}
+.sport-opt svg { width: 19px; height: 19px; display: block; flex: none; }
+/* Spacing lives on the item, not on a container `gap`: a gap survives a
+   width:0 child and would leave the collapsed pill padded out with dead space
+   on the left. This collapses with the item. */
+.sport-opt + .sport-opt { margin-left: 4px; }
+
+/* SELECTION IS WHITE GLASS, NOT AN ACCENT FILL -- the same rule the pill row
+   followed, and the reason --glass-active exists ("Selection, not status --
+   hence white-at-alpha rather than --accent", see the token block). The accent
+   is spent on the GLYPH only, which is where the old pill spent it too (an
+   inset accent line). A tinted accent fill here would make the current sport
+   read like the active stat chip below it, and those are different kinds of
+   choice: the chip picks what you are looking at, this picks which league. */
+.sport-opt.active {
+  color: var(--accent);
+  background: var(--glass-active-soft);
   border-color: var(--glass-border-lift);
-  box-shadow: inset 0 2px 0 var(--accent);
-  font-weight: 600; color: var(--text);
+}
+
+/* Collapsed: every option except the active one has no width, so the container
+   is exactly one icon wide and the active icon IS the disclosure. */
+.sport-picker:not([data-open="true"]) .sport-opt:not(.active) {
+  width: 0;
+  margin-left: 0;
+  opacity: 0;
+  pointer-events: none;
+  /* box-sizing is border-box, so a 1px border keeps a "width:0" button 2px
+     wide. Collapse the border too, or the pill carries 2px of dead space per
+     hidden sport -- invisible at two sports, a visible lump at four. */
+  border-width: 0;
+}
+
+.sport-opt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---------- stat chips ---------- */
@@ -379,11 +433,14 @@ body {
    the rows rather than a surface under them, so it goes opaque instead. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .board { background: var(--glass-fallback); }
-  .sport-btn.active { background: rgba(255, 255, 255, 0.14); }
+  .sport-opt.active { background: rgba(255, 255, 255, 0.14); }
 }
 
 /* Both disclosures on this page honour the setting -- see the matching block
    in insights/insights.css for the row-level and AI-note ones. */
 @media (prefers-reduced-motion: reduce) {
   .pcat-detail { transition: none; }
+  /* The picker still opens and closes -- only the width/fade tween is dropped,
+     so the options appear at full size instead of sliding out. */
+  .sport-opt { transition: none; }
 }

@@ -172,8 +172,9 @@
     if (state.view === "detail") {
       html += renderDetail();
     } else {
+      // The sport switcher is no longer a row of its own -- renderHeader()
+      // places it inline with the title. See renderSportPicker.
       html += renderHeader();
-      html += renderSportToggle();
       html += renderChipRow();
       html += renderList();
     }
@@ -198,26 +199,102 @@
       // The "Insights →" link that used to sit here is gone: Insights is a tab
       // now, so a link from one section into another duplicated the tab bar and
       // was the only cross-document navigation left in the app.
+      renderSportPicker() +
       "</header>"
     );
   }
 
-  function renderSportToggle() {
+  // Per-sport glyphs. Inline SVG rather than files under assets/: the repo has
+  // per-TEAM crests (assets/logos/<sport>/<slug>.png, see scripts/fetch_logos.py)
+  // but has never had a per-LEAGUE mark, and these are 19px monochrome shapes
+  // that inherit currentColor -- so they follow the active/inactive colour
+  // without a second asset per state, and add no fetch to a page whose whole
+  // point is one payload. Keyed by sport so an unregistered sport still renders
+  // something rather than an empty button.
+  var SPORT_ICONS = {
+    // Baseball: seams are the whole read at this size, so they carry more
+    // weight than the outline.
+    mlb:
+      '<circle cx="12" cy="12" r="8.5"/>' +
+      '<path d="M6 5.8c2 1.8 3.1 3.9 3.1 6.2S8 16.4 6 18.2"/>' +
+      '<path d="M18 5.8c-2 1.8-3.1 3.9-3.1 6.2s1.1 4.4 3.1 6.2"/>',
+    // Association football: centre pentagon plus spokes. The pentagon alone
+    // reads as a ball; the spokes stop it reading as a generic badge.
+    soccer:
+      '<circle cx="12" cy="12" r="8.5"/>' +
+      '<path d="M12 8.4l3 2.2-1.15 3.6h-3.7L9 10.6z"/>' +
+      '<path d="M12 8.4V3.6M15 10.6l4.5-1.5M13.85 14.2l2.8 3.7M10.15 14.2l-2.8 3.7M9 10.6L4.5 9.1"/>',
+    // Gridiron: a rotated ellipse with laces.
+    football:
+      '<ellipse cx="12" cy="12" rx="8.6" ry="5.4" transform="rotate(-45 12 12)"/>' +
+      '<path d="M9.4 14.6l5.2-5.2M10.7 12.1l1.5 1.5M12.2 10.6l1.5 1.5"/>',
+  };
+  var SPORT_ICON_BY_KEY = { mlb: "mlb", epl: "soccer", worldcup: "soccer", nfl: "football", cfb: "football" };
+
+  function sportIcon(key) {
+    var shape = SPORT_ICONS[SPORT_ICON_BY_KEY[key]] ||
+      // Unknown sport: a neutral mark, so a newly registered league is visibly
+      // present and selectable before it earns a glyph.
+      '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/>';
+    return (
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+      shape + "</svg>"
+    );
+  }
+
+  // The sport switcher: a single icon in the header that opens into one icon
+  // per sport. It replaced a two-up row of full-width pills, which spent a
+  // whole row of vertical rhythm on a control that is touched rarely and has
+  // exactly one bit of state.
+  //
+  // ONE CONTAINER, N BUTTONS -- there is no separate trigger element. Collapsed,
+  // every inactive option is width:0/opacity:0 and the active one IS the
+  // disclosure; expanded, they all have width. That is what lets the whole
+  // thing animate as one pill widening rather than a menu appearing over the
+  // header, and it means the same [data-sport] buttons serve both states.
+  //
+  // THE ACTIVE OPTION IS RENDERED LAST, deliberately. The picker is right-
+  // aligned (margin-left:auto), so a widening container grows leftward from a
+  // pinned right edge. With the active option last it sits on that pinned edge
+  // and never moves as the others slide out from behind it; anywhere else in
+  // the order and the icon you just tapped jumps sideways as the row opens.
+  function renderSportPicker() {
     var sportKeys = Object.keys(state.data.sports);
-    // Nothing to toggle between with a single sport -- omit the row entirely
+    // Nothing to switch between with a single sport -- omit it entirely
     // (it reappears automatically once a second sport is in data.json).
+    // Unchanged from the pill row this replaced.
     if (sportKeys.length <= 1) return "";
-    var buttons = sportKeys
+    var ordered = sportKeys.filter(function (k) { return k !== state.sport; });
+    ordered.push(state.sport);
+    var buttons = ordered
       .map(function (key) {
-        var active = key === state.sport ? " active" : "";
+        var isActive = key === state.sport;
+        var label = state.data.sports[key].label;
         return (
-          '<button class="sport-btn' + active + '" data-sport="' + key + '" type="button">' +
-          esc(state.data.sports[key].label) +
+          '<button class="sport-opt' + (isActive ? " active" : "") + '"' +
+          ' data-sport="' + esc(key) + '" type="button"' +
+          // Collapsed, the active button is a disclosure; expanded, it is the
+          // current choice. aria-expanded lives on it either way because it is
+          // the only control a screen reader can reach while collapsed.
+          (isActive ? ' aria-expanded="false" aria-current="true"' : "") +
+          ' aria-label="' + esc(isActive ? label + " — switch sport" : "Switch to " + label) + '"' +
+          ' title="' + esc(label) + '">' +
+          sportIcon(key) +
           "</button>"
         );
       })
       .join("");
-    return '<nav class="sport-toggle">' + buttons + "</nav>";
+    return '<div class="sport-picker" id="sportPicker" data-open="false">' + buttons + "</div>";
+  }
+
+  function closeSportPicker() {
+    var picker = document.getElementById("sportPicker");
+    if (!picker || picker.dataset.open !== "true") return false;
+    picker.dataset.open = "false";
+    var act = picker.querySelector(".sport-opt.active");
+    if (act) act.setAttribute("aria-expanded", "false");
+    return true;
   }
 
   function renderChipRow() {
@@ -629,16 +706,34 @@
   appEl.addEventListener("click", function (e) {
     var sportBtn = e.target.closest("[data-sport]");
     if (sportBtn) {
+      var picker = sportBtn.closest(".sport-picker");
+      // COLLAPSED: the one visible icon is a disclosure, not a re-selection --
+      // opening is the only thing a tap can mean when the other options have
+      // no width to be tapped. Open and stop; the selection branch below is
+      // unreachable until they are actually on screen.
+      if (picker && picker.dataset.open !== "true") {
+        picker.dataset.open = "true";
+        sportBtn.setAttribute("aria-expanded", "true");
+        return;
+      }
       var sport = sportBtn.dataset.sport;
       if (sport !== state.sport) {
         state.sport = sport;
         state.view = "list";
         state.selected = null;
+        // No explicit collapse needed: render() rebuilds the picker from
+        // scratch and its markup is collapsed by default.
         render();
         setPageScroll(0); // new sport = fresh context; start at the top
+      } else {
+        // Tapping the already-active icon while open is "never mind".
+        closeSportPicker();
       }
       return;
     }
+    // A tap anywhere else in the app closes an open picker, then falls through
+    // so the same tap still does whatever it was going to do.
+    closeSportPicker();
     var chipBtn = e.target.closest("[data-cat]");
     if (chipBtn) {
       if (chipBtn.dataset.cat !== state.statBySport[state.sport]) {
@@ -825,6 +920,22 @@
     }
     swipe = null;
   }
+
+  // Escape closes the sport picker. On document rather than appEl because the
+  // key can arrive while focus sits outside the app element (the tab bar, or
+  // nothing at all after a pointer tap), and an expanded picker should not
+  // survive that.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var picker = document.getElementById("sportPicker");
+    var wasOpen = closeSportPicker();
+    // Return focus to the control the user opened, so dismissing by keyboard
+    // does not drop the caret at the top of the document.
+    if (wasOpen && picker) {
+      var act = picker.querySelector(".sport-opt.active");
+      if (act) act.focus();
+    }
+  });
 
   appEl.addEventListener("touchstart", onTouchStart, { passive: true });
   appEl.addEventListener("touchmove", onTouchMove, { passive: false });
