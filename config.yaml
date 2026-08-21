@@ -316,23 +316,43 @@ epl:
   lookback_days: 75
 
   stat_categories:
+    # MIN_GAMES IS A RATE-BOARD TOOL AND IS SET ONLY ON RATE BOARDS.
+    #
+    # An appearance floor exists to stop a tiny denominator from manufacturing
+    # a rank. That is a real hazard for a RATE: one goal in one appearance is
+    # 1.00 goals/app, which tops goals_per_appearance over a striker on 5 in 5
+    # (0.80) on the strength of a single cameo. The floor is the only thing
+    # standing between that board and noise, so goals_per_appearance keeps
+    # min_games: 3.
+    #
+    # A COUNTING board has no denominator and therefore no such hazard. One
+    # goal in one appearance is one goal -- it ranks below two goals and above
+    # zero, which is exactly right, and no amount of small sample can inflate
+    # it. Applying the floor there bought nothing and cost real data: every
+    # counting board sat blank until players reached three appearances, which
+    # in a league whose season opens after a 3-month gap meant the boards were
+    # empty for the first two matchdays of every season while genuine goals,
+    # assists and clean sheets were already on the record. The six counting
+    # boards below therefore set no min_games at all and fall through to
+    # aggregate_category's default of 1 -- one appearance, i.e. the player
+    # actually played. `total <= 0` already drops anyone who did nothing.
+    #
+    # Depth is still reported rather than hidden: each record carries its own
+    # games_window, and CATEGORY_META's "Last {n} App" subtitle resolves to
+    # the board's real depth per build, so a matchday-1 board says "Last 1
+    # App" instead of promising five.
+
     # ---- unfiltered boards ------------------------------------------------
     # No position filter: a goal counts the same whoever scores it, so these
     # are the boards where bench-only players (16% of the pool, whose real
     # position ESPN never reports -- see fetchers/epl.stable_position) stay
     # fully eligible.
-    #
-    # min_games: 3, not NFL's 2. EPL rotation is heavier -- cup and European
-    # fixtures plus a congested festive period mean a fringe player can make
-    # two short cameos in a five-match span, and a 2-game floor would let that
-    # top a board.
     - key: goals
       label: Goals (last 5 appearances)
       short_label: Goals
       unit: G
       mode: rolling_sum
       fields: [totalGoals]
-      min_games: 3
 
     - key: assists
       label: Assists (last 5 appearances)
@@ -340,7 +360,6 @@ epl:
       unit: A
       mode: rolling_sum
       fields: [goalAssists]
-      min_games: 3
 
     - key: goal_or_assist
       label: Goal Contributions (last 5 appearances)
@@ -348,7 +367,6 @@ epl:
       unit: G+A
       mode: rolling_sum
       fields: [totalGoals, goalAssists]
-      min_games: 3
 
     # ---- attacking boards, Forward/Midfielder only ------------------------
     # Filtered because these rank attacking output: a defender or keeper on
@@ -376,7 +394,6 @@ epl:
       unit: SOT
       mode: rolling_sum
       fields: [shotsOnTarget]
-      min_games: 3
       positions: [Forward, Midfielder]
 
     # ---- goalkeeper boards ------------------------------------------------
@@ -393,7 +410,6 @@ epl:
       unit: CS
       mode: rolling_sum
       fields: [cleanSheets]
-      min_games: 3
       positions: [Goalkeeper]
 
     - key: saves
@@ -402,7 +418,6 @@ epl:
       unit: SV
       mode: rolling_sum
       fields: [saves]
-      min_games: 3
       positions: [Goalkeeper]
 
 # ARCHIVED -- the 2026 tournament is over and the next cycle is ~2030. This

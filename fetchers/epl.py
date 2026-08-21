@@ -302,7 +302,13 @@ def aggregate_category(by_player, cat_cfg, default_window):
     The window is a player's most recent `window_games` APPEARANCES, not
     calendar matchdays -- so rotation, injury and suspension shift the window
     back rather than punching holes in it. `min_games` then drops anyone whose
-    window is too thin to read as form.
+    window is too thin, defaulting to 1 (played at all) when config sets none.
+
+    Which categories set it is a config decision, and the EPL block sets it on
+    RATE BOARDS ONLY -- a small denominator can manufacture a rank, a small
+    numerator cannot. See config.yaml's stat_categories header for the full
+    argument. Nothing about that policy lives here: this function applies
+    whatever floor it is handed.
 
     TRANSFERS ARE NOT SPLIT. A player who changes club mid-window keeps one
     continuous window: their last five appearances are their last five
@@ -369,14 +375,12 @@ def _build_records(by_player, epl_cfg, default_window):
     """Rank-ready records for every configured stat category, or [] when the
     appearances given fill no board at all.
 
-    Split out of fetch() because "did this window produce a board?" is the
-    condition the offseason fallback turns on, and that is NOT the same
-    question as "did this window contain any matches". A window can hold real
-    football and still yield nothing: on 2026-08-07 the 75-day window reached
-    back to exactly 2026-05-24, catching one matchday, so every player had a
-    single appearance and `min_games: 3` filtered all of them out. Keying the
-    fallback on the matches found would leave that day's board empty; keying it
-    on the records built is what makes the guard mean what it says.
+    Split out of fetch() because the offseason fallback turns on what a window
+    BUILT, not on what it contained -- a window can hold real football and still
+    fail to produce a usable board. fetch() measures that with _board_depth
+    rather than emptiness; see both functions for why emptiness alone stopped
+    being a sufficient test once the counting boards dropped their min_games
+    floor.
 
     ONE DELIBERATE SIDE EFFECT: the unknown-mode ValueError below now fires even
     when the window held no matches. fetch() used to return [] before reaching
@@ -390,6 +394,20 @@ def _build_records(by_player, epl_cfg, default_window):
             raise ValueError("Unknown EPL stat category mode: {}".format(cat_cfg["mode"]))
         records.extend(aggregate_category(by_player, cat_cfg, default_window))
     return records
+
+
+def _board_depth(records):
+    """Deepest per-player window across a record set -- how many appearances the
+    best-covered player actually has, or 0 for no records at all.
+
+    This is the "did the window fill a real board?" measure, and it replaced a
+    plain `if not records` emptiness test when the counting boards dropped their
+    min_games floor. Emptiness stopped being a usable signal at that point: a
+    window holding a single matchday now yields real counting rows (somebody
+    scored), so an emptiness test would see data and conclude the window was
+    fine, when what it actually holds is one match out of a five-appearance
+    window. Depth asks the question emptiness used to stand in for."""
+    return max((r.get("games_window") or 0) for r in records) if records else 0
 
 
 def fetch(config, today=None):
@@ -416,13 +434,13 @@ def fetch(config, today=None):
     previous season, which is the honest answer to "who is hot" when nobody has
     kicked a ball since May -- last season's form is the only form there is.
 
-    "Fills no board" and "found no matches" are not the same test, and the
-    difference is load-bearing for three days a year. On 2026-08-07 the 75-day
-    window reached back to exactly 2026-05-24 and caught a single matchday: real
-    football, so a matches-found test would pass and the fallback would stay
-    down, but every player held one appearance against `min_games: 3` and the
-    board came out empty anyway. The condition is therefore the records built,
-    not the matches seen -- see _build_records.
+    The trigger is BOARD DEPTH, not emptiness, and the difference is
+    load-bearing. On 2026-08-07 the 75-day window reached back to exactly
+    2026-05-24 and caught a single matchday: real football, and -- now that the
+    counting boards carry no min_games floor -- real rows, since somebody scored
+    that day. An emptiness test would see those rows and leave the fallback
+    down, publishing one match dressed as a five-appearance board. Depth sees
+    1-of-5, re-anchors, and returns the closing five matchdays instead.
 
     Re-anchoring rather than simply WIDENING the window is what keeps this
     cheap and self-correcting. Widening enough to clear an offseason (~121 days
@@ -432,17 +450,23 @@ def fetch(config, today=None):
     depend on the calendar date of the run. Anchoring keeps the fetch at its
     usual ~75 matches whatever the date, and needs no tuning per offseason.
 
-    The fallback is self-limiting: it fires only when the live window fills no
-    board, so it costs nothing in-season, and it stops firing on its own once
-    the new season has enough matches to fill one.
+    The fallback is self-limiting: it fires only when the live window comes back
+    shallower than `window_games`, which mid-season it never does (75 days holds
+    ~10 matchdays), so it costs nothing in season.
 
-    IT DOES NOT COVER THE CROSSOVER. Between the new season's first match and
-    the point where players reach `min_games`, the anchor lands INSIDE the live
-    window -- there is no earlier football to fall back to that this window does
-    not already hold -- so the board stays empty rather than reverting to last
-    season. Carrying the previous season across that crossover means boards
-    mixing two seasons, which is a UI/labelling decision and not one to make
-    silently inside a fetcher. See the equal-windows branch below.
+    THE CROSSOVER IS COVERED FOR COUNTING BOARDS, AND NOT BY THIS FALLBACK.
+    Once the new season starts, the anchor lands inside the live window and
+    there is no older football to reach for, so re-anchoring cannot help. What
+    fills those opening matchdays instead is the absence of a min_games floor on
+    the six counting boards (see config.yaml's stat_categories): a goal in
+    matchday 1 is a real goal and ranks from the first appearance. Only
+    goals_per_appearance keeps a floor, because a rate over one appearance is
+    the one number a thin window genuinely cannot support, so that single board
+    is simply absent until three appearances exist -- build_data skips a
+    category with no records, so it does not render rather than rendering empty.
+
+    Boards mixing two seasons remain deliberately unbuilt: a shallow board is
+    labelled shallow ("Last 1 App") rather than topped up from May.
     """
     epl_cfg = config["epl"]
     scoreboard_url = epl_cfg["scoreboard_url"]
@@ -461,9 +485,12 @@ def fetch(config, today=None):
         start.strftime("%Y%m%d"), today.strftime("%Y%m%d"))
     records = _build_records(by_player, epl_cfg, default_window)
 
-    if not records:
-        # Offseason, or a window catching too little football to fill a board.
-        # See the OFFSEASON FALLBACK note above.
+    if _board_depth(records) < default_window:
+        # The live window did not fill a full-depth board: either the offseason
+        # (nothing in it at all) or a window whose far end is a dead zone. See
+        # the OFFSEASON FALLBACK note above. Mid-season this branch is never
+        # entered -- 75 days holds ~10 matchdays, so a regular is at depth 5 or
+        # better and the probe below costs nothing.
         anchor = find_last_completed_date(session, scoreboard_url, today)
         anchored_start = (anchor - datetime.timedelta(days=lookback_days)) if anchor else None
 
@@ -472,30 +499,47 @@ def fetch(config, today=None):
                   "the {} days searched behind that -- no boards"
                   .format(lookback_days, OFFSEASON_SEARCH_DAYS))
             return []
-        if anchored_start == start:
-            # The anchored window IS the window just tried, so re-fetching it
-            # would spend the same summary calls to reach the same empty board.
-            # This is the new season's opening matchdays: football has resumed
-            # (so there is nothing to fall back FROM -- the anchor is inside the
-            # live window) but no player has yet reached `min_games`. Carrying
-            # the previous season across that crossover is a different feature
-            # with a UI question attached -- what a board mixing two seasons is
-            # called -- and is deliberately not decided here.
-            print("whos-hot(epl): matches found in the last {} days but no player has "
-                  "enough appearances to fill a board yet -- no boards"
-                  .format(lookback_days))
-            return []
 
-        print("whos-hot(epl): the last {} days fill no board; the league last played {} "
-              "({} days ago), so windowing the {} days ending then"
-              .format(lookback_days, anchor, (today - anchor).days, lookback_days))
-        by_player = collect_appearances(
-            session, scoreboard_url, summary_url,
-            anchored_start.strftime("%Y%m%d"), anchor.strftime("%Y%m%d"))
-        records = _build_records(by_player, epl_cfg, default_window)
-        if not records:
-            print("whos-hot(epl): the {} days ending {} filled no board either -- no boards"
-                  .format(lookback_days, anchor))
-            return []
+        # When the anchored window IS the window just tried, re-fetching would
+        # spend the same calls for the same rows: football has resumed, the
+        # anchor sits inside the live window, and there is nothing older to
+        # reach for. Whatever the counting boards built from the matches played
+        # so far is the honest board and stands as-is -- that is the new
+        # season's opening matchdays, and it is the intended outcome, not a
+        # degraded one.
+        if anchored_start != start:
+            anchored = _build_records(
+                collect_appearances(session, scoreboard_url, summary_url,
+                                    anchored_start.strftime("%Y%m%d"),
+                                    anchor.strftime("%Y%m%d")),
+                epl_cfg, default_window)
+            # Adopt the re-anchored board only if it is genuinely deeper. That
+            # comparison is what keeps this from ever trading live football for
+            # older football: during a new season's opening weeks the anchored
+            # window covers those same few matchdays and comes back no deeper,
+            # so the live rows stand.
+            if _board_depth(anchored) > _board_depth(records):
+                print("whos-hot(epl): the last {} days reach depth {} of {}; the league "
+                      "last played {} ({} days ago), so windowing the {} days ending "
+                      "then instead (depth {})"
+                      .format(lookback_days, _board_depth(records), default_window,
+                              anchor, (today - anchor).days, lookback_days,
+                              _board_depth(anchored)))
+                records = anchored
+
+    if not records:
+        print("whos-hot(epl): no completed matches in the last {} days -- no boards"
+              .format(lookback_days))
+        return []
+
+    if _board_depth(records) < default_window:
+        # Real, partial data -- say so rather than passing it off as a full
+        # five-appearance board. The UI reports the same depth on its own:
+        # CATEGORY_META's "Last {n} App" subtitle resolves per build from these
+        # records' games_window, so a shallow board is labelled as shallow.
+        print("whos-hot(epl): boards built at depth {} of {} -- partial window, "
+              "counting boards populate from the first appearance and the rate "
+              "board stays gated until min_games is met"
+              .format(_board_depth(records), default_window))
 
     return records
