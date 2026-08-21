@@ -232,6 +232,22 @@ nfl:
     # those resolve in arbitrary dict order; the underlying yardage settles
     # them on real production, reusing rank_records' existing `tiebreak` key.
     #
+    # RESOLVED (2026-08): NO min_games FLOOR ON THESE FOUR BOARDS. The removal
+    # was taken back to review together with the prior decision it overturned,
+    # and it was SUSTAINED. This is settled rather than provisional -- treat it
+    # as the current rule, not as an open question.
+    #
+    # What settled it was one measurement rather than an argument: replaying
+    # the real 2025 nflverse file across weeks 5-18, over all four TD boards, a
+    # player with fewer than two games took 0 of 560 top-10 slots. The abuse
+    # the floor had been ratified to prevent does not occur in real data, while
+    # its cost did (week 1 published nothing at all).
+    #
+    # EVERYTHING BELOW IS THE HISTORY OF HOW THAT WAS DECIDED, kept on purpose.
+    # The floor was argued for and accepted before it was removed, so anyone
+    # thinking of re-adding it should read why it was there first -- and should
+    # expect to beat the 0-of-560 result to make the case.
+
     # min_games: DELIBERATELY ABSENT HERE, AND THIS REVERSES AN EARLIER
     # RATIFIED DECISION. Recording both sides, because the earlier one was
     # argued and accepted rather than overlooked.
