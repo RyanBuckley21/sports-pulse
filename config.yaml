@@ -14,7 +14,16 @@ top_n: 10
 # pipeline ("Who's Hot": players ranked by raw production). The scored per-game
 # picks (Signal Scores, weights, thresholds, graded outcomes, the ledger) are
 # gated separately by `active_game_sports` below.
-active_sports: [mlb]
+#
+# epl added 2026-08-21. LEADERBOARDS ONLY, and that is not a promise this key
+# makes on its own -- it is a fact about EPL specifically. There is no
+# `betting_signals.epl` block and no EPL entry in
+# generate_insights.GAME_BUILDERS, and _active_game_sports filters its
+# resolved list down to sports registered in GAME_BUILDERS, so EPL cannot
+# reach the scored-picks pipeline through this key's fallback. Adding a sport
+# that IS registered there (nfl, cfb) would be a different matter and needs
+# `active_game_sports` set explicitly first.
+active_sports: [mlb, epl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
 # GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
