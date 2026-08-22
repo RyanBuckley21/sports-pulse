@@ -446,6 +446,33 @@ epl:
       fields: [shotsOnTarget]
       positions: [Forward, Midfielder]
 
+    # Total shots, sitting alongside shots on target rather than replacing it.
+    # The two answer different questions: on-target is end product, total is
+    # volume and intent, and a player generating six shots that miss is a
+    # genuinely different (and often more interesting) read than one who put
+    # two on target. Measured over 597 real player-match rows from the closing
+    # weeks of 2025-26, totalShots is non-zero on 286 of them against
+    # shotsOnTarget's 142 -- twice the qualifying pool, because it keeps the
+    # volume shooters who are not converting.
+    #
+    # totalShots is a real ESPN field, not a derivation: present on 597 of 597
+    # rows in that sample, and shotsOnTarget never exceeded it once (0
+    # violations), so the pair is internally coherent and safe to show side by
+    # side. Contrast shotsFaced, the adjacent field this repo already refuses
+    # to build on -- it was present on all 597 rows and NON-ZERO ON NONE.
+    #
+    # No min_games, matching every other counting board: a small window cannot
+    # inflate a raw shot count, only understate it. Same Fwd/Mid filter as
+    # shots on target, for the same reason -- it ranks attacking output, and a
+    # defender on that board is not a meaningful comparison.
+    - key: shots_total
+      label: Total Shots (last 5 appearances, Fwd/Mid)
+      short_label: Total Shots
+      unit: SH
+      mode: rolling_sum
+      fields: [totalShots]
+      positions: [Forward, Midfielder]
+
     # ---- goalkeeper boards ------------------------------------------------
     # cleanSheets is not an ESPN field. It is derived per match by
     # fetchers/epl.extract_clean_sheet_credits, which credits a starting
