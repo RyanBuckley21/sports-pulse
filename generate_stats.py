@@ -5,6 +5,7 @@ side. Also writes a Markdown snapshot as a lightweight debug artifact."""
 import datetime
 import json
 import os
+import traceback
 
 import yaml
 
@@ -448,15 +449,65 @@ def main():
     # that function's docstring for the full resolution order.
     active_sports = config.get("active_sports") or list(SPORT_FETCHERS)
 
+    # ONE SPORT'S OUTAGE MUST NOT TAKE THE OTHERS DOWN. Each sport is fetched
+    # inside its own try: an exception here skips that sport for this run and
+    # the loop continues, instead of propagating out of main() and killing the
+    # build before anything is written.
+    #
+    # This was not hypothetical. On 2026-08-22 statsapi.mlb.com read-timed-out
+    # from GitHub's runners three times over three hours, and each time the
+    # whole run died in mlb.fetch -- taking the EPL boards with it, even though
+    # ESPN was reachable throughout and EPL's data was sitting there ready to
+    # build. The sports share a process; they should not share a fate.
+    #
+    # The try spans fetch + competition + normalize, not fetch alone, so a
+    # sport contributes ALL of its rows or NONE of them. all_normalized is
+    # extended only after normalize returns, so a sport that fails midway
+    # cannot leave a partial slate behind for rank_records to publish.
+    #
+    # `except Exception` deliberately does not catch KeyboardInterrupt or
+    # SystemExit, which are not fetch failures and should still stop the run.
     all_normalized = []
+    failed_sports = []
     for sport_key in active_sports:
         sport_impl = SPORT_FETCHERS.get(sport_key)
         if not sport_impl:
             print(f"Skipping '{sport_key}': no fetcher registered in SPORT_FETCHERS")
             continue
-        raw_records = sport_impl["fetch"](config)
-        competition = sport_impl["competition"](config)
-        all_normalized.extend(normalizer.normalize(sport_key, competition, raw_records))
+        try:
+            raw_records = sport_impl["fetch"](config)
+            competition = sport_impl["competition"](config)
+            normalized = normalizer.normalize(sport_key, competition, raw_records)
+        except Exception as exc:
+            failed_sports.append(sport_key)
+            # Loud on purpose, and in three parts: an Actions ::error:: annotation
+            # so the run surfaces the skip in the UI summary rather than only in
+            # the log body, a plain line for anyone reading the log, and the full
+            # traceback so the cause is diagnosable without a re-run.
+            print(f"::error title=Sport skipped::{sport_key}: fetch failed, "
+                  f"skipped for this run -- {type(exc).__name__}: {exc}")
+            print(f"whos-hot({sport_key}): FETCH FAILED, skipping this sport for "
+                  f"this run -- {type(exc).__name__}: {exc}")
+            traceback.print_exc()
+            continue
+        all_normalized.extend(normalized)
+
+    # EVERY sport failing is a different event from one failing, and must not
+    # be silently published. Writing a data.json with no sports at all would
+    # blank the site -- and would look exactly like a legitimate quiet day to
+    # everything downstream. Fail the run instead and leave the previously
+    # deployed payload in place, which is the same call _build_game_entities
+    # already makes for the games pipeline ("a red run that leaves yesterday's
+    # data.json served is the better failure").
+    if failed_sports and not all_normalized:
+        raise RuntimeError(
+            "every active sport failed to fetch ({}) -- refusing to write an "
+            "empty data.json over a good one".format(", ".join(failed_sports)))
+
+    if failed_sports:
+        print("whos-hot: {} of {} sports skipped this run ({}); publishing the "
+              "rest".format(len(failed_sports), len(active_sports),
+                            ", ".join(failed_sports)))
 
     ranked = rank_records(all_normalized, top_n)
 
