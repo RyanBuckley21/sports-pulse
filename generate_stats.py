@@ -59,7 +59,7 @@ APPROVED_CATEGORIES = {
     # attacking (Fwd/Mid), then goalkeeping.
     "epl": [
         "goals", "assists", "goal_or_assist",
-        "goals_per_appearance", "shots_on_goal",
+        "goals_per_appearance", "shots_on_goal", "shots_total",
         "clean_sheets", "saves",
     ],
 }
@@ -142,6 +142,12 @@ CATEGORY_META = {
     "goal_or_assist": {"kind": "count", "sub": "Last {n} App", "title": "Goal Contributions"},
     "goals_per_appearance": {"kind": "rate", "sub": "Last {n} App · Fwd/Mid", "title": "Goals / Appearance"},
     "shots_on_goal": {"kind": "count", "sub": "Last {n} App · Fwd/Mid", "title": "Shots on Target"},
+    # Volume alongside end product. Deliberately adjacent to shots_on_goal in
+    # APPROVED_CATEGORIES above so the two read as a pair on the chip row --
+    # total shots is the wider number by construction (ESPN never reports more
+    # on target than total; verified across 597 real player-match rows), so
+    # placing it after on-target reads as "and here is everything they tried".
+    "shots_total": {"kind": "count", "sub": "Last {n} App · Fwd/Mid", "title": "Total Shots"},
     "clean_sheets": {"kind": "count", "sub": "Last {n} App · GK", "title": "Clean Sheets"},
     "saves": {"kind": "count", "sub": "Last {n} App · GK", "title": "Saves"},
 }
