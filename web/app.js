@@ -204,43 +204,38 @@
     );
   }
 
-  // Per-sport glyphs. Inline SVG rather than files under assets/: the repo has
-  // per-TEAM crests (assets/logos/<sport>/<slug>.png, see scripts/fetch_logos.py)
-  // but has never had a per-LEAGUE mark, and these are 19px monochrome shapes
-  // that inherit currentColor -- so they follow the active/inactive colour
-  // without a second asset per state, and add no fetch to a page whose whole
-  // point is one payload. Keyed by sport so an unregistered sport still renders
-  // something rather than an empty button.
-  var SPORT_ICONS = {
-    // Baseball: seams are the whole read at this size, so they carry more
-    // weight than the outline.
-    mlb:
-      '<circle cx="12" cy="12" r="8.5"/>' +
-      '<path d="M6 5.8c2 1.8 3.1 3.9 3.1 6.2S8 16.4 6 18.2"/>' +
-      '<path d="M18 5.8c-2 1.8-3.1 3.9-3.1 6.2s1.1 4.4 3.1 6.2"/>',
-    // Association football: centre pentagon plus spokes. The pentagon alone
-    // reads as a ball; the spokes stop it reading as a generic badge.
-    soccer:
-      '<circle cx="12" cy="12" r="8.5"/>' +
-      '<path d="M12 8.4l3 2.2-1.15 3.6h-3.7L9 10.6z"/>' +
-      '<path d="M12 8.4V3.6M15 10.6l4.5-1.5M13.85 14.2l2.8 3.7M10.15 14.2l-2.8 3.7M9 10.6L4.5 9.1"/>',
-    // Gridiron: a rotated ellipse with laces.
-    football:
-      '<ellipse cx="12" cy="12" rx="8.6" ry="5.4" transform="rotate(-45 12 12)"/>' +
-      '<path d="M9.4 14.6l5.2-5.2M10.7 12.1l1.5 1.5M12.2 10.6l1.5 1.5"/>',
+  // League monograms -- the league's own short name set in a circle, not a
+  // picture of the sport it plays.
+  //
+  // THE PICTORIAL ICONS THIS REPLACED COULD NOT SCALE, and the reason is
+  // structural rather than a matter of drawing them better. A glyph keyed to
+  // the SPORT collapses every league that plays that sport into one shape:
+  // nfl and cfb are both gridiron, so both drew the same football and became
+  // indistinguishable at a glance -- two buttons the user cannot tell apart is
+  // not a switcher. Monograms key to the LEAGUE, so any number of leagues
+  // sharing a sport stay separable, and the picker stops needing new artwork
+  // every time a sport is registered.
+  //
+  // The text comes from the SPORT KEY, not from the display label. The keys are
+  // already the abbreviations everyone uses (mlb, nfl, cfb, epl) and they are
+  // the identifier the rest of the pipeline is keyed on, so the badge cannot
+  // drift from what config.yaml and SPORT_FETCHERS call the sport. The label is
+  // NOT usable for this: generate_stats.SPORT_LABELS maps epl to "Premier
+  // League", which is the right thing to read aloud and the wrong thing to set
+  // in a 44px circle. So the label still carries the accessible name and the
+  // tooltip; only the visible badge is the key.
+  var SPORT_MONOGRAMS = {
+    // Keys that are not already their own abbreviation. "WORLDCUP" does not
+    // fit and "WOR" is not a name anybody uses.
+    worldcup: "WC",
   };
-  var SPORT_ICON_BY_KEY = { mlb: "mlb", epl: "soccer", worldcup: "soccer", nfl: "football", cfb: "football" };
 
-  function sportIcon(key) {
-    var shape = SPORT_ICONS[SPORT_ICON_BY_KEY[key]] ||
-      // Unknown sport: a neutral mark, so a newly registered league is visibly
-      // present and selectable before it earns a glyph.
-      '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/>';
-    return (
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
-      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
-      shape + "</svg>"
-    );
+  function sportMonogram(key) {
+    if (SPORT_MONOGRAMS[key]) return SPORT_MONOGRAMS[key];
+    var k = String(key || "").toUpperCase();
+    // Four characters is what fits legibly at this diameter; a longer
+    // unregistered key is truncated rather than allowed to overflow its circle.
+    return k.length <= 4 ? k : k.slice(0, 3);
   }
 
   // The sport switcher: a single icon in the header that opens into one icon
@@ -280,7 +275,7 @@
           (isActive ? ' aria-expanded="false" aria-current="true"' : "") +
           ' aria-label="' + esc(isActive ? label + " — switch sport" : "Switch to " + label) + '"' +
           ' title="' + esc(label) + '">' +
-          sportIcon(key) +
+          esc(sportMonogram(key)) +
           "</button>"
         );
       })

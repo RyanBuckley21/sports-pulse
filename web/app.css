@@ -121,6 +121,14 @@ body {
 
 /* ---------- header ---------- */
 .app-header { display: flex; align-items: center; gap: 12px; }
+/* The title column must be allowed to SHRINK, and its status line must not
+   reflow. A flex item defaults to min-width:auto, so without this the status
+   text ("Updated 4 hours ago") wraps to a second line when the sport picker
+   expands, which grows the header and shoves the whole board down -- a visible
+   jump every time the picker opens. Observed with four leagues open, where the
+   expanded picker is 199px of a 394px row. Clipping one word is a much smaller
+   cost than the page moving under the user's thumb. */
+.app-header > div:not(.app-icon):not(.sport-picker) { min-width: 0; }
 .app-icon {
   width: 44px; height: 44px; flex: none; border-radius: 13px;
   border: 1px solid var(--border); overflow: hidden;
@@ -131,11 +139,14 @@ body {
 .app-title { font: 700 22px/1 var(--font-body); letter-spacing: -0.6px; }
 /* .app-insights-link is gone with the header link it styled: Insights is a tab
    now, so a cross-section link duplicated the tab bar. */
-.app-status { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+.app-status { display: flex; align-items: center; gap: 6px; margin-top: 5px; min-width: 0; overflow: hidden; }
 .live-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--good); box-shadow: 0 0 6px var(--good); }
 .live-dot.stale-1 { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
 .live-dot.stale-old { background: var(--critical); box-shadow: 0 0 6px var(--critical); }
-.status-text { font: 500 11.5px/1 var(--font-body); color: var(--text-tertiary); }
+.status-text {
+  font: 500 11.5px/1 var(--font-body); color: var(--text-tertiary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
 .status-text.stale-1 { color: var(--warning); }
 .status-text.stale-old { color: var(--critical); }
 /* ---------- sport picker ---------- */
@@ -160,9 +171,23 @@ body {
   -webkit-backdrop-filter: blur(var(--glass-blur-soft));
   border: 1px solid var(--glass-border);
 }
+/* 44px, matching .app-icon at the other end of this same header row.
+   Two things pick that number, and neither is a guess:
+
+   1. It is the iOS minimum touch target (44pt), which the 32px this replaces
+      was well under -- the first thing on-device testing reported was that the
+      control was hard to hit.
+   2. tools/tokens/tokens.py carries colour and radius scales but NO size
+      scale, so there is no size token to derive from. .app-icon's 44px is the
+      only established dimension in this row, and matching it makes the header
+      read as two bookends of equal weight rather than a large mark on the left
+      and a small afterthought on the right.
+
+   The monogram is TEXT, not a glyph, so the diameter also has to fit three
+   uppercase letters legibly -- which 32px could not do and 44px can. */
 .sport-opt {
   flex: none;
-  width: 32px; height: 32px;
+  width: 44px; height: 44px;
   display: grid; place-items: center;
   padding: 0;
   border: 1px solid transparent;
@@ -170,16 +195,23 @@ body {
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  /* The glyph must not spill while the button animates to zero width. */
+  /* The league monogram. 11px/600 with a little tracking is the same idiom
+     .chip uses for its uppercase labels; the tracking is smaller here (0.4 vs
+     0.5) because three letters in a circle need the width back. tabular-nums
+     is deliberately absent -- these are letters, not figures. */
+  font: 600 11px/1 var(--font-body);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* The monogram must not spill while the button animates to zero width. */
   overflow: hidden;
   transition: width 0.22s ease, margin 0.22s ease, opacity 0.16s ease,
               color 0.16s ease, background-color 0.16s ease;
 }
-.sport-opt svg { width: 19px; height: 19px; display: block; flex: none; }
 /* Spacing lives on the item, not on a container `gap`: a gap survives a
    width:0 child and would leave the collapsed pill padded out with dead space
    on the left. This collapses with the item. */
-.sport-opt + .sport-opt { margin-left: 4px; }
+.sport-opt + .sport-opt { margin-left: 5px; }
 
 /* SELECTION IS WHITE GLASS, NOT AN ACCENT FILL -- the same rule the pill row
    followed, and the reason --glass-active exists ("Selection, not status --
