@@ -172,8 +172,9 @@
     if (state.view === "detail") {
       html += renderDetail();
     } else {
+      // The sport switcher is no longer a row of its own -- renderHeader()
+      // places it inline with the title. See renderSportPicker.
       html += renderHeader();
-      html += renderSportToggle();
       html += renderChipRow();
       html += renderList();
     }
@@ -198,26 +199,97 @@
       // The "Insights →" link that used to sit here is gone: Insights is a tab
       // now, so a link from one section into another duplicated the tab bar and
       // was the only cross-document navigation left in the app.
+      renderSportPicker() +
       "</header>"
     );
   }
 
-  function renderSportToggle() {
+  // League monograms -- the league's own short name set in a circle, not a
+  // picture of the sport it plays.
+  //
+  // THE PICTORIAL ICONS THIS REPLACED COULD NOT SCALE, and the reason is
+  // structural rather than a matter of drawing them better. A glyph keyed to
+  // the SPORT collapses every league that plays that sport into one shape:
+  // nfl and cfb are both gridiron, so both drew the same football and became
+  // indistinguishable at a glance -- two buttons the user cannot tell apart is
+  // not a switcher. Monograms key to the LEAGUE, so any number of leagues
+  // sharing a sport stay separable, and the picker stops needing new artwork
+  // every time a sport is registered.
+  //
+  // The text comes from the SPORT KEY, not from the display label. The keys are
+  // already the abbreviations everyone uses (mlb, nfl, cfb, epl) and they are
+  // the identifier the rest of the pipeline is keyed on, so the badge cannot
+  // drift from what config.yaml and SPORT_FETCHERS call the sport. The label is
+  // NOT usable for this: generate_stats.SPORT_LABELS maps epl to "Premier
+  // League", which is the right thing to read aloud and the wrong thing to set
+  // in a 44px circle. So the label still carries the accessible name and the
+  // tooltip; only the visible badge is the key.
+  var SPORT_MONOGRAMS = {
+    // Keys that are not already their own abbreviation. "WORLDCUP" does not
+    // fit and "WOR" is not a name anybody uses.
+    worldcup: "WC",
+  };
+
+  function sportMonogram(key) {
+    if (SPORT_MONOGRAMS[key]) return SPORT_MONOGRAMS[key];
+    var k = String(key || "").toUpperCase();
+    // Four characters is what fits legibly at this diameter; a longer
+    // unregistered key is truncated rather than allowed to overflow its circle.
+    return k.length <= 4 ? k : k.slice(0, 3);
+  }
+
+  // The sport switcher: a single icon in the header that opens into one icon
+  // per sport. It replaced a two-up row of full-width pills, which spent a
+  // whole row of vertical rhythm on a control that is touched rarely and has
+  // exactly one bit of state.
+  //
+  // ONE CONTAINER, N BUTTONS -- there is no separate trigger element. Collapsed,
+  // every inactive option is width:0/opacity:0 and the active one IS the
+  // disclosure; expanded, they all have width. That is what lets the whole
+  // thing animate as one pill widening rather than a menu appearing over the
+  // header, and it means the same [data-sport] buttons serve both states.
+  //
+  // THE ACTIVE OPTION IS RENDERED LAST, deliberately. The picker is right-
+  // aligned (margin-left:auto), so a widening container grows leftward from a
+  // pinned right edge. With the active option last it sits on that pinned edge
+  // and never moves as the others slide out from behind it; anywhere else in
+  // the order and the icon you just tapped jumps sideways as the row opens.
+  function renderSportPicker() {
     var sportKeys = Object.keys(state.data.sports);
-    // Nothing to toggle between with a single sport -- omit the row entirely
+    // Nothing to switch between with a single sport -- omit it entirely
     // (it reappears automatically once a second sport is in data.json).
+    // Unchanged from the pill row this replaced.
     if (sportKeys.length <= 1) return "";
-    var buttons = sportKeys
+    var ordered = sportKeys.filter(function (k) { return k !== state.sport; });
+    ordered.push(state.sport);
+    var buttons = ordered
       .map(function (key) {
-        var active = key === state.sport ? " active" : "";
+        var isActive = key === state.sport;
+        var label = state.data.sports[key].label;
         return (
-          '<button class="sport-btn' + active + '" data-sport="' + key + '" type="button">' +
-          esc(state.data.sports[key].label) +
+          '<button class="sport-opt' + (isActive ? " active" : "") + '"' +
+          ' data-sport="' + esc(key) + '" type="button"' +
+          // Collapsed, the active button is a disclosure; expanded, it is the
+          // current choice. aria-expanded lives on it either way because it is
+          // the only control a screen reader can reach while collapsed.
+          (isActive ? ' aria-expanded="false" aria-current="true"' : "") +
+          ' aria-label="' + esc(isActive ? label + " — switch sport" : "Switch to " + label) + '"' +
+          ' title="' + esc(label) + '">' +
+          esc(sportMonogram(key)) +
           "</button>"
         );
       })
       .join("");
-    return '<nav class="sport-toggle">' + buttons + "</nav>";
+    return '<div class="sport-picker" id="sportPicker" data-open="false">' + buttons + "</div>";
+  }
+
+  function closeSportPicker() {
+    var picker = document.getElementById("sportPicker");
+    if (!picker || picker.dataset.open !== "true") return false;
+    picker.dataset.open = "false";
+    var act = picker.querySelector(".sport-opt.active");
+    if (act) act.setAttribute("aria-expanded", "false");
+    return true;
   }
 
   function renderChipRow() {
@@ -629,16 +701,34 @@
   appEl.addEventListener("click", function (e) {
     var sportBtn = e.target.closest("[data-sport]");
     if (sportBtn) {
+      var picker = sportBtn.closest(".sport-picker");
+      // COLLAPSED: the one visible icon is a disclosure, not a re-selection --
+      // opening is the only thing a tap can mean when the other options have
+      // no width to be tapped. Open and stop; the selection branch below is
+      // unreachable until they are actually on screen.
+      if (picker && picker.dataset.open !== "true") {
+        picker.dataset.open = "true";
+        sportBtn.setAttribute("aria-expanded", "true");
+        return;
+      }
       var sport = sportBtn.dataset.sport;
       if (sport !== state.sport) {
         state.sport = sport;
         state.view = "list";
         state.selected = null;
+        // No explicit collapse needed: render() rebuilds the picker from
+        // scratch and its markup is collapsed by default.
         render();
         setPageScroll(0); // new sport = fresh context; start at the top
+      } else {
+        // Tapping the already-active icon while open is "never mind".
+        closeSportPicker();
       }
       return;
     }
+    // A tap anywhere else in the app closes an open picker, then falls through
+    // so the same tap still does whatever it was going to do.
+    closeSportPicker();
     var chipBtn = e.target.closest("[data-cat]");
     if (chipBtn) {
       if (chipBtn.dataset.cat !== state.statBySport[state.sport]) {
@@ -825,6 +915,22 @@
     }
     swipe = null;
   }
+
+  // Escape closes the sport picker. On document rather than appEl because the
+  // key can arrive while focus sits outside the app element (the tab bar, or
+  // nothing at all after a pointer tap), and an expanded picker should not
+  // survive that.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var picker = document.getElementById("sportPicker");
+    var wasOpen = closeSportPicker();
+    // Return focus to the control the user opened, so dismissing by keyboard
+    // does not drop the caret at the top of the document.
+    if (wasOpen && picker) {
+      var act = picker.querySelector(".sport-opt.active");
+      if (act) act.focus();
+    }
+  });
 
   appEl.addEventListener("touchstart", onTouchStart, { passive: true });
   appEl.addEventListener("touchmove", onTouchMove, { passive: false });
