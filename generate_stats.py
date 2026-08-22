@@ -155,6 +155,30 @@ CATEGORY_META = {
 CATEGORY_SHORT_LABELS = {}
 CATEGORY_UNITS = {}
 
+# Per-category qualification facts, indexed from config alongside the labels
+# above. build_data needs them to tell "this board has nothing to show yet"
+# apart from "this board does not exist", and config is the only place that
+# knows a category's floor.
+CATEGORY_QUALIFY = {}
+
+# Sports whose RATE boards announce themselves when they have not qualified
+# yet, instead of vanishing from the payload.
+#
+# EPL ONLY, deliberately. A rate board with a floor is empty for a real and
+# temporary reason -- not enough appearances yet -- and a board that silently
+# disappears and reappears days later reads as a bug rather than as a wait.
+# That matters for EPL specifically because its season opens after a
+# three-month gap, so every August the one rate board (goals_per_appearance,
+# min_games: 3) is absent for the first two matchdays while the six counting
+# boards are already populating around it.
+#
+# NOT applied to NFL, whose four per_game boards also carry min_games: 2 and
+# would otherwise be swept in by a rule keyed on "rate board with a floor".
+# NFL is inactive and its empty-board behaviour has not been specified; taking
+# it along for the ride would be scope this change was not asked to take. Add
+# the key here when that decision is actually made.
+NO_DATA_SPORTS = {"epl"}
+
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
 LOGO_MANIFEST_PATH = os.path.join(ASSETS_DIR, "logos", "manifest.json")
 
@@ -202,6 +226,14 @@ def index_category_labels(config):
         for cat_cfg in config.get(sport_key, {}).get("stat_categories", []):
             CATEGORY_SHORT_LABELS[cat_cfg["key"]] = cat_cfg.get("short_label", cat_cfg["key"])
             CATEGORY_UNITS[cat_cfg["key"]] = cat_cfg.get("unit", "")
+            # `rate` reads both spellings because the flag is named per sport:
+            # EPL divides by appearances, MLB and NFL by games. A board with no
+            # floor can never be empty for a qualification reason, so it is not
+            # a candidate for the no-data state whatever its kind.
+            CATEGORY_QUALIFY[cat_cfg["key"]] = {
+                "min_games": cat_cfg.get("min_games"),
+                "rate": bool(cat_cfg.get("per_appearance") or cat_cfg.get("per_game")),
+            }
 
 
 def _resolve_sub(sub, records):
@@ -270,6 +302,63 @@ def rank_records(records, top_n):
     return ranked
 
 
+def _no_data_category(sport_key, cat_key, sport_records):
+    """A category that exists and is configured but has qualified nobody yet,
+    emitted so the client can say so instead of the board silently vanishing.
+
+    WHY THIS IS NOT A FETCHER CONCERN. The fetcher's offseason fallback answers
+    "is there any football to window over?" and re-anchors the WHOLE board set
+    when there is not. This answers a different question that only arises once
+    that fallback has stood down: football has resumed, most boards are filling,
+    and ONE board's own floor has not been cleared yet. The two never contend --
+    when the fallback fires it returns a full-depth window in which every
+    category including the rate board qualifies, so this path is not reached.
+
+    NO CROSS-SEASON FILL. The board stays empty and says so; it does not borrow
+    last season's rows to look populated. A rate computed over a window the
+    label does not describe would be worse than an honest blank.
+
+    `sub` is resolved against the SPORT's records rather than this category's,
+    which are by definition none. That is what keeps "{n}" from leaking to the
+    UI as a literal, and it is also the more useful number: the depth the other
+    boards reached is exactly the reason this one has not qualified.
+    """
+    meta = CATEGORY_META[cat_key]
+    floor = (CATEGORY_QUALIFY.get(cat_key) or {}).get("min_games")
+    return {
+        "key": cat_key,
+        "label": meta["title"],
+        "short_label": CATEGORY_SHORT_LABELS.get(cat_key, cat_key),
+        "unit": CATEGORY_UNITS.get(cat_key, ""),
+        "kind": meta["kind"],
+        "sub": _resolve_sub(meta["sub"], sport_records),
+        "players": [],
+        # The RULE, not the sentence. The client owns the wording of the empty
+        # state; this says only what the board is waiting for, so the copy can
+        # change without a pipeline change.
+        "no_data": {"min_games": floor, "depth": _board_depth(sport_records)},
+    }
+
+
+def _board_depth(records):
+    """Deepest per-player window across a record set, 0 for none. Mirrors
+    fetchers/epl._board_depth; duplicated rather than imported because
+    generate_stats is sport-agnostic and must not reach into one fetcher."""
+    depths = [r.get("games_window") or len(r.get("series") or []) for r in records]
+    depths = [d for d in depths if d]
+    return max(depths) if depths else 0
+
+
+def _renders_no_data(sport_key, cat_key):
+    """Whether an absent category should announce itself rather than vanish.
+    Only for opted-in sports, and only for a RATE board carrying a floor --
+    a counting board has no floor and so is never empty for this reason."""
+    if sport_key not in NO_DATA_SPORTS:
+        return False
+    q = CATEGORY_QUALIFY.get(cat_key) or {}
+    return bool(q.get("rate")) and bool(q.get("min_games"))
+
+
 def build_data(ranked_records, generated_at):
     """Assemble the single JSON payload the static site fetches: every
     approved category, its ranked players, and everything the leaderboard +
@@ -283,8 +372,18 @@ def build_data(ranked_records, generated_at):
     sports_out = {}
     for sport_key, cats_for_sport in by_sport_category.items():
         categories_out = []
+        # Every record this sport produced, across all its categories -- the
+        # basis for resolving a no-data board's depth, since it has none of
+        # its own.
+        sport_records = [r for recs in cats_for_sport.values() for r in recs]
         for cat_key in APPROVED_CATEGORIES.get(sport_key, []):
             if cat_key not in cats_for_sport:
+                # Absent because nobody qualified, not because the board does
+                # not exist -- say so rather than dropping it. See
+                # _renders_no_data for how narrowly this is scoped.
+                if _renders_no_data(sport_key, cat_key):
+                    categories_out.append(
+                        _no_data_category(sport_key, cat_key, sport_records))
                 continue
             records = sorted(cats_for_sport[cat_key], key=lambda r: r["rank"])
             meta = CATEGORY_META[cat_key]

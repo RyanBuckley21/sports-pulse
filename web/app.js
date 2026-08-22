@@ -317,9 +317,33 @@
     var cat = currentCategory();
     var players = cat.players;
     if (!players.length) {
+      // Two different empty boards, and they deserve different sentences.
+      //
+      // cat.no_data present means the board is configured, real, and WAITING:
+      // generate_stats emitted it deliberately because its qualification floor
+      // has not been cleared yet (EPL's goals_per_appearance needs three
+      // appearances, and early in a season nobody has three). Saying "no
+      // qualifying players" there is true but reads as a dead end, when the
+      // honest answer is that it fills itself in a few matchdays. The payload
+      // carries the RULE (min_games, and how deep the other boards have got);
+      // the sentence is composed here so the copy can change without a
+      // pipeline change.
+      //
+      // Without it, the board is empty for some other reason and keeps the
+      // original generic line.
+      var msg = "No qualifying players right now.";
+      if (cat.no_data) {
+        var need = Number(cat.no_data.min_games) || 0;
+        var have = Number(cat.no_data.depth) || 0;
+        msg = "No data available yet.";
+        if (need) {
+          msg += " This board needs " + need + " appearance" + (need === 1 ? "" : "s") +
+                 " per player; the deepest window so far is " + have + ".";
+        }
+      }
       return (
         '<div class="section-title-row"><span class="section-title">' + esc(cat.label) + "</span></div>" +
-        '<p class="empty-state">No qualifying players right now.</p>'
+        '<p class="empty-state">' + esc(msg) + "</p>"
       );
     }
     var leaderValue = players[0].value;
