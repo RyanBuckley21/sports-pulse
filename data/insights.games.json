@@ -844,27 +844,27 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 23,
-          "side": "KC"
+          "score": 6,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 8,
-          "side": "No clear lean"
+          "score": 17,
+          "side": "Under"
         },
         "moneyline": {
           "flags": [],
-          "score": 13,
+          "score": 6,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 26,
+          "side": "NRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 13,
+          "score": 4,
           "side": "No clear lean"
         },
         "team_total": {
@@ -877,7 +877,7 @@
           "home": {
             "abbr": "KC",
             "flags": [],
-            "score": 1,
+            "score": 11,
             "side": "No clear lean"
           }
         }
@@ -889,6 +889,10 @@
         "name": "Royals"
       },
       "probables": {
+        "away": {
+          "era": "3.66",
+          "name": "Jacob Waguespack"
+        },
         "home": {
           "era": "3.68",
           "name": "Daniel Lynch IV"
@@ -913,14 +917,19 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "DET 6-6"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.66 vs 3.68"
         }
       ],
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "nrfi_yrfi",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 23,
-        "side": "KC"
+        "market": "First-Inning Runs",
+        "score": 26,
+        "side": "NRFI"
       },
       "start": "2:10 PM ET",
       "status": "Preview",
