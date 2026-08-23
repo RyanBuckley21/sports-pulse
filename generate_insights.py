@@ -79,6 +79,8 @@ GAME_BUILDERS = {"mlb": mlb.build_game_entities, "nfl": nfl.build_game_entities,
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
 # below the cap are pruned on each run.
+#
+# Applied PER SPORT, not to the pooled set -- see _top_n_per_sport.
 TOP_N = 20
 
 
@@ -247,6 +249,33 @@ def _top_n(entities, n):
         return (ent.get("pulse") or {}).get("score", 0)
     ordered = sorted(entities.items(), key=lambda kv: (-score(kv[1]), (kv[1].get("entity") or "")))
     return dict(ordered[:n])
+
+
+def _top_n_per_sport(entities, n):
+    """_top_n applied WITHIN each sport rather than across the pooled set.
+
+    A single global cap made one sport's depth a function of another's. With
+    mlb and epl both active the 20 slots came out 11 mlb / 9 epl on the
+    2026-08-21 payload -- not because either board ran out of players, but
+    because 12 players tied on a pulse of 100 and the cap fell where it fell.
+    Neither sport was showing its own top 20, and a third sport would have
+    thinned both again. Per-sport makes each sport's list complete and
+    independent of what the others did that day.
+
+    Still bounded, which is the property the cap exists for: n per ACTIVE sport
+    instead of n overall. The committed player store grows in proportion (two
+    sports -> up to 40 entries), which is the intended cost.
+
+    Ordering within a sport is _top_n's, unchanged. The return is the union of
+    the per-sport winners -- same {key: entity} shape the caller already took,
+    so nothing downstream has to know this became per-sport."""
+    by_sport = {}
+    for key, ent in entities.items():
+        by_sport.setdefault(ent.get("sport"), {})[key] = ent
+    winners = {}
+    for sport_entities in by_sport.values():
+        winners.update(_top_n(sport_entities, n))
+    return winners
 
 
 def _active_game_sports(config):
@@ -431,7 +460,7 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     # be influenced by (or confused with) outcome data.
     _resolve_training_outcomes(config, generated_at)
     all_entities = build_entities(data, config)
-    entities = _top_n(all_entities, TOP_N)  # cap players to top-N by pulse (games are NOT capped)
+    entities = _top_n_per_sport(all_entities, TOP_N)  # top-N by pulse PER SPORT (games are NOT capped)
     store = _load_store(store_path)
     total = len(entities)
 
@@ -665,7 +694,14 @@ def _build_players_section(entities, insight_map, generated_at):
     Reuses the deterministic pulse + signals from build_entities; story/summary
     come from insight_map. Sorted most-notable first. Always emitted -- in
     merge-only mode entities without committed text still appear (pulse/signals
-    render; the AI block is simply omitted client-side when empty)."""
+    render; the AI block is simply omitted client-side when empty).
+
+    ONE FLAT LIST SPANNING EVERY ACTIVE SPORT, and each row carries its own
+    `sport`. That tag is not decoration: the Players view scopes the list to the
+    selected league with it, the way Who's Hot scopes its boards. Rendering this
+    array as-is puts a Premier League goalkeeper in a column of MLB hitters,
+    which is what it did before the view learned to filter. Any new consumer
+    reads `sport` or accepts the blend."""
     players = []
     for key, ent in entities.items():
         ins = insight_map.get(key) or {}

@@ -1,15 +1,27 @@
 (function () {
   "use strict";
 
+  var SP = window.SP || (window.SP = {});
+
   var state = {
     data: null,
-    sport: null,
     statBySport: {},
     view: "list", // 'list' | 'detail'
     selected: null, // {sport, cat, rank}
     listScroll: 0, // page scroll of the list, restored on return from detail
     chipScroll: 0, // chip row's horizontal scroll, restored on return
   };
+
+  // `sport` is NOT a field of this object. The selected league is shared with
+  // the Players view (see sport-state.js), so it has exactly one home, and this
+  // accessor forwards to it. Defined as a property rather than swapping every
+  // `state.sport` in this file for a call so the reads and writes below --
+  // including the ones inside render paths that have nothing to do with the
+  // picker -- keep working untouched and cannot drift from the shared value.
+  Object.defineProperty(state, "sport", {
+    get: function () { return SP.sport.get(); },
+    set: function (key) { SP.sport.set(key); },
+  });
 
   var appEl = document.getElementById("app");
 
@@ -204,92 +216,18 @@
     );
   }
 
-  // League monograms -- the league's own short name set in a circle, not a
-  // picture of the sport it plays.
-  //
-  // THE PICTORIAL ICONS THIS REPLACED COULD NOT SCALE, and the reason is
-  // structural rather than a matter of drawing them better. A glyph keyed to
-  // the SPORT collapses every league that plays that sport into one shape:
-  // nfl and cfb are both gridiron, so both drew the same football and became
-  // indistinguishable at a glance -- two buttons the user cannot tell apart is
-  // not a switcher. Monograms key to the LEAGUE, so any number of leagues
-  // sharing a sport stay separable, and the picker stops needing new artwork
-  // every time a sport is registered.
-  //
-  // The text comes from the SPORT KEY, not from the display label. The keys are
-  // already the abbreviations everyone uses (mlb, nfl, cfb, epl) and they are
-  // the identifier the rest of the pipeline is keyed on, so the badge cannot
-  // drift from what config.yaml and SPORT_FETCHERS call the sport. The label is
-  // NOT usable for this: generate_stats.SPORT_LABELS maps epl to "Premier
-  // League", which is the right thing to read aloud and the wrong thing to set
-  // in a 44px circle. So the label still carries the accessible name and the
-  // tooltip; only the visible badge is the key.
-  var SPORT_MONOGRAMS = {
-    // Keys that are not already their own abbreviation. "WORLDCUP" does not
-    // fit and "WOR" is not a name anybody uses.
-    worldcup: "WC",
-  };
-
-  function sportMonogram(key) {
-    if (SPORT_MONOGRAMS[key]) return SPORT_MONOGRAMS[key];
-    var k = String(key || "").toUpperCase();
-    // Four characters is what fits legibly at this diameter; a longer
-    // unregistered key is truncated rather than allowed to overflow its circle.
-    return k.length <= 4 ? k : k.slice(0, 3);
-  }
-
-  // The sport switcher: a single icon in the header that opens into one icon
-  // per sport. It replaced a two-up row of full-width pills, which spent a
-  // whole row of vertical rhythm on a control that is touched rarely and has
-  // exactly one bit of state.
-  //
-  // ONE CONTAINER, N BUTTONS -- there is no separate trigger element. Collapsed,
-  // every inactive option is width:0/opacity:0 and the active one IS the
-  // disclosure; expanded, they all have width. That is what lets the whole
-  // thing animate as one pill widening rather than a menu appearing over the
-  // header, and it means the same [data-sport] buttons serve both states.
-  //
-  // THE ACTIVE OPTION IS RENDERED LAST, deliberately. The picker is right-
-  // aligned (margin-left:auto), so a widening container grows leftward from a
-  // pinned right edge. With the active option last it sits on that pinned edge
-  // and never moves as the others slide out from behind it; anywhere else in
-  // the order and the icon you just tapped jumps sideways as the row opens.
+  // The sport switcher is sport-state.js's control, rendered here into the
+  // header row. This section owns only the two things that are its own: WHICH
+  // leagues exist (data.json's sports block) and what each is CALLED
+  // (sport.label, which the Players view has no equivalent source for). The
+  // markup, the monograms, the collapsed/expanded behaviour and the selection
+  // itself all live in the shared module, so the same control appears on the
+  // Players tab without either section reaching into the other.
   function renderSportPicker() {
     var sportKeys = Object.keys(state.data.sports);
-    // Nothing to switch between with a single sport -- omit it entirely
-    // (it reappears automatically once a second sport is in data.json).
-    // Unchanged from the pill row this replaced.
-    if (sportKeys.length <= 1) return "";
-    var ordered = sportKeys.filter(function (k) { return k !== state.sport; });
-    ordered.push(state.sport);
-    var buttons = ordered
-      .map(function (key) {
-        var isActive = key === state.sport;
-        var label = state.data.sports[key].label;
-        return (
-          '<button class="sport-opt' + (isActive ? " active" : "") + '"' +
-          ' data-sport="' + esc(key) + '" type="button"' +
-          // Collapsed, the active button is a disclosure; expanded, it is the
-          // current choice. aria-expanded lives on it either way because it is
-          // the only control a screen reader can reach while collapsed.
-          (isActive ? ' aria-expanded="false" aria-current="true"' : "") +
-          ' aria-label="' + esc(isActive ? label + " — switch sport" : "Switch to " + label) + '"' +
-          ' title="' + esc(label) + '">' +
-          esc(sportMonogram(key)) +
-          "</button>"
-        );
-      })
-      .join("");
-    return '<div class="sport-picker" id="sportPicker" data-open="false">' + buttons + "</div>";
-  }
-
-  function closeSportPicker() {
-    var picker = document.getElementById("sportPicker");
-    if (!picker || picker.dataset.open !== "true") return false;
-    picker.dataset.open = "false";
-    var act = picker.querySelector(".sport-opt.active");
-    if (act) act.setAttribute("aria-expanded", "false");
-    return true;
+    var labels = {};
+    sportKeys.forEach(function (k) { labels[k] = state.data.sports[k].label; });
+    return SP.sport.render(sportKeys, state.sport, labels);
   }
 
   function renderChipRow() {
@@ -725,34 +663,24 @@
   appEl.addEventListener("click", function (e) {
     var sportBtn = e.target.closest("[data-sport]");
     if (sportBtn) {
-      var picker = sportBtn.closest(".sport-picker");
-      // COLLAPSED: the one visible icon is a disclosure, not a re-selection --
-      // opening is the only thing a tap can mean when the other options have
-      // no width to be tapped. Open and stop; the selection branch below is
-      // unreachable until they are actually on screen.
-      if (picker && picker.dataset.open !== "true") {
-        picker.dataset.open = "true";
-        sportBtn.setAttribute("aria-expanded", "true");
-        return;
-      }
-      var sport = sportBtn.dataset.sport;
-      if (sport !== state.sport) {
-        state.sport = sport;
+      // What the tap MEANS (expand / choose / never mind) is the shared
+      // control's decision -- see sport-state.js's activate(). It has already
+      // applied the selection by the time a key comes back; what is left here
+      // is this section's own reaction to a league change.
+      var result = SP.sport.activate(sportBtn);
+      if (result !== "opened" && result !== "dismissed") {
         state.view = "list";
         state.selected = null;
         // No explicit collapse needed: render() rebuilds the picker from
         // scratch and its markup is collapsed by default.
         render();
         setPageScroll(0); // new sport = fresh context; start at the top
-      } else {
-        // Tapping the already-active icon while open is "never mind".
-        closeSportPicker();
       }
       return;
     }
     // A tap anywhere else in the app closes an open picker, then falls through
     // so the same tap still does whatever it was going to do.
-    closeSportPicker();
+    SP.sport.close(appEl);
     var chipBtn = e.target.closest("[data-cat]");
     if (chipBtn) {
       if (chipBtn.dataset.cat !== state.statBySport[state.sport]) {
@@ -940,20 +868,21 @@
     swipe = null;
   }
 
-  // Escape closes the sport picker. On document rather than appEl because the
-  // key can arrive while focus sits outside the app element (the tab bar, or
-  // nothing at all after a pointer tap), and an expanded picker should not
-  // survive that.
+  // Escape closes THIS SECTION's sport picker. On document rather than appEl
+  // because the key can arrive while focus sits outside the app element (the
+  // tab bar, or nothing at all after a pointer tap), and an expanded picker
+  // should not survive that.
+  //
+  // Scoped to appEl, not the document: the Players view renders the same
+  // control and binds its own Escape the same way, and a document-wide query
+  // would have each handler closing whichever picker happened to come first in
+  // the DOM. close() returns the button that was acting as the disclosure, so
+  // focus goes back to the control the user opened rather than being dropped
+  // at the top of the document.
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
-    var picker = document.getElementById("sportPicker");
-    var wasOpen = closeSportPicker();
-    // Return focus to the control the user opened, so dismissing by keyboard
-    // does not drop the caret at the top of the document.
-    if (wasOpen && picker) {
-      var act = picker.querySelector(".sport-opt.active");
-      if (act) act.focus();
-    }
+    var refocus = SP.sport.close(appEl);
+    if (refocus) refocus.focus();
   });
 
   appEl.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -995,9 +924,11 @@
       .then(function (data) {
         state.data = data;
         fetchedAt = Date.now();
-        if (!state.sport || !state.data.sports[state.sport]) {
-          state.sport = Object.keys(state.data.sports)[0];
-        }
+        // Settle the shared selection against the leagues this payload
+        // actually carries -- keeps a still-valid choice, otherwise falls to
+        // data.json's first sport. Same rule the Players view applies, from
+        // the same place, so the two can never disagree about the default.
+        SP.sport.ensure(Object.keys(state.data.sports));
         Object.keys(state.data.sports).forEach(function (key) {
           var cats = state.data.sports[key].categories;
           if (!state.statBySport[key] && cats.length) state.statBySport[key] = cats[0].key;
@@ -1040,9 +971,8 @@
     state.chipScroll = 0;
   }
 
-  window.SP = window.SP || {};
-  window.SP.views = window.SP.views || {};
-  window.SP.views.whosHot = { mount: mount, unmount: unmount };
+  SP.views = SP.views || {};
+  SP.views.whosHot = { mount: mount, unmount: unmount };
 
   // Without the shell (the five standalone pages that still ship today), there
   // is no router to call mount(), so self-start. The shell marks its document

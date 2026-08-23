@@ -16,7 +16,7 @@ routes inside it:
 | Route | View | Source |
 | --- | --- | --- |
 | `#/games` | Today's Games | `data.json` → `insights.games` |
-| `#/players` | Players | `data.json` → `insights.players` |
+| `#/players` | Players | `data.json` → `insights.players`, scoped to one league |
 | `#/teams` | Teams | `mock-insights.json` (preview, not live) |
 | `#/components` | Card gallery | `mock-insights.json` |
 
@@ -34,6 +34,25 @@ What remains here:
   cannot reach the Who's Hot section now that both stylesheets share a document.
   See the header comment in that file for why the scope sits on `<body>`.
 - `mock-insights.json` — the deferred mock behind the teams and components views.
+
+## League scoping
+
+`insights.players` is ONE flat list spanning every active sport, ranked by pulse
+and nothing else — so with mlb and epl both live it interleaved a Premier League
+goalkeeper into a column of MLB hitters. Every row carries its own `sport`, and
+the Players view now filters on it and renders the shared sport picker
+(`../sport-state.js`) above the list. That picker and its selection are the same
+ones Who's Hot's header carries: pick a league on either tab and the other agrees
+when you get there.
+
+Games and Teams are deliberately NOT scoped. Both are structurally identical —
+flat, sport-tagged, unfiltered — but neither can currently mix, because
+`generate_insights._active_game_sports` resolves to `[mlb]`: `active_game_sports`
+falls back to `active_sports` and is then filtered to `GAME_BUILDERS`, which epl
+is not in. Scoping them would mean deciding what those tabs should show for a
+league that has no game builder at all, which is a product question, not this
+bug. Revisit when a second sport joins `active_game_sports` (nfl and cfb are
+registered and waiting).
 
 ## Testing
 

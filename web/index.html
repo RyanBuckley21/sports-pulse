@@ -48,8 +48,10 @@
 
 <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
 
-<!-- Order matters: both view modules must have registered on window.SP.views
-     before shell.js starts routing. -->
+<!-- Order matters: sport-state.js owns the league selection both view modules
+     read, so it loads first; and both view modules must have registered on
+     window.SP.views before shell.js starts routing. -->
+<script src="sport-state.js"></script>
 <script src="app.js"></script>
 <script src="insights/insights.js"></script>
 <script src="shell.js"></script>

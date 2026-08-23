@@ -283,7 +283,8 @@ jobs:
           # The navigation shell is one document: index.html plus the three
           # stylesheet/script pairs it loads. The five standalone insights pages
           # it replaced are gone, so there are no other HTML files to publish.
-          cp web/index.html web/app.css web/app.js web/shell.css web/shell.js site/
+          cp web/index.html web/app.css web/app.js web/shell.css web/shell.js \
+             web/sport-state.js site/
           cp output/data.json site/data.json
           cp -r assets site/assets
           # insights.css and insights.js are loaded by the shell from here, and
@@ -294,7 +295,7 @@ jobs:
           # keep serving a stale cached copy indefinitely even after a hard
           # refresh or app relaunch, since nothing about the URL ever changes
           # from one deploy to the next.
-          for ref in app.css shell.css insights.css app.js shell.js insights.js; do
+          for ref in app.css shell.css insights.css app.js shell.js insights.js sport-state.js; do
             sed -i "s|${ref}\"|${ref}?v=${GITHUB_SHA}\"|" site/index.html
           done
           # Fail the build rather than publish an app that cannot be busted. The

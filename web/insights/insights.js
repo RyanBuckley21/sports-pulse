@@ -6,6 +6,8 @@
   // mirroring app.js's rendering style, and are exposed on window.SP.Cards so
   // any page on the site (including the main app later) can reuse them.
 
+  var SP = window.SP || (window.SP = {});
+
   function esc(s) {
     var div = document.createElement("div");
     div.textContent = s == null ? "" : String(s);
@@ -601,8 +603,7 @@
   };
 
   // Expose for reuse across the site.
-  window.SP = window.SP || {};
-  window.SP.Cards = Cards;
+  SP.Cards = Cards;
 
   // ---- page bootstrap: load mock data, render the current view ----
   var root = document.getElementById("insightsRoot");
@@ -617,6 +618,11 @@
   // rendered list order is fixed for the life of one render, so the index is
   // a perfectly stable key for that render's lifetime.
   var playersById = {};
+
+  // The view currently in the DOM, set by renderView. The sport picker needs it
+  // to re-render itself in place after a league change, and the delegated
+  // handler that reads it is bound once for every view.
+  var currentView = null;
 
   // One game in the list: the compact row plus its (initially empty) detail
   // panel. The wrapper -- not Cards.gameRow -- owns the id and the panel, so
@@ -699,6 +705,21 @@
   // no module-level variable to keep in sync, and it resets for free because
   // mount() re-renders the section on every visit.
   root.addEventListener("click", function (ev) {
+    // The sport picker is checked FIRST and closes over its own tap: it is the
+    // one control here that changes what the list contains rather than what one
+    // row reveals, so nothing below should also see the click.
+    var sportBtn = ev.target.closest && ev.target.closest("[data-sport]");
+    if (sportBtn) {
+      // Expand / choose / never mind is the shared control's decision -- see
+      // sport-state.js's activate(). A key back means the league changed and is
+      // already selected, so all that is left is to redraw this view under it.
+      var result = SP.sport.activate(sportBtn);
+      if (result !== "opened" && result !== "dismissed") mount(currentView);
+      return;
+    }
+    // A tap anywhere else closes an open picker, then falls through so the same
+    // tap still does whatever it was going to do. Mirrors app.js.
+    SP.sport.close(root);
     var row = ev.target.closest && ev.target.closest(".gr-row");
     if (row) return toggleGame(row);
     var prow = ev.target.closest && ev.target.closest(".pi-row");
@@ -727,6 +748,18 @@
     if (!prow) return;
     ev.preventDefault();
     togglePlayer(prow);
+  });
+
+  // Escape closes THIS SECTION's sport picker, scoped to `root` for the same
+  // reason app.js scopes its own to appEl: both containers are permanent, so
+  // both pickers can be in the document at once and a document-wide query would
+  // have each handler closing the wrong one. Bound on document because the key
+  // can arrive while focus sits outside the section (the tab bar, or nothing at
+  // all after a pointer tap).
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape") return;
+    var refocus = SP.sport.close(root);
+    if (refocus) refocus.focus();
   });
 
   // ---------------- re-entry point ----------------
@@ -805,8 +838,8 @@
   // gamesById / playersById / UI are all reassigned on every render.
   function unmount() {}
 
-  window.SP.views = window.SP.views || {};
-  window.SP.views.insights = { mount: mount, unmount: unmount };
+  SP.views = SP.views || {};
+  SP.views.insights = { mount: mount, unmount: unmount };
 
   // Without the shell (the five standalone pages that still ship today), there
   // is no router to call mount(), so self-start from the body attribute. The
@@ -821,10 +854,13 @@
   }
 
   function renderView(view, data, root) {
+    // Remembered so the sport picker can re-render the view it is sitting in
+    // without the click handler having to know which one that is.
+    currentView = view;
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
     AI_ENABLED = data.aiInsightsEnabled !== false;
-    if (view === "players") renderPlayers((data.insights && data.insights.players) || [], root);
+    if (view === "players") renderPlayers(data, root);
     else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
     // insights.teams, matching players/games -- NOT the top-level data.teams the
     // mock used. renderGallery still reads that top-level shape, and still gets
@@ -851,14 +887,56 @@
     });
   }
 
+  // The leagues the picker offers, and what to call them.
+  //
+  // data.sports is the SAME source Who's Hot builds its picker from, so the two
+  // controls always offer the same leagues in the same order -- config.yaml's
+  // active_sports order, carried through data.json. A payload with no
+  // leaderboard block at all (the committed mock) falls back to whatever sports
+  // the players themselves declare, in first-seen order.
+  function sportOptions(data) {
+    var sports = data.sports || {};
+    var keys = Object.keys(sports), labels = {};
+    keys.forEach(function (k) { labels[k] = (sports[k] || {}).label || k; });
+    if (!keys.length) {
+      ((data.insights && data.insights.players) || []).forEach(function (p) {
+        var k = p && p.sport;
+        if (k && keys.indexOf(k) < 0) { keys.push(k); labels[k] = k; }
+      });
+    }
+    return { keys: keys, labels: labels };
+  }
+
   // Players render as compact rows that expand in place, mirroring renderGames
   // above. Every visit starts fully collapsed for the same reason: mount()
   // always re-renders, so a remembered open row would not be resuming
   // anything -- you are re-scanning the list fresh.
-  function renderPlayers(players, root) {
+  //
+  // SCOPED TO ONE LEAGUE. data.insights.players is a single flat list spanning
+  // every active sport (generate_insights._build_players_section), ranked by
+  // pulse and nothing else. Rendered as-is -- which is what this did -- a
+  // Premier League goalkeeper on a pulse of 100 sits between two MLB hitters on
+  // the same score, and the page reads as a cross-sport ranking that nobody
+  // asked for. The rows already carry `sport`; this filters on it and puts the
+  // shared picker (sport-state.js -- the same control, and the same selection,
+  // as Who's Hot's header) above the list so the choice is visible and
+  // changeable from here rather than only from the other tab.
+  function renderPlayers(data, root) {
+    var all = (data.insights && data.insights.players) || [];
+    var opts = sportOptions(data);
+    var active = SP.sport.ensure(opts.keys);
+    var players = all.filter(function (p) {
+      // An UNTAGGED player is kept. `sport` is what makes scoping possible, and
+      // a payload without it is single-league by construction -- the committed
+      // mock fixture is exactly that. Dropping those would empty the view
+      // rather than scope it.
+      return !p || !p.sport || p.sport === active;
+    });
     playersById = {};
     players.forEach(function (p, idx) { playersById[String(idx)] = p; });
-    root.innerHTML = list(players, playerItem);
+    var picker = SP.sport.render(opts.keys, active, opts.labels);
+    root.innerHTML = (picker ? '<div class="pi-sportbar">' + picker + "</div>" : "") +
+      list(players, playerItem);
     // Interactive rows, exposed to keyboard and assistive tech here rather than
     // inside Cards.playerRow -- the component stays presentational, and only
     // the wiring that actually makes rows clickable claims they are buttons.
