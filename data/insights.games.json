@@ -723,35 +723,35 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 41,
-          "side": "CWS"
+          "score": 14,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 9,
+          "score": 4,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 36,
+          "score": 18,
           "side": "CWS"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 16,
+          "side": "YRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 36,
-          "side": "CWS"
+          "score": 14,
+          "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "TEX",
             "flags": [],
-            "score": 27,
-            "side": "Under"
+            "score": 11,
+            "side": "No clear lean"
           },
           "home": {
             "abbr": "CWS",
@@ -771,6 +771,10 @@
         "away": {
           "era": "4.21",
           "name": "Kumar Rocker"
+        },
+        "home": {
+          "era": "4.20",
+          "name": "Jos\u00e9 Urquidy"
         }
       },
       "pulse": {
@@ -792,13 +796,18 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "CWS 3-2"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.21 vs 4.20"
         }
       ],
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "moneyline",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 41,
+        "market": "Moneyline",
+        "score": 18,
         "side": "CWS"
       },
       "start": "7:40 PM ET",
