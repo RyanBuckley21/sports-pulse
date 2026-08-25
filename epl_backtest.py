@@ -368,25 +368,29 @@ def derive_calibration(measurements, shipped=SHIPPED_SIGNALS, require_ci=True):
 def candidate_config(weights, scales, min_threshold, standout_threshold):
     return {"betting_signals": {SPORT_KEY: {
         "min_threshold": min_threshold, "standout_threshold": standout_threshold,
-        "scales": scales, "bet_types": {"match_result": weights}}}}
+        "scales": scales, "bet_types": {"double_chance": weights}}}}
 
 
 def grade(rec, scored):
-    """Grade a match_result pick against the real final score.
+    """Grade a double_chance pick against the real final score.
 
-    A DRAW IS A LOSS, not a push. 1X2 has no push, so this must not be softened
-    -- the reported hit rate is against that rule. `dc_hit` additionally reports
-    the same pick read as a double chance (side-or-draw), which is a genuinely
-    different market and is the one the per-season spread says is steadier.
+    A DRAW WINS. That is what the market is: "<team> or Draw", so a draw is a
+    result the pick contains rather than the result that beats it. `hit` grades
+    the market as scored. `outright_hit` grades the same lean read as a 1X2
+    pick, where a draw loses -- reported alongside because it is the number the
+    other sports' moneyline hit rates are comparable to, and because the gap
+    between the two is the clearest statement of what including draws buys.
     """
-    entry = (scored or {}).get("match_result") or {}
+    entry = (scored or {}).get("double_chance") or {}
     side = entry.get("side")
     if not side or side == "No clear lean":
         return None
-    picked_home = side == rec["home_abbr"]
-    won = (rec["result"] == "H") if picked_home else (rec["result"] == "A")
+    # "ARS or Draw" -> the leaning side is the leading token.
+    picked_home = side.split(" ")[0] == rec["home_abbr"]
+    outright = (rec["result"] == "H") if picked_home else (rec["result"] == "A")
     return {"side": side, "score": entry.get("score", 0), "picked_home": picked_home,
-            "result": rec["result"], "hit": won, "dc_hit": won or rec["result"] == "D"}
+            "result": rec["result"], "hit": outright or rec["result"] == "D",
+            "outright_hit": outright}
 
 
 def fit_weights(records, gate, names, n_boot, seed):
@@ -434,7 +438,7 @@ def summarize(picks):
     n = len(picks)
     return {"n": n,
             "hit": sum(1 for p in picks if p["hit"]) / n,
-            "dc": sum(1 for p in picks if p["dc_hit"]) / n,
+            "outright": sum(1 for p in picks if p["outright_hit"]) / n,
             "pct_home": sum(1 for p in picks if p["picked_home"]) / n}
 
 
@@ -597,15 +601,15 @@ def main(argv=None):
     all_picks = walk_forward(records, args.gate, SHIPPED_SIGNALS, args.seed)
     scoreable = len(all_picks) or 1
     rows = []
-    for t in (0, 15, 20, 25, 30, 40, 50, 60, 70):
+    for t in (0, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75):
         s = summarize([p for p in all_picks if p["score"] >= t])
         if not s:
             continue
         rows.append({"threshold": t, "coverage": s["n"] / scoreable, **s})
-    print("  %-10s %7s %9s %8s %10s" % ("threshold", "picks", "%scoreable", "1X2", "DoubleCh"))
+    print("  %-10s %7s %9s %8s %10s" % ("threshold", "picks", "%scoreable", "DoubleCh", "1X2 (ref)"))
     for r in rows:
         print("  %-10d %7d %8.1f%% %7.1f%% %9.1f%%" %
-              (r["threshold"], r["n"], 100 * r["coverage"], 100 * r["hit"], 100 * r["dc"]))
+              (r["threshold"], r["n"], 100 * r["coverage"], 100 * r["hit"], 100 * r["outright"]))
     threshold = args.threshold if args.threshold is not None else pick_threshold(rows)
     print("  -> threshold %d\n" % threshold)
 
@@ -613,7 +617,7 @@ def main(argv=None):
         print("CANDIDATE SETS (out of sample, threshold %d)" % threshold)
         base = None
         print("  %-28s %7s %8s %10s %7s  %s" %
-              ("set", "picks", "1X2", "DoubleCh", "agree", "vs attack+defense"))
+              ("set", "picks", "DoubleCh", "1X2 (ref)", "agree", "vs attack+defense"))
         for label, names in CANDIDATE_SETS.items():
             picks = walk_forward(records, args.gate, names, args.seed, threshold)
             s = summarize(picks)
@@ -626,26 +630,44 @@ def main(argv=None):
                 delta = ("%+5.2f pp  CI [%+.2f, %+.2f]%s" %
                          (mean, lo, hi, "" if lo <= 0 <= hi else "  *")) if mean is not None else ""
             print("  %-28s %7d %7.1f%% %9.1f%% %s  %s" %
-                  (label, s["n"], 100 * s["hit"], 100 * s["dc"], agree_s, delta))
+                  (label, s["n"], 100 * s["hit"], 100 * s["outright"], agree_s, delta))
         print("  agree = share of shared matches picked the same side as attack+defense")
         print("  * = bootstrap CI on the accuracy difference excludes zero\n")
+
+    print("THREE-WAY OUTCOME SPLIT by score band (out of sample)")
+    print("  The draw as a first-class outcome. `side` is the leaning side winning")
+    print("  outright, `other` the opposite side; a double_chance pick wins on")
+    print("  side+draw. These are observed frequencies, not a fitted distribution --")
+    print("  config.yaml's epl.outcome_split ships the all-season version.")
+    print("  %-14s %7s %8s %8s %9s" % ("score band", "n", "side", "draw", "other"))
+    for lo, hi in ((0, 25), (25, 50), (50, 70), (70, 101)):
+        band = [p for p in all_picks if lo <= p["score"] < hi]
+        if not band:
+            continue
+        bn = len(band)
+        side = sum(1 for p in band if p["outright_hit"]) / bn
+        draw = sum(1 for p in band if p["result"] == "D") / bn
+        print("  %-14s %7d %7.3f %8.3f %9.3f" %
+              ("%d-%d" % (lo, hi - 1), bn, round(side, 3), round(draw, 3),
+               round(1 - side - draw, 3)))
+    print()
 
     picks = [p for p in all_picks if p["score"] >= threshold]
     s = summarize(picks)
     b = baselines(records, args.gate)
     print("GRADED PERFORMANCE at threshold %d (out of sample)" % threshold)
-    print("  %-11s %7s %8s %10s" % ("season", "picks", "1X2", "DoubleCh"))
+    print("  %-11s %7s %8s %10s" % ("season", "picks", "DoubleCh", "1X2 (ref)"))
     for season in sorted({p["season"] for p in picks}):
         sp = [p for p in picks if p["season"] == season]
         print("  %-11s %7d %7.1f%% %9.1f%%" %
               ("%d/%02d" % (season, (season + 1) % 100), len(sp),
                100 * sum(1 for p in sp if p["hit"]) / len(sp),
-               100 * sum(1 for p in sp if p["dc_hit"]) / len(sp)))
-    print("  %-11s %7d %7.1f%% %9.1f%%" % ("ALL", s["n"], 100 * s["hit"], 100 * s["dc"]))
+               100 * sum(1 for p in sp if p["outright_hit"]) / len(sp)))
+    print("  %-11s %7d %7.1f%% %9.1f%%" % ("ALL", s["n"], 100 * s["hit"], 100 * s["outright"]))
     print("  picked home on %.1f%% of them; home wins %.1f%% of the gated slate" %
           (100 * s["pct_home"], 100 * b["home"]))
-    print("  naive baselines: always HOME %.1f%%   always HOME-or-DRAW %.1f%%" %
-          (100 * b["home"], 100 * b["home_or_draw"]))
+    print("  naive baselines: always HOME-or-DRAW %.1f%%   (1X2 ref: always HOME %.1f%%)" %
+          (100 * b["home_or_draw"], 100 * b["home"]))
     print("\n  THIS IS A HIT RATE, NOT A PROFITABILITY CLAIM. No odds, line or price")
     print("  data enters this repo anywhere, so nothing here says these picks beat")
     print("  the vig. Draws are priced; a 1X2 hit rate cannot see that.\n")

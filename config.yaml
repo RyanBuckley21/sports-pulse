@@ -16,13 +16,15 @@ top_n: 10
 # gated separately by `active_game_sports` below.
 #
 # epl added 2026-08-21. LEADERBOARDS ONLY, and that is not a promise this key
-# makes on its own -- it is a fact about EPL specifically. There is no
-# `betting_signals.epl` block and no EPL entry in
-# generate_insights.GAME_BUILDERS, and _active_game_sports filters its
-# resolved list down to sports registered in GAME_BUILDERS, so EPL cannot
-# reach the scored-picks pipeline through this key's fallback. Adding a sport
-# that IS registered there (nfl, cfb) would be a different matter and needs
-# `active_game_sports` set explicitly first.
+# makes on its own -- it is a fact about EPL specifically. There is now a
+# calibrated `betting_signals.epl` block further down, but a config block is
+# not an activation: EPL has no entry in generate_insights.GAME_BUILDERS, and
+# _active_game_sports filters its resolved list down to sports registered
+# there, so EPL still cannot reach the scored-picks pipeline through this
+# key's fallback. What switches it on is registering a builder AND naming it
+# in `active_game_sports` -- two deliberate steps, neither of which this key
+# performs. Adding a sport that IS registered (nfl, cfb) would be a different
+# matter and needs `active_game_sports` set explicitly first.
 active_sports: [mlb, epl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
@@ -902,14 +904,34 @@ betting_signals:
   # survivors, threshold read off a sensitivity table -- with three departures
   # forced by the sport. All three are in epl_backtest.py's report, not buried:
   #
-  #   1. THE OUTCOME IS GOAL DIFFERENCE, not home_win. nfl_backtest excludes
-  #      ties from its reliability pass, which is free at NFL's 0.2%. EPL draws
-  #      are 23.6% of these 2,660 matches, so the same exclusion would discard a
-  #      quarter of the evidence and condition every r on "given the match was
-  #      decisive" -- not the population this scores live. The home_win version
-  #      is reported alongside and agrees closely (attack +0.366 vs +0.357,
-  #      defense +0.329 vs +0.339), which is what says this is a better
-  #      estimator rather than a different question.
+  #   1. DRAWS ARE AN OUTCOME, NOT AN EXCLUSION. This is the departure the other
+  #      two follow from. A draw is a normal result in this sport -- 23.6% of
+  #      these 2,660 matches -- unlike NFL's 0.2% ties, which nfl_backtest can
+  #      afford to throw away. So draws are kept in three separate places, and
+  #      it takes all three:
+  #        THE MARKET is double_chance ("<team> or Draw"), so a draw COUNTS FOR
+  #        the pick. A 1X2 market would make a draw the thing that beats you and
+  #        would hand the model an outcome it can never name -- which is exactly
+  #        what "throwing draws out" means in practice, whatever the reliability
+  #        pass does.
+  #        THE RELIABILITY PASS correlates against GOAL DIFFERENCE rather than a
+  #        point-biserial on home_win with draws dropped, so every match counts.
+  #        The home_win version is reported alongside and agrees closely (attack
+  #        +0.366 vs +0.357, defense +0.329 vs +0.339), which is what says this
+  #        is a better estimator rather than a different question.
+  #        THE OUTPUT names it -- see outcome_split below.
+  #
+  #      WHAT IS NOT CLAIMED: the model does not PICK draws, and that limit was
+  #      measured, not assumed. A draw is never the modal outcome in any lean
+  #      band; the draw rate is flat at 17-27% with no usable pattern;
+  #      correlation with the lean is -0.013 (95% CI [-0.051, +0.027]) and with
+  #      the match's scoring environment -0.016 (CI [-0.057, +0.023]), both
+  #      spanning zero. That second one was tested specifically because a draw
+  #      might plausibly depend on a SUM -- how low-scoring both sides are --
+  #      rather than the difference signal_core.paired computes; it does not. In
+  #      every lean band, picking the leaning side beats picking the draw by 6 to
+  #      33 points. Including draws in the market is honest; forecasting them
+  #      would be invention.
   #
   #   2. THE HEADLINE NUMBER IS OUT OF SAMPLE. NFL and CFB derive weights over
   #      all seasons and grade on those same seasons. Seven seasons is enough to
@@ -945,19 +967,22 @@ betting_signals:
   # form-vs-season-long; venue_form is the only signal carrying venue
   # information at all.
   #
-  # MEASURED PERFORMANCE at these values, out of sample, threshold 50:
-  # 60.7% on match_result (1X2) over 844 picks, against a 43.8% always-pick-home
-  # baseline on the same gated slate. Per-season: 60.0 / 61.7 / 62.1 / 65.8 /
-  # 60.0 / 52.8. THAT 13-POINT SPREAD IS THE MAIN REASON FOR CAUTION HERE, and
-  # the honest contrast with cfb's block, whose three seasons ran 77.5 / 76.1 /
-  # 77.2. The most recent season is the worst of the six.
+  # MEASURED PERFORMANCE at these values, out of sample, threshold 55:
+  # 85.2% on double_chance over 738 picks, against a 67.1% always-pick-
+  # home-or-draw baseline on the same gated slate. Per-season: 79.2 / 84.1 /
+  # 87.5 / 88.6 / 84.5 / 87.6 -- a 9.4-point spread, and the weak season is
+  # 2020/21, played in empty stadiums, where home advantage inverted league-wide
+  # (home wins 37.9% against away 40.3%, the only season of the seven where away
+  # is ahead). A model leaning partly on venue form having its worst year there
+  # is the expected failure, not an unexplained one.
   #
-  # Read as a double chance (side-or-draw) the same picks grade 83.8% against a
-  # 67.1% baseline, and are markedly steadier season to season: 78.6 / 82.7 /
-  # 84.8 / 85.5 / 85.9 / 85.4. That is a DIFFERENT MARKET and is not what
-  # bet_types below scores; it is recorded because the stability gap is a real
-  # argument for scoring double chance instead, and that decision has not been
-  # taken.
+  # THE SAME LEAN READ AS A 1X2 PICK grades 61.7% against a 43.8% always-home
+  # baseline, and is much less stable: 58.3 / 63.4 / 64.2 / 68.2 / 59.5 / 54.3,
+  # a 13.9-point spread. That gap is what including draws buys, and it is why
+  # bet_types scores double_chance rather than match_result. The 1X2 number is
+  # kept in the report as the figure comparable to the other sports' moneyline
+  # hit rates -- cfb's 76.9% and nfl's are two-outcome markets, so reading them
+  # against 85.2% would flatter this one.
   #
   # THIS IS A HIT RATE, NOT A PROFITABILITY CLAIM -- the same warning cfb's
   # block carries, and it binds harder here. No odds, line or price data enters
@@ -979,13 +1004,13 @@ betting_signals:
   # live picks; mlb's constants took several rounds of real production
   # measurement to settle and these have had none.
   epl:
-    # 50 is the most selective threshold that still keeps at least a third of
-    # the scoreable slate (43.6% at 50; 32.3% at 60) -- nfl_backtest's rule,
+    # 55 is the most selective threshold that still keeps at least a third of
+    # the scoreable slate (36.5% at 55; 30.9% at 60) -- nfl_backtest's rule,
     # flagged there as a judgment call and flagged as one here. Accuracy rises
-    # monotonically with it (51.5% at 0, 55.2% at 30, 60.7% at 50, 64.6% at 70),
+    # monotonically with it (74.7% at 0, 79.9% at 35, 85.2% at 55, 86.5% at 75),
     # so this is a coverage/accuracy trade rather than an optimum.
-    min_threshold: 50
-    standout_threshold: 50
+    min_threshold: 55
+    standout_threshold: 55
     # Each scale is the measured standard deviation of that signal's own raw
     # gap over the 2,307 scoreable matches, so a one-sigma edge maps to the same
     # place on the tanh for every signal. Every SIGNAL_SPECS entry needs one --
@@ -1002,12 +1027,31 @@ betting_signals:
       rest_gap: 4.8390
     bet_types:
       # r=+0.366 / +0.329 / +0.294 / +0.330; r^2 renormalized over the four.
-      # A draw LOSES this market -- 1X2 has no push.
-      match_result:
+      # A draw WINS this market: both sides are "<team> or Draw".
+      double_chance:
         attack: 0.3057
         defense: 0.2475
         venue_form: 0.2488
         recent_form: 0.1979
+    # Observed frequencies of the three results, banded by Signal Score, over
+    # all 2,307 scoreable matches. NOT a fitted distribution -- real counts, on
+    # the same deterministic footing as everything else here.
+    #
+    # This is what makes the draw VISIBLE rather than merely survivable. The
+    # market already counts it as a win; this says how often it is actually the
+    # result, which differs enough across bands to be worth showing (26.2% at
+    # the 50-69 band against 19.8% at 70+). `side` is the leaning side winning
+    # outright and `other` is the opposite side winning, so a double_chance pick
+    # wins on side+draw -- reported apart rather than pre-added so the card can
+    # show all three.
+    #
+    # Extend by adding a row; epl_signals.outcome_split takes the highest band
+    # a score clears and needs no code change for a new one.
+    outcome_split:
+      - {min_score: 0,  side: 0.433, draw: 0.210, other: 0.357}
+      - {min_score: 25, side: 0.455, draw: 0.263, other: 0.282}
+      - {min_score: 50, side: 0.564, draw: 0.262, other: 0.174}
+      - {min_score: 70, side: 0.656, draw: 0.198, other: 0.146}
   # Reserved for future sports; empty = no betting layer.
   worldcup: {}
 

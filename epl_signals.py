@@ -1,9 +1,10 @@
 """EPL Betting Signal Layer -- deterministic per-match Signal Scores.
 
-v1 scores ONLY match_result (1X2), the same "one market first" sequencing NFL
-and CFB followed. The generic scoring math comes from signal_core.py, shared
-with nfl_signals.py and cfb_signals.py; what lives here is the sport wiring:
-SIGNAL_SPECS, _base_signals, list_markets, score_game and build_inputs.
+v1 scores ONLY double_chance, the same "one market first" sequencing NFL and
+CFB followed. The generic scoring math comes from signal_core.py, shared with
+nfl_signals.py and cfb_signals.py; what lives here is the sport wiring:
+SIGNAL_SPECS, _base_signals, list_markets, score_game, outcome_split and
+build_inputs.
 
 Config-driven and sport-keyed like every other sport:
 config["betting_signals"]["epl"] holds the weights, scales and thresholds. They
@@ -12,25 +13,45 @@ in config.yaml for the measurement and its caveats.
 
 THE ONE THING THAT DOES NOT PORT FROM THE OTHER SPORTS: DRAWS.
 
-MLB, NFL and CFB all score a two-outcome market. Ties are ~0.2% of NFL games
+MLB, NFL and CFB all score a two-outcome market. Ties are ~0.2% of NFL games,
 and nfl_backtest simply excludes them from its reliability pass ("no direction
-to correlate a tie against"). EPL draws are 23.6% of 2,660 matches measured
-here, so the same exclusion would discard a quarter of the evidence AND
-condition every correlation on "given the match was decisive", which is not the
-population this module scores live.
+to correlate a tie against"). A draw is not that. It is a normal result in this
+sport -- 23.6% of the 2,660 matches measured here, more than one in five -- and
+every part of this module has to treat it as an outcome rather than as an
+absence of one. Three places that shows up:
 
-Two consequences, both deliberate:
+  * THE MARKET INCLUDES IT. double_chance picks "HOME or Draw" / "AWAY or
+    Draw", so a draw COUNTS FOR the pick. This is the whole reason the market
+    is not 1X2: a 1X2 pick is home-or-away only, which makes a draw the thing
+    that beats you and hands the model an outcome it can never name. Measured
+    side by side out of sample, double chance is also the steadier market by
+    some distance -- per-season spread 9.3pp against 1X2's 12.9pp -- which is
+    what you would expect once a quarter of results stop being automatic
+    losses.
 
-  * The reliability pass correlates against HOME GOAL DIFFERENCE, a continuous
-    outcome that uses every match and is monotone in the 3-way result, rather
-    than a point-biserial against home_win. epl_backtest.py reports the
-    home_win version alongside it for comparability with the NFL and CFB
-    numbers; the two agree closely (see its output), which is why the swap is
-    a better estimator rather than a different question.
+  * THE RELIABILITY PASS KEEPS IT. Correlation is against HOME GOAL
+    DIFFERENCE, a continuous outcome that uses every match and is monotone in
+    the 3-way result, rather than a point-biserial against home_win with draws
+    dropped. epl_backtest.py reports the home_win version alongside for
+    comparability with the NFL and CFB numbers; they agree closely, which is
+    what makes this a better estimator rather than a different question.
 
-  * A match_result pick LOSES on a draw. It is not a moneyline with a push --
-    there is no push in 1X2 -- so the 60.7% hit rate in config.yaml's epl
-    block is measured against that rule, not softened by it.
+  * THE OUTPUT NAMES IT. outcome_split() returns the measured probability of
+    all three results for a given Signal Score, so a draw is visible on the
+    card as a real outcome with a real frequency (20-26% across score bands)
+    instead of being invisible until it costs you.
+
+WHAT IS *NOT* DONE, because the data will not support it: the model does not
+PICK draws, and nothing here pretends it can. That was tested rather than
+assumed. A draw is never the modal outcome in any lean band; the draw rate is
+flat at 17-27% with no usable pattern; correlation with the lean is -0.013 (95%
+CI [-0.051, +0.027], spans zero) and with the match's scoring environment
+-0.016 (CI [-0.057, +0.023], spans zero) -- the latter tested specifically
+because a draw might plausibly depend on a SUM (how low-scoring both sides are)
+rather than the difference signal_core.paired computes, and it does not. In
+every lean band, picking the leaning side beats picking the draw, by 6 to 33
+points. A draw band would therefore be a fabricated signal. Including draws in
+the market is honest; claiming to forecast them would not be.
 
 NO HOME-ADVANTAGE INTERCEPT, and this is a real architectural limit rather than
 an oversight. signal_core.paired() is a pure home-minus-away difference and
@@ -116,8 +137,23 @@ def _base_signals(inp, scales):
             for name, spec in SIGNAL_SPECS.items()}
 
 
+# How each market labels its two sides. double_chance is not "home vs away" --
+# both of its sides CONTAIN the draw, which is the point of scoring it, so the
+# labels have to say so. Kept as a table rather than inlined because the second
+# market this sport gets will need its own and should not have to edit
+# score_game to say so.
+#
+# "ARS or Draw" survives the UI's team-colour lookup unchanged: insights.js
+# resolves a side to a colour on its LEADING token, so the chip is still
+# Arsenal red rather than the neutral gold.
+def _labels_for(bet_type, home, away):
+    if bet_type == "double_chance":
+        return ("%s or Draw" % home, "%s or Draw" % away)
+    return (home, away)
+
+
 def score_game(config, sport_key, inputs):
-    """Score every configured bet type for one match (v1: match_result only).
+    """Score every configured bet type for one match (v1: double_chance only).
     Returns {bet_type: {side, score, flags}}. Empty dict if the sport isn't
     configured, or if either side is short of MIN_MATCHES -- an unscored match
     is the honest output for a cold start, not a zero-confidence lean.
@@ -141,14 +177,46 @@ def score_game(config, sport_key, inputs):
         w = dict(weights)
         bt_sig = {k: sig.get(k) for k in w}
         L, n, agree = _raw_lean(bt_sig, w)
-        out[bt] = _finalize(L, n, agree, min_t, labels)
+        out[bt] = _finalize(L, n, agree, min_t, _labels_for(bt, *labels))
     return out
+
+
+def outcome_split(config, sport_key, score):
+    """The measured chance of each of the three results, for a pick carrying
+    `score`. Returns {side, draw, other} summing to 1.0, or None when the sport
+    has no table configured.
+
+    THIS IS WHERE THE DRAW BECOMES VISIBLE. The market already counts a draw as
+    a win, but a reader still deserves to see how the three results actually
+    split -- a 56.4% / 26.2% / 17.4% match reads very differently from a 65.6%
+    / 19.8% / 14.6% one even though both are the same pick. Without this the
+    draw is invisible on the card right up until it decides the match.
+
+    NOT A MODEL. These are observed frequencies from real completed matches,
+    banded by Signal Score -- the same deterministic, rules-based footing as
+    everything else here, with no fitted distribution in sight. `side` is the
+    leaning side winning outright, `draw` is a draw, `other` is the opposite
+    side winning; for double_chance the pick wins on side+draw, which is why
+    those two are reported apart rather than pre-added.
+
+    Bands are chosen by `min_score`, taking the highest band the score clears,
+    so the table is extended by adding a row rather than by touching code."""
+    cfg = (config.get("betting_signals") or {}).get(sport_key) or {}
+    table = cfg.get("outcome_split") or []
+    chosen = None
+    for row in table:
+        if score >= row.get("min_score", 0):
+            if chosen is None or row["min_score"] >= chosen["min_score"]:
+                chosen = row
+    if not chosen:
+        return None
+    return {"side": chosen["side"], "draw": chosen["draw"], "other": chosen["other"]}
 
 
 # Precedence for tie-breaking the standout when two markets share the top
 # score. v1 has exactly one market, so this only matters once a second EPL bet
 # type is added.
-_MARKET_PRECEDENCE = ("match_result",)
+_MARKET_PRECEDENCE = ("double_chance",)
 
 
 def list_markets(scored):
