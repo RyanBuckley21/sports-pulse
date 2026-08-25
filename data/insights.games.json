@@ -10,7 +10,7 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 5,
+          "score": 6,
           "side": "No clear lean"
         },
         "game_total": {
@@ -20,7 +20,7 @@
         },
         "moneyline": {
           "flags": [],
-          "score": 1,
+          "score": 2,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
@@ -30,7 +30,7 @@
         },
         "run_line": {
           "flags": [],
-          "score": 2,
+          "score": 3,
           "side": "No clear lean"
         },
         "team_total": {
@@ -99,17 +99,17 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 25,
+          "score": 26,
           "side": "KC"
         },
         "game_total": {
           "flags": [],
-          "score": 26,
+          "score": 27,
           "side": "Over"
         },
         "moneyline": {
           "flags": [],
-          "score": 16,
+          "score": 17,
           "side": "KC"
         },
         "nrfi_yrfi": {
@@ -126,7 +126,7 @@
           "away": {
             "abbr": "KC",
             "flags": [],
-            "score": 25,
+            "score": 27,
             "side": "Over"
           },
           "home": {
@@ -161,7 +161,7 @@
         {
           "label": "KC OPS (14d)",
           "tone": "pos",
-          "value": ".731"
+          "value": ".733"
         },
         {
           "label": "KC bullpen ERA (7d)",
@@ -198,17 +198,17 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 2,
+          "score": 1,
           "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 1,
+          "score": 0,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 7,
+          "score": 8,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
@@ -218,7 +218,7 @@
         },
         "run_line": {
           "flags": [],
-          "score": 7,
+          "score": 8,
           "side": "No clear lean"
         },
         "team_total": {
@@ -231,7 +231,7 @@
           "home": {
             "abbr": "STL",
             "flags": [],
-            "score": 9,
+            "score": 8,
             "side": "No clear lean"
           }
         }
@@ -256,7 +256,7 @@
         {
           "label": "STL OPS (14d)",
           "tone": "pos",
-          "value": ".724"
+          "value": ".723"
         },
         {
           "label": "STL bullpen ERA (7d)",
@@ -1005,12 +1005,12 @@
         },
         "game_total": {
           "flags": [],
-          "score": 0,
+          "score": 1,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 10,
+          "score": 9,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
@@ -1062,7 +1062,7 @@
         {
           "label": "TB OPS (14d)",
           "tone": "pos",
-          "value": ".730"
+          "value": ".729"
         },
         {
           "label": "DET bullpen ERA (7d)",
@@ -1165,7 +1165,7 @@
         {
           "label": "TEX bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.02"
+          "value": "4.01"
         },
         {
           "label": "Season series",
