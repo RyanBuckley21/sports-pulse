@@ -16,7 +16,7 @@ routes inside it:
 | Route | View | Source |
 | --- | --- | --- |
 | `#/games` | Today's Games | `data.json` → `insights.games` |
-| `#/players` | Players | `data.json` → `insights.players` |
+| `#/players` | Players | `data.json` → `insights.players`, scoped to one league |
 | `#/teams` | Teams | `mock-insights.json` (preview, not live) |
 | `#/components` | Card gallery | `mock-insights.json` |
 
@@ -34,6 +34,40 @@ What remains here:
   cannot reach the Who's Hot section now that both stylesheets share a document.
   See the header comment in that file for why the scope sits on `<body>`.
 - `mock-insights.json` — the deferred mock behind the teams and components views.
+
+## League scoping
+
+**Selecting a league means the same thing on every tab: nothing from another one
+is on screen.**
+
+All three live views render a flat array spanning whatever sports the pipeline
+built that run, each row carrying its own `sport`, and none of them filtered on
+it. `insights.players` is ranked by pulse and nothing else, so with mlb and epl
+both live it interleaved a Premier League goalkeeper into a column of MLB
+hitters; Games and Teams meanwhile kept showing the MLB slate no matter which
+league you picked. All three now filter, and all three render the shared sport
+picker (`../sport-state.js`) above their list. That picker and its selection are
+the same ones Who's Hot's header carries: pick a league on either tab and the
+other agrees when you get there.
+
+An **untagged** row is kept rather than dropped. The tag is what makes scoping
+possible, and a payload without it is single-league by construction — the
+committed mock behind the dev views is exactly that, and its games and teams
+carry no `sport` at all.
+
+Scoping Games and Teams can currently only ever EMPTY them, never re-fill them:
+`generate_insights._active_game_sports` resolves to `[mlb]`, because
+`active_game_sports` falls back to `active_sports` and is then filtered to
+`GAME_BUILDERS`, which epl is not in. So Premier League gets a named empty state
+on both tabs. That is the honest answer and a better one than handing it MLB's
+slate. It resolves itself when a league joins `active_game_sports` (nfl and cfb
+are registered and waiting); if the emptiness proves annoying before then, the
+next step is hiding those tabs per league, which is a change to the shell's tab
+bar rather than to these views.
+
+The route notes in `../shell.js` name no league for the same reason — "Today's
+MLB slate" above an empty Premier League Games tab is the same bug one line
+higher up the page.
 
 ## Testing
 

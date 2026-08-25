@@ -46,13 +46,23 @@
   // straight through to insights.js's mount(). `title`/`note` are shell chrome:
   // the standalone insights pages each carried their own <h1> and note, and the
   // shell owns that now so insights.js stays purely a content renderer.
+  //
+  // THE NOTES NAME NO LEAGUE. Every insights view is scoped to the selected one
+  // now, and these strings are fixed per route -- the shell has no idea which
+  // league is selected and reaching for it here would make the router a
+  // consumer of view state it otherwise knows nothing about. "Today's MLB
+  // slate" sitting above an empty Premier League Games tab is the same bug the
+  // scoping fixed, one line higher up the page. What the note dropped, the
+  // cards still say for themselves: the Teams cards label their own metrics
+  // ("OPS (14d)", "Bullpen ERA (7d)"), and a league with nothing to show gets
+  // an empty state that names it.
   var DEFAULT_HASH = "#/";
   var ROUTES = [
     { hash: "#/", id: "whos-hot", label: "Who's Hot", section: "app", tab: true },
     {
       hash: "#/games", id: "games", label: "Games", tab: true,
       section: "insights", view: "games",
-      title: "Today's Games", note: "Today's MLB slate — updated each morning.",
+      title: "Today's Games", note: "Today's slate — updated each morning.",
     },
     {
       hash: "#/players", id: "players", label: "Players", tab: true,
@@ -62,7 +72,7 @@
     {
       hash: "#/teams", id: "teams", label: "Teams", tab: true,
       section: "insights", view: "teams",
-      title: "Teams", note: "Team form for today's slate — 14-day OPS and 7-day bullpen ERA.",
+      title: "Teams", note: "Team form for today's slate.",
     },
     // Development scaffolding, deliberately absent from the tab bar -- the same
     // "reach it by direct URL only" arrangement components.html has always had.
