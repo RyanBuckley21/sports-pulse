@@ -1,7 +1,10 @@
 """EPL Betting Signal Layer -- deterministic per-match Signal Scores.
 
-v1 scores ONLY double_chance, the same "one market first" sequencing NFL and
-CFB followed. The generic scoring math comes from signal_core.py, shared with
+Scores TWO markets from ONE lean -- double_chance and match_result (3-way
+moneyline). They are not two models: identical weights, identical score, and
+the only thing separating them is the bar each must clear, because a draw wins
+one and loses the other. See _MARKET_PRECEDENCE and config's
+market_thresholds. The generic scoring math comes from signal_core.py, shared with
 nfl_signals.py and cfb_signals.py; what lives here is the sport wiring:
 SIGNAL_SPECS, _base_signals, list_markets, score_game, outcome_split and
 build_inputs.
@@ -20,14 +23,21 @@ sport -- 23.6% of the 2,660 matches measured here, more than one in five -- and
 every part of this module has to treat it as an outcome rather than as an
 absence of one. Three places that shows up:
 
-  * THE MARKET INCLUDES IT. double_chance picks "HOME or Draw" / "AWAY or
-    Draw", so a draw COUNTS FOR the pick. This is the whole reason the market
-    is not 1X2: a 1X2 pick is home-or-away only, which makes a draw the thing
-    that beats you and hands the model an outcome it can never name. Measured
-    side by side out of sample, double chance is also the steadier market by
-    some distance -- per-season spread 9.3pp against 1X2's 12.9pp -- which is
-    what you would expect once a quarter of results stop being automatic
-    losses.
+  * ONE MARKET COUNTS IT, THE OTHER PAYS FOR IT, AND THE DRAW RATE DECIDES
+    WHICH IS OFFERED. double_chance picks "HOME or Draw", so a draw wins it;
+    match_result picks the side outright, so a draw loses it. Scoring only the
+    first would be safe but would ignore that double chance is routinely priced
+    near its own break-even (1.21 at the 55 bar), which is a poor proposition
+    however high the hit rate reads. Scoring only the second would make a draw
+    a pure 23.6% tax on every pick.
+
+    So match_result is admitted only above a higher bar, set where the draw tax
+    is MEASURABLY below the league rate: at score >= 75 it is 18.2%, 95% CI
+    [14.4%, 22.6%], whose upper bound clears the 23.3% base. At 70 the CI still
+    overlaps and there is no measured edge to justify taking the worse side of
+    a draw. Above that bar the outright market takes precedence and becomes the
+    standout; below it, only double chance is offered. The escalation is the
+    draw probability doing work, not a preference.
 
   * THE RELIABILITY PASS KEEPS IT. Correlation is against HOME GOAL
     DIFFERENCE, a continuous outcome that uses every match and is monotone in
@@ -36,22 +46,30 @@ absence of one. Three places that shows up:
     comparability with the NFL and CFB numbers; they agree closely, which is
     what makes this a better estimator rather than a different question.
 
-  * THE OUTPUT NAMES IT. outcome_split() returns the measured probability of
-    all three results for a given Signal Score, so a draw is visible on the
-    card as a real outcome with a real frequency (20-26% across score bands)
-    instead of being invisible until it costs you.
+  * THE OUTPUT NAMES IT, AND PRICES IT. outcome_split() returns the measured
+    probability of all three results for a given Signal Score, and every market
+    carries the win_prob and fair_odds derived from it -- so a draw is visible
+    as a real outcome with a real frequency (13-27% across bands) AND as the
+    break-even each market has to beat. A hit rate alone cannot tell you
+    whether a pick is worth taking; a break-even next to the price can.
 
 WHAT IS *NOT* DONE, because the data will not support it: the model does not
 PICK draws, and nothing here pretends it can. That was tested rather than
-assumed. A draw is never the modal outcome in any lean band; the draw rate is
-flat at 17-27% with no usable pattern; correlation with the lean is -0.013 (95%
-CI [-0.051, +0.027], spans zero) and with the match's scoring environment
--0.016 (CI [-0.057, +0.023], spans zero) -- the latter tested specifically
-because a draw might plausibly depend on a SUM (how low-scoring both sides are)
-rather than the difference signal_core.paired computes, and it does not. In
-every lean band, picking the leaning side beats picking the draw, by 6 to 33
-points. A draw band would therefore be a fabricated signal. Including draws in
-the market is honest; claiming to forecast them would not be.
+assumed. A draw is never the modal outcome in any lean band; correlation with
+the lean is -0.013 (95% CI [-0.051, +0.027], spans zero) and with the match's
+scoring environment -0.016 (CI [-0.057, +0.023], spans zero) -- the latter
+tested specifically because a draw might plausibly depend on a SUM (how
+low-scoring both sides are) rather than the difference signal_core.paired
+computes, and it does not. In every lean band, picking the leaning side beats
+picking the draw, by 6 to 33 points. A draw band would be a fabricated signal.
+
+THAT NEAR-ZERO CORRELATION IS LINEAR, AND THE RELATIONSHIP IS NOT. Draws sit
+flat at 25.4% through the 50-69 band and 24.8% through 70-84, then fall to
+13.9% at 85+ -- a difference of -11.5pp with 95% CI [-18.1, -4.5], which
+excludes zero. Both facts are true and each drives a different decision: the
+flat middle is why a draw band near zero lean fails, and the tail is why an
+outright market at a high bar works. Reading only the linear r would lose the
+second one.
 
 NO HOME-ADVANTAGE INTERCEPT, and this is a real architectural limit rather than
 an oversight. signal_core.paired() is a pure home-minus-away difference and
@@ -149,7 +167,7 @@ def _base_signals(inp, scales):
 def _labels_for(bet_type, home, away):
     if bet_type == "double_chance":
         return ("%s or Draw" % home, "%s or Draw" % away)
-    return (home, away)
+    return (home, away)  # match_result: the side outright, a draw loses
 
 
 def score_game(config, sport_key, inputs):
@@ -168,7 +186,8 @@ def score_game(config, sport_key, inputs):
     if (inputs.get("home_played") or 0) < MIN_MATCHES or (inputs.get("away_played") or 0) < MIN_MATCHES:
         return {}
     scales = cfg["scales"]
-    min_t = cfg.get("min_threshold", 50)
+    min_t = cfg.get("min_threshold", 55)
+    per_market = cfg.get("market_thresholds") or {}
 
     sig = _base_signals(inputs, scales)
     labels = (inputs.get("home_abbr"), inputs.get("away_abbr"))
@@ -177,8 +196,33 @@ def score_game(config, sport_key, inputs):
         w = dict(weights)
         bt_sig = {k: sig.get(k) for k in w}
         L, n, agree = _raw_lean(bt_sig, w)
-        out[bt] = _finalize(L, n, agree, min_t, _labels_for(bt, *labels))
+        # PER-MARKET THRESHOLD, and this is the whole mechanism by which the
+        # draw gets priced into an outright pick rather than merely reported.
+        #
+        # Both markets read the SAME lean -- there is one model here, not two.
+        # What differs is the bar each has to clear, because a draw costs them
+        # opposite things: it wins double_chance and loses match_result. So the
+        # outright market is admitted only where the draw tax is measurably
+        # small, which is a property of the score band and was measured (see
+        # config.yaml's market_thresholds). Below that bar match_result simply
+        # does not qualify and only the safe market is offered.
+        entry = _finalize(L, n, agree, per_market.get(bt, min_t), _labels_for(bt, *labels))
+        split = outcome_split(config, sport_key, entry.get("score", 0))
+        if split:
+            entry["win_prob"] = _win_prob(bt, split)
+            entry["fair_odds"] = round(1.0 / entry["win_prob"], 2) if entry["win_prob"] else None
+        out[bt] = entry
     return out
+
+
+def _win_prob(bet_type, split):
+    """The share of outcomes this market WINS on, from the measured split.
+    double_chance takes the side outright plus the draw; match_result takes the
+    side only. Rounded to 4dp so a config table of 3dp inputs cannot produce a
+    spuriously precise probability."""
+    if bet_type == "double_chance":
+        return round(split["side"] + split["draw"], 4)
+    return round(split["side"], 4)
 
 
 def outcome_split(config, sport_key, score):
@@ -213,10 +257,18 @@ def outcome_split(config, sport_key, score):
     return {"side": chosen["side"], "draw": chosen["draw"], "other": chosen["other"]}
 
 
-# Precedence for tie-breaking the standout when two markets share the top
-# score. v1 has exactly one market, so this only matters once a second EPL bet
-# type is added.
-_MARKET_PRECEDENCE = ("double_chance",)
+# Precedence for tie-breaking the standout when two markets share the top score
+# -- and here they ALWAYS do, which makes this table load-bearing rather than a
+# formality. Both markets are scored from the same lean, so both carry the
+# identical Signal Score; what separates them is only which one qualified.
+#
+# match_result FIRST is the deliberate part. Its threshold is the higher of the
+# two, so it qualifies only on the matches where the draw tax was measured to be
+# small -- exactly the matches where taking the outright side is the better
+# proposition and double chance is priced worst. So the standout escalates by
+# itself: the safe market below that bar, the outright one above it, with no
+# separate rule deciding when to switch.
+_MARKET_PRECEDENCE = ("match_result", "double_chance")
 
 
 def list_markets(scored):

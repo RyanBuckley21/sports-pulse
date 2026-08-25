@@ -976,13 +976,19 @@ betting_signals:
   # is ahead). A model leaning partly on venue form having its worst year there
   # is the expected failure, not an unexplained one.
   #
-  # THE SAME LEAN READ AS A 1X2 PICK grades 61.7% against a 43.8% always-home
-  # baseline, and is much less stable: 58.3 / 63.4 / 64.2 / 68.2 / 59.5 / 54.3,
-  # a 13.9-point spread. That gap is what including draws buys, and it is why
-  # bet_types scores double_chance rather than match_result. The 1X2 number is
-  # kept in the report as the figure comparable to the other sports' moneyline
-  # hit rates -- cfb's 76.9% and nfl's are two-outcome markets, so reading them
-  # against 85.2% would flatter this one.
+  # THE OUTRIGHT MARKET at its own bar of 75: 344 picks, 17.8% of the scoreable
+  # slate, 68.3% -> break-even 1.46, with the draw tax on those matches down to
+  # 18.0% against the league's 23.3%. Per season 65 / 71 / 66 / 75 / 64 / 62.
+  # On those same 344 matches double chance grades 86.3% -> break-even 1.16,
+  # which is the comparison that matters: an 86.3% hit rate priced at 1.16 is
+  # not obviously better than a 68.3% one priced at 1.46, and only the price on
+  # offer settles it. That is why both markets ship and why every market carries
+  # its break-even.
+  #
+  # Read across the whole slate the same lean grades 61.7% on 1X2 against a
+  # 43.8% always-home baseline -- kept in the report as the figure comparable to
+  # the other sports' moneyline rates, since cfb's 76.9% and nfl's are
+  # two-outcome markets and reading them against 85.2% would flatter this one.
   #
   # THIS IS A HIT RATE, NOT A PROFITABILITY CLAIM -- the same warning cfb's
   # block carries, and it binds harder here. No odds, line or price data enters
@@ -1026,32 +1032,82 @@ betting_signals:
       recent_gd_gap: 1.4378
       rest_gap: 4.8390
     bet_types:
+      # IDENTICAL WEIGHTS ON PURPOSE. There is one model here and two ways to
+      # take it, not two models: both markets read the same lean, and the
+      # weights are fitted to goal difference, which is market-neutral (refitting
+      # to a does-not-lose target moves them by at most 0.0156). What separates
+      # the markets is the bar each must clear -- see market_thresholds.
+      #
       # r=+0.366 / +0.329 / +0.294 / +0.330; r^2 renormalized over the four.
-      # A draw WINS this market: both sides are "<team> or Draw".
+      #
+      # A draw WINS this one: both sides are "<team> or Draw".
       double_chance:
         attack: 0.3057
         defense: 0.2475
         venue_form: 0.2488
         recent_form: 0.1979
+      # A draw LOSES this one: the side outright, 3-way moneyline.
+      match_result:
+        attack: 0.3057
+        defense: 0.2475
+        venue_form: 0.2488
+        recent_form: 0.1979
+    # WHERE THE DRAW GETS PRICED INTO AN OUTRIGHT PICK, rather than only
+    # reported. A draw wins double_chance and loses match_result, so the two
+    # markets cannot share a bar.
+    #
+    # double_chance 55 -- the standard one-third-coverage rule (see above).
+    #
+    # match_result 75 -- a DIFFERENT rule, because coverage is not what the
+    # outright market is trading off. It is admitted only where the draw tax it
+    # pays is measurably below the league's own draw rate, and 75 is the lowest
+    # threshold where that is true: P(draw) 18.2%, 95% CI [14.4%, 22.6%], whose
+    # upper bound clears the 23.3% base rate. At 70 the CI still overlaps it
+    # ([16.8%, 24.3%]) and the market has no measured edge to justify taking the
+    # worse side of a draw.
+    #
+    # The underlying effect is real and was checked rather than assumed: draw
+    # rate falls from 25.4% in the 50-69 band to 13.9% at 85+, a difference of
+    # -11.5pp with 95% CI [-18.1, -4.5]. NOTE this does not contradict the
+    # near-zero LINEAR correlation between the lean and a draw (r=-0.013)
+    # recorded above -- the relationship is flat through the middle and drops
+    # only in the tail, so both facts hold. The linear figure is why a draw band
+    # near zero lean fails; the tail effect is why an outright market at a high
+    # bar works.
+    market_thresholds:
+      double_chance: 55
+      match_result: 75
     # Observed frequencies of the three results, banded by Signal Score, over
     # all 2,307 scoreable matches. NOT a fitted distribution -- real counts, on
     # the same deterministic footing as everything else here.
     #
-    # This is what makes the draw VISIBLE rather than merely survivable. The
-    # market already counts it as a win; this says how often it is actually the
-    # result, which differs enough across bands to be worth showing (26.2% at
-    # the 50-69 band against 19.8% at 70+). `side` is the leaning side winning
-    # outright and `other` is the opposite side winning, so a double_chance pick
-    # wins on side+draw -- reported apart rather than pre-added so the card can
-    # show all three.
+    # This is what makes the draw VISIBLE rather than merely survivable, and it
+    # is also what prices both markets: epl_signals derives each market's
+    # win_prob and FAIR ODDS from this table, so a reader can compare the
+    # break-even against the price actually on offer instead of trusting a hit
+    # rate in isolation. Double chance at 55 breaks even at 1.21 and is
+    # routinely priced near there, which is exactly why the outright market
+    # exists alongside it.
+    #
+    # `side` is the leaning side winning outright and `other` is the opposite
+    # side winning, so double_chance wins on side+draw and match_result on side
+    # alone -- reported apart rather than pre-added so the card can show all
+    # three and each market can price itself.
     #
     # Extend by adding a row; epl_signals.outcome_split takes the highest band
     # a score clears and needs no code change for a new one.
+    # BANDS ARE ALIGNED TO THE TWO DECISION POINTS (55 and 75), not to round
+    # numbers. They were 0/25/50/70 while double_chance was the only market,
+    # which lumped a score of 76 and a score of 99 into one band and reported
+    # the same break-even for both -- useless precisely where the outright
+    # market lives. The 85 band is split out because that is where the draw tax
+    # collapses (13.2% against the 23.6% league rate).
     outcome_split:
       - {min_score: 0,  side: 0.433, draw: 0.210, other: 0.357}
-      - {min_score: 25, side: 0.455, draw: 0.263, other: 0.282}
-      - {min_score: 50, side: 0.564, draw: 0.262, other: 0.174}
-      - {min_score: 70, side: 0.656, draw: 0.198, other: 0.146}
+      - {min_score: 25, side: 0.464, draw: 0.263, other: 0.273}
+      - {min_score: 55, side: 0.563, draw: 0.266, other: 0.171}
+      - {min_score: 75, side: 0.622, draw: 0.219, other: 0.159}
+      - {min_score: 85, side: 0.778, draw: 0.132, other: 0.090}
   # Reserved for future sports; empty = no betting layer.
   worldcup: {}
 

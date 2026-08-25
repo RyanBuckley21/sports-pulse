@@ -366,9 +366,19 @@ def derive_calibration(measurements, shipped=SHIPPED_SIGNALS, require_ci=True):
 # --------------------------------------------------------------------------- #
 
 def candidate_config(weights, scales, min_threshold, standout_threshold):
+    """The config the replay scores under.
+
+    BOTH markets, both at threshold 0. They read the same lean and therefore
+    carry the same score, so scoring them together costs nothing, and holding
+    the bar at 0 here lets one pass produce every row of the sensitivity table
+    -- each market's real threshold is applied by filtering on score afterwards
+    (see walk_forward). Scoring only double_chance, as this did, silently made
+    every outright measurement come back empty."""
     return {"betting_signals": {SPORT_KEY: {
         "min_threshold": min_threshold, "standout_threshold": standout_threshold,
-        "scales": scales, "bet_types": {"double_chance": weights}}}}
+        "market_thresholds": {"double_chance": 0, "match_result": 0},
+        "scales": scales,
+        "bet_types": {"double_chance": weights, "match_result": weights}}}}
 
 
 def grade(rec, scored):
@@ -381,14 +391,19 @@ def grade(rec, scored):
     other sports' moneyline hit rates are comparable to, and because the gap
     between the two is the clearest statement of what including draws buys.
     """
-    entry = (scored or {}).get("double_chance") or {}
-    side = entry.get("side")
+    dc = (scored or {}).get("double_chance") or {}
+    mr = (scored or {}).get("match_result") or {}
+    side = dc.get("side")
     if not side or side == "No clear lean":
         return None
     # "ARS or Draw" -> the leaning side is the leading token.
     picked_home = side.split(" ")[0] == rec["home_abbr"]
     outright = (rec["result"] == "H") if picked_home else (rec["result"] == "A")
-    return {"side": side, "score": entry.get("score", 0), "picked_home": picked_home,
+    # match_result qualifies only above its own higher bar; `outright_offered`
+    # separates "the outright pick lost" from "there was no outright pick",
+    # which a single hit/miss column would conflate.
+    return {"side": side, "outright_side": mr.get("side"),
+            "score": dc.get("score", 0), "picked_home": picked_home,
             "result": rec["result"], "hit": outright or rec["result"] == "D",
             "outright_hit": outright}
 
@@ -509,7 +524,9 @@ def parse_args(argv=None):
     p.add_argument("--gate", type=int, default=epl_signals.MIN_MATCHES,
                    help="minimum prior matches this season per side (default: %(default)s)")
     p.add_argument("--threshold", type=int, default=None,
-                   help="override the auto-picked threshold")
+                   help="override the auto-picked double_chance threshold")
+    p.add_argument("--outright-threshold", type=int, default=None,
+                   help="match_result bar (default: config's market_thresholds)")
     p.add_argument("--n-boot", type=int, default=N_BOOT_DEFAULT)
     p.add_argument("--seed", type=int, default=BOOT_SEED)
     p.add_argument("--sets", action="store_true",
@@ -519,6 +536,19 @@ def parse_args(argv=None):
     p.add_argument("--output", default=OUTPUT_PATH)
     p.add_argument("--no-write", action="store_true")
     return p.parse_args(argv)
+
+
+def _shipped_market_threshold(market, fallback):
+    """Read a market's bar out of config.yaml so this report and the shipped
+    block cannot drift. Falls back rather than failing: the backtest must stay
+    runnable against a checkout whose config predates the key."""
+    try:
+        import yaml
+        cfg = yaml.safe_load(open("config.yaml"))
+        block = ((cfg.get("betting_signals") or {}).get(SPORT_KEY) or {})
+        return int((block.get("market_thresholds") or {}).get(market, fallback))
+    except Exception:  # noqa: BLE001 -- a report must not die on a config read
+        return fallback
 
 
 def pick_threshold(rows):
@@ -655,6 +685,9 @@ def main(argv=None):
     picks = [p for p in all_picks if p["score"] >= threshold]
     s = summarize(picks)
     b = baselines(records, args.gate)
+    outright_threshold = args.outright_threshold
+    if outright_threshold is None:
+        outright_threshold = _shipped_market_threshold("match_result", 75)
     print("GRADED PERFORMANCE at threshold %d (out of sample)" % threshold)
     print("  %-11s %7s %8s %10s" % ("season", "picks", "DoubleCh", "1X2 (ref)"))
     for season in sorted({p["season"] for p in picks}):
@@ -668,6 +701,27 @@ def main(argv=None):
           (100 * s["pct_home"], 100 * b["home"]))
     print("  naive baselines: always HOME-or-DRAW %.1f%%   (1X2 ref: always HOME %.1f%%)" %
           (100 * b["home_or_draw"], 100 * b["home"]))
+
+    offered = [p for p in all_picks if p["score"] >= outright_threshold]
+    if offered:
+        hit = sum(1 for p in offered if p["outright_hit"]) / len(offered)
+        draw = sum(1 for p in offered if p["result"] == "D") / len(offered)
+        dc_here = sum(1 for p in offered if p["hit"]) / len(offered)
+        print("\n  THE OUTRIGHT MARKET (match_result) at its own bar of %d:" % outright_threshold)
+        print("    %d picks, %.1f%% of the scoreable slate"
+              % (len(offered), 100 * len(offered) / len(all_picks)))
+        print("    outright %.1f%% -> break-even %.2f     draw tax here %.1f%% (league %.1f%%)"
+              % (100 * hit, 1 / hit, 100 * draw,
+                 100 * sum(1 for p in all_picks if p["result"] == "D") / len(all_picks)))
+        print("    same matches as double chance: %.1f%% -> break-even %.2f"
+              % (100 * dc_here, 1 / dc_here))
+        print("    The bar is where the draw tax falls measurably below the league rate,")
+        print("    which is what makes taking the worse side of a draw defensible.")
+        print("    Per season: %s" % "  ".join(
+            "%d/%02d %.0f%%" % (ss, (ss + 1) % 100,
+                                100 * sum(1 for p in offered if p["season"] == ss and p["outright_hit"])
+                                / max(1, sum(1 for p in offered if p["season"] == ss)))
+            for ss in sorted({p["season"] for p in offered})))
     print("\n  THIS IS A HIT RATE, NOT A PROFITABILITY CLAIM. No odds, line or price")
     print("  data enters this repo anywhere, so nothing here says these picks beat")
     print("  the vig. Draws are priced; a 1X2 hit rate cannot see that.\n")
