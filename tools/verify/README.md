@@ -58,6 +58,32 @@ the two apart.
 bug: exactly one `apple-mobile-web-app-capable`, plus `viewport-fit=cover` and
 the tab bar's safe-area padding, plainly wrong on a notched device.
 
+## Pipeline tests (Python, no browser)
+
+```
+python3 -m tools.verify.test_game_isolation   # from the repo root
+```
+
+**`test_game_isolation`** — per-sport isolation in
+`generate_insights._build_game_entities`, and specifically the pair of
+behaviours that look identical from outside: a sport whose BUILDER FAILED has
+its committed store partition frozen, while a sport having a genuine OFF DAY
+still has its partition cleared. Both produce an empty slate, both log a similar
+line, and getting them backwards destroys the pre-game snapshot
+`signal_report.py` grades against — silently, with the run still green, until a
+grading run comes up empty weeks later. Nothing throws when this breaks, which
+is why it is measured rather than reasoned about. Also pins that total failure
+stays fatal and that a caller passing no `failed_sports` (`implied_total.py`)
+keeps the old fail-loud contract.
+
+Both directions were sabotage-checked when written: disabling the freeze guard
+fails exactly the freeze assertion, disabling the total-failure guard fails
+exactly the two fatality assertions.
+
+No network. Succeeding builders return the real committed entities from
+`data/insights.games.json`, and every store is redirected to a temp copy, so a
+run cannot touch anything committed.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

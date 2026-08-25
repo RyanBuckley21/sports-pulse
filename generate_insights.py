@@ -26,6 +26,7 @@ runs are ephemeral, so the store must be committed to survive).
 import json
 import os
 import shutil
+import traceback
 
 import pulse
 import training_capture
@@ -287,7 +288,7 @@ def _active_game_sports(config):
     return [s for s in configured if s in GAME_BUILDERS]
 
 
-def _build_game_entities(config, generated_at, team_entities=None):
+def _build_game_entities(config, generated_at, team_entities=None, failed_sports=None):
     """Deterministic game builder + its stores, dispatched per sport over
     GAME_BUILDERS (mirroring generate_stats.SPORT_FETCHERS). Runs everywhere,
     CI included -- there is no longer any gated step after it.
@@ -305,22 +306,59 @@ def _build_game_entities(config, generated_at, team_entities=None):
 
     A single bad game does NOT reach here -- mlb.build_game_entities skips it,
     reports it, and returns the rest of the slate. What reaches here is one
-    SPORT's build failing outright, and that is raised rather than absorbed:
-    this used to be an `except Exception` returning empty games, which meant a
-    broken builder and a genuine off-day produced byte-identical output, and
-    the run exited 0 either way. Nothing downstream can tell those apart --
-    run() goes on to write a {} games store over the committed pre-game
-    snapshot that signal_report.py grades against, and the site deploys with
-    no games at all. A red run that leaves yesterday's data.json served is the
-    better failure -- true per sport today exactly as it was true overall
-    before, since one sport is all that is registered.
+    SPORT's build failing outright, and that used to bring the whole run down
+    with it, whichever sport it was.
+
+    The reason it did is worth keeping straight, because it is NOT "failures
+    should be loud" in the abstract. Before that raise existed this was an
+    `except Exception` returning empty games, which meant a broken builder and
+    a genuine off day produced byte-identical output and the run exited 0
+    either way. Nothing downstream can tell those apart -- run() goes on to
+    write a {} games store over the committed pre-game snapshot that
+    signal_report.py grades against, and the site deploys with no games at all.
+    Raising fixed that, and while one sport was registered "raise" and "don't
+    lose the store" were the same instruction.
+
+    With a second sport they come apart, and only one of them was ever the
+    point. Taking MLB's slate, its store and the whole deploy down because a
+    different league's provider is having a bad morning protects nothing; the
+    store that must not be silently cleared is the FAILED sport's own. So the
+    failure is now contained per sport and the store protection is enforced
+    directly, by freezing that partition -- see `failed_sports` below. A red
+    run that leaves yesterday's data.json served is still the better failure
+    when there is nothing left to publish, and that case still raises.
 
     `team_entities`, when a list is passed, is filled with the Team entities
     built from the SAME slates and caches -- see mlb.build_game_entities. It
     stays an out-parameter rather than a fourth return value so the existing
     three-value unpacking at every other call site keeps working untouched;
     every attempted sport's teams land in the SAME shared list, passed to each
-    builder in turn (each one only ever .extend()s it)."""
+    builder in turn (each one only ever .extend()s it).
+
+    `failed_sports` OPTS IN TO PER-SPORT ISOLATION, and is an out-parameter for
+    the same reason team_entities is: implied_total.py unpacks three values from
+    this function and is a protected file, so the arity cannot change.
+
+    Pass a list and one sport's builder blowing up no longer stops the others --
+    that sport is skipped, its key appended, and the loop continues. Pass
+    nothing and ANY failure re-raises, exactly as it always did. That is not
+    timidity about the default; it is that isolation is only SAFE for a caller
+    that then acts on the list, and the reasoning above says why:
+
+    a failed build and a genuine off day produce byte-identical output -- an
+    empty slate for that sport. run() reads an empty slate as "no games today"
+    and clears that sport's committed partition, which is the pre-game snapshot
+    signal_report.py grades against. So isolation without the follow-through
+    would not preserve the protection this raise exists for, it would quietly
+    convert a loud failure into silent data loss. The follow-through is in
+    run(): a sport in this list has its partition FROZEN rather than cleared.
+    A caller that cannot do that (implied_total.py, which only wants today's
+    entities) must keep the old contract, and does.
+
+    TOTAL failure stays fatal either way. If every attempted sport fails there
+    is no partial slate to salvage, and returning {} would hand run() the very
+    "empty games section" this guards against -- so it raises, and the run goes
+    red with yesterday's data.json still served."""
     if config is None:
         return {}, {}, None
     game_date = generated_at.date().isoformat()
@@ -328,13 +366,41 @@ def _build_game_entities(config, generated_at, team_entities=None):
         box_cache_all = _load_store(BOXSCORE_CACHE_PATH)
         game_entities = {}
         training_rows = []
-        for sport_key in _active_game_sports(config):
+        attempted = _active_game_sports(config)
+        skipped = []
+        for sport_key in attempted:
             builder = GAME_BUILDERS[sport_key]
-            sport_entities, pruned_cache, sport_training_rows = builder(
-                config, game_date, box_cache_all.get(sport_key, {}), team_entities=team_entities)
+            try:
+                sport_entities, pruned_cache, sport_training_rows = builder(
+                    config, game_date, box_cache_all.get(sport_key, {}), team_entities=team_entities)
+            except Exception as exc:  # noqa: BLE001 -- see failed_sports in the docstring
+                if failed_sports is None:
+                    raise  # caller did not opt in: old contract, unchanged
+                skipped.append(sport_key)
+                failed_sports.append(sport_key)
+                detail = "{}: {}".format(type(exc).__name__, str(exc)[:200])
+                print("insights(games): {} builder FAILED for {} ({}); skipping this sport "
+                      "-- its committed store partition will be FROZEN, not cleared"
+                      .format(sport_key, game_date, detail))
+                if os.environ.get("GITHUB_ACTIONS"):
+                    print("::error title=Game slate build failed for {} ({})::{}. That sport "
+                          "contributes no games to this run and its committed store partition "
+                          "is left exactly as it was.".format(sport_key, game_date, detail))
+                traceback.print_exc()
+                # NOT assigning box_cache_all[sport_key] is the point: the
+                # previous cache for this sport is carried through untouched
+                # rather than replaced with a partial or empty one.
+                continue
             box_cache_all[sport_key] = pruned_cache
             game_entities.update(sport_entities)
             training_rows.extend(sport_training_rows)
+        if attempted and len(skipped) == len(attempted):
+            raise RuntimeError(
+                "every active game sport failed to build ({}) -- refusing to return an empty "
+                "slate, which run() cannot tell from an off day".format(", ".join(skipped)))
+        if skipped:
+            print("insights(games): {} of {} sport(s) skipped this run: {}"
+                  .format(len(skipped), len(attempted), ", ".join(skipped)))
         _save_store(BOXSCORE_CACHE_PATH, box_cache_all)
         games_store = _load_store(GAMES_STORE_PATH)
         print("insights(games): built {} games for {} (boxscore cache: {} final games)"
@@ -439,8 +505,12 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     # Teams ride along on the same build -- same slate, same session, same caches
     # -- rather than opening a second fetch path for the Teams view.
     team_entities = []
+    # Opting in to per-sport isolation, which obliges this function to freeze a
+    # failed sport's store partition below -- see _build_game_entities.
+    failed_game_sports = []
     game_entities, games_store, game_date = _build_game_entities(
-        config, generated_at, team_entities=team_entities)
+        config, generated_at, team_entities=team_entities,
+        failed_sports=failed_game_sports)
 
     # Partition this run's game_entities by their own "sport" tag (every entity
     # already carries one -- see mlb.build_game_entities' return shape) so each
@@ -462,6 +532,19 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     # the (then-single, now per-sport) store.
     updated_games_store = dict(games_store)
     for sport_key in _active_game_sports(config):
+        # A sport whose BUILDER failed is not an off day, and the difference is
+        # the whole reason this loop cannot simply proceed. Its slate is empty
+        # for the same reason an off day's is, so every check below would read
+        # it as "no games today" and clear a committed pre-game snapshot that is
+        # still perfectly good -- the exact data loss _build_game_entities used
+        # to prevent by refusing to return at all. Skipping leaves
+        # updated_games_store[sport_key] as loaded, which is the freeze.
+        if sport_key in failed_game_sports:
+            print("insights(games): NOT touching {}'s {!r} partition -- its builder failed "
+                  "this run, so an empty slate here means 'unknown', not 'no games'. The "
+                  "committed pre-game snapshot is kept as-is."
+                  .format(GAMES_STORE_PATH, sport_key))
+            continue
         sport_entities = entities_by_sport.get(sport_key, {})
         sport_store = games_store.get(sport_key) or {}
         writable, why_frozen = _games_store_writable(sport_entities, sport_store, game_date)
