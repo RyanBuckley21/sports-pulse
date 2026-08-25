@@ -891,7 +891,124 @@ betting_signals:
         off_ppa: 0.5193
         def_ppa_allowed: 0.3154
         turnover_diff: 0.1654
-  # Reserved for future sports (e.g. Premier League); empty = no betting layer.
+  # ------------------------------------------------------------------------ #
+  # EPL (Premier League) -- BACKTEST-DERIVED. Measured by epl_backtest.py over
+  # 2019/20-2025/26, every completed match, 2,660 total; 2,307 clear the
+  # five-prior-matches gate and are scoreable.
+  #
+  # Same method NFL's and CFB's calibrations used -- each signal's
+  # direction-corrected raw gap correlated against the real outcome, 95%
+  # bootstrap CI, reliability-proportional (r^2) weights renormalized over the
+  # survivors, threshold read off a sensitivity table -- with three departures
+  # forced by the sport. All three are in epl_backtest.py's report, not buried:
+  #
+  #   1. THE OUTCOME IS GOAL DIFFERENCE, not home_win. nfl_backtest excludes
+  #      ties from its reliability pass, which is free at NFL's 0.2%. EPL draws
+  #      are 23.6% of these 2,660 matches, so the same exclusion would discard a
+  #      quarter of the evidence and condition every r on "given the match was
+  #      decisive" -- not the population this scores live. The home_win version
+  #      is reported alongside and agrees closely (attack +0.366 vs +0.357,
+  #      defense +0.329 vs +0.339), which is what says this is a better
+  #      estimator rather than a different question.
+  #
+  #   2. THE HEADLINE NUMBER IS OUT OF SAMPLE. NFL and CFB derive weights over
+  #      all seasons and grade on those same seasons. Seven seasons is enough to
+  #      do better, so epl_backtest walks forward: weights for season S are fit
+  #      on seasons < S only. The weights BELOW are then fit on all seven, as
+  #      NFL's and CFB's are -- the walk-forward number is the evidence that
+  #      such a fit generalises, not a separate model.
+  #
+  #   3. FOUR CANDIDATES WERE REJECTED, for two different reasons that are kept
+  #      apart because collapsing them would misrepresent both:
+  #        rest       DROPPED -- 95% CI [-0.084, +0.030] spans zero on goal
+  #                   difference AND [-0.049, +0.041] on home_win. A statistical
+  #                   result, the same treatment NFL's rest_diff got.
+  #        goal_diff  EXCLUDED -- r=+0.403, the STRONGEST single signal measured,
+  #        form_ppm   and out anyway: r=0.90 with attack and 0.83 with defense
+  #        recent_gd  makes it close to their linear combination, and
+  #                   reliability-proportional weighting assumes independent
+  #                   evidence. Same for form_ppm (0.84 with attack, 0.84 with
+  #                   venue_form) and recent_gd (0.89 with recent_form). These
+  #                   are out DESPITE predicting well; reading "excluded" as
+  #                   "doesn't predict" inverts the reason.
+  #
+  # HOW MUCH THE SET CHOICE MATTERS: almost nothing, and that was measured
+  # rather than assumed. Across four candidate sets, on every match both sets
+  # score above the bar, they pick the SAME SIDE -- 100% agreement, 714 of 714
+  # for the two leading sets. The sets differ in WHICH matches clear the
+  # threshold, not in direction, and the accuracy differences are inside a
+  # +/-4-5pp bootstrap CI (attack+defense alone grades 60.2%; the four-signal
+  # set below, 60.7%). The set below is chosen for STRUCTURE, not for that
+  # 0.5pp: attack and defense are the two genuinely separable dimensions
+  # (r=0.50 with each other, the lowest pair among the strong signals) and
+  # mirror mlb's ops/bullpen and nfl's off/def EPA split; recent_form adds
+  # form-vs-season-long; venue_form is the only signal carrying venue
+  # information at all.
+  #
+  # MEASURED PERFORMANCE at these values, out of sample, threshold 50:
+  # 60.7% on match_result (1X2) over 844 picks, against a 43.8% always-pick-home
+  # baseline on the same gated slate. Per-season: 60.0 / 61.7 / 62.1 / 65.8 /
+  # 60.0 / 52.8. THAT 13-POINT SPREAD IS THE MAIN REASON FOR CAUTION HERE, and
+  # the honest contrast with cfb's block, whose three seasons ran 77.5 / 76.1 /
+  # 77.2. The most recent season is the worst of the six.
+  #
+  # Read as a double chance (side-or-draw) the same picks grade 83.8% against a
+  # 67.1% baseline, and are markedly steadier season to season: 78.6 / 82.7 /
+  # 84.8 / 85.5 / 85.9 / 85.4. That is a DIFFERENT MARKET and is not what
+  # bet_types below scores; it is recorded because the stability gap is a real
+  # argument for scoring double chance instead, and that decision has not been
+  # taken.
+  #
+  # THIS IS A HIT RATE, NOT A PROFITABILITY CLAIM -- the same warning cfb's
+  # block carries, and it binds harder here. No odds, line or price data enters
+  # this repo anywhere. Draws are priced by the market; a 1X2 hit rate cannot
+  # see that, so nothing here says these picks beat the vig.
+  #
+  # NO HOME-ADVANTAGE INTERCEPT. signal_core.paired() is a pure home-minus-away
+  # difference, so two equally-formed sides produce a lean of exactly zero while
+  # the home side in fact wins 43.4% of matches and the away side 32.9%. A
+  # constant term cannot be fitted into that shape -- no variance to correlate,
+  # no stdev to scale by. venue_form carries venue information instead and
+  # measurably does part of the job (it moves the share of home picks from 50.0%
+  # to 55.5%). The residual was measured, not waved away: sweeping a decision
+  # offset over the lean recovers at most +0.3pp, because the picks a home bias
+  # would flip sit near zero lean and are close to coin flips.
+  #
+  # FIRST PASS, SUBJECT TO REVISION AFTER REAL PRODUCTION DATA -- same framing
+  # as nfl's and cfb's calibrated blocks. One backtest is not months of graded
+  # live picks; mlb's constants took several rounds of real production
+  # measurement to settle and these have had none.
+  epl:
+    # 50 is the most selective threshold that still keeps at least a third of
+    # the scoreable slate (43.6% at 50; 32.3% at 60) -- nfl_backtest's rule,
+    # flagged there as a judgment call and flagged as one here. Accuracy rises
+    # monotonically with it (51.5% at 0, 55.2% at 30, 60.7% at 50, 64.6% at 70),
+    # so this is a coverage/accuracy trade rather than an optimum.
+    min_threshold: 50
+    standout_threshold: 50
+    # Each scale is the measured standard deviation of that signal's own raw
+    # gap over the 2,307 scoreable matches, so a one-sigma edge maps to the same
+    # place on the tanh for every signal. Every SIGNAL_SPECS entry needs one --
+    # _base_signals divides by it unconditionally -- including the four that
+    # carry no weight.
+    scales:
+      attack_gap: 0.7257
+      defense_gap: 0.5752
+      recent_form_gap: 0.9717
+      venue_form_gap: 0.8646
+      form_ppm_gap: 0.7443
+      goal_diff_gap: 1.1297
+      recent_gd_gap: 1.4378
+      rest_gap: 4.8390
+    bet_types:
+      # r=+0.366 / +0.329 / +0.294 / +0.330; r^2 renormalized over the four.
+      # A draw LOSES this market -- 1X2 has no push.
+      match_result:
+        attack: 0.3057
+        defense: 0.2475
+        venue_form: 0.2488
+        recent_form: 0.1979
+  # Reserved for future sports; empty = no betting layer.
   worldcup: {}
 
 # Team Pulse -- a deterministic 0-100 notability score for ONE team, built from
