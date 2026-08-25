@@ -849,8 +849,22 @@
     if (legacyView) mount(legacyView);
   }
 
-  function list(items, fn) {
-    return items && items.length ? items.map(fn).join("") : '<p class="empty-state">Nothing to show right now.</p>';
+  function list(items, fn, empty) {
+    if (items && items.length) return items.map(fn).join("");
+    return '<p class="empty-state">' + esc(empty || "Nothing to show right now.") + "</p>";
+  }
+
+  // What a league-scoped view says when the selected league contributed nothing.
+  //
+  // NAMES THE LEAGUE, and deliberately claims nothing about why. Two different
+  // causes land here and the payload cannot tell them apart: an off day for a
+  // league that is published, and a league that has no builder feeding this view
+  // at all (epl is in active_sports but not in GAME_BUILDERS, so it has
+  // leaderboards and no games). "No Premier League games in this update" is true
+  // either way; "no games today" would be a guess, and the wrong one half the
+  // time.
+  function nothingFor(label, kind) {
+    return "No " + (label || "") + " " + kind + " in this update.";
   }
 
   function renderView(view, data, root) {
@@ -861,11 +875,8 @@
     UI = (data.insights && data.insights.ui) || {};
     AI_ENABLED = data.aiInsightsEnabled !== false;
     if (view === "players") renderPlayers(data, root);
-    else if (view === "games") renderGames((data.insights && data.insights.games) || [], root);
-    // insights.teams, matching players/games -- NOT the top-level data.teams the
-    // mock used. renderGallery still reads that top-level shape, and still gets
-    // it, because components is the one view still backed by the mock.
-    else if (view === "teams") root.innerHTML = list((data.insights && data.insights.teams) || [], Cards.teamInsight);
+    else if (view === "games") renderGames(data, root);
+    else if (view === "teams") renderTeams(data, root);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
   }
@@ -873,10 +884,20 @@
   // Games render as compact rows that expand in place. Every visit starts fully
   // collapsed by design: the slate turns over daily, so a remembered open row
   // would not be resuming anything -- you are re-scanning fresh games.
-  function renderGames(games, root) {
+  //
+  // Scoped to the selected league like the other two views. Today that scoping
+  // can only ever empty this tab rather than re-fill it: _active_game_sports
+  // resolves to [mlb], because `active_game_sports` falls back to
+  // `active_sports` and is then filtered to GAME_BUILDERS, which epl is not in.
+  // So a league with leaderboards but no game builder gets the named empty
+  // state -- which is the honest answer, and a better one than handing it
+  // another league's slate.
+  function renderGames(data, root) {
+    var ctx = leagueContext(data);
+    var games = scoped(data.insights && data.insights.games, ctx.active);
     gamesById = {};
     games.forEach(function (g) { if (g && g.id != null) gamesById[String(g.id)] = g; });
-    root.innerHTML = list(games, gameItem);
+    root.innerHTML = ctx.bar + list(games, gameItem, nothingFor(ctx.label, "games"));
     // Interactive rows, exposed to keyboard and assistive tech here rather than
     // inside Cards.gameRow -- the component stays presentational, and only the
     // wiring that actually makes rows clickable claims they are buttons.
@@ -887,24 +908,60 @@
     });
   }
 
+  // ---------------- league scoping ----------------
+  //
+  // Every live view here (players, games, teams) renders a flat array that
+  // spans whatever sports the pipeline built that run, with each row carrying
+  // its own `sport`. None of them filtered on it, so with mlb and epl both
+  // active the Players list interleaved a Premier League goalkeeper into a
+  // column of MLB hitters -- and switching to Premier League still left the
+  // Games and Teams tabs showing the MLB slate. Selecting a league now means
+  // the same thing on every tab: nothing from another one is on screen.
+
   // The leagues the picker offers, and what to call them.
   //
   // data.sports is the SAME source Who's Hot builds its picker from, so the two
   // controls always offer the same leagues in the same order -- config.yaml's
   // active_sports order, carried through data.json. A payload with no
   // leaderboard block at all (the committed mock) falls back to whatever sports
-  // the players themselves declare, in first-seen order.
+  // its own rows declare, in first-seen order.
   function sportOptions(data) {
     var sports = data.sports || {};
     var keys = Object.keys(sports), labels = {};
     keys.forEach(function (k) { labels[k] = (sports[k] || {}).label || k; });
     if (!keys.length) {
-      ((data.insights && data.insights.players) || []).forEach(function (p) {
-        var k = p && p.sport;
+      var ins = data.insights || {};
+      [].concat(ins.players || [], ins.games || [], ins.teams || []).forEach(function (r) {
+        var k = r && r.sport;
         if (k && keys.indexOf(k) < 0) { keys.push(k); labels[k] = k; }
       });
     }
     return { keys: keys, labels: labels };
+  }
+
+  // Settle the selection, resolve the label, and hand back the picker markup --
+  // the three things every league-scoped view needs before it can render.
+  function leagueContext(data) {
+    var opts = sportOptions(data);
+    var active = SP.sport.ensure(opts.keys);
+    var picker = SP.sport.render(opts.keys, active, opts.labels);
+    return {
+      active: active,
+      label: opts.labels[active] || active || "",
+      bar: picker ? '<div class="league-bar">' + picker + "</div>" : "",
+    };
+  }
+
+  // Rows belonging to the selected league.
+  //
+  // AN UNTAGGED ROW IS KEPT. `sport` is what makes scoping possible, and a
+  // payload without it is single-league by construction -- the committed mock
+  // fixture behind the dev views is exactly that, and its games and teams carry
+  // no tag at all. Dropping those would empty the view rather than scope it.
+  function scoped(rows, active) {
+    return (rows || []).filter(function (r) {
+      return !r || !r.sport || r.sport === active;
+    });
   }
 
   // Players render as compact rows that expand in place, mirroring renderGames
@@ -912,31 +969,16 @@
   // always re-renders, so a remembered open row would not be resuming
   // anything -- you are re-scanning the list fresh.
   //
-  // SCOPED TO ONE LEAGUE. data.insights.players is a single flat list spanning
-  // every active sport (generate_insights._build_players_section), ranked by
-  // pulse and nothing else. Rendered as-is -- which is what this did -- a
-  // Premier League goalkeeper on a pulse of 100 sits between two MLB hitters on
-  // the same score, and the page reads as a cross-sport ranking that nobody
-  // asked for. The rows already carry `sport`; this filters on it and puts the
-  // shared picker (sport-state.js -- the same control, and the same selection,
-  // as Who's Hot's header) above the list so the choice is visible and
-  // changeable from here rather than only from the other tab.
+  // Scoped to the selected league -- see the league-scoping block above. The
+  // shared picker (sport-state.js: the same control, and the same selection, as
+  // Who's Hot's header) sits above the list so the choice is visible and
+  // changeable from here rather than only from the Who's Hot tab.
   function renderPlayers(data, root) {
-    var all = (data.insights && data.insights.players) || [];
-    var opts = sportOptions(data);
-    var active = SP.sport.ensure(opts.keys);
-    var players = all.filter(function (p) {
-      // An UNTAGGED player is kept. `sport` is what makes scoping possible, and
-      // a payload without it is single-league by construction -- the committed
-      // mock fixture is exactly that. Dropping those would empty the view
-      // rather than scope it.
-      return !p || !p.sport || p.sport === active;
-    });
+    var ctx = leagueContext(data);
+    var players = scoped(data.insights && data.insights.players, ctx.active);
     playersById = {};
     players.forEach(function (p, idx) { playersById[String(idx)] = p; });
-    var picker = SP.sport.render(opts.keys, active, opts.labels);
-    root.innerHTML = (picker ? '<div class="pi-sportbar">' + picker + "</div>" : "") +
-      list(players, playerItem);
+    root.innerHTML = ctx.bar + list(players, playerItem, nothingFor(ctx.label, "players"));
     // Interactive rows, exposed to keyboard and assistive tech here rather than
     // inside Cards.playerRow -- the component stays presentational, and only
     // the wiring that actually makes rows clickable claims they are buttons.
@@ -945,6 +987,18 @@
       r.setAttribute("tabindex", "0");
       r.setAttribute("aria-expanded", "false");
     });
+  }
+
+  // Teams reads insights.teams -- NOT the top-level data.teams the mock used.
+  // renderGallery still reads that top-level shape, and still gets it, because
+  // components is the one view still backed by the mock.
+  //
+  // Scoped like games, and empties for the same reason: teams ride along on the
+  // game builders' slate, so a league with no builder has no team profiles.
+  function renderTeams(data, root) {
+    var ctx = leagueContext(data);
+    var teams = scoped(data.insights && data.insights.teams, ctx.active);
+    root.innerHTML = ctx.bar + list(teams, Cards.teamInsight, nothingFor(ctx.label, "team data"));
   }
 
   // Component gallery: each of the six card types shown in isolation so they're

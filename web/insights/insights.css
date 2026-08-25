@@ -392,17 +392,18 @@ body.insights-scope .breakdown-label {
   .ai-chevron { transition: none; }
 }
 
-/* ---- League bar above the players list ----
-   Holds the shared sport picker (sport-state.js). The control itself is styled
-   entirely by app.css's .sport-picker/.sport-opt, which are unscoped and so
-   already live in this document -- restyling it here would give the Players tab
-   a second, drifting copy of a control whose whole point is being the same one
-   the header carries. This rule is only the row it sits in.
+/* ---- League bar: the sport picker above every scoped list ----
+   Games, Players and Teams all render it, so the class is view-neutral rather
+   than carrying one view's prefix. The control itself is styled entirely by
+   app.css's .sport-picker/.sport-opt, which are unscoped and so already live in
+   this document -- restyling it here would give the insights tabs a second,
+   drifting copy of a control whose whole point is being the same one the Who's
+   Hot header carries. This rule is only the row it sits in.
 
    The picker carries `margin-left:auto`, which right-aligns it inside any flex
-   row; that is what pins it to the same edge here as in the Who's Hot header,
-   and it is why this is display:flex rather than a plain block. */
-.pi-sportbar { display: flex; align-items: center; margin: 0 0 12px; }
+   row; that is what pins it to the same edge here as in that header, and it is
+   why this is display:flex rather than a plain block. */
+.league-bar { display: flex; align-items: center; margin: 0 0 12px; }
 
 /* ---- Player Row: the compact COLLAPSED row for the players list ----
    A lighter sibling of .insight-card, exactly like .gr-row/.gr-item above --
