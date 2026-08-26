@@ -622,34 +622,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 2,
+          "score": 14,
           "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 6,
+          "score": 4,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 5,
+          "score": 7,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 3,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 5,
+          "score": 10,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "HOU",
             "flags": [],
-            "score": 8,
+            "score": 2,
             "side": "No clear lean"
           },
           "home": {
@@ -670,6 +670,10 @@
         "away": {
           "era": "3.85",
           "name": "Peter Lambert"
+        },
+        "home": {
+          "era": "4.08",
+          "name": "Elmer Rodr\u00edguez"
         }
       },
       "pulse": {
@@ -691,6 +695,11 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "HOU 2-2"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.85 vs 4.08"
         }
       ],
       "standout": null,
