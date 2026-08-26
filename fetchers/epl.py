@@ -42,8 +42,12 @@ this file's World Cup predecessor.
 
 import collections
 import datetime
+import math
 
 import requests
+
+import pulse
+import team_meta
 
 REQUEST_TIMEOUT = 15
 
@@ -543,3 +547,431 @@ def fetch(config, today=None):
               .format(_board_depth(records), default_window))
 
     return records
+
+
+# --------------------------------------------------------------------------- #
+# Signal Score games + Team Pulse -- generate_insights.GAME_BUILDERS
+#
+# Everything above this line is the LEADERBOARD fetcher and stays descriptive.
+# Everything below is the scored per-match pipeline, gated separately by
+# `active_game_sports`. The two share this module because they share a data
+# source and nothing else; neither calls the other.
+# --------------------------------------------------------------------------- #
+
+# How far back to look for this season's completed matches. One scoreboard call
+# covers it: ESPN 400s on a range wider than about a year, and an EPL season
+# never exceeds that even when COVID pushed 2019/20 to 26 July.
+SEASON_LOOKBACK_DAYS = 360
+# Fixtures ahead of `game_date` that count as "today's slate". Soccer has no
+# fixed matchday -- a round sprawls Friday to Monday and midweek rounds exist --
+# so a single-date slate would show an empty Games tab most days of the week.
+FIXTURE_WINDOW_DAYS = 3
+# Matches in the recent-form window, matching epl_signals' own `window` for
+# recent_form so the displayed form and the scored one describe the same span.
+FORM_WINDOW = 5
+
+
+def _season_slug_year(event):
+    return (event.get("season") or {}).get("year")
+
+
+def get_season_matches(session, scoreboard_url, today, lookback_days=SEASON_LOOKBACK_DAYS):
+    """Every COMPLETED match of the current season, oldest first, plus the
+    season year they belong to.
+
+    Season membership comes from each event's own `season.year`, not from the
+    date window: the window is a coarse net and August straddles two seasons,
+    so filing by date would mix last season's closing rounds into this season's
+    form. Form must never cross that boundary -- three clubs are relegated and
+    three promoted every summer, so last season's table is a different league.
+
+    Returns (matches, season_year). `season_year` is the newest season seen,
+    which is the one being played; an empty list gives ([], None).
+    """
+    start = today - datetime.timedelta(days=lookback_days)
+    data = _get(session, scoreboard_url,
+                params={"dates": "{}-{}".format(start.strftime("%Y%m%d"),
+                                                today.strftime("%Y%m%d")),
+                        "limit": SCOREBOARD_LIMIT})
+    rows = []
+    for event in data.get("events", []):
+        comp = (event.get("competitions") or [{}])[0]
+        if not ((comp.get("status") or {}).get("type") or {}).get("completed"):
+            continue
+        sides = {}
+        for c in comp.get("competitors") or []:
+            team = c.get("team") or {}
+            try:
+                score = int(c.get("score"))
+            except (TypeError, ValueError):
+                score = None
+            sides[c.get("homeAway")] = {"id": team.get("id"),
+                                        "name": team.get("displayName"),
+                                        "score": score}
+        if set(sides) != {"home", "away"} or any(s["score"] is None for s in sides.values()):
+            continue
+        rows.append({"date": (event.get("date") or "")[:10],
+                     "season": _season_slug_year(event),
+                     "home": sides["home"], "away": sides["away"]})
+    if not rows:
+        return [], None
+    season = max(r["season"] for r in rows if r["season"] is not None)
+    rows = [r for r in rows if r["season"] == season]
+    rows.sort(key=lambda r: r["date"])
+    return rows, season
+
+
+def build_team_form(matches, window=FORM_WINDOW):
+    """Per-team form from completed matches, keyed by ESPN team id.
+
+    Every value here is a plain count over matches already played -- goals for
+    and against per match, points per match, the same over the last `window`,
+    and the record in this team's HOME or AWAY role separately. No projection
+    and no decay.
+
+    `venue` holds the two role-specific point rates. It is the only place venue
+    information enters the model at all, which matters more here than it would
+    in a North American league: epl_signals has no home-advantage intercept
+    (signal_core.paired is a pure difference), so this is what carries the fact
+    that a home side wins 43.4% of matches and an away side 32.9%.
+    """
+    hist = collections.defaultdict(list)
+    for m in matches:
+        hs, as_ = m["home"]["score"], m["away"]["score"]
+        for side, gf, ga in (("home", hs, as_), ("away", as_, hs)):
+            hist[m[side]["id"]].append({
+                "gf": gf, "ga": ga, "venue": side, "date": m["date"],
+                "pts": 3 if gf > ga else (1 if gf == ga else 0),
+            })
+    form = {}
+    for team_id, past in hist.items():
+        n = len(past)
+        recent = past[-window:]
+        entry = {
+            "played": n,
+            "gf_pm": sum(p["gf"] for p in past) / n,
+            "ga_pm": sum(p["ga"] for p in past) / n,
+            "ppm": sum(p["pts"] for p in past) / n,
+            "gd_pm": sum(p["gf"] - p["ga"] for p in past) / n,
+            "recent_ppm": sum(p["pts"] for p in recent) / len(recent),
+            "recent_gd_pm": sum(p["gf"] - p["ga"] for p in recent) / len(recent),
+            "last_date": past[-1]["date"],
+            "form_string": "".join(
+                "W" if p["pts"] == 3 else ("D" if p["pts"] == 1 else "L") for p in recent),
+        }
+        for role in ("home", "away"):
+            at_role = [p for p in past if p["venue"] == role]
+            entry[role + "_ppm"] = (sum(p["pts"] for p in at_role) / len(at_role)) if at_role else None
+            entry[role + "_played"] = len(at_role)
+        form[team_id] = entry
+    return form
+
+
+def _team_ref(name, team_id):
+    """The TeamRef shape the game card renders. `color` (not `team_color`) is
+    the key a game TeamRef uses -- see insights.js teamTag, which reads both."""
+    meta = team_meta.get_team_meta("epl", name) or {}
+    return {"id": team_id, "abbr": meta.get("abbr") or (name or "")[:3].upper(),
+            "name": name, "color": meta.get("color")}
+
+
+def _fmt(value, places=2):
+    return None if value is None else round(float(value), places)
+
+
+def _display_signals(away_ref, home_ref, away_form, home_form):
+    """The Key Signals rows on the match card: the raw per-side numbers the
+    lean is built from, shown as numbers rather than as the tanh-squashed
+    values, because a reader can check "1.8 vs 1.1 goals per match" and cannot
+    check a squashed lean.
+
+    `tone` compares the two sides directly and is intrinsic to the metric
+    (higher scored is good, lower conceded is good), the same split every other
+    sport uses: direction in code, magnitude in config.
+    """
+    rows = []
+
+    def pair(label, key, higher_is_better, places=2):
+        h, a = home_form.get(key), away_form.get(key)
+        if h is None or a is None:
+            return
+        better_home = (h >= a) if higher_is_better else (h <= a)
+        rows.append({"label": label,
+                     "value": "{} {} · {} {}".format(home_ref["abbr"], _fmt(h, places),
+                                                     away_ref["abbr"], _fmt(a, places)),
+                     "tone": "pos" if better_home else "neg"})
+
+    pair("Goals scored / match", "gf_pm", True)
+    pair("Goals conceded / match", "ga_pm", False)
+    pair("Points / match (last {})".format(FORM_WINDOW), "recent_ppm", True)
+    if home_form.get("form_string") and away_form.get("form_string"):
+        rows.append({"label": "Recent form",
+                     "value": "{} {} · {} {}".format(home_ref["abbr"], home_form["form_string"],
+                                                     away_ref["abbr"], away_form["form_string"]),
+                     "tone": "pos"})
+    # Venue-role form, which is the pair epl_signals actually weights as
+    # venue_form -- the home side AT HOME against the away side AWAY, not both
+    # sides' overall rate.
+    hv, av = home_form.get("home_ppm"), away_form.get("away_ppm")
+    if hv is not None and av is not None:
+        rows.append({"label": "Points / match in this role",
+                     "value": "{} {} home · {} {} away".format(
+                         home_ref["abbr"], _fmt(hv), away_ref["abbr"], _fmt(av)),
+                     "tone": "pos" if hv >= av else "neg"})
+    return rows
+
+
+def _team_pulse(form, cfg):
+    """Deterministic 0-100 notability score for ONE club from its own form,
+    the same shape fetchers/mlb._team_pulse uses: each component tanh-squashed
+    against a league-average `base` by a `scale` that reads as a meaningful
+    move, renormalized over whichever components have data.
+
+    Direction is intrinsic and lives here rather than in config -- more goals
+    scored is good, FEWER conceded is good, hence the flipped numerator. Same
+    rule betting_signals and mlb._team_pulse follow.
+
+    Returns None when the club is below the sample floor, and the card then
+    renders without a Pulse rather than showing a 50 that would look measured.
+    50 is the league-average score, not the no-data score -- a distinction that
+    matters most in August, when one 4-0 opening day would otherwise read as
+    the best attack in the division.
+    """
+    if not cfg or not form:
+        return None
+    if (form.get("played") or 0) < cfg.get("min_matches", 5):
+        return None
+    terms = []
+    for key, metric, favors_high in (("attack", "gf_pm", True), ("defense", "ga_pm", False)):
+        block = cfg.get(key) or {}
+        value = form.get(metric)
+        if value is None or not block.get("scale"):
+            continue
+        delta = (value - block["base"]) if favors_high else (block["base"] - value)
+        terms.append((math.tanh(delta / block["scale"]), block.get("weight", 0.5)))
+    if not terms:
+        return None
+    wsum = sum(w for _, w in terms)
+    if wsum <= 0:
+        return None
+    combined = sum(d * w for d, w in terms) / wsum
+    # Round half UP, matching signal_core.round_half_up -- banker's rounding
+    # would put a hand-checked score off by one at an exact .5 boundary.
+    return pulse.pulse(max(0, min(100, int(math.floor(50 + 50 * combined + 0.5)))))
+
+
+def _kickoff(iso):
+    """"2026-08-29T14:00Z" -> "10:00 AM ET". EPL kicks off in UK time and this
+    site's audience reads Eastern, which is what mlb.build_game_entities also
+    emits, so the two slates are directly comparable on one screen."""
+    if not iso:
+        return None
+    try:
+        utc = datetime.datetime.strptime(iso[:16], "%Y-%m-%dT%H:%M").replace(
+            tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+    # Fixed -4 rather than a tz database lookup: this repo ships no tzdata
+    # dependency and mlb.py formats the same way. Wrong by an hour for the
+    # ~4 winter months, which is flagged rather than silently accepted.
+    et = utc + datetime.timedelta(hours=-4)
+    return et.strftime("%-I:%M %p ET")
+
+
+def _build_one_match(config, event, form):
+    import epl_signals
+
+    comp = (event.get("competitions") or [{}])[0]
+    sides = {}
+    for c in comp.get("competitors") or []:
+        team = c.get("team") or {}
+        sides[c.get("homeAway")] = {"id": team.get("id"), "name": team.get("displayName")}
+    if set(sides) != {"home", "away"}:
+        return None
+    home_ref = _team_ref(sides["home"]["name"], sides["home"]["id"])
+    away_ref = _team_ref(sides["away"]["name"], sides["away"]["id"])
+    hf = form.get(sides["home"]["id"]) or {}
+    af = form.get(sides["away"]["id"]) or {}
+
+    inputs = epl_signals.build_inputs(
+        away_abbr=away_ref["abbr"], home_abbr=home_ref["abbr"],
+        away_played=af.get("played"), home_played=hf.get("played"),
+        away_gf_pm=af.get("gf_pm"), home_gf_pm=hf.get("gf_pm"),
+        away_ga_pm=af.get("ga_pm"), home_ga_pm=hf.get("ga_pm"),
+        away_ppm=af.get("ppm"), home_ppm=hf.get("ppm"),
+        away_gd_pm=af.get("gd_pm"), home_gd_pm=hf.get("gd_pm"),
+        away_recent_ppm=af.get("recent_ppm"), home_recent_ppm=hf.get("recent_ppm"),
+        away_recent_gd_pm=af.get("recent_gd_pm"), home_recent_gd_pm=hf.get("recent_gd_pm"),
+        # THE VENUE PAIR IS ROLE-SPECIFIC, and getting this backwards would
+        # quietly destroy the one signal carrying home advantage: the home
+        # side's record AT HOME against the away side's record AWAY.
+        away_venue_ppm=af.get("away_ppm"), home_venue_ppm=hf.get("home_ppm"),
+        away_rest=None, home_rest=None)
+
+    # Returns {} below the cold-start gate, which is the honest output for
+    # August rather than a low-confidence lean -- see epl_signals.MIN_MATCHES.
+    scored = epl_signals.score_game(config, "epl", inputs)
+    cfg = (config.get("betting_signals") or {}).get("epl") or {}
+    standout = epl_signals.top_market(scored, cfg.get("standout_threshold", 55))
+
+    ui = ((config.get("insights_ui") or {}).get("epl") or {})
+    labels = ui.get("market_labels") or {}
+    signal_scores = [{"market": labels.get(m["bet_type"], m["bet_type"]),
+                      "side": m["side"], "score": m["score"]}
+                     for m in epl_signals.list_markets(scored)]
+    if standout:
+        standout = {**standout, "market": labels.get(standout.get("bet_type"),
+                                                     standout.get("bet_type"))}
+
+    status_type = (comp.get("status") or {}).get("type") or {}
+    return {
+        "gamePk": str(event["id"]),  # generic id, reused across sports
+        "sport": "epl",
+        # "Preview" is the word _games_store_writable checks for to decide
+        # whether a slate has started, so it must be spelled exactly as MLB
+        # spells it or a live EPL match would never freeze the store.
+        "status": "Preview" if status_type.get("state") == "pre" else (
+            "Final" if status_type.get("completed") else "Live"),
+        "away": away_ref, "home": home_ref,
+        "start": _kickoff(event.get("date")),
+        "venue": ((comp.get("venue") or {}).get("fullName")),
+        "probables": None,   # no pregame XI feed -- see epl_signals' docstring
+        "signals": _display_signals(away_ref, home_ref, af, hf),
+        "pulse": None,       # a match has no Pulse; clubs do (see team entities)
+        "betting_signals": scored,
+        "standout": standout,
+        "best_angle": standout,
+        "signal_scores": signal_scores,
+        "compare": None,     # no insights_ui.epl.compare_sets configured
+        "est_total": None,   # no goals-total market in v1
+        "f5_total": None,    # no first-half market in v1
+        # THE THREE-WAY SPLIT TRAVELS WITH THE MATCH. It is the reason a draw is
+        # visible on the card at all rather than only when it settles a bet.
+        "outcome_split": epl_signals.outcome_split(
+            config, "epl", (standout or {}).get("score", 0)) if standout else None,
+        "context": {
+            "home_played": hf.get("played"), "away_played": af.get("played"),
+            "home_gf_pm": _fmt(hf.get("gf_pm")), "away_gf_pm": _fmt(af.get("gf_pm")),
+            "home_ga_pm": _fmt(hf.get("ga_pm")), "away_ga_pm": _fmt(af.get("ga_pm")),
+            "home_recent_ppm": _fmt(hf.get("recent_ppm")), "away_recent_ppm": _fmt(af.get("recent_ppm")),
+            "home_venue_ppm": _fmt(hf.get("home_ppm")), "away_venue_ppm": _fmt(af.get("away_ppm")),
+            "home_form": hf.get("form_string"), "away_form": af.get("form_string"),
+        },
+    }
+
+
+def _build_team_entities(config, form, matches, slate_ids):
+    """One Team card per club ON THIS SLATE, mirroring mlb._build_team_entities.
+
+    Scoped to the slate rather than the whole division on purpose: the Teams tab
+    is "who is playing today and how are they", the same question MLB's version
+    answers. A 20-club league table is a different feature.
+    """
+    cfg = ((config.get("team_pulse") or {}).get("epl") or {})
+    if not cfg:
+        return []
+    names = {}
+    for m in matches:
+        for side in ("home", "away"):
+            names[m[side]["id"]] = m[side]["name"]
+    out = []
+    for team_id in slate_ids:
+        f = form.get(team_id)
+        if not f:
+            continue
+        ref = _team_ref(names.get(team_id), team_id)
+        signals = []
+        atk_base = ((cfg.get("attack") or {}).get("base"))
+        dfn_base = ((cfg.get("defense") or {}).get("base"))
+        if f.get("gf_pm") is not None:
+            signals.append({"label": "Goals scored / match", "value": str(_fmt(f["gf_pm"])),
+                            "tone": "pos" if (atk_base is None or f["gf_pm"] >= atk_base) else "neg"})
+        if f.get("ga_pm") is not None:
+            signals.append({"label": "Goals conceded / match", "value": str(_fmt(f["ga_pm"])),
+                            "tone": "pos" if (dfn_base is None or f["ga_pm"] <= dfn_base) else "neg"})
+        if f.get("form_string"):
+            signals.append({"label": "Last {}".format(len(f["form_string"])),
+                            "value": f["form_string"], "tone": "pos"})
+        out.append({
+            "id": team_id, "sport": "epl", "abbr": ref["abbr"], "name": ref["name"],
+            # `team_color`, the pipeline's key for a team PROFILE -- game
+            # TeamRefs use `color`. teamTag reads both; this side must emit the
+            # profile key or the card falls back to placeholder grey.
+            "team_color": ref["color"],
+            "pulse": _team_pulse(f, cfg),
+            "signals": signals,
+        })
+    out.sort(key=lambda e: (-((e.get("pulse") or {}).get("score") or 0), e.get("abbr") or ""))
+    return out
+
+
+def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
+    """EPL's entry in generate_insights.GAME_BUILDERS -- same calling convention
+    and return shape as fetchers/mlb, nfl and cfb.
+
+    CALL BUDGET: exactly TWO network requests per run, regardless of slate size.
+    One scoreboard call for the season's completed matches (which builds every
+    club's form in memory) and one for the fixture window. It does not scale
+    with the number of matches, which is why there is nothing to cache.
+
+    `boxscore_cache` IS RETURNED UNCHANGED, and that is deliberate rather than
+    an omission. MLB's cache exists because a boxscore costs a call per game and
+    a final one never changes; CFB reuses the channel for pre-aggregated team
+    form. Here the whole season arrives in one response, so a cache would add a
+    committed file, a staleness question and a merge conflict to save nothing.
+
+    `team_entities`, when a list is passed, is extended with one Team profile
+    per club on this slate -- built from the SAME form table the matches are
+    scored from, so the two views cannot disagree about a club's numbers.
+
+    Returns (entities, boxscore_cache, []) keyed by ESPN's event id as a string.
+    training_rows is always [] because training_capture's schema is
+    MLB-specific, the same position CFB and NFL are in.
+
+    Per-match failures are isolated exactly as MLB's and CFB's are: one bad
+    fixture is logged and skipped, the rest of the slate builds.
+    """
+    epl_cfg = config.get("epl") or {}
+    scoreboard_url = epl_cfg.get("scoreboard_url")
+    if not scoreboard_url:
+        return {}, boxscore_cache, []
+
+    session = requests.Session()
+    today = datetime.date.fromisoformat(game_date)
+    matches, season = get_season_matches(session, scoreboard_url, today)
+    form = build_team_form(matches)
+
+    end = today + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)
+    data = _get(session, scoreboard_url,
+                params={"dates": "{}-{}".format(today.strftime("%Y%m%d"),
+                                                end.strftime("%Y%m%d")),
+                        "limit": SCOREBOARD_LIMIT})
+    fixtures = data.get("events") or []
+
+    entities = {}
+    slate_ids = []
+    for event in fixtures:
+        try:
+            built = _build_one_match(config, event, form)
+        except Exception as e:  # noqa: BLE001 -- one bad fixture must not cost the slate
+            print("insights(games): epl match {} failed to build ({}: {}); skipped"
+                  .format(event.get("id"), type(e).__name__, str(e)[:160]))
+            continue
+        if not built:
+            continue
+        entities[built["gamePk"]] = built
+        for side in ("home", "away"):
+            tid = built[side].get("id")
+            if tid and tid not in slate_ids:
+                slate_ids.append(tid)
+
+    scored = sum(1 for e in entities.values() if e.get("betting_signals"))
+    print("insights(games): epl built {} fixtures for {} (season {}, {} completed matches "
+          "on file, {} scored -- the rest are below the {}-match cold-start gate)"
+          .format(len(entities), game_date, season, len(matches), scored,
+                  __import__("epl_signals").MIN_MATCHES))
+
+    if team_entities is not None:
+        team_entities.extend(_build_team_entities(config, form, matches, slate_ids))
+
+    return entities, boxscore_cache, []

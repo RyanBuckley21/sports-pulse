@@ -625,3 +625,31 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
   /* .ai-summary is a wash inside a now-opaque card, so it needs no fallback --
      it never carried a blur in the first place. */
 }
+
+/* ---- Three-way outcome split ----
+   Only soccer emits the data behind this (see Cards.outcomeSplit); the other
+   sports have two outcomes and the component renders nothing for them.
+
+   One continuous bar rather than three separate meters: the question a reader
+   has is how the three shares compare to each other, and adjacent segments
+   answer that without any number being read. The segments carry the two clubs'
+   own colours and the neutral gold for the draw, which is the same colour rule
+   the market chips on this card already follow. */
+.outcome-split { margin-top: 4px; }
+.os-bar {
+  display: flex; height: 8px; border-radius: 999px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+.os-seg { display: block; height: 100%; }
+/* A hairline between segments so two similar club colours never read as one
+   block. inset rather than a border: a border would add width and throw the
+   percentages off. */
+.os-seg + .os-seg { box-shadow: inset 1px 0 0 var(--bg); }
+.os-keys { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.os-key {
+  display: flex; align-items: center; gap: 6px;
+  font: 500 11px var(--font-body); color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+.os-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.os-pct { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
