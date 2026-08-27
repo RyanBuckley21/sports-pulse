@@ -80,6 +80,10 @@ Both directions were sabotage-checked when written: disabling the freeze guard
 fails exactly the freeze assertion, disabling the total-failure guard fails
 exactly the two fatality assertions.
 
+No network. Succeeding builders return the real committed entities from
+`data/insights.games.json`, and every store is redirected to a temp copy, so a
+run cannot touch anything committed.
+
 ```
 python3 -m tools.verify.test_epl_grading      # from the repo root
 ```
@@ -104,9 +108,6 @@ wins, 8 draws, 6 away wins — trimmed to the fields the adapter reads. Real
 rather than hand-written because a hand-written draw is a guess about the shape
 ESPN emits for one, and that shape is exactly what is being parsed.
 
-No network. Succeeding builders return the real committed entities from
-`data/insights.games.json`, and every store is redirected to a temp copy, so a
-run cannot touch anything committed.
 
 ## What it cannot cover
 
