@@ -969,25 +969,13 @@
   // Games and Teams tabs showing the MLB slate. Selecting a league now means
   // the same thing on every tab: nothing from another one is on screen.
 
-  // The leagues the picker offers, and what to call them.
-  //
-  // data.sports is the SAME source Who's Hot builds its picker from, so the two
-  // controls always offer the same leagues in the same order -- config.yaml's
-  // active_sports order, carried through data.json. A payload with no
-  // leaderboard block at all (the committed mock) falls back to whatever sports
-  // its own rows declare, in first-seen order.
+  // The leagues the picker offers, and what to call them -- sport-state.js's
+  // definition, which is also the one Who's Hot uses, so the two controls
+  // cannot end up offering different leagues. See SP.sport.options for why the
+  // list is not simply data.sports (cfb publishes games and teams but no
+  // leaderboards, so it appears in neither data.sports nor any player row).
   function sportOptions(data) {
-    var sports = data.sports || {};
-    var keys = Object.keys(sports), labels = {};
-    keys.forEach(function (k) { labels[k] = (sports[k] || {}).label || k; });
-    if (!keys.length) {
-      var ins = data.insights || {};
-      [].concat(ins.players || [], ins.games || [], ins.teams || []).forEach(function (r) {
-        var k = r && r.sport;
-        if (k && keys.indexOf(k) < 0) { keys.push(k); labels[k] = k; }
-      });
-    }
-    return { keys: keys, labels: labels };
+    return SP.sport.options(data);
   }
 
   // Settle the selection, resolve the label, and hand back the picker markup --

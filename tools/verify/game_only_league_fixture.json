@@ -1,0 +1,352 @@
+{
+ "captured_at": "2025-11-15",
+ "sport_labels": {
+  "cfb": "College Football"
+ },
+ "games": [
+  {
+   "id": "401757174",
+   "sport": "cfb",
+   "away": {
+    "abbr": "AF",
+    "name": "Air Force",
+    "color": "#3F76D9"
+   },
+   "home": {
+    "abbr": "CONN",
+    "name": "UConn",
+    "color": "#5C79BC"
+   },
+   "start": "12:00 PM ET",
+   "venue": "Pratt & Whitney Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [],
+   "betting_signals": {
+    "moneyline": {
+     "side": "No clear lean",
+     "score": 0,
+     "flags": []
+    }
+   },
+   "standout": null,
+   "signal_scores": [],
+   "best_angle": null,
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401762862",
+   "sport": "cfb",
+   "away": {
+    "abbr": "AKR",
+    "name": "Akron",
+    "color": "#5C84BC"
+   },
+   "home": {
+    "abbr": "BGSU",
+    "name": "Bowling Green",
+    "color": "#F76521"
+   },
+   "start": "7:00 PM ET",
+   "venue": "Doyt L. Perry Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [],
+   "betting_signals": {
+    "moneyline": {
+     "side": "No clear lean",
+     "score": 0,
+     "flags": []
+    }
+   },
+   "standout": null,
+   "signal_scores": [],
+   "best_angle": null,
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401761652",
+   "sport": "cfb",
+   "away": {
+    "abbr": "APP",
+    "name": "App State",
+    "color": "#8C8C8C"
+   },
+   "home": {
+    "abbr": "JMU",
+    "name": "James Madison",
+    "color": "#9044D4"
+   },
+   "start": "3:30 PM ET",
+   "venue": "Bridgeforth Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [],
+   "betting_signals": {
+    "moneyline": {
+     "side": "No clear lean",
+     "score": 0,
+     "flags": []
+    }
+   },
+   "standout": null,
+   "signal_scores": [],
+   "best_angle": null,
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401756951",
+   "sport": "cfb",
+   "away": {
+    "abbr": "ARIZ",
+    "name": "Arizona",
+    "color": "#E92F5E"
+   },
+   "home": {
+    "abbr": "CIN",
+    "name": "Cincinnati",
+    "color": "#8C8C8C"
+   },
+   "start": "12:00 PM ET",
+   "venue": "Nippert Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [],
+   "betting_signals": {
+    "moneyline": {
+     "side": "No clear lean",
+     "score": 0,
+     "flags": []
+    }
+   },
+   "standout": null,
+   "signal_scores": [],
+   "best_angle": null,
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  }
+ ],
+ "teams": [
+  {
+   "id": "Indiana",
+   "sport": "cfb",
+   "abbr": "IU",
+   "name": "Indiana",
+   "team_color": "#DA3E3E",
+   "pulse": {
+    "score": 99,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "41.3",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "13.4",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "9-0",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Texas Tech",
+   "sport": "cfb",
+   "abbr": "TTU",
+   "name": "Texas Tech",
+   "team_color": "#E73250",
+   "pulse": {
+    "score": 99,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "39.3",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "13.2",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "8-1",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Oregon",
+   "sport": "cfb",
+   "abbr": "ORE",
+   "name": "Oregon",
+   "team_color": "#4ACF83",
+   "pulse": {
+    "score": 98,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "36.8",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "13.8",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "8-1",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Utah",
+   "sport": "cfb",
+   "abbr": "UTAH",
+   "name": "Utah",
+   "team_color": "#E53333",
+   "pulse": {
+    "score": 97,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "36.6",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "14.9",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "6-2",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "LWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Notre Dame",
+   "sport": "cfb",
+   "abbr": "ND",
+   "name": "Notre Dame",
+   "team_color": "#6688B3",
+   "pulse": {
+    "score": 95,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "38.7",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "18.8",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "7-2",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Ohio State",
+   "sport": "cfb",
+   "abbr": "OSU",
+   "name": "Ohio State",
+   "team_color": "#DC3C5C",
+   "pulse": {
+    "score": 94,
+    "label": "Scorching"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game",
+     "value": "32.1",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game",
+     "value": "8.1",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS)",
+     "value": "8-0",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  }
+ ]
+}

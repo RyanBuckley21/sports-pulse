@@ -213,18 +213,30 @@ jobs:
       # shaped -- so widening the secret to the job would expose it to a step
       # that has no use for it.
       #
-      # Inert today and safe to ship ahead of any activation: `cfb` is
-      # registered in GAME_BUILDERS but absent from active_sports and
-      # active_game_sports, so cfb.build_game_entities is never invoked and
-      # the key is never read. fetchers/cfb.py demands it lazily inside
-      # cfbd_key(), never at import time, so an unset or empty secret cannot
-      # break the MLB pipeline -- it can only surface once CFB is switched on.
+      # CFB_ALLOW_CFBD IS SET HERE AND NOWHERE ELSE, and that is the whole
+      # quota-safety mechanism -- see fetchers/cfb.py's CFBD_ALLOW_ENV.
+      #
+      # The free CFBD tier is 1,000 calls a month. This fetcher's cost is meant
+      # to be zero in steady state: each week is fetched once and cached per
+      # (season, week) in data/boxscores.json. That only holds if the cache is
+      # committed, and THIS WORKFLOW IS THE ONLY ONE THAT COMMITS IT (see the
+      # `git add data/boxscores.json` step below). deploy-pages.yml runs the
+      # same fetcher on every push to main and commits nothing, so any call it
+      # made would be discarded and re-made next run -- roughly 1,440 calls a
+      # month once the season is deep enough, over the tier, with nothing
+      # announcing it.
+      #
+      # So the flag says "this run can keep what it buys". Unset, the fetcher
+      # serves the committed cache and skips the network entirely. The failure
+      # mode if this workflow stops is therefore STALE CFB FORM, not an
+      # exhausted quota -- which is the right way round.
       - name: Regenerate stats and signals
         id: generate_stats
         if: ${{ !cancelled() }}
         env:
           SP_SKIP_INSIGHTS: "1"
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          CFB_ALLOW_CFBD: "1"
         run: python3 generate_stats.py
 
       # Independent of the grading step: commits only if regeneration itself

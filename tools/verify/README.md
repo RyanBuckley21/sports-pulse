@@ -45,6 +45,35 @@ broken — the games accordion collapsing when you leave and return, and
 delegated click handlers surviving repeated mounts without being lost or
 double-bound.
 
+**`game-only-league`** — a league that publishes GAMES AND TEAMS BUT NO PLAYER
+LEADERBOARDS. `cfb` is exactly that by design (no player props to bet, so no
+player boards are built), and it broke the app in two ways that a normal run
+never surfaces. The sport picker was derived from `data.json`'s `sports` block,
+which only holds leagues WITH leaderboards — so cfb's games and teams shipped in
+the payload, correctly scoped, with no control anywhere in the app that could
+select them. Nothing threw; the league was simply unreachable. And once it *is*
+selectable, walking from Games back to Who's Hot handed `renderChipRow` an
+undefined sport and threw. This splices real cfb rows into whatever payload the
+suite is serving and walks Games → Teams → Who's Hot and back, asserting both
+halves: the league is offered and scopes both tabs, and Who's Hot names it
+rather than crashing — without quietly resetting the selection, which would undo
+a switch made one tab over.
+
+Sabotage-checked in both directions when written: dropping the
+`insights.ui.sport_labels` union fails exactly the "picker offers it" assertion
+(and then cannot proceed); removing the no-leaderboards branch in `app.js`
+fails exactly the three Who's Hot assertions, with the page both rendering the
+PREVIOUS league's boards and throwing.
+
+`game_only_league_fixture.json` is REAL pipeline output — a captured 2025-11-15
+cfb slate, four games and six team profiles, exactly as `generate_insights`
+emits them. Real rather than hand-written for the same reason the EPL fixture
+below is: the shape of a row from a league with no leaderboards behind it is the
+thing under test. The suite tags the served payload's own rows with its first
+league on the way past, because `scoped()` deliberately keeps an UNTAGGED row
+and a two-league payload with half its rows untagged is not one the pipeline can
+produce.
+
 **`router`** — hash routing, the cold-launch normalisation (including that a
 *valid* saved `#/games` is still normalised to `#/`, which the unknown-hash
 fallback would otherwise honour), the `#/components` exemption, symmetric
