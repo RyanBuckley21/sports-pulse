@@ -187,8 +187,21 @@
       // The sport switcher is no longer a row of its own -- renderHeader()
       // places it inline with the title. See renderSportPicker.
       html += renderHeader();
-      html += renderChipRow();
-      html += renderList();
+      // A LEAGUE WITH NO LEADERBOARDS is a real state, not a broken one. The
+      // selection is shared with the Players/Games/Teams tabs, and those offer
+      // every active league -- including cfb, which ships games and teams and
+      // no player boards at all (no player props to bet, so none are built).
+      // Picking it there and coming back here used to hand renderChipRow an
+      // undefined sport and throw. It says so instead, and leaves the choice
+      // alone: silently snapping the selection back to MLB would undo a switch
+      // the user made on another tab.
+      var sp = currentSportData();
+      if (!sp) {
+        html += renderNoBoards();
+      } else {
+        html += renderChipRow();
+        html += renderList();
+      }
     }
     html += "</div>";
     appEl.innerHTML = html;
@@ -217,17 +230,27 @@
   }
 
   // The sport switcher is sport-state.js's control, rendered here into the
-  // header row. This section owns only the two things that are its own: WHICH
-  // leagues exist (data.json's sports block) and what each is CALLED
-  // (sport.label, which the Players view has no equivalent source for). The
-  // markup, the monograms, the collapsed/expanded behaviour and the selection
-  // itself all live in the shared module, so the same control appears on the
-  // Players tab without either section reaching into the other.
+  // header row. WHICH leagues it offers and what each is CALLED now come from
+  // there too (SP.sport.options), because "the leagues in data.json's sports
+  // block" turned out to be the wrong answer: that block holds only leagues
+  // with LEADERBOARDS, and cfb has none by design. Deriving the picker here
+  // would have left this control and the Players one offering different
+  // leagues. The markup, the monograms, the collapsed/expanded behaviour and
+  // the selection all live in the shared module, so the same control appears
+  // on the Players tab without either section reaching into the other.
   function renderSportPicker() {
-    var sportKeys = Object.keys(state.data.sports);
-    var labels = {};
-    sportKeys.forEach(function (k) { labels[k] = state.data.sports[k].label; });
-    return SP.sport.render(sportKeys, state.sport, labels);
+    var opts = SP.sport.options(state.data);
+    return SP.sport.render(opts.keys, state.sport, opts.labels);
+  }
+
+  function renderNoBoards() {
+    var opts = SP.sport.options(state.data);
+    var label = opts.labels[state.sport] || state.sport || "This league";
+    return (
+      '<div class="section-title-row"><span class="section-title">' + esc(label) + "</span></div>" +
+      '<p class="empty-state">No player leaderboards for ' + esc(label) +
+      ". Its games and teams are on the Insights tabs.</p>"
+    );
   }
 
   function renderChipRow() {
@@ -928,7 +951,7 @@
         // actually carries -- keeps a still-valid choice, otherwise falls to
         // data.json's first sport. Same rule the Players view applies, from
         // the same place, so the two can never disagree about the default.
-        SP.sport.ensure(Object.keys(state.data.sports));
+        SP.sport.ensure(SP.sport.options(state.data).keys);
         Object.keys(state.data.sports).forEach(function (key) {
           var cats = state.data.sports[key].categories;
           if (!state.statBySport[key] && cats.length) state.statBySport[key] = cats[0].key;

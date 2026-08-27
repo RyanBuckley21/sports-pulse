@@ -668,6 +668,24 @@ def _ui_meta(config):
         cats = (block or {}).get("signal_categories")
         if cats:
             out[sport_key] = {"signal_categories": cats}
+
+    # SPORT DISPLAY NAMES, for every sport with scored games -- not just the
+    # ones with a category strip.
+    #
+    # The sport picker takes its option labels from data.json's `sports` block,
+    # which only holds sports that publish LEADERBOARDS. CFB publishes none by
+    # design (no player props to bet), so without this it would have games and
+    # teams the UI could never name, and the picker would have nothing to call
+    # it. Emitted from generate_stats.SPORT_LABELS so one table names a sport
+    # everywhere rather than the UI inventing a second.
+    import generate_stats  # local: avoids a circular import at module load
+    labels = {}
+    for sport_key in _active_game_sports(config):
+        label = generate_stats.SPORT_LABELS.get(sport_key)
+        if label:
+            labels[sport_key] = label
+    if labels:
+        out["sport_labels"] = labels
     return out
 
 

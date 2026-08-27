@@ -159,6 +159,49 @@
     return key;
   }
 
+  // The leagues a payload carries, and what to call them -- ONE definition,
+  // read by every section that renders the picker.
+  //
+  // data.sports is not the whole list. It holds only leagues that publish
+  // LEADERBOARDS, and a league can be fully active without them: cfb ships
+  // games and teams and no player boards at all, deliberately (there are no
+  // player props to bet). Building the picker from data.sports alone made such
+  // a league UNREACHABLE -- its games and teams were in the payload, scoped and
+  // ready, with no control anywhere in the app that could select it. So the
+  // keys are the union of the leaderboard leagues and the ones the pipeline
+  // named in insights.ui.sport_labels (generate_insights emits one entry per
+  // active GAME sport, from generate_stats.SPORT_LABELS, so the app never
+  // invents a name for a league the pipeline already named).
+  //
+  // ORDER: leaderboard leagues first, in data.json's own order (config.yaml's
+  // active_sports), then the game-only ones. That keeps the default selection
+  // -- keys[0], via ensure() -- exactly what it was before this existed.
+  //
+  // The last fallback covers a payload with NO sports block at all (the
+  // committed mock behind the dev views): the rows themselves declare their
+  // league, so the picker is derived from those, in first-seen order.
+  function options(data) {
+    var d = data || {};
+    var sports = d.sports || {};
+    var ins = d.insights || {};
+    var named = (ins.ui && ins.ui.sport_labels) || {};
+    var keys = [], labels = {};
+    function add(key, label) {
+      if (!key) return;
+      if (keys.indexOf(key) < 0) keys.push(key);
+      if (!labels[key] && label) labels[key] = label;
+    }
+    Object.keys(sports).forEach(function (k) { add(k, (sports[k] || {}).label); });
+    Object.keys(named).forEach(function (k) { add(k, named[k]); });
+    if (!keys.length) {
+      [].concat(ins.players || [], ins.games || [], ins.teams || []).forEach(function (r) {
+        add(r && r.sport, null);
+      });
+    }
+    keys.forEach(function (k) { if (!labels[k]) labels[k] = k; });
+    return { keys: keys, labels: labels };
+  }
+
   SP.sport = {
     get: function () { return selected; },
     set: function (key) { selected = key; },
@@ -173,6 +216,7 @@
       }
       return selected;
     },
+    options: options,
     monogram: monogram,
     render: render,
     close: close,

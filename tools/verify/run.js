@@ -1104,12 +1104,133 @@ function htmlFilesUnder(dir) {
 // Groups are independent by construction -- each opens its own page(s) and
 // asserts against a freshly loaded app -- so the driver is free to run the rest
 // after one of them dies. Adding a group means adding a row here.
+// ------------------------------------------------------------- game-only-league
+// A league can be fully active and publish NO player leaderboards. cfb is
+// exactly that by design -- games and teams, no player boards, because there
+// are no player props to bet -- and it broke two things that both failed
+// silently.
+//
+// The picker was built from data.json's `sports` block, which only holds
+// leagues WITH leaderboards. So cfb's games and teams shipped in the payload,
+// correctly scoped and ready to render, with no control anywhere in the app
+// that could select them: the league was unreachable, and nothing threw. The
+// keys now come from SP.sport.options, which unions that block with the
+// leagues the pipeline named in insights.ui.sport_labels.
+//
+// The second one DID throw, and only on the tab that has nothing to show:
+// picking such a league on Games or Teams and walking back to Who's Hot handed
+// renderChipRow an undefined sport. That page is now a named empty state, and
+// crucially it leaves the SELECTION alone -- snapping back to the first league
+// would silently undo a switch made one tab over.
+//
+// The cfb rows spliced in here are REAL pipeline output (a captured 2025-11-15
+// slate: four games, six team profiles), not hand-written -- the shape of a
+// game with no leaderboard league behind it is the thing under test, so it has
+// to be the shape the pipeline actually emits. The fixture's own rows are
+// tagged mlb on the way past, because scoped() deliberately keeps an UNTAGGED
+// row (a single-league payload has nothing to scope), and a two-league payload
+// with half its rows untagged is not a payload the pipeline can produce.
+async function gameOnlyLeagueChecks(browser, base) {
+  const extra = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "game_only_league_fixture.json"), "utf8"));
+  const p = await newPage(browser);
+  const problems = collectProblems(p, base);
+
+  await p.route("**/data.json*", async (route) => {
+    const res = await route.fetch();
+    const data = JSON.parse(await res.text());
+    const home = Object.keys(data.sports || {})[0] || "mlb";
+    const ins = data.insights || (data.insights = {});
+    ["players", "games", "teams"].forEach((k) => {
+      ins[k] = (ins[k] || []).map((r) => Object.assign({}, r, { sport: r.sport || home }));
+    });
+    ins.games = (ins.games || []).concat(extra.games);
+    ins.teams = (ins.teams || []).concat(extra.teams);
+    ins.ui = Object.assign({}, ins.ui, {
+      sport_labels: Object.assign({}, (ins.ui || {}).sport_labels, extra.sport_labels),
+    });
+    await route.fulfill({ body: JSON.stringify(data), contentType: "application/json" });
+  });
+
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(450);
+  await goRoute(p, "#/games");
+
+  const offered = () => p.$$eval("#insightsRoot [data-sport]",
+    (b) => b.map((x) => x.getAttribute("data-sport")).sort());
+  ok("the picker offers the game-only league", (await offered()).includes("cfb"),
+     (await offered()).join(","));
+
+  // Default selection is unchanged by any of this: still data.json's first
+  // league, which is the one WITH leaderboards.
+  const beforeAbbrs = () => p.$$eval("#insightsRoot .gr-row .gr-teams .team-chip",
+    (n) => n.map((x) => x.textContent.trim()));
+  const cfbAbbrs = extra.games.map((g) => g.home.abbr);
+  ok("it is not selected by default", !(await beforeAbbrs()).some((a) => cfbAbbrs.includes(a)));
+
+  // Two taps: the collapsed control is a disclosure, so the first opens it.
+  await p.click('#insightsRoot .sport-opt.active');
+  await p.click('#insightsRoot [data-sport="cfb"]');
+  await p.waitForTimeout(450);
+
+  const shown = await beforeAbbrs();
+  ok("selecting it shows its games", shown.length > 0 && shown.some((a) => cfbAbbrs.includes(a)),
+     shown.join(",") || "none");
+  ok("  and NOTHING from the other league", shown.every((a) => cfbAbbrs.includes(a) ||
+     extra.games.some((g) => g.away.abbr === a)), shown.join(","));
+
+  await goRoute(p, "#/teams");
+  const teamNames = await p.$$eval("#insightsRoot .ti-name", (n) => n.map((x) => x.textContent.trim()));
+  const cfbTeams = extra.teams.map((t) => t.name);
+  ok("the selection carries to Teams", teamNames.length > 0 && teamNames.every((n) => cfbTeams.includes(n)),
+     teamNames.join(",") || "none");
+
+  // A Pulse computed over a DIFFERENT window than the card implies carries a
+  // `qualifier`, and it has to reach the screen: these cards say "Scorching"
+  // about programs that have not played a snap this season. Two assertions,
+  // because the failure modes are opposite -- the text missing entirely, or
+  // the season folded into the band word, which would miss pulseBand()'s
+  // lookup table and silently grey out every band colour.
+  const quals = extra.teams.filter((t) => t.pulse && t.pulse.qualifier);
+  if (quals.length) {
+    const labels = await p.$$eval("#insightsRoot .pulse-label", (n) => n.map((x) => x.textContent.trim()));
+    ok("  a stale Pulse says which season it is from",
+       labels.some((l) => l.includes(quals[0].pulse.qualifier.toUpperCase())
+                       || l.includes(quals[0].pulse.qualifier)), labels.slice(0, 2).join(" | "));
+    const bands = await p.$$eval("#insightsRoot .pulse", (n) => n.map((x) => x.className));
+    ok("  and still resolves its band colour (not the grey fallback)",
+       bands.length > 0 && bands.every((c) => !/pulse-cool/.test(c)), bands.slice(0, 2).join(" | "));
+  }
+
+  // The tab with nothing to show. It must NAME the league, and must not have
+  // quietly reset the selection to get there.
+  await goRoute(p, "#/");
+  const app = await p.$eval("#app", (n) => n.innerText);
+  ok("Who's Hot names the league instead of throwing", /College Football/.test(app),
+     app.slice(0, 120).replace(/\n/g, " "));
+  ok("  and renders no leaderboard chips", (await p.$$eval("#app .chip", (n) => n.length)) === 0);
+  ok("  the selection survived the visit",
+     (await p.evaluate(() => window.SP.sport.get())) === "cfb");
+
+  // ...and switching back from that empty page still works, which is the only
+  // way out of it.
+  await p.click('#app .sport-opt.active');
+  await p.click('#app [data-sport]:not(.active)');
+  await p.waitForTimeout(450);
+  ok("switching back from it restores the boards",
+     (await p.$$eval("#app .chip", (n) => n.length)) > 0);
+
+  ok("no errors anywhere in that walk", problems.length === 0, problems.join(" | ") || "clean");
+  await p.close();
+}
+
 const GROUPS = [
   ["insights-scope-leak-check", scopeLeakCheck],
   ["re-entry", reEntryChecks],
   ["player-detail", playerDetailChecks],
   ["detail-history", detailHistoryChecks],
   ["ai-note", aiNoteChecks],
+  ["game-only-league", gameOnlyLeagueChecks],
   ["router", routerChecks],
   ["safe-area", safeAreaChecks],
   ["standalone", standaloneChecks],

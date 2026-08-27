@@ -44,6 +44,18 @@ active_sports: [mlb, epl]
 # An explicitly EMPTY list (`active_game_sports: []`) is honoured as a real
 # kill switch -- no scored picks for any sport -- rather than falling back.
 #
+# CFB added 2026-08-27, GAMES AND TEAMS ONLY -- there is no cfb entry in
+# generate_stats.SPORT_FETCHERS and no `cfb.stat_categories`, so it publishes no
+# player leaderboards at all. That is not a restriction this key imposes; CFB
+# simply never had a leaderboard fetcher, which suits a sport whose player props
+# are not the point.
+#
+# ITS CFBD COST IS ZERO UNLESS A RUN CAN COMMIT THE CACHE. See fetchers/cfb.py's
+# CFBD_ALLOW_ENV: only daily-stats-and-grade.yml sets CFB_ALLOW_CFBD, because
+# only it commits data/boxscores.json. Week 0/1 costs nothing regardless (no
+# prior form exists to fetch), and the ESPN fallback schedule costs nothing ever
+# (its game ids cannot join CFBD rows, so the fetch would buy an empty join).
+#
 # WHAT EPL DOES AND DOES NOT GET FROM THIS. It gets scored markets, a Team
 # Pulse, and a per-sport partition in data/insights.games.json with the same
 # pre-game freeze rules MLB's has. It does NOT get graded: signal_report.py
@@ -54,7 +66,7 @@ active_sports: [mlb, epl]
 # ships"), not something this change introduces -- but it does make it live, so
 # EPL has no accuracy ledger until a grader learns the sport. The backtest is
 # the only accuracy evidence EPL has.
-active_game_sports: [mlb, epl]
+active_game_sports: [mlb, epl, cfb]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
@@ -349,6 +361,21 @@ nfl:
 # outcome. Its absence is the clearest available statement of that boundary.
 #
 # Not fetched or shown while `epl` is absent from active_sports.
+# CFB fetcher/grader endpoints. Small next to the `epl` block below because
+# almost everything CFB needs is a constant in fetchers/cfb.py -- the schedule
+# sources, the season window, the call ceiling. What lives here is the pair
+# signal_report's grading adapter reads, plus the block's own existence: a
+# sport with no top-level config key is rejected by `--sport`, which is what
+# kept `--sport cfb` from running at all.
+#
+# These MUST equal fetchers/cfb.ESPN_CFB_SCOREBOARD and ESPN_FBS_GROUP. That
+# module has its own copy because it needs the same endpoint for the fallback
+# schedule; tools/verify/test_cfb_grading.py asserts the two agree so a grader
+# reading a different endpoint from the builder cannot ship quietly.
+cfb:
+  scoreboard_url: "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
+  fbs_group: 80
+
 epl:
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard
   summary_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary
@@ -880,6 +907,16 @@ betting_signals:
       off_ppa_gap: 0.1686
       def_ppa_gap: 0.1568
       turnover_gap: 1.3292
+      # Cold start only. Stdev of the prior-season margin gap over the 733
+      # week-1/2 games across 2016-2025 that have a prior season on both sides
+      # (2020 excluded, COVID). Schedule-derived, so measuring it cost no CFBD
+      # calls. The all-weeks figure is 16.04 over 5,825 games -- close enough
+      # that the early-season subset is not a special population.
+      prior_margin_gap: 15.6676
+      # Fallback tier 1. Stdev of THIS season's point-in-time margin gap over
+      # the 5,233 games across 2015-2025 where both sides had the three-game
+      # minimum. Also schedule-derived, also free.
+      season_margin_gap: 17.0004
     bet_types:
       # Moneyline only in v1. Weights are reliability-proportional over the
       # three signals that survived measurement: r = 0.3351 / 0.2612 / 0.1891
@@ -902,6 +939,24 @@ betting_signals:
         off_ppa: 0.5193
         def_ppa_allowed: 0.3154
         turnover_diff: 0.1654
+        # FALLBACK TIERS, never co-present with the three above OR with each
+        # other -- cfb_signals.score_game picks the first tier that has
+        # anything and blanks the rest, so each of these is always the only
+        # signal in its lean and is always renormalized to 1.0. Their
+        # magnitudes carry no meaning at all; both are 1.0 precisely so nobody
+        # reads either as "a fifth of a lean". See _FALLBACK_TIERS.
+        #
+        # Before these, a game with no CFBD form scored 0 -- every week-0 and
+        # week-1 game, and every game of a season on the ESPN fallback
+        # schedule. Walk-forward over ten seasons: season_margin 76.0% at
+        # threshold 40, prior_margin 73.7% in week 1, against the calibrated
+        # PPA model's 76.9% on the same measure.
+        #
+        # Same caveat as the block above, and it matters more here: these are
+        # STRAIGHT-UP HIT RATES on games where the favourite is obvious and the
+        # market knows it. Not a claim of edge.
+        season_margin: 1.0
+        prior_margin: 1.0
   # ------------------------------------------------------------------------ #
   # EPL (Premier League) -- BACKTEST-DERIVED. Measured by epl_backtest.py over
   # 2019/20-2025/26, every completed match, 2,660 total; 2,307 clear the
@@ -1184,6 +1239,39 @@ team_pulse:
       base: 1.432
       scale: 0.359
       weight: 0.50
+  # CFB. MEASURED from real results, not picked: `base` is the FBS mean and
+  # `scale` one standard deviation of the team-season spread, over all 136 FBS
+  # programs across the 2025 season, FBS-vs-FBS games only.
+  #
+  #   points scored / game   mean 25.92  stdev 6.43  (range 9.7 - 44.6)
+  #   points allowed / game  mean 26.41  stdev 6.08  (range 10.0 - 39.6)
+  #
+  # FBS-vs-FBS ONLY is doing real work in those numbers. FBS programs schedule
+  # FCS opponents on purpose and win them by design, so including those games
+  # would inflate exactly the programs that scheduled the weakest opponents --
+  # a systematic bias, not noise. The same restriction fbs_matchup_index
+  # enforces for the scored model.
+  #
+  # COSTS NO CFBD CALLS. Unlike the scored model, whose signals are all CFBD
+  # (off_ppa, def_ppa_allowed, turnover_diff), these come from the schedule
+  # this fetcher already holds. That is the point: the Teams tab renders on
+  # every run, including the ones where team form is skipped entirely -- week
+  # 1, the ESPN fallback schedule, or the per-run call ceiling.
+  #
+  # min_games 3 bites harder here than the equivalent floor in any other sport.
+  # A CFB season is twelve games, so three is a quarter of it and there is no
+  # 162-game average to absorb one blowout. Below it a program gets NO pulse
+  # rather than a 50, which would read as measured.
+  cfb:
+    min_games: 3
+    offense:
+      base: 25.92
+      scale: 6.43
+      weight: 0.50
+    defense:
+      base: 26.41
+      scale: 6.08
+      weight: 0.50
   # Reserved for future sports; empty = the Teams view renders nothing.
   worldcup: {}
 
@@ -1249,5 +1337,13 @@ insights_ui:
     market_labels:
       double_chance: "Double Chance"
       match_result: "Match Result"
+
+  # CFB. Market label only -- no signal_categories strip and no compare_sets.
+  # Both would describe CFBD-derived inputs (PPA, turnover margin), and a strip
+  # advertising signals that are absent on every keyless run would be a promise
+  # the page cannot keep. The Key Signals rows already name whatever resolved.
+  cfb:
+    market_labels:
+      moneyline: "Moneyline"
 
   worldcup: {}

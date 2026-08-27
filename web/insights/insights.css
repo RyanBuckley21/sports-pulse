@@ -109,6 +109,13 @@ body.insights-scope .breakdown-label {
   font: 600 10px var(--font-body); text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--text-tertiary); margin-bottom: 8px;
 }
+/* The window a Pulse was computed over, when it is NOT the one the card
+   implies -- CFB week 0, where a program's only form is last season's. Set
+   apart from the band word rather than blended into it: the band is a claim
+   about the team and this is the caveat on that claim, so it reads as an
+   aside. Inherits the label's uppercase/tracking so the line stays one
+   typographic unit. */
+.pulse-qualifier { color: var(--text-quaternary, var(--text-tertiary)); opacity: 0.75; }
 .pulse-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
 .pulse-fill { height: 100%; border-radius: 999px; }
 /* Band colours. The class comes from the LABEL Python emits, never from a

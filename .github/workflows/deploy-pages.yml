@@ -250,12 +250,20 @@ jobs:
       # contents: read` -- that block scopes the GITHUB_TOKEN, not repository
       # secrets, which are injected independently.
       #
-      # Inert until activation, exactly as in the daily workflow: `cfb` is
-      # registered in GAME_BUILDERS but absent from active_sports and
-      # active_game_sports, so cfb.build_game_entities is never invoked and the
-      # key is never read. fetchers/cfb.py demands it lazily inside cfbd_key()
-      # and treats an empty string the same as unset -- which is what GitHub
-      # injects for an undefined secret -- so this cannot break the MLB build.
+      # CFB_ALLOW_CFBD IS DELIBERATELY NOT SET HERE, and adding it would be the
+      # bug. The free CFBD tier is 1,000 calls a month and the fetcher's cost is
+      # only zero because each (season, week) is cached in data/boxscores.json
+      # and COMMITTED -- which the daily workflow does and this one does not.
+      # This workflow runs on every push to main and keeps nothing, so any call
+      # it made would be discarded and re-made next run: roughly 1,440 a month
+      # once the season is deep enough, over the tier, with nothing announcing
+      # it. Without the flag the fetcher serves the committed cache and skips
+      # the network, so the site build gets whatever form the last daily run
+      # bought. The key still rides along because it costs nothing to pass and
+      # keeps the two workflows' wiring identical; fetchers/cfb.py reads it
+      # lazily inside cfbd_key() and treats an empty string as unset -- which is
+      # what GitHub injects for an undefined secret -- so an unset secret cannot
+      # break this build either.
       - name: Regenerate stats and signals
         if: ${{ success() && steps.restore_data.outputs.cache-hit != 'true' }}
         env:

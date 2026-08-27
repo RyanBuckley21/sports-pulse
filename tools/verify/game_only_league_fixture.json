@@ -1,0 +1,454 @@
+{
+ "captured_at": "2026-08-29",
+ "sport_labels": {
+  "cfb": "College Football"
+ },
+ "games": [
+  {
+   "id": "401858432",
+   "sport": "cfb",
+   "away": {
+    "abbr": "BALL",
+    "name": "Ball State",
+    "color": "#DC3C5C"
+   },
+   "home": {
+    "abbr": "OSU",
+    "name": "Ohio State",
+    "color": "#DC3C5C"
+   },
+   "start": "12:30 PM ET",
+   "venue": "Ohio Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [
+    {
+     "label": "Last season margin / game",
+     "value": "OSU +23.2 \u00b7 BALL -15.7",
+     "tone": "pos"
+    }
+   ],
+   "betting_signals": {
+    "moneyline": {
+     "side": "OSU",
+     "score": 99,
+     "flags": []
+    }
+   },
+   "standout": {
+    "bet_type": "moneyline",
+    "side": "OSU",
+    "score": 99,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "signal_scores": [
+    {
+     "market": "Moneyline",
+     "side": "OSU",
+     "score": 99
+    }
+   ],
+   "best_angle": {
+    "bet_type": "moneyline",
+    "side": "OSU",
+    "score": 99,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401858206",
+   "sport": "cfb",
+   "away": {
+    "abbr": "MIA",
+    "name": "Miami",
+    "color": "#F37525"
+   },
+   "home": {
+    "abbr": "STAN",
+    "name": "Stanford",
+    "color": "#C85151"
+   },
+   "start": "9:00 PM ET",
+   "venue": "Stanford Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [
+    {
+     "label": "Last season margin / game",
+     "value": "STAN -10.3 \u00b7 MIA +18.3",
+     "tone": "neg"
+    }
+   ],
+   "betting_signals": {
+    "moneyline": {
+     "side": "MIA",
+     "score": 95,
+     "flags": []
+    }
+   },
+   "standout": {
+    "bet_type": "moneyline",
+    "side": "MIA",
+    "score": 95,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "signal_scores": [
+    {
+     "market": "Moneyline",
+     "side": "MIA",
+     "score": 95
+    }
+   ],
+   "best_angle": {
+    "bet_type": "moneyline",
+    "side": "MIA",
+    "score": 95,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401864494",
+   "sport": "cfb",
+   "away": {
+    "abbr": "SJSU",
+    "name": "San Jos\u00e9 State",
+    "color": "#3B90DD"
+   },
+   "home": {
+    "abbr": "USC",
+    "name": "USC",
+    "color": "#DA3E3E"
+   },
+   "start": "3:00 PM ET",
+   "venue": "Los Angeles Memorial Coliseum",
+   "probables": null,
+   "pulse": null,
+   "signals": [
+    {
+     "label": "Last season margin / game",
+     "value": "USC +14.1 \u00b7 SJSU -12.4",
+     "tone": "pos"
+    }
+   ],
+   "betting_signals": {
+    "moneyline": {
+     "side": "USC",
+     "score": 93,
+     "flags": []
+    }
+   },
+   "standout": {
+    "bet_type": "moneyline",
+    "side": "USC",
+    "score": 93,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "signal_scores": [
+    {
+     "market": "Moneyline",
+     "side": "USC",
+     "score": 93
+    }
+   ],
+   "best_angle": {
+    "bet_type": "moneyline",
+    "side": "USC",
+    "score": 93,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  },
+  {
+   "id": "401869960",
+   "sport": "cfb",
+   "away": {
+    "abbr": "LIB",
+    "name": "Liberty",
+    "color": "#5E83BA"
+   },
+   "home": {
+    "abbr": "JMU",
+    "name": "James Madison",
+    "color": "#9044D4"
+   },
+   "start": "12:00 PM ET",
+   "venue": "Bridgeforth Stadium",
+   "probables": null,
+   "pulse": null,
+   "signals": [
+    {
+     "label": "Last season margin / game",
+     "value": "JMU +20.3 \u00b7 LIB -2.9",
+     "tone": "pos"
+    }
+   ],
+   "betting_signals": {
+    "moneyline": {
+     "side": "JMU",
+     "score": 90,
+     "flags": []
+    }
+   },
+   "standout": {
+    "bet_type": "moneyline",
+    "side": "JMU",
+    "score": 90,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "signal_scores": [
+    {
+     "market": "Moneyline",
+     "side": "JMU",
+     "score": 90
+    }
+   ],
+   "best_angle": {
+    "bet_type": "moneyline",
+    "side": "JMU",
+    "score": 90,
+    "flags": [],
+    "market": "Moneyline"
+   },
+   "compare": null,
+   "est_total": null,
+   "f5_total": null,
+   "outcome_split": null,
+   "betting_note": null,
+   "summary": null,
+   "story": null
+  }
+ ],
+ "teams": [
+  {
+   "id": "Indiana",
+   "sport": "cfb",
+   "abbr": "IU",
+   "name": "Indiana",
+   "team_color": "#DA3E3E",
+   "pulse": {
+    "score": 99,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "39.5",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "12.5",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "15-0",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "WWW",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "James Madison",
+   "sport": "cfb",
+   "abbr": "JMU",
+   "name": "James Madison",
+   "team_color": "#9044D4",
+   "pulse": {
+    "score": 94,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "36.5",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "19.0",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "11-2",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "WWL",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Oregon",
+   "sport": "cfb",
+   "abbr": "ORE",
+   "name": "Oregon",
+   "team_color": "#4ACF83",
+   "pulse": {
+    "score": 94,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "35.4",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "18.2",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "12-2",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "WWL",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Ohio State",
+   "sport": "cfb",
+   "abbr": "OSU",
+   "name": "Ohio State",
+   "team_color": "#DC3C5C",
+   "pulse": {
+    "score": 90,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "30.6",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "10.0",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "11-2",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "WLL",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "Miami",
+   "sport": "cfb",
+   "abbr": "MIA",
+   "name": "Miami",
+   "team_color": "#F37525",
+   "pulse": {
+    "score": 88,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "30.0",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "15.6",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "12-3",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "WWL",
+     "tone": "pos"
+    }
+   ]
+  },
+  {
+   "id": "USC",
+   "sport": "cfb",
+   "abbr": "USC",
+   "name": "USC",
+   "team_color": "#DA3E3E",
+   "pulse": {
+    "score": 85,
+    "label": "Scorching",
+    "qualifier": "2025 season"
+   },
+   "signals": [
+    {
+     "label": "Points scored / game (2025)",
+     "value": "35.8",
+     "tone": "pos"
+    },
+    {
+     "label": "Points allowed / game (2025)",
+     "value": "23.0",
+     "tone": "pos"
+    },
+    {
+     "label": "Record (FBS) (2025)",
+     "value": "9-4",
+     "tone": "pos"
+    },
+    {
+     "label": "Last 3 (2025)",
+     "value": "LWL",
+     "tone": "pos"
+    }
+   ]
+  }
+ ]
+}

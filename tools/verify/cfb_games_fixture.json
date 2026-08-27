@@ -1,0 +1,484 @@
+[
+ {
+  "id": "401754581",
+  "date": "2025-11-01T16:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final/OT",
+      "shortDetail": "Final/OT",
+      "altDetail": "OT"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "26",
+      "team": {
+       "location": "SMU",
+       "abbreviation": "SMU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "20",
+      "team": {
+       "location": "Miami",
+       "abbreviation": "MIA"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752900",
+  "date": "2025-11-16T00:30Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "48",
+      "team": {
+       "location": "Ohio State",
+       "abbreviation": "OSU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "10",
+      "team": {
+       "location": "UCLA",
+       "abbreviation": "UCLA"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752901",
+  "date": "2025-11-15T17:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "31",
+      "team": {
+       "location": "Indiana",
+       "abbreviation": "IU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "7",
+      "team": {
+       "location": "Wisconsin",
+       "abbreviation": "WIS"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752772",
+  "date": "2025-11-15T17:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "31",
+      "team": {
+       "location": "Texas A&M",
+       "abbreviation": "TA&M"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "30",
+      "team": {
+       "location": "South Carolina",
+       "abbreviation": "SC"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752765",
+  "date": "2025-11-15T20:30Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "21",
+      "team": {
+       "location": "Alabama",
+       "abbreviation": "ALA"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "23",
+      "team": {
+       "location": "Oklahoma",
+       "abbreviation": "OU"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752766",
+  "date": "2025-11-16T00:30Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "35",
+      "team": {
+       "location": "Georgia",
+       "abbreviation": "UGA"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "10",
+      "team": {
+       "location": "Texas",
+       "abbreviation": "TEX"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401756953",
+  "date": "2025-11-15T20:30Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "48",
+      "team": {
+       "location": "Texas Tech",
+       "abbreviation": "TTU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "9",
+      "team": {
+       "location": "UCF",
+       "abbreviation": "UCF"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401752769",
+  "date": "2025-11-16T00:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "34",
+      "team": {
+       "location": "Ole Miss",
+       "abbreviation": "MISS"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "24",
+      "team": {
+       "location": "Florida",
+       "abbreviation": "FLA"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401754597",
+  "date": "2025-11-15T17:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "15",
+      "team": {
+       "location": "Pittsburgh",
+       "abbreviation": "PITT"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "37",
+      "team": {
+       "location": "Notre Dame",
+       "abbreviation": "ND"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401756950",
+  "date": "2025-11-16T03:15Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "44",
+      "team": {
+       "location": "BYU",
+       "abbreviation": "BYU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "13",
+      "team": {
+       "location": "TCU",
+       "abbreviation": "TCU"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401756949",
+  "date": "2025-11-16T00:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "28",
+      "team": {
+       "location": "Baylor",
+       "abbreviation": "BAY"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "55",
+      "team": {
+       "location": "Utah",
+       "abbreviation": "UTAH"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401757174",
+  "date": "2025-11-15T17:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "26",
+      "team": {
+       "location": "UConn",
+       "abbreviation": "CONN"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "16",
+      "team": {
+       "location": "Air Force",
+       "abbreviation": "AFA"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401762849",
+  "date": "2025-11-01T16:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "3",
+      "team": {
+       "location": "Bowling Green",
+       "abbreviation": "BGSU"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "28",
+      "team": {
+       "location": "Buffalo",
+       "abbreviation": "BUFF"
+      }
+     }
+    ]
+   }
+  ]
+ }
+]
