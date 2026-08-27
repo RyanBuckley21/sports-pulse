@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""EPL match_result backtest + weight calibration against real completed seasons.
+"""EPL betting-market backtest + weight calibration against real completed seasons.
 
     python3 epl_backtest.py                      # 2019/20-2025/26, full calibration
     python3 epl_backtest.py --seasons 2023 2024 2025
     python3 epl_backtest.py --gate 8 --threshold 60
+    python3 epl_backtest.py --sets              # compare candidate signal sets
 
 Mirrors nfl_backtest.py's role (a standalone, read-mostly replay of real
 history against the live scoring path, writing its own output file, never
@@ -15,29 +16,44 @@ thresholds off a sensitivity table.
 THREE DELIBERATE DEPARTURES from that method, each because soccer differs, and
 each visible in the report rather than buried:
 
-1. OUTCOME VARIABLE. nfl_backtest correlates against home_win with ties
-   excluded. EPL draws are 23.6% of the sample, so exclusion would discard a
-   quarter of the evidence and condition every r on "given the match was
-   decisive" -- not the population the live model scores. Reliability is
-   measured against HOME GOAL DIFFERENCE, continuous and monotone in the 3-way
-   result. The home_win version is reported beside it for comparability; they
-   agree closely, which is the evidence that this is a better estimator rather
-   than a different question.
+1. DRAWS ARE AN OUTCOME, NOT AN EXCLUSION. nfl_backtest correlates against
+   home_win with ties excluded, which is free at NFL's 0.2%. EPL draws are 23.6%
+   of the sample, so the same exclusion would discard a quarter of the evidence
+   and condition every r on "given the match was decisive" -- not the population
+   the live model scores. Reliability is therefore measured against HOME GOAL
+   DIFFERENCE, continuous and monotone in the 3-way result; the home_win version
+   is reported beside it for comparability and they agree closely, which is the
+   evidence that this is a better estimator rather than a different question.
+
+   TWO MARKETS ARE GRADED, not one, for the same reason. double_chance wins on a
+   draw, match_result loses on one, and each is reported with the break-even
+   implied by its own measured hit rate -- because a high hit rate at short odds
+   is not an edge. See epl_signals and config.yaml's market_thresholds for why
+   the outright market carries the higher bar.
 
 2. WALK-FORWARD EVALUATION. nfl_backtest derives weights over all seasons and
    then grades on those same seasons -- in-sample twice over. With seven
-   seasons available here, --walk-forward (default on) refits on seasons < S
-   for each S and grades only on S, so the headline hit rate is out of sample.
+   seasons available here, this one always walks forward: weights are refit on
+   seasons < S for each S and graded only on S, so every hit rate in the report
+   is out of sample. There is no flag for it -- an in-sample number is not worth
+   offering.
    The shipped weights are then fitted on everything, which is what nfl and cfb
    ship too; the walk-forward number is what says whether that fit generalises.
 
 3. COLLINEARITY IS DECIDED BY MEASUREMENT, not by a fixed cutoff. Every
    candidate here is a function of the same match results, so the pairwise
    table is dense (goal_diff is r=0.93 with form_ppm and 0.90 with attack --
-   it is close to a linear combination of the other two). --sets prints the
-   out-of-sample accuracy of each candidate set with a paired bootstrap
-   against the baseline set, so an exclusion can be justified by what it costs
-   rather than by a threshold nobody can defend.
+   it is close to a linear combination of the other two). --sets prints each
+   candidate set's out-of-sample accuracy so an exclusion is justified by what
+   it costs rather than by a cutoff nobody can defend.
+
+   It reports SIDE AGREEMENT plus an UNPAIRED difference, not a paired bootstrap
+   on the shared matches, and that is a measured correction rather than a
+   preference: the candidate sets pick the same side on every match they both
+   score (714 of 714 for the two leading sets), differing only in which matches
+   clear the bar, so a paired test on the intersection is structurally zero and
+   would report "no difference" for a reason unrelated to whether the extra
+   signals help. See compare_sets.
 
 Point-in-time discipline: a match on date D in season S sees ONLY matches from
 season S played strictly before D. Nothing carries across a season boundary --

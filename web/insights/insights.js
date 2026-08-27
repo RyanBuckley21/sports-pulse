@@ -100,6 +100,12 @@
     mound: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15h16M4 15c1.5-3 4-5 6-5s4.5 2 6 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
     relief: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8a5 5 0 0 1 9-2M15 12a5 5 0 0 1-9 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 3v3h-3M6 17v-3h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     bat: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16l9-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14.5" cy="5.5" r="2" fill="currentColor"/></svg>',
+    // EPL. A boot, a shield and a rising bar -- attack, defence, form. Keyed
+    // by what the category MEANS, not by the sport, so a second soccer league
+    // reuses them from its own config without new artwork.
+    boot: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h5l3 4h4a2 2 0 0 1 2 2v2H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 11h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    shield: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3l6 2v5c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    streak: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 15h3v-4H3zM8.5 15h3V8h-3zM14 15h3V4h-3z" fill="currentColor"/></svg>',
     _default: '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>',
   };
   function icon(name) { return ICONS[name] || ICONS._default; }
@@ -516,6 +522,9 @@
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
         Cards.bestAngle(g.best_angle, away, home) +
+        section("How This Result Splits",
+                Cards.outcomeSplit(g.outcome_split, away, home,
+                                   (g.best_angle || {}).side)) +
         section("Signal Scores", Cards.signalScores(g.signal_scores, g.best_angle, away, home)) +
         section((g.compare && g.compare.title) || "Comparison", Cards.compareMetrics(g.compare)) +
         section((g.est_total && g.est_total.label) || "Estimate", Cards.estTotal(g.est_total)) +
@@ -523,6 +532,48 @@
         block(Cards.aiSummary(g.summary, g.story, g.betting_note ? { label: "Betting signal", text: g.betting_note } : null)) +
         "</article>"
       );
+    },
+
+    // Three-way outcome split -- the measured chance of each result for a pick
+    // carrying this Signal Score.
+    //
+    // EXISTS BECAUSE SOME SPORTS HAVE A THIRD RESULT. In MLB, NFL and CFB a
+    // game has a winner and the pick either has it or does not, so `side` and
+    // `other` say everything and no sport emits this. Soccer draws more than
+    // one match in five, and a card that showed only the pick would hide the
+    // likeliest single way it loses -- for a Double Chance pick the draw is
+    // even part of what WINS it. Absent field -> renders nothing, so this costs
+    // the other sports a null check and no markup.
+    //
+    // The bar is the three shares end to end, so their relative size is read
+    // rather than computed. Draw is the neutral gold every non-team element on
+    // this card already uses; side and other take the two clubs' colours, so a
+    // reader maps the bar to the matchup without a legend.
+    outcomeSplit: function (o, away, home, pickSide) {
+      if (!o || o.side == null) return "";
+      // Which club the pick is on. `side` is "ARS" or "ARS or Draw", so the
+      // leading token identifies it -- the same rule sideColor() uses.
+      var tok = String(pickSide || "").split(" ")[0];
+      var picked = home && home.abbr === tok ? home : (away && away.abbr === tok ? away : null);
+      var otherTeam = picked === home ? away : (picked === away ? home : null);
+      var pickColor = (picked && picked.color) || GOLD;
+      var otherColor = (otherTeam && otherTeam.color) || "rgba(255,255,255,0.35)";
+      var parts = [
+        { label: (picked && picked.abbr) || "Pick", pct: o.side, color: pickColor },
+        { label: "Draw", pct: o.draw, color: GOLD },
+        { label: (otherTeam && otherTeam.abbr) || "Other", pct: o.other, color: otherColor },
+      ];
+      var bar = parts.map(function (p) {
+        return '<span class="os-seg" style="width:' + (100 * (p.pct || 0)).toFixed(1) +
+          "%;background:" + p.color + '"></span>';
+      }).join("");
+      var keys = parts.map(function (p) {
+        return '<div class="os-key"><span class="os-dot" style="background:' + p.color +
+          '"></span>' + esc(p.label) + '<span class="os-pct">' +
+          Math.round(100 * (p.pct || 0)) + "%</span></div>";
+      }).join("");
+      return '<div class="outcome-split"><div class="os-bar">' + bar + "</div>" +
+        '<div class="os-keys">' + keys + "</div></div>";
     },
 
     // Team Insight -- team identity + the three sub-cards.

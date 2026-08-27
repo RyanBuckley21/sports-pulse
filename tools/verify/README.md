@@ -84,6 +84,31 @@ No network. Succeeding builders return the real committed entities from
 `data/insights.games.json`, and every store is redirected to a temp copy, so a
 run cannot touch anything committed.
 
+```
+python3 -m tools.verify.test_epl_grading      # from the repo root
+```
+
+**`test_epl_grading`** — the pair of rules that decide what a DRAW does to an
+EPL pick: it WINS a `double_chance` bet and LOSES a `match_result` one. Getting
+those backwards throws nothing. It writes a confident wrong verdict into an
+append-only ledger, on roughly one pick in four (draws are 23.6% of matches),
+and makes a winning market read as a losing system. Also covers the unsettled
+and malformed paths (PENDING, POSTPONED, a side naming neither club, a market
+with no rule) and the adapter boundary itself — MLB's `SPORT_ADAPTERS` entries
+must still be MLB's own functions, which is the property that keeps an EPL
+change from reaching an MLB verdict.
+
+Sabotage-checked in both directions when written: swapping the draw rules fails
+exactly the double-chance assertions, making `match_result` push on a draw fails
+exactly the match-result ones.
+
+Offline and deterministic. `epl_matches_fixture.json` is REAL ESPN data captured
+from live responses over four 2025/26 matchdays — 21 completed matches, 7 home
+wins, 8 draws, 6 away wins — trimmed to the fields the adapter reads. Real
+rather than hand-written because a hand-written draw is a guess about the shape
+ESPN emits for one, and that shape is exactly what is being parsed.
+
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

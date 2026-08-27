@@ -1,0 +1,779 @@
+{
+ "740808": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "CHE",
+       "displayName": "Chelsea"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "BRE",
+       "displayName": "Brentford"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T15:00Z",
+  "id": "740808"
+ },
+ "740809": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "LEE",
+       "displayName": "Leeds United"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "FUL",
+       "displayName": "Fulham"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T15:00Z",
+  "id": "740809"
+ },
+ "740810": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "LIV",
+       "displayName": "Liverpool"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "BUR",
+       "displayName": "Burnley"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T15:00Z",
+  "id": "740810"
+ },
+ "740811": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "MAN",
+       "displayName": "Manchester United"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "MNC",
+       "displayName": "Manchester City"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T12:30Z",
+  "id": "740811"
+ },
+ "740812": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "NFO",
+       "displayName": "Nottingham Forest"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "ARS",
+       "displayName": "Arsenal"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T17:30Z",
+  "id": "740812"
+ },
+ "740813": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "SUN",
+       "displayName": "Sunderland"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "CRY",
+       "displayName": "Crystal Palace"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T15:00Z",
+  "id": "740813"
+ },
+ "740814": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "TOT",
+       "displayName": "Tottenham Hotspur"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "2",
+      "team": {
+       "abbreviation": "WHU",
+       "displayName": "West Ham United"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-01-17T15:00Z",
+  "id": "740814"
+ },
+ "740857": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "MNC",
+       "displayName": "Manchester City"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "NEW",
+       "displayName": "Newcastle United"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-02-21T20:00Z",
+  "id": "740857"
+ },
+ "740858": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "BRE",
+       "displayName": "Brentford"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "2",
+      "team": {
+       "abbreviation": "BHA",
+       "displayName": "Brighton & Hove Albion"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-02-21T15:00Z",
+  "id": "740858"
+ },
+ "740861": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "WHU",
+       "displayName": "West Ham United"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "BOU",
+       "displayName": "AFC Bournemouth"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-02-21T17:30Z",
+  "id": "740861"
+ },
+ "740862": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "AVL",
+       "displayName": "Aston Villa"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "LEE",
+       "displayName": "Leeds United"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-02-21T15:00Z",
+  "id": "740862"
+ },
+ "740864": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "CHE",
+       "displayName": "Chelsea"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "BUR",
+       "displayName": "Burnley"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-02-21T15:00Z",
+  "id": "740864"
+ },
+ "740886": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "ARS",
+       "displayName": "Arsenal"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "EVE",
+       "displayName": "Everton"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-03-14T17:30Z",
+  "id": "740886"
+ },
+ "740888": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "BUR",
+       "displayName": "Burnley"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "BOU",
+       "displayName": "AFC Bournemouth"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-03-14T15:00Z",
+  "id": "740888"
+ },
+ "740889": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "CHE",
+       "displayName": "Chelsea"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "NEW",
+       "displayName": "Newcastle United"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-03-14T17:30Z",
+  "id": "740889"
+ },
+ "740894": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "SUN",
+       "displayName": "Sunderland"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "BHA",
+       "displayName": "Brighton & Hove Albion"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-03-14T15:00Z",
+  "id": "740894"
+ },
+ "740895": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "WHU",
+       "displayName": "West Ham United"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "1",
+      "team": {
+       "abbreviation": "MNC",
+       "displayName": "Manchester City"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-03-14T20:00Z",
+  "id": "740895"
+ },
+ "740906": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "BRE",
+       "displayName": "Brentford"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "2",
+      "team": {
+       "abbreviation": "EVE",
+       "displayName": "Everton"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-04-11T14:00Z",
+  "id": "740906"
+ },
+ "740907": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "BUR",
+       "displayName": "Burnley"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "2",
+      "team": {
+       "abbreviation": "BHA",
+       "displayName": "Brighton & Hove Albion"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-04-11T14:00Z",
+  "id": "740907"
+ },
+ "740908": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "1",
+      "team": {
+       "abbreviation": "ARS",
+       "displayName": "Arsenal"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "2",
+      "team": {
+       "abbreviation": "BOU",
+       "displayName": "AFC Bournemouth"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-04-11T11:30Z",
+  "id": "740908"
+ },
+ "740911": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "2",
+      "team": {
+       "abbreviation": "LIV",
+       "displayName": "Liverpool"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "FUL",
+       "displayName": "Fulham"
+      }
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "shortDetail": "FT",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2026-04-11T16:30Z",
+  "id": "740911"
+ }
+}

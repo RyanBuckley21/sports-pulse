@@ -30,7 +30,7 @@ import traceback
 
 import pulse
 import training_capture
-from fetchers import cfb, mlb, nfl
+from fetchers import cfb, epl, mlb, nfl
 
 # Stamped onto every player store entry as `template_version`. It used to mean
 # "which prompt produced this text", and bumping it forced regeneration; with the
@@ -65,18 +65,26 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # Team Pulse, training capture) by adding its own entry here -- same
 # mechanism, deliberately, as SPORT_FETCHERS.
 #
-# nfl is REGISTERED but not ACTIVE -- _active_game_sports only attempts a
-# sport that is both registered here AND listed by the config key it reads,
-# so nfl.build_game_entities never runs in production until that key says so
+# nfl and cfb are REGISTERED but not ACTIVE -- _active_game_sports only
+# attempts a sport that is both registered here AND listed by the config key
+# it reads, so their builders never run in production until that key says so
 # (same staged-rollout precedent worldcup already sets in the stat-categories
-# pipeline). It is wired and calibrated, pending the decision to go live.
+# pipeline). They are wired and calibrated, pending the decision to go live.
+#
+# epl is registered AND active. Registering it here is the second of the two
+# steps that switch a sport on; the first is `active_game_sports` naming it,
+# which config.yaml now does. Note what that means for August: EPL form never
+# crosses a season boundary, so every club starts each season below
+# epl_signals.MIN_MATCHES and the builder returns fixtures with NO markets
+# scored for the opening weeks. That is the designed output, not a fault --
+# the Games tab shows the slate and no picks until the sample exists.
 #
 # That key is `active_game_sports`, which is SEPARATE from the `active_sports`
 # key gating generate_stats.py's leaderboards -- see _active_game_sports for
 # why the two were split and how `active_game_sports` falls back when absent.
 # Publishing a sport's leaderboards no longer switches on its betting markets.
 GAME_BUILDERS = {"mlb": mlb.build_game_entities, "nfl": nfl.build_game_entities,
-                 "cfb": cfb.build_game_entities}
+                 "cfb": cfb.build_game_entities, "epl": epl.build_game_entities}
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
 # below the cap are pruned on each run.
@@ -842,6 +850,13 @@ def _build_games_section(entities, text_map):
             "compare": ent.get("compare"),
             "est_total": ent.get("est_total"),
             "f5_total": ent.get("f5_total"),
+            # The three-way outcome split, when the sport has one. Soccer does
+            # and the North American sports do not: a draw is a real result
+            # there, so a card that showed only the pick would hide the
+            # likeliest way it loses. This list is an ALLOWLIST -- a field a
+            # builder emits and this misses is silently dropped, which is
+            # exactly what happened to this one first time round.
+            "outcome_split": ent.get("outcome_split"),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),

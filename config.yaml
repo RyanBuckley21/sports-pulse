@@ -34,18 +34,27 @@ active_sports: [mlb, epl]
 # too. They are now independently gate-able in both directions -- leaderboards
 # without picks, picks without leaderboards, or both.
 #
-# COMMENTED OUT ON PURPOSE. When this key is absent it falls back to
-# `active_sports`, which reproduces the old shared-gate behaviour exactly, so
-# production keeps resolving to [mlb] with nothing to migrate. Uncomment it
-# only when the two lists genuinely need to differ -- e.g. to publish NFL
-# leaderboards while keeping NFL betting markets off:
-#
-#     active_sports:      [mlb, nfl]
-#     active_game_sports: [mlb]
+# NOW SET EXPLICITLY, and epl is on it. It was commented out while the fallback
+# to `active_sports` happened to give the right answer; it no longer does, since
+# epl is registered in GAME_BUILDERS and the fallback would switch it on as a
+# side effect of publishing its leaderboards -- precisely the accident the split
+# exists to prevent. Naming both sports here makes the decision explicit and
+# leaves nfl and cfb off, registered but inactive.
 #
 # An explicitly EMPTY list (`active_game_sports: []`) is honoured as a real
 # kill switch -- no scored picks for any sport -- rather than falling back.
-# active_game_sports: [mlb]
+#
+# WHAT EPL DOES AND DOES NOT GET FROM THIS. It gets scored markets, a Team
+# Pulse, and a per-sport partition in data/insights.games.json with the same
+# pre-game freeze rules MLB's has. It does NOT get graded: signal_report.py
+# runs with --sport defaulting to mlb and reads only that partition, so EPL
+# picks are published and stored but never scored against their outcome and
+# never reach data/signal_report_history.jsonl. That gap is the module's own
+# documented one ("a real gap for whenever a second sport's grading actually
+# ships"), not something this change introduces -- but it does make it live, so
+# EPL has no accuracy ledger until a grader learns the sport. The backtest is
+# the only accuracy evidence EPL has.
+active_game_sports: [mlb, epl]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
@@ -1143,6 +1152,38 @@ team_pulse:
       scale: 1.50
       weight: 0.50
       window_days: 7
+  # EPL. MEASURED, not picked: `base` is the league mean and `scale` one
+  # standard deviation of the club-season spread, over all 140 club-seasons in
+  # 2019/20-2025/26 (7 x 20). So a club one sigma better than average lands at
+  # tanh(1) of the way toward the top of the band, which is the same reading
+  # mlb's ops/bullpen block gives.
+  #
+  #   goals scored / match    mean 1.432  stdev 0.446  (range 0.53 - 2.68)
+  #   goals conceded / match  mean 1.432  stdev 0.359  (range 0.68 - 2.74)
+  #
+  # The two means are necessarily identical -- every goal scored is a goal
+  # conceded -- but the SPREADS are not, and that asymmetry is real: attacks
+  # differ from each other more than defences do. Weighting 50/50 despite that
+  # is deliberate, because each is already normalized by its own scale.
+  #
+  # DIRECTION IS IN CODE, NOT HERE -- more scored is good, FEWER conceded is
+  # good. Same split betting_signals and mlb._team_pulse use.
+  #
+  # min_matches is the same cold-start floor epl_signals.MIN_MATCHES applies to
+  # scoring, and it matters more for a Pulse than for a lean: a club that has
+  # played once and won 4-0 would otherwise read as the best attack in the
+  # division on a 90-minute sample. Below it the club gets NO pulse and the card
+  # renders without one, rather than a 50 that would look measured.
+  epl:
+    min_matches: 5
+    attack:
+      base: 1.432
+      scale: 0.446
+      weight: 0.50
+    defense:
+      base: 1.432
+      scale: 0.359
+      weight: 0.50
   # Reserved for future sports; empty = the Teams view renders nothing.
   worldcup: {}
 
@@ -1194,4 +1235,19 @@ insights_ui:
       unit: "runs"
       note: "Rough model estimate from the probable starters — not a betting line. Assumes both starters work the first five; no bullpen, park, weather, or lineup data."
   # Reserved for future sports; empty = no config-driven affordances render.
+  # EPL. The strip and the market names; no compare_sets, because a soccer match
+  # has no two-entity comparison equivalent to MLB's probable starters -- the
+  # per-side numbers are already the Key Signals rows.
+  epl:
+    signal_categories:
+      - { key: attack,      label: "Attack Form",   icon: boot }
+      - { key: defense,     label: "Defensive Solidity", icon: shield }
+      - { key: recent_form, label: "Recent Form",   icon: streak }
+    # Keys match betting_signals.epl bet_types. "Match Result" rather than
+    # "Moneyline": the market has three outcomes and calling it a moneyline
+    # invites the two-outcome reading every other sport in this file uses.
+    market_labels:
+      double_chance: "Double Chance"
+      match_result: "Match Result"
+
   worldcup: {}
