@@ -178,7 +178,13 @@
         '<div class="pulse pulse-' + pulseBand(p) + '">' +
         '<div class="pulse-score">' + s + '<span class="pulse-max">/100</span></div>' +
         '<div class="pulse-meta">' +
-        '<div class="pulse-label">' + esc(p.label || "Pulse") + "</div>" +
+        '<div class="pulse-label">' + esc(p.label || "Pulse") +
+        // A qualifier says the number was computed from a DIFFERENT window than
+        // the card implies -- CFB sets it in week 0, where a program's only form
+        // is last season's. It is a separate field rather than part of `label`
+        // because pulseBand() above keys the band colour off the label word.
+        (p.qualifier ? ' <span class="pulse-qualifier">' + esc(p.qualifier) + "</span>" : "") +
+        "</div>" +
         '<div class="pulse-bar"><div class="pulse-fill" style="width:' + s + '%"></div></div>' +
         "</div>" +
         "</div>"

@@ -165,6 +165,7 @@ import requests
 import yaml
 
 import betting_signals  # read-only: ranking (list_markets / top_market)
+import cfb_grading      # the same, for CFB -- see SPORT_ADAPTERS
 import epl_grading      # the same, for EPL -- see SPORT_ADAPTERS
 
 CONFIG_PATH = "config.yaml"
@@ -840,6 +841,26 @@ SPORT_ADAPTERS = {
         #
         # With it, a pick whose match is not on the graded date is DEFERRED --
         # not graded, not recorded, left for the run that grades its own date.
+        "store_spans_dates": True,
+    },
+    "cfb": {
+        "fetch_slate": cfb_grading.fetch_slate,
+        "fetch_replay_dates": cfb_grading.fetch_replay_dates,
+        "is_final": cfb_grading.is_final,
+        "is_called_off": cfb_grading.is_called_off,
+        "live_state": cfb_grading.live_state,
+        "observed_facts": cfb_grading.observed_facts,
+        "grade": cfb_grading.grade,
+        "list_markets": cfb_grading.list_markets,
+        "top_market": cfb_grading.top_market,
+        # SEVEN DAYS OF FIXTURES IN ONE STORE, for the same reason EPL has
+        # three: college football is a Saturday sport and a one-date slate
+        # leaves the Games tab empty most of the week (measured on the real
+        # 2026 opener: Thu 0, Fri 0, Sat 6, Sun 0, Tue 0). Without this, every
+        # stored game kicking off after the graded date would be handed to
+        # grade() as "not on this date's schedule" and recorded UNRESOLVED --
+        # a verdict meaning "this cannot be settled" for games that simply had
+        # not kicked off yet, and on a seven-day window that is most of them.
         "store_spans_dates": True,
     },
 }

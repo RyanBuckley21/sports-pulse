@@ -164,6 +164,26 @@ jobs:
         continue-on-error: true
         run: python3 signal_report.py --sport epl
 
+      # CFB, same isolation and the same leniency, for reasons that are its own
+      # rather than borrowed from EPL's.
+      #
+      # continue-on-error because a CFB season is FOUR MONTHS LONG and this
+      # workflow runs every day of the year. From February to August there is
+      # no slate at all, so the honest output is a `no_picks` row daily for
+      # eight months -- redding the workflow through the entire offseason would
+      # train everyone to ignore it, which is the alarm fatigue this file's
+      # header argues against. MLB's step stays strict.
+      #
+      # In-season the gap is narrower but real: college football plays Tuesday
+      # through Saturday in some weeks and not at all in others (open dates,
+      # championship week, the bowl gap between mid-December and New Year), so
+      # an empty Monday is routine rather than a signal.
+      - name: Grade yesterday's CFB picks
+        id: grade_picks_cfb
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 signal_report.py --sport cfb
+
       # Gated on the FILE having changed, not on grade_picks having exited 0.
       # signal_report.py's own "no gamePk overlap" die() path writes a
       # self-documenting no_store row to the ledger BEFORE it exits non-zero

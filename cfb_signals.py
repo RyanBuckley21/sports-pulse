@@ -61,7 +61,55 @@ SIGNAL_SPECS = {
                         "scale_key": "def_ppa_gap", "favors": "lower"},
     "turnover_diff": {"home_key": "home_turnover_diff", "away_key": "away_turnover_diff",
                       "scale_key": "turnover_gap", "favors": "higher"},
+    # FALLBACK TIERS -- see _FALLBACK_TIERS. Neither is ever scored alongside
+    # the three above.
+    "season_margin": {"home_key": "home_season_margin", "away_key": "away_season_margin",
+                      "scale_key": "season_margin_gap", "favors": "higher"},
+    "prior_margin": {"home_key": "home_prior_margin", "away_key": "away_prior_margin",
+                     "scale_key": "prior_margin_gap", "favors": "higher"},
 }
+
+# WHAT TO SCORE ON WHEN THE CALIBRATED SIGNALS ARE NOT THERE.
+#
+# Most specific tier first; score_game uses the FIRST tier with any signal
+# available and discards every later one. Nothing here is ever mixed into a
+# calibrated lean.
+#
+# The problem it solves: week 0 and week 1 have no in-season data at all, so
+# every opening-weekend game scored 0 / "No clear lean" -- on the weekend the
+# tab most needs to say something. And the PPA tier can be missing for reasons
+# that have nothing to do with the calendar: no CFBD budget, or an ESPN
+# fallback schedule whose game ids cannot join CFBD's rows, which is the state
+# the 2026 season is in right now. Without a fallback that is a whole season of
+# zeros.
+#
+# WHY THESE TWO, IN THIS ORDER. Both are points margin per game off the plain
+# schedule -- no API key, no quota, no join. Measured walk-forward over ten
+# real seasons (2015-2025, 2020 excluded as COVID), the crossover between them
+# is sharp and consistent:
+#
+#             week 1   week 3   week 5   weeks 6-8   weeks 9+
+#   prior      67.7%    67.7%    67.0%     63.3%      63.1%
+#   season       --     65.4%    68.1%     67.0%      70.3%
+#
+# so last season leads until week 4 and this season leads after. The handoff is
+# not coded as a week number: season_margin needs three games (see
+# fetchers/cfb.SEASON_MARGIN_MIN_GAMES) and therefore first appears in week 4
+# by construction, which is where the measurement puts the crossover anyway.
+#
+# NEITHER IS A WEAK STAND-IN. Against the same outcome the calibrated PPA model
+# hits 76.9% at threshold 40; season_margin alone hits 76.0% and prior_margin
+# 73.7% in week 1. What they lack is not accuracy, it is independence -- both
+# are one number, so the alignment guard in signal_core.finalize is inactive
+# for them (n_avail < 2) and a single bad input has nothing to check it.
+#
+# The mid-season question this deliberately does NOT answer: prior_margin still
+# leads in weeks 3-4, where in-season signals also exist. Giving either margin
+# a weight ALONGSIDE the PPA signals is a joint calibration against them, which
+# needs CFBD data, and asserting a number without that measurement is exactly
+# what the rest of this module refuses to do.
+_FALLBACK_TIERS = (("season_margin",), ("prior_margin",))
+_FALLBACK_SIGNALS = tuple(k for tier in _FALLBACK_TIERS for k in tier)
 
 
 def _base_signals(inp, scales):
@@ -71,6 +119,25 @@ def _base_signals(inp, scales):
     return {name: _paired(inp.get(spec["home_key"]), inp.get(spec["away_key"]),
                           scales[spec["scale_key"]], spec["favors"])
             for name, spec in SIGNAL_SPECS.items()}
+
+
+def _apply_fallback_tiers(sig):
+    """`sig` with every tier below the best AVAILABLE one blanked out.
+
+    The calibrated signals are tier 0 and are never blanked: if any of them
+    survived, every fallback is dropped. Otherwise the first tier in
+    _FALLBACK_TIERS with a value keeps it and the rest go. Returns a new dict
+    -- the caller's is left alone."""
+    out = dict(sig)
+    if any(out.get(k) is not None for k in out if k not in _FALLBACK_SIGNALS):
+        chosen = ()
+    else:
+        chosen = next((tier for tier in _FALLBACK_TIERS
+                       if any(out.get(k) is not None for k in tier)), ())
+    for k in _FALLBACK_SIGNALS:
+        if k not in chosen:
+            out[k] = None
+    return out
 
 
 def score_game(config, sport_key, inputs):
@@ -87,6 +154,7 @@ def score_game(config, sport_key, inputs):
     min_t = cfg.get("min_threshold", 15)
 
     sig = _base_signals(inputs, scales)
+    sig = _apply_fallback_tiers(sig)
     home, away = inputs.get("home_abbr"), inputs.get("away_abbr")
     out = {}
     for bt, weights in bet_types.items():
@@ -127,7 +195,9 @@ def top_market(scored, threshold):
 
 def build_inputs(away_abbr, home_abbr, away_off_ppa, home_off_ppa,
                  away_def_ppa_allowed, home_def_ppa_allowed,
-                 away_turnover_diff, home_turnover_diff):
+                 away_turnover_diff, home_turnover_diff,
+                 away_season_margin=None, home_season_margin=None,
+                 away_prior_margin=None, home_prior_margin=None):
     """Assemble the deterministic input dict from fetchers.cfb's already-
     computed team-form values, mirroring nfl_signals.build_inputs' role."""
     return {
@@ -137,4 +207,11 @@ def build_inputs(away_abbr, home_abbr, away_off_ppa, home_off_ppa,
         "home_def_ppa_allowed": _coerce(home_def_ppa_allowed),
         "away_turnover_diff": _coerce(away_turnover_diff),
         "home_turnover_diff": _coerce(home_turnover_diff),
+        # Default None so every existing caller (and cfb_backtest.py) keeps its
+        # current behaviour untouched: absent means the signal is absent, and a
+        # caller that passes neither gets exactly the pre-fallback lean.
+        "away_season_margin": _coerce(away_season_margin),
+        "home_season_margin": _coerce(home_season_margin),
+        "away_prior_margin": _coerce(away_prior_margin),
+        "home_prior_margin": _coerce(home_prior_margin),
     }

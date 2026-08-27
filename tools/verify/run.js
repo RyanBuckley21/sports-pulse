@@ -1185,6 +1185,23 @@ async function gameOnlyLeagueChecks(browser, base) {
   ok("the selection carries to Teams", teamNames.length > 0 && teamNames.every((n) => cfbTeams.includes(n)),
      teamNames.join(",") || "none");
 
+  // A Pulse computed over a DIFFERENT window than the card implies carries a
+  // `qualifier`, and it has to reach the screen: these cards say "Scorching"
+  // about programs that have not played a snap this season. Two assertions,
+  // because the failure modes are opposite -- the text missing entirely, or
+  // the season folded into the band word, which would miss pulseBand()'s
+  // lookup table and silently grey out every band colour.
+  const quals = extra.teams.filter((t) => t.pulse && t.pulse.qualifier);
+  if (quals.length) {
+    const labels = await p.$$eval("#insightsRoot .pulse-label", (n) => n.map((x) => x.textContent.trim()));
+    ok("  a stale Pulse says which season it is from",
+       labels.some((l) => l.includes(quals[0].pulse.qualifier.toUpperCase())
+                       || l.includes(quals[0].pulse.qualifier)), labels.slice(0, 2).join(" | "));
+    const bands = await p.$$eval("#insightsRoot .pulse", (n) => n.map((x) => x.className));
+    ok("  and still resolves its band colour (not the grey fallback)",
+       bands.length > 0 && bands.every((c) => !/pulse-cool/.test(c)), bands.slice(0, 2).join(" | "));
+  }
+
   // The tab with nothing to show. It must NAME the league, and must not have
   // quietly reset the selection to get there.
   await goRoute(p, "#/");

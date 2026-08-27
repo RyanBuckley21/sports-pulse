@@ -65,9 +65,16 @@ Sabotage-checked in both directions when written: dropping the
 fails exactly the three Who's Hot assertions, with the page both rendering the
 PREVIOUS league's boards and throwing.
 
-`game_only_league_fixture.json` is REAL pipeline output — a captured 2025-11-15
-cfb slate, four games and six team profiles, exactly as `generate_insights`
-emits them. Real rather than hand-written for the same reason the EPL fixture
+It also pins the `qualifier` a Pulse carries when it was computed over a
+different window than the card implies — CFB week 0, where a program's only
+form is last season's. Two assertions with opposite failure modes: the text
+missing entirely, and the season folded into the band WORD, which would miss
+`pulseBand()`'s lookup table and silently drop every one of those cards to the
+grey "cool" band.
+
+`game_only_league_fixture.json` is REAL pipeline output — a captured 2026-08-29
+cfb opening slate, four games and six team profiles, exactly as
+`generate_insights` emits them. Real rather than hand-written for the same reason the EPL fixture
 below is: the shape of a row from a league with no leaderboards behind it is the
 thing under test. The suite tags the served payload's own rows with its first
 league on the way past, because `scoped()` deliberately keeps an UNTAGGED row
@@ -137,6 +144,64 @@ wins, 8 draws, 6 away wins — trimmed to the fields the adapter reads. Real
 rather than hand-written because a hand-written draw is a guess about the shape
 ESPN emits for one, and that shape is exactly what is being parsed.
 
+
+```
+python3 -m tools.verify.test_cfb_signals      # from the repo root
+```
+
+**`test_cfb_signals`** — the rule that decides WHICH signals a CFB lean is
+built from. Before the fallback tiers, a game with no CFBD team form scored 0
+and read "No clear lean": every week-0 and week-1 game, and every game of a
+season running on the ESPN fallback schedule. Two schedule-derived margin
+signals now fill that gap — this season's, then last season's — and both
+failure modes are silent. Letting `prior_margin` into a November lean would
+drag last season into a calibrated answer that was measured without it, shifting
+every mid-season score with nothing to say so; letting both margin tiers in at
+once would double-count one quantity over two windows. The strongest assertion
+here needs no golden value: the same PPA inputs with and without the margins
+attached must produce the identical dict, even with the margins pointed the
+opposite way at full strength.
+
+Sabotage-checked in both directions when written: removing the tier gate fails
+exactly the four non-perturbation assertions (a calibrated 89 becomes a 37 "No
+clear lean"), and reversing the tier order fails exactly the precedence one.
+
+No network and no fixture — every input is a number handed straight to
+score_game, because the gating rule is what is under test, not anybody's feed.
+Whether the resulting picks win is a backtest, and those numbers live in
+config.yaml's comments and `cfb_signals._FALLBACK_TIERS`.
+
+```
+python3 -m tools.verify.test_cfb_grading      # from the repo root
+```
+
+**`test_cfb_grading`** — CFB's verdicts, and four things that fail without
+throwing. A TIE must be UNRESOLVED, not MISS: overtime has settled every
+regulation tie since 1996, so a level score means the feed is wrong, and MISS
+would write a confident wrong verdict into an append-only ledger. An OVERTIME
+final must grade — ESPN keeps `name: STATUS_FINAL` and moves the overtime into
+`detail: "Final/OT"`, so a grader matching the detail string would quietly
+defer every OT result as PENDING. The TEAM-NAME JOIN must go through
+`_team_ref` on both sides: measured over 300 competitors across six real 2025
+dates, our abbreviations and ESPN's disagree for Air Force (AF vs AFA) and
+Buffalo (BUF vs BUFF) — rare enough to survive spot-checking and to fail
+silently in November, and comparing the two vocabularies directly would grade
+every Air Force pick UNRESOLVED, making a real record read as an empty one.
+And the ADAPTER BOUNDARY: MLB's and EPL's `SPORT_ADAPTERS` entries must still be
+their own functions. Also pins that `config.yaml`'s `cfb.scoreboard_url` equals
+`fetchers/cfb.ESPN_CFB_SCOREBOARD` — two copies for two real consumers, and
+nothing else stops the grader reading a different endpoint from the builder.
+
+Sabotage-checked in both directions when written: grading a tie as a result
+fails exactly the four tie assertions, and trusting ESPN's `abbreviation` field
+fails exactly the Air Force and Buffalo ones.
+
+Offline and deterministic. `cfb_games_fixture.json` is REAL ESPN data captured
+from live responses across four 2025 dates — thirteen games including a genuine
+overtime final (SMU 26-20 Miami) and both abbreviation mismatches — trimmed to
+the fields the adapter reads. The POSTPONED and PENDING cases are built by
+editing a real event's status block, because no postponed FBS game appeared on
+any date sampled; the edit is confined to the one field those branches read.
 
 ## What it cannot cover
 

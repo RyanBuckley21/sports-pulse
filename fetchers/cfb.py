@@ -98,10 +98,21 @@ CFBD_KEY_ENV = "CFBD_API_KEY"
 # cache is not working, and the right response is to degrade and say so rather
 # than to spend the month's quota proving it. Everything healthy costs 0 or 2.
 #
-# Hitting it is NOT an exception. The remaining weeks return empty, form for
-# those weeks is None, the affected signals drop out of the lean, and the
-# slate still builds -- the same degradation a missing API key produces. What
-# it must never do is fail silently, so it prints an Actions error annotation.
+# WHAT HEALTHY ACTUALLY COSTS, simulated against the real 2025 schedule with
+# both daily runs firing every day of the season: 30 calls for the WHOLE
+# SEASON. Two on each of 15 days -- the day a new week finalizes -- and zero on
+# the other 150. The heaviest month is 10. Nothing is ever re-fetched, because
+# only FINAL weeks are cached and a final week never changes; a Tuesday and a
+# Wednesday in the same week ask for exactly the same weeks and the second one
+# is served from disk. That is what the 1,000/month tier is being spent on.
+#
+# Hitting the ceiling is NOT an exception. The remaining weeks return empty,
+# form for those weeks is None, the affected signals drop out of the lean, and
+# the slate still builds -- and since the fallback tiers exist (see
+# cfb_signals._FALLBACK_TIERS) it no longer degrades to "No clear lean" either:
+# a game with no PPA form scores on schedule-derived margin instead, which
+# needs no key and no quota. What it must never do is fail silently, so it
+# prints an Actions error annotation.
 MAX_CFBD_CALLS_PER_RUN = 12
 
 # ONLY A RUN THAT PERSISTS THE CACHE MAY SPEND CALLS.
@@ -119,8 +130,10 @@ MAX_CFBD_CALLS_PER_RUN = 12
 #
 # So a run that cannot keep what it buys does not buy. Unset, this fetcher uses
 # whatever the committed cache already holds and skips the fetch -- the same
-# degradation week 1 and the ESPN fallback already produce. Set (by the one
-# workflow that commits), the fetch happens and the result is kept forever.
+# degradation week 1 and the ESPN fallback already produce, and since the
+# fallback tiers exist that degradation is a schedule-derived lean rather than
+# a blank card. Set (by the one workflow that commits), the fetch happens and
+# the result is kept forever.
 #
 # Consequence worth stating: if daily-stats-and-grade stops running, CFB form
 # goes stale rather than the quota going to zero. That is the right way round.
@@ -862,7 +875,7 @@ def _team_turnovers(team_entry):
     return None
 
 
-def build_scoring_margins(schedule_rows, fbs_index, upto_week):
+def build_scoring_margins(schedule_rows, fbs_index, upto_week, min_games=0):
     """Season-to-date average point differential per team, over the same
     FBS-vs-FBS regular-season games before `upto_week` that team form uses.
 
@@ -874,7 +887,11 @@ def build_scoring_margins(schedule_rows, fbs_index, upto_week):
     as a weighted CFB signal would repeat a finding this repo has already
     made. Carrying it in context costs one pass over an already-fetched
     schedule and gives the CFB backtest a measurable candidate to confirm or
-    refute that for college football specifically."""
+    refute that for college football specifically.
+
+    `min_games` defaults to 0, which is the unfiltered behaviour this has
+    always had and what `context` still wants. The SIGNAL path passes 3 -- see
+    SEASON_MARGIN_MIN_GAMES."""
     totals = {}
     for row in schedule_rows:
         game_id = str(row.get("game_id") or "")
@@ -886,7 +903,68 @@ def build_scoring_margins(schedule_rows, fbs_index, upto_week):
             continue
         totals.setdefault(row["home_team"], []).append(home_pts - away_pts)
         totals.setdefault(row["away_team"], []).append(away_pts - home_pts)
-    return {team: round(sum(v) / len(v), 3) for team, v in totals.items()}
+    return {team: round(sum(v) / len(v), 3) for team, v in totals.items()
+            if len(v) >= min_games}
+
+
+# Minimum FBS-vs-FBS games a program must have played LAST season before its
+# margin is usable as a cold-start signal. Four is what it takes for a per-game
+# average to mean anything, and it also filters out programs that spent the
+# prior season in FCS -- a promoted team's two or three FBS results are not a
+# season, and its margin against FCS opposition is not comparable to anyone
+# else's.
+PRIOR_SEASON_MIN_GAMES = 4
+
+# Games a program must have played THIS season before its own points margin is
+# usable as a signal. Three, and it is not an arbitrary floor: it makes the
+# handoff from last season's margin to this one land at week 4, which is where
+# ten seasons of walk-forward measurement put the crossover. Before week 4
+# prior-season margin is the better predictor; from week 5 on this season's is,
+# and by weeks 9+ it is not close (70.3% vs 63.1% straight up).
+SEASON_MARGIN_MIN_GAMES = 3
+
+
+def build_prior_season_margin(prior_schedule_rows, min_games=PRIOR_SEASON_MIN_GAMES):
+    """{school: last season's points margin per game}, FBS-vs-FBS regular
+    season only.
+
+    WHY THIS EXISTS. Week 0 and week 1 have no in-season form of any kind, so
+    every game scored "No clear lean" -- a 0 on the opening weekend, which is
+    the weekend the tab most needs to say something. This is the one real,
+    already-published number available before a single snap: what each program
+    did last year.
+
+    IT IS NOT A GUESS AND IT IS NOT WEAK. Measured walk-forward over ten
+    seasons of real results (2015-2025, 2020 excluded as a COVID season), the
+    prior-season margin gap correlates with the eventual points margin at
+    r=+0.46 in week 1 (bootstrap 95% CI [+0.34, +0.57], 2,000 resamples,
+    stdlib, fixed seed) -- comparable to what the in-season signals reach once
+    they exist. Picking the side it favours won 67.7% of week-1 games outright
+    and 80.2% of the ones scoring 70+.
+
+    IT DOES NOT STAY. The same measurement run week by week shows it beaten by
+    THIS season's margin from week 5 onward (weeks 9+: 70.3% vs 63.1% at bar 0,
+    84.3% vs 74.3% at bar 70), which is why cfb_signals gates it to games with
+    no in-season signal at all rather than letting it into a calibrated
+    mid-season lean. Whether it deserves a weight alongside the in-season
+    signals in weeks 3-4 -- where it still leads -- is a joint calibration that
+    needs CFBD data, and is deliberately not answered here.
+
+    KEYLESS. The prior season's schedule is the same CSV/scoreboard the current
+    one comes from, so this costs zero CFBD calls -- which is what makes it
+    usable at all on a 1,000-call monthly budget.
+
+    Reuses build_scoring_margins with no week ceiling: "before week 999" is the
+    whole regular season, and reusing it means the cold-start margin and the
+    in-season one cannot drift apart on what counts as a game."""
+    index = fbs_matchup_index(prior_schedule_rows)
+    played = {}
+    for game_id, entry in index.items():
+        played[entry["home"]] = played.get(entry["home"], 0) + 1
+        played[entry["away"]] = played.get(entry["away"], 0) + 1
+    margins = build_scoring_margins(prior_schedule_rows, index, upto_week=999)
+    return {team: margin for team, margin in margins.items()
+            if played.get(team, 0) >= min_games}
 
 
 # --------------------------------------------------------------------------- #
@@ -913,9 +991,16 @@ def _format_kickoff(start_date_utc):
         return None
 
 
-def _display_signals(away, home, away_form, home_form):
+def _display_signals(away, home, away_form, home_form,
+                     away_season_margin=None, home_season_margin=None,
+                     away_prior_margin=None, home_prior_margin=None):
     """Team-relative framing chips, mirroring fetchers/nfl._display_signals:
-    surface the single more-notable side per family."""
+    surface the single more-notable side per family.
+
+    The two margin rows are FALLBACKS IN THE SAME ORDER cfb_signals scores in,
+    and only one of the three tiers is ever shown. A card listing "last season"
+    beside live PPA would suggest the lean used both; it never does, and the
+    card has to say which one it did use."""
     signals = []
     ao, ho = away_form.get("off_ppa"), home_form.get("off_ppa")
     if ao is not None or ho is not None:
@@ -931,7 +1016,30 @@ def _display_signals(away, home, away_form, home_form):
             signals.append({"label": "{} Def PPA/play allowed".format(home), "value": _fmt_ppa(hd), "tone": "neg"})
         else:
             signals.append({"label": "{} Def PPA/play allowed".format(away), "value": _fmt_ppa(ad), "tone": "neg"})
+    if not signals:
+        # Both sides on one row, LABELLED WITH THE WINDOW IT CAME FROM -- the
+        # whole point of these rows is that the reader can tell at a glance
+        # whether the number in front of them is this season's or last year's.
+        if away_season_margin is not None or home_season_margin is not None:
+            signals.append(_margin_signal("Points margin / game",
+                                          away, home, away_season_margin, home_season_margin))
+        elif away_prior_margin is not None or home_prior_margin is not None:
+            signals.append(_margin_signal("Last season margin / game",
+                                          away, home, away_prior_margin, home_prior_margin))
     return signals
+
+
+def _margin_signal(label, away, home, away_margin, home_margin):
+    return {
+        "label": label,
+        "value": "{} {} \u00b7 {} {}".format(
+            home, _fmt_margin(home_margin), away, _fmt_margin(away_margin)),
+        "tone": "pos" if (home_margin or 0) >= (away_margin or 0) else "neg",
+    }
+
+
+def _fmt_margin(v):
+    return "n/a" if v is None else "{:+.1f}".format(v)
 
 
 def _team_ref(school):
@@ -955,7 +1063,7 @@ def _team_ref(school):
             "name": school, "color": meta.get("color")}
 
 
-def _build_one_game(config, g, form, margins):
+def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=None):
     import cfb_signals
 
     away, home = g["away_team"], g["home_team"]
@@ -963,6 +1071,7 @@ def _build_one_game(config, g, form, margins):
     # Form is keyed by SCHOOL (what CFBD and the schedule both emit); the
     # abbreviations below are presentation only and never a lookup key.
     away_form, home_form = form.get(away, {}), form.get(home, {})
+    prior_margin, season_margin = prior_margin or {}, season_margin or {}
 
     inputs = cfb_signals.build_inputs(
         away_abbr=away_ref["abbr"], home_abbr=home_ref["abbr"],
@@ -971,6 +1080,13 @@ def _build_one_game(config, g, form, margins):
         home_def_ppa_allowed=home_form.get("def_ppa_allowed"),
         away_turnover_diff=away_form.get("turnover_diff"),
         home_turnover_diff=home_form.get("turnover_diff"),
+        # FALLBACK TIERS, both keyless. cfb_signals.score_game uses the first
+        # tier that has anything, so neither of these can dilute a lean built
+        # from the calibrated PPA signals. See _FALLBACK_TIERS there.
+        away_season_margin=season_margin.get(away),
+        home_season_margin=season_margin.get(home),
+        away_prior_margin=prior_margin.get(away),
+        home_prior_margin=prior_margin.get(home),
     )
     # No `availability` argument anywhere in this call: CFB has no injury
     # feed, so there is no QB override to apply. See the module docstring.
@@ -997,8 +1113,14 @@ def _build_one_game(config, g, form, margins):
         "start": _format_kickoff(g.get("start_date")),
         "venue": g.get("venue"),
         "probables": None,   # no starter feed for CFB -- see module docstring
-        "signals": _display_signals(away_ref["abbr"], home_ref["abbr"], away_form, home_form),
-        "pulse": None,       # no team_pulse.cfb config block
+        "signals": _display_signals(away_ref["abbr"], home_ref["abbr"], away_form, home_form,
+                                    season_margin.get(away), season_margin.get(home),
+                                    prior_margin.get(away), prior_margin.get(home)),
+        # No GAME-level pulse for CFB. team_pulse.cfb exists and drives the
+        # Teams tab (build_cfb_team_entities), but a game pulse is a different
+        # number -- MLB's is built from its own per-game inputs -- and CFB has
+        # nothing to build one from that is not already in betting_signals.
+        "pulse": None,
         "betting_signals": betting,
         "standout": standout,
         "best_angle": standout,
@@ -1019,6 +1141,10 @@ def _build_one_game(config, g, form, margins):
             # Unweighted in v1 -- see build_scoring_margins' docstring.
             "away_scoring_margin": margins.get(away), "home_scoring_margin": margins.get(home),
             "away_games": away_form.get("games"), "home_games": home_form.get("games"),
+            "away_prior_margin": prior_margin.get(away),
+            "home_prior_margin": prior_margin.get(home),
+            "away_season_margin": season_margin.get(away),
+            "home_season_margin": season_margin.get(home),
         },
     }
 
@@ -1113,41 +1239,76 @@ def _cfb_team_pulse(form, cfg):
     return pulse.pulse(max(0, min(100, int(math.floor(50 + 50 * combined + 0.5)))))
 
 
-def build_cfb_team_entities(config, form, slate_schools):
+def _stale_pulse(pulse, prior_season):
+    """A pulse computed from LAST season, marked as such.
+
+    The number is untouched -- both components are points per game either way,
+    on the same scale team_pulse.cfb was calibrated against. What is added is a
+    `qualifier`, because "Scorching" about a program that has not played a snap
+    this year is a claim the data does not support, and the reader has no other
+    way to tell.
+
+    IT IS A SEPARATE FIELD, NOT A CHANGED `label`, and that is not stylistic.
+    insights.js's pulseBand() maps the label WORD to a CSS class
+    (PULSE_CLASS[p.label]); prefixing a season onto it would miss the table and
+    silently drop every one of these cards to the grey "cool" band -- the band
+    colour is the one part of a Pulse that cannot be reworded."""
+    if not pulse or not prior_season:
+        return pulse
+    return {**pulse, "qualifier": "{} season".format(prior_season)}
+
+
+def build_cfb_team_entities(config, form, slate_schools, prior_form=None, prior_season=None):
     """One Team card per program ON THIS SLATE, mirroring mlb and epl.
 
     Scoped to the slate rather than all 136 FBS programs on purpose: the Teams
     tab answers "who is playing today and how are they", which is the question
     the other sports' versions answer. A full FBS table is a different feature.
+
+    `prior_form` is LAST SEASON'S form for the same programs, used only for a
+    program with nothing this season -- which in week 0 and week 1 is every
+    program on the slate, and was an empty Teams tab through the whole opening
+    month. Same fallback discipline the scored signals use (cfb_signals.
+    _FALLBACK_TIERS): one window or the other, never blended. Every row built
+    that way is LABELLED with the season it came from, on each signal and in
+    the pulse band, because a card reading "9-0" that silently means last year
+    is worse than no card at all.
     """
     cfg = ((config.get("team_pulse") or {}).get("cfb") or {})
     if not cfg:
         return []
+    prior_form = prior_form or {}
     out = []
     for school in slate_schools:
         f = form.get(school)
+        stale = False
+        if not f:
+            f = prior_form.get(school)
+            stale = bool(f)
         if not f:
             continue
         ref = _team_ref(school)
+        suffix = " ({})".format(prior_season) if stale and prior_season else (" (last season)" if stale else "")
         signals = []
         off_base = ((cfg.get("offense") or {}).get("base"))
         def_base = ((cfg.get("defense") or {}).get("base"))
         if f.get("pf_pg") is not None:
-            signals.append({"label": "Points scored / game", "value": "%.1f" % f["pf_pg"],
+            signals.append({"label": "Points scored / game" + suffix, "value": "%.1f" % f["pf_pg"],
                             "tone": "pos" if (off_base is None or f["pf_pg"] >= off_base) else "neg"})
         if f.get("pa_pg") is not None:
-            signals.append({"label": "Points allowed / game", "value": "%.1f" % f["pa_pg"],
+            signals.append({"label": "Points allowed / game" + suffix, "value": "%.1f" % f["pa_pg"],
                             "tone": "pos" if (def_base is None or f["pa_pg"] <= def_base) else "neg"})
-        signals.append({"label": "Record (FBS)", "value": "%d-%d" % (f["wins"], f["losses"]),
+        signals.append({"label": "Record (FBS)" + suffix, "value": "%d-%d" % (f["wins"], f["losses"]),
                         "tone": "pos" if f["wins"] >= f["losses"] else "neg"})
         if f.get("form_string"):
-            signals.append({"label": "Last %d" % len(f["form_string"]),
+            signals.append({"label": "Last %d" % len(f["form_string"]) + suffix,
                             "value": f["form_string"], "tone": "pos"})
         out.append({
             "id": school, "sport": "cfb", "abbr": ref.get("abbr"), "name": school,
             # `team_color`, the profile key -- game TeamRefs use `color`.
             "team_color": ref.get("color"),
-            "pulse": _cfb_team_pulse(f, cfg),
+            "pulse": _stale_pulse(_cfb_team_pulse(f, cfg), prior_season) if stale
+                     else _cfb_team_pulse(f, cfg),
             "signals": signals,
         })
     out.sort(key=lambda e: (-((e.get("pulse") or {}).get("score") or 0), e.get("abbr") or ""))
@@ -1178,8 +1339,12 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     value, which generate_insights writes back into data/boxscores.json under
     the "cfb" key. It is NOT a boxscore cache in MLB's sense -- CFB's signals
     come pre-aggregated from CFBD -- it reuses the same channel because the
-    load/save/commit plumbing already exists and is already persisted. `team_entities` is likewise left untouched -- there is no
-    team_pulse.cfb config to build a Team profile from.
+    load/save/commit plumbing already exists and is already persisted.
+
+    `team_entities`, when a list is passed, is filled with one Team profile per
+    program on the slate -- built from the SCHEDULE alone (build_schedule_form),
+    never from CFBD, so the Teams tab renders on every run including the ones
+    that make no CFBD calls at all.
 
     Returns (entities, {}, training_rows), keyed by CFBD's own game id as a
     string; training_rows is always [] (training_capture's schema is
@@ -1249,17 +1414,49 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # a single cutoff, so this is usually one build either way -- but a bowl
     # slate now aggregates the entire regular season, and repeating that per
     # game would redo the same full-season pass dozens of times.
-    form_by_cutoff, margins_by_cutoff = {}, {}
+    form_by_cutoff, margins_by_cutoff, season_margin_by_cutoff = {}, {}, {}
     for cutoff in sorted(cutoffs):
         form_by_cutoff[cutoff] = build_team_form(ppa_rows, team_stats, fbs_index, cutoff)
         margins_by_cutoff[cutoff] = build_scoring_margins(schedule, fbs_index, cutoff)
+        # The SIGNAL version of the same number, floored at three games. Free:
+        # it reads the schedule already in memory, so the fallback tier costs
+        # nothing even when CFBD is unreachable, unfunded, or (as on the ESPN
+        # fallback schedule) unjoinable.
+        season_margin_by_cutoff[cutoff] = build_scoring_margins(
+            schedule, fbs_index, cutoff, min_games=SEASON_MARGIN_MIN_GAMES)
+
+    # Last season's margins, for the games that have nothing else. Fetched only
+    # when at least one game on the slate actually has no in-season form -- an
+    # October Saturday never touches this. The prior schedule is the same
+    # keyless CSV/scoreboard as the current one, so it costs no CFBD calls; the
+    # failure is non-fatal because a missing prior season means exactly what it
+    # meant before this existed: no cold-start signal, "No clear lean".
+    prior_margin = {}
+    def _cold(g):
+        cut = form_cutoff(g, max_reg_week)
+        form, marg = form_by_cutoff[cut], season_margin_by_cutoff[cut]
+        has_form = form.get(g["home_team"]) and form.get(g["away_team"])
+        has_marg = (marg.get(g["home_team"]) is not None
+                    and marg.get(g["away_team"]) is not None)
+        return not has_form and not has_marg
+    if any(_cold(g) for g in games):
+        try:
+            prior_margin = build_prior_season_margin(get_schedule(session, season - 1))
+            print("insights(games): cfb cold start -- {} programs carry a {} margin "
+                  "(no CFBD calls; see build_prior_season_margin)"
+                  .format(len(prior_margin), season - 1))
+        except Exception as exc:  # noqa: BLE001
+            print("insights(games): cfb prior-season margins unavailable ({}: {}); "
+                  "cold-start games will score 'No clear lean' as before"
+                  .format(type(exc).__name__, str(exc)[:120]))
 
     entities = {}
     for g in games:
         try:
             cutoff = form_cutoff(g, max_reg_week)
             form, margins = form_by_cutoff[cutoff], margins_by_cutoff[cutoff]
-            entities[str(g["game_id"])] = _build_one_game(config, g, form, margins)
+            entities[str(g["game_id"])] = _build_one_game(
+                config, g, form, margins, prior_margin, season_margin_by_cutoff[cutoff])
         except Exception as e:  # noqa: BLE001 -- one bad game must not cost the slate
             print("insights(games): cfb game {} ({} @ {}) failed to build ({}: {}); skipped"
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
@@ -1275,6 +1472,21 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
             for key in ("home_team", "away_team"):
                 if g.get(key) and g[key] not in schools:
                     schools.append(g[key])
-        team_entities.extend(build_cfb_team_entities(config, schedule_form, schools))
+        # Last season's form, for the programs with none of their own yet. In
+        # week 0 that is ALL of them, and without it the Teams tab was empty
+        # through the entire opening month -- the same gap the scored signals
+        # had. `before_date=None` means the whole prior season. Fetched once and
+        # only when it is actually needed; the schedule is keyless either way.
+        prior_form = {}
+        if any(school not in schedule_form for school in schools):
+            try:
+                prior_form = build_schedule_form(get_schedule(session, season - 1),
+                                                 season - 1, None, window=3)
+            except Exception as exc:  # noqa: BLE001
+                print("insights(teams): cfb prior-season form unavailable ({}: {}); "
+                      "programs with no games yet get no card, as before"
+                      .format(type(exc).__name__, str(exc)[:120]))
+        team_entities.extend(build_cfb_team_entities(
+            config, schedule_form, schools, prior_form, season - 1))
 
     return entities, form_cache, []

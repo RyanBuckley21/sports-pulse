@@ -361,6 +361,21 @@ nfl:
 # outcome. Its absence is the clearest available statement of that boundary.
 #
 # Not fetched or shown while `epl` is absent from active_sports.
+# CFB fetcher/grader endpoints. Small next to the `epl` block below because
+# almost everything CFB needs is a constant in fetchers/cfb.py -- the schedule
+# sources, the season window, the call ceiling. What lives here is the pair
+# signal_report's grading adapter reads, plus the block's own existence: a
+# sport with no top-level config key is rejected by `--sport`, which is what
+# kept `--sport cfb` from running at all.
+#
+# These MUST equal fetchers/cfb.ESPN_CFB_SCOREBOARD and ESPN_FBS_GROUP. That
+# module has its own copy because it needs the same endpoint for the fallback
+# schedule; tools/verify/test_cfb_grading.py asserts the two agree so a grader
+# reading a different endpoint from the builder cannot ship quietly.
+cfb:
+  scoreboard_url: "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
+  fbs_group: 80
+
 epl:
   scoreboard_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard
   summary_url: https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary
@@ -892,6 +907,16 @@ betting_signals:
       off_ppa_gap: 0.1686
       def_ppa_gap: 0.1568
       turnover_gap: 1.3292
+      # Cold start only. Stdev of the prior-season margin gap over the 733
+      # week-1/2 games across 2016-2025 that have a prior season on both sides
+      # (2020 excluded, COVID). Schedule-derived, so measuring it cost no CFBD
+      # calls. The all-weeks figure is 16.04 over 5,825 games -- close enough
+      # that the early-season subset is not a special population.
+      prior_margin_gap: 15.6676
+      # Fallback tier 1. Stdev of THIS season's point-in-time margin gap over
+      # the 5,233 games across 2015-2025 where both sides had the three-game
+      # minimum. Also schedule-derived, also free.
+      season_margin_gap: 17.0004
     bet_types:
       # Moneyline only in v1. Weights are reliability-proportional over the
       # three signals that survived measurement: r = 0.3351 / 0.2612 / 0.1891
@@ -914,6 +939,24 @@ betting_signals:
         off_ppa: 0.5193
         def_ppa_allowed: 0.3154
         turnover_diff: 0.1654
+        # FALLBACK TIERS, never co-present with the three above OR with each
+        # other -- cfb_signals.score_game picks the first tier that has
+        # anything and blanks the rest, so each of these is always the only
+        # signal in its lean and is always renormalized to 1.0. Their
+        # magnitudes carry no meaning at all; both are 1.0 precisely so nobody
+        # reads either as "a fifth of a lean". See _FALLBACK_TIERS.
+        #
+        # Before these, a game with no CFBD form scored 0 -- every week-0 and
+        # week-1 game, and every game of a season on the ESPN fallback
+        # schedule. Walk-forward over ten seasons: season_margin 76.0% at
+        # threshold 40, prior_margin 73.7% in week 1, against the calibrated
+        # PPA model's 76.9% on the same measure.
+        #
+        # Same caveat as the block above, and it matters more here: these are
+        # STRAIGHT-UP HIT RATES on games where the favourite is obvious and the
+        # market knows it. Not a claim of edge.
+        season_margin: 1.0
+        prior_margin: 1.0
   # ------------------------------------------------------------------------ #
   # EPL (Premier League) -- BACKTEST-DERIVED. Measured by epl_backtest.py over
   # 2019/20-2025/26, every completed match, 2,660 total; 2,307 clear the
