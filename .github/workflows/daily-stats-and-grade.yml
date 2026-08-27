@@ -139,6 +139,31 @@ jobs:
         id: grade_picks
         run: python3 signal_report.py
 
+      # EPL, graded as its own invocation rather than as a loop inside
+      # signal_report.py. Two reasons, both about blast radius.
+      #
+      # One sport's grading must not take another's down. signal_report exits
+      # non-zero on a genuine gap and writes its ledger row before doing so, and
+      # a single process grading both sports would abandon the second the moment
+      # the first hit that path. Separate steps means an EPL provider outage
+      # cannot cost MLB its grading, which is the same isolation reasoning the
+      # generate_stats and _build_game_entities fetch loops now follow.
+      #
+      # continue-on-error, unlike the MLB step, because EPL HAS NO GRADED
+      # HISTORY YET and its early weeks are expected to be empty: form does not
+      # cross a season boundary, so every club sits below the five-match gate
+      # until roughly late September and the honest output is a `no_picks` row
+      # every day until then. That is exit 0 and commits normally -- but any
+      # real EPL-side failure in that window would red this workflow daily for a
+      # month and train everyone to ignore it, which is exactly the alarm
+      # fatigue this file's own header argues against. MLB's step stays strict.
+      # Revisit once EPL has a real graded record to protect.
+      - name: Grade yesterday's EPL picks
+        id: grade_picks_epl
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 signal_report.py --sport epl
+
       # Gated on the FILE having changed, not on grade_picks having exited 0.
       # signal_report.py's own "no gamePk overlap" die() path writes a
       # self-documenting no_store row to the ledger BEFORE it exits non-zero

@@ -165,21 +165,21 @@ import requests
 import yaml
 
 import betting_signals  # read-only: ranking (list_markets / top_market)
+import epl_grading      # the same, for EPL -- see SPORT_ADAPTERS
 
 CONFIG_PATH = "config.yaml"
 STORE_PATH = "data/insights.games.json"
 LEDGER_PATH = "data/signal_report_history.jsonl"
 # The sport to grade, resolved per invocation via --sport (see parse_args) --
-# NOT a fixed-at-import global. DEFAULT_SPORT_KEY only supplies the CLI
-# default (today's only behavior, "mlb"); every lookup that used to read a
-# bare SPORT_KEY now takes the resolved value as a parameter instead. The
-# ledger schema (build_pick_rows/build_status_row) is untouched by this --
-# rows carry no sport tag yet, so a `--sport` other than "mlb" is not yet
-# distinguishable in data/signal_report_history.jsonl. That is a real gap for
-# whenever a second sport's grading actually ships, deliberately left for that
-# change rather than folded in here, since adding a field would move every
-# future row's shape -- out of scope for a refactor that must not touch
-# output at all.
+# NOT a fixed-at-import global. DEFAULT_SPORT_KEY only supplies the CLI default,
+# so a bare `python3 signal_report.py` still grades MLB exactly as it always has.
+#
+# A SECOND SPORT NOW SHIPS. This comment used to say rows carried no sport tag
+# and that this was "a real gap for whenever a second sport's grading actually
+# ships" -- both halves are settled: build_pick_rows and build_status_row stamp
+# `sport` on every row they write, and _row_sport reads a row written before
+# that field existed as mlb, which it was. EPL grades through SPORT_ADAPTERS
+# and writes rows tagged "epl" into the same ledger.
 DEFAULT_SPORT_KEY = "mlb"
 
 # Reference lines used ONLY under --assume-lines. These are conventional round
@@ -425,13 +425,19 @@ def observed_facts(game):
     }
 
 
-def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY):
+def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """One ledger row per pick -- the grain that makes "how have moneyline picks
     done" and "do 90+ scores outperform 60s" answerable later. Aggregates are
     computed on read; none are stored as truth.
 
     `sport_key` is stamped onto every new row going forward (see _row_sport
-    for how a reader treats a row written before this field existed)."""
+    for how a reader treats a row written before this field existed).
+
+    `sport` is the adapter (SPORT_ADAPTERS[sport_key]); it supplies
+    observed_facts, whose contents are sport-shaped -- MLB stores innings and
+    first-five splits, EPL stores the three-way result. Defaults to MLB's so an
+    existing caller that passes only sport_key keeps working."""
+    sport = sport or SPORT_ADAPTERS[DEFAULT_SPORT_KEY]
     out = []
     for pick, game, result, verdict, basis in rows:
         out.append({
@@ -445,7 +451,7 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY):
             "bet_type": pick["bet_type"], "market": pick["market"], "side": pick["side"],
             "score": pick["score"], "flags": pick["flags"], "point": pick.get("point"),
             "result": result, "verdict": verdict, "basis": basis,
-            "observed": observed_facts(game),
+            "observed": sport["observed_facts"](game),
         })
     return out
 
@@ -759,6 +765,95 @@ def grade(pick, game, assume_lines):
 
 
 # --------------------------------------------------------------------------- #
+# sport adapters
+# --------------------------------------------------------------------------- #
+
+def _mlb_fetch_slate(session, config, date):
+    """base_url adapter over fetch_slate. The existing function takes a base_url
+    because MLB was the only thing it ever served; the registry hands every
+    adapter the whole config instead, since EPL needs a scoreboard_url and a
+    third sport will need something else again."""
+    return fetch_slate(session, config["mlb"]["base_url"], date)
+
+
+def _mlb_fetch_replay_dates(session, config, pks):
+    return fetch_replay_dates(session, config["mlb"]["base_url"], pks)
+
+
+# Everything in this module that reads a SPORT'S OWN SHAPE, in one table.
+#
+# signal_report was written entirely around MLB's StatsAPI: codedGameState,
+# linescore innings, per-inning run splits. None of that is a shape an ESPN
+# soccer event answers to, so a second sport could not be added by widening the
+# rules -- it needed its own implementations of the handful of functions that
+# touch a raw game record. Those live in epl_grading.py.
+#
+# MLB'S ENTRIES ARE ITS EXISTING FUNCTIONS, unmoved and unedited, and that is
+# the property worth protecting: this is an append-only accuracy ledger holding
+# real history, and no refactor may change what an MLB row grades to. The two
+# _mlb_* wrappers above adapt a signature and nothing else. Verified by replaying
+# real graded dates through both the old and new code on one shared slate fetch
+# -- picks, verdicts, observed facts and full ledger rows all byte-identical.
+#
+# A sport joins by adding an entry, the same mechanism generate_stats.
+# SPORT_FETCHERS and generate_insights.GAME_BUILDERS use. `list_markets` is
+# reached only under --all-markets and `top_market` only when a store entry has
+# no usable `standout`.
+SPORT_ADAPTERS = {
+    "mlb": {
+        "fetch_slate": _mlb_fetch_slate,
+        "fetch_replay_dates": _mlb_fetch_replay_dates,
+        "is_final": is_final,
+        "is_called_off": is_called_off,
+        "live_state": live_state,
+        "observed_facts": observed_facts,
+        "grade": grade,
+        "list_markets": lambda scored: betting_signals.list_markets(scored),
+        "top_market": lambda scored, t: betting_signals.top_market(scored, t),
+        # MLB's store holds exactly one date's games, so a stored pk missing
+        # from the slate is a genuine store/date mismatch and must surface as
+        # UNRESOLVED rather than be quietly dropped. See store_spans_dates.
+        "store_spans_dates": False,
+    },
+    "epl": {
+        "fetch_slate": epl_grading.fetch_slate,
+        "fetch_replay_dates": epl_grading.fetch_replay_dates,
+        "is_final": epl_grading.is_final,
+        "is_called_off": epl_grading.is_called_off,
+        "live_state": epl_grading.live_state,
+        "observed_facts": epl_grading.observed_facts,
+        "grade": epl_grading.grade,
+        "list_markets": epl_grading.list_markets,
+        "top_market": epl_grading.top_market,
+        # EPL'S STORE SPANS SEVERAL DATES, and this flag is what stops that
+        # becoming a ledger full of nonsense.
+        #
+        # fetchers/epl.build_game_entities looks three days ahead, because a
+        # soccer round sprawls Friday to Monday and a one-date slate would leave
+        # the Games tab empty midweek. signal_report was built on MLB's
+        # assumption that a store IS one date, so without this every stored
+        # fixture kicking off after the graded date would be handed to grade()
+        # as "not on this date's schedule" and recorded UNRESOLVED -- a verdict
+        # meaning "this cannot be settled" for matches that simply had not
+        # kicked off yet. Measured on four real matchdays before the fix: 7 of
+        # 15 picks.
+        #
+        # With it, a pick whose match is not on the graded date is DEFERRED --
+        # not graded, not recorded, left for the run that grades its own date.
+        "store_spans_dates": True,
+    },
+}
+
+
+def adapter_for(sport_key):
+    """The sport's adapter, or None when it has no grading rules yet. main()
+    die()s on None rather than falling through to MLB's -- grading a soccer
+    match by codedGameState and innings would produce a confident wrong verdict
+    and write it to an append-only ledger."""
+    return SPORT_ADAPTERS.get(sport_key)
+
+
+# --------------------------------------------------------------------------- #
 # pick selection
 # --------------------------------------------------------------------------- #
 
@@ -810,7 +905,7 @@ def _run_line_laying(scored, side):
     return ml == side
 
 
-def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT_KEY):
+def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
     what the site showed."""
@@ -821,7 +916,7 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
         scored = entry.get("betting_signals") or {}
         stored = _stored_standout(entry, min_score)
         if all_markets:
-            markets = [m for m in betting_signals.list_markets(scored) if m["score"] >= min_score]
+            markets = [m for m in sport["list_markets"](scored) if m["score"] >= min_score]
             # Only the standout carries an estimate (the store keeps no
             # signal_scores), so merge it onto its own row and leave the rest
             # unpriced rather than pretending every row has a number.
@@ -833,7 +928,7 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
         elif stored:
             markets = [stored]
         else:
-            top = betting_signals.top_market(scored, min_score)
+            top = sport["top_market"](scored, min_score)
             markets = [top] if top else []
         for m in markets:
             pick = {
@@ -852,7 +947,9 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
             # and has no access to the game's other markets. `scored` is the full
             # per-game betting_signals dict, moneyline included, whether or not
             # moneyline is itself among the picks being reported.
-            if m["bet_type"] == "run_line":
+            # MLB-only market; _run_line_laying reads a `moneyline` entry no
+            # other sport's scored dict has.
+            if sport_key == "mlb" and m["bet_type"] == "run_line":
                 pick["laying"] = _run_line_laying(scored, m["side"])
             picks.append(pick)
     picks.sort(key=lambda p: (-p["score"], p["gamePk"]))
@@ -1065,7 +1162,13 @@ def main(argv=None):
     if sport_key not in config:
         die("--sport {!r} is not configured (config.yaml has no {!r} block)"
             .format(sport_key, sport_key))
-    base_url = config[sport_key]["base_url"]
+    sport = adapter_for(sport_key)
+    if sport is None:
+        # Refusing beats falling through to MLB's rules: grading a soccer match
+        # by codedGameState and innings would produce a confident wrong verdict
+        # and write it to an append-only ledger.
+        die("--sport {!r} has no grading adapter (SPORT_ADAPTERS knows: {})"
+            .format(sport_key, ", ".join(sorted(SPORT_ADAPTERS))))
     threshold = (config.get("betting_signals") or {}).get(sport_key, {}).get("standout_threshold", 50)
     min_score = args.min_score if args.min_score is not None else threshold
 
@@ -1079,7 +1182,7 @@ def main(argv=None):
 
     session = requests.Session()
     try:
-        slate = fetch_slate(session, base_url, args.date)
+        slate = sport["fetch_slate"](session, config, args.date)
     except requests.RequestException as e:
         die("schedule fetch failed for {}: {}".format(args.date, e))
 
@@ -1159,20 +1262,38 @@ def main(argv=None):
                 args.store, " @ " + args.rev if args.rev else "",
                 "/".join(stamps), len(store), args.date, stamps[0], args.date))
 
-    picks = collect_picks(store, config, min_score, args.all_markets, sport_key=sport_key)
+    picks = collect_picks(store, config, min_score, args.all_markets,
+                          sport_key=sport_key, sport=sport)
+    # A store covering several dates carries picks that belong to other days'
+    # runs; grading them here would record a verdict for a match that has not
+    # been played. Dropped rather than graded, and counted out loud so a thin
+    # slate reads as "deferred" rather than as picks going missing.
+    if sport.get("store_spans_dates"):
+        due = [p for p in picks if p["gamePk"] in slate]
+        deferred = len(picks) - len(due)
+        if deferred:
+            print("signal_report: {} pick{} deferred -- their fixtures are not on {} "
+                  "(this sport's store spans several dates)"
+                  .format(deferred, "" if deferred == 1 else "s", args.date))
+        picks = due
     if len(overlap) < len(store):
-        sys.stderr.write("signal_report: warning: {} of {} stored games are not on the {} "
-                         "schedule; their picks are listed as UNRESOLVED\n".format(
-                             len(store) - len(overlap), len(store), args.date))
+        # Not a warning for a sport whose store legitimately spans several
+        # dates -- there the off-date fixtures are DEFERRED (reported above),
+        # not listed as UNRESOLVED, and calling that a warning every single run
+        # would be crying wolf about the design working.
+        if not sport.get("store_spans_dates"):
+            sys.stderr.write("signal_report: warning: {} of {} stored games are not on the {} "
+                             "schedule; their picks are listed as UNRESOLVED\n".format(
+                                 len(store) - len(overlap), len(store), args.date))
 
     # Postponed picks: find where (if anywhere) the game was actually played, so
     # the row can say so instead of just "Postponed".
     called_off = {p["gamePk"] for p in picks
-                  if p["gamePk"] in slate and is_called_off(slate[p["gamePk"]])}
+                  if p["gamePk"] in slate and sport["is_called_off"](slate[p["gamePk"]])}
     replays = {}
     if called_off:
         try:
-            replays = fetch_replay_dates(session, base_url, called_off)
+            replays = sport["fetch_replay_dates"](session, config, called_off)
         except requests.RequestException:
             replays = {}  # best-effort; the row still reports the postponement
 
@@ -1180,16 +1301,23 @@ def main(argv=None):
     for pick in picks:
         game = slate.get(pick["gamePk"])
         pick["replayed_on"] = replays.get(pick["gamePk"])
-        result, verdict, basis = grade(pick, game, args.assume_lines)
+        result, verdict, basis = sport["grade"](pick, game, args.assume_lines)
         rows.append((pick, game, result, verdict, basis))
 
     # The standing record. Only a canonical run may add to it; every run still
     # displays it, so the all-time number is visible even from a fixture run.
     if recordable:
-        append_ledger(build_pick_rows(args.date, rows, source, run_id, sport_key=sport_key) if rows
+        append_ledger(build_pick_rows(args.date, rows, source, run_id,
+                                      sport_key=sport_key, sport=sport) if rows
                       else [build_status_row(args.date, STATUS_NO_PICKS, source, run_id, sport_key=sport_key)])
 
-    render(args.date, picks, rows, len(store), args.assume_lines, load_ledger(), why_not)
+    # SCOPED TO THIS SPORT. The all-time record is rendered from these rows, and
+    # handing an EPL run the whole ledger would print MLB's 180-pick history
+    # under an EPL header -- a number that looks like EPL's record and is not.
+    # _row_sport reads a row written before the field existed as mlb, which it
+    # was, so MLB's own totals are unchanged.
+    ledger_rows = [r for r in load_ledger() if _row_sport(r) == sport_key]
+    render(args.date, picks, rows, len(store), args.assume_lines, ledger_rows, why_not)
     return EXIT_PENDING if any(r[3] in RERUNNABLE for r in rows) else EXIT_OK
 
 
