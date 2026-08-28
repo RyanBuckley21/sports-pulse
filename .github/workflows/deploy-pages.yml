@@ -9,6 +9,47 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
+  # THE SITE'S SECOND CLOCK, and the reason it needs one.
+  #
+  # On 2026-08-28 the site served 19-hour-old data. Three commits had landed on
+  # main that day (grading, regenerate, training capture) and NONE of them
+  # deployed. That is not a bug in the `push` trigger above: a push made with
+  # GITHUB_TOKEN does not start another workflow, by GitHub's anti-recursion
+  # rule, and every commit this project makes to itself is made that way. The
+  # run history says it plainly -- every push-triggered deploy in it maps to a
+  # human merge, and not one maps to a bot commit.
+  #
+  # So until this existed the site had exactly ONE automatic path to freshness:
+  # the single cron above. And this repo's crons are unreliable enough that the
+  # file already carries two hand-written alarms about it -- +3.6h to +5.0h late
+  # is routine, on 2026-07-27 none of the daily workflow's entries fired at all,
+  # and the run that should have deployed on 2026-08-28 was still missing four
+  # hours past due.
+  #
+  # NOT A DATA DEPENDENCY. This workflow runs generate_stats.py itself and
+  # deploys what that produces -- it never reads the commits the daily workflow
+  # makes. So this is not "publish the new data"; it is a THIRD INDEPENDENT DRAW
+  # on the same flaky scheduler. The daily workflow has two cron entries, this
+  # one has one, and they are separate draws: chaining them gives the site three
+  # chances a day to refresh instead of one, and the site stays current as long
+  # as ANY of the three lands.
+  #
+  # DELIBERATELY NOT GATED ON `conclusion: success`. Since nothing here consumes
+  # the daily run's output, a daily run that failed is still a fine moment to
+  # rebuild the site from live sources -- and gating on it would reintroduce
+  # exactly the coupling the paragraph above avoids.
+  #
+  # No loop: daily-stats-and-grade.yml has no workflow_run trigger of its own.
+  # No throttle interaction: the push throttle below is `if: github.event_name
+  # == 'push'`, so these runs regenerate unconditionally, the same as a
+  # scheduled run.
+  #
+  # No CFBD cost: CFB_ALLOW_CFBD is set in daily-stats-and-grade.yml and nowhere
+  # else, so the extra runs this adds spend nothing against the monthly quota --
+  # see fetchers/cfb.py's CFBD_ALLOW_ENV.
+  workflow_run:
+    workflows: ["Regenerate stats and grade picks"]
+    types: [completed]
 
 permissions:
   contents: read
