@@ -1995,27 +1995,32 @@
         {
           "label": "Goals scored / match",
           "tone": "neg",
-          "value": "BOU 1.0 \u00b7 EVE 2.0"
+          "value": "BOU 1.0 \u00b7 EVE 1.5"
         },
         {
           "label": "Goals conceded / match",
           "tone": "neg",
-          "value": "BOU 2.0 \u00b7 EVE 0.0"
+          "value": "BOU 1.5 \u00b7 EVE 0.5"
         },
         {
           "label": "Points / match (last 5)",
           "tone": "neg",
-          "value": "BOU 0.0 \u00b7 EVE 3.0"
+          "value": "BOU 0.5 \u00b7 EVE 2.0"
         },
         {
           "label": "Recent form",
           "tone": "pos",
-          "value": "BOU L \u00b7 EVE W"
+          "value": "BOU LD \u00b7 EVE WD"
+        },
+        {
+          "label": "Points / match in this role",
+          "tone": "pos",
+          "value": "BOU 1.0 home \u00b7 EVE 1.0 away"
         }
       ],
       "standout": null,
       "start": "10:00 AM ET",
-      "status": "Preview",
+      "status": "Final",
       "story": null,
       "summary": null,
       "template_version": "v3",
@@ -2063,7 +2068,7 @@
       ],
       "standout": null,
       "start": "12:30 PM ET",
-      "status": "Preview",
+      "status": "Live",
       "story": null,
       "summary": null,
       "template_version": "v3",
@@ -2139,27 +2144,32 @@
         {
           "label": "Goals scored / match",
           "tone": "pos",
-          "value": "LIV 2.0 \u00b7 NFO 0.0"
+          "value": "LIV 2.0 \u00b7 NFO 1.0"
         },
         {
           "label": "Goals conceded / match",
           "tone": "neg",
-          "value": "LIV 2.0 \u00b7 NFO 1.0"
+          "value": "LIV 2.0 \u00b7 NFO 1.5"
         },
         {
           "label": "Points / match (last 5)",
           "tone": "pos",
-          "value": "LIV 1.0 \u00b7 NFO 0.0"
+          "value": "LIV 1.0 \u00b7 NFO 0.5"
         },
         {
           "label": "Recent form",
           "tone": "pos",
-          "value": "LIV D \u00b7 NFO L"
+          "value": "LIV DD \u00b7 NFO LD"
+        },
+        {
+          "label": "Points / match in this role",
+          "tone": "pos",
+          "value": "LIV 1.0 home \u00b7 NFO 1.0 away"
         }
       ],
       "standout": null,
       "start": "7:30 AM ET",
-      "status": "Preview",
+      "status": "Final",
       "story": null,
       "summary": null,
       "template_version": "v3",
@@ -2235,12 +2245,12 @@
         {
           "label": "Goals scored / match",
           "tone": "neg",
-          "value": "COV 0.0 \u00b7 HUL 2.0"
+          "value": "COV 0.0 \u00b7 HUL 1.5"
         },
         {
           "label": "Goals conceded / match",
           "tone": "neg",
-          "value": "COV 3.0 \u00b7 HUL 0.0"
+          "value": "COV 2.0 \u00b7 HUL 0.0"
         },
         {
           "label": "Points / match (last 5)",
@@ -2250,12 +2260,17 @@
         {
           "label": "Recent form",
           "tone": "pos",
-          "value": "COV L \u00b7 HUL W"
+          "value": "COV LL \u00b7 HUL WW"
+        },
+        {
+          "label": "Points / match in this role",
+          "tone": "neg",
+          "value": "COV 0.0 home \u00b7 HUL 3.0 away"
         }
       ],
       "standout": null,
       "start": "10:00 AM ET",
-      "status": "Preview",
+      "status": "Final",
       "story": null,
       "summary": null,
       "template_version": "v3",
