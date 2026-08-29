@@ -373,3 +373,6 @@
 {"date": "2026-08-27", "note": "store covers 2026-08-28", "run_id": "2026-08-28T23:11:31Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "mlb", "status": "no_store"}
 {"date": "2026-08-27", "note": "store covers 2026-08-27/2026-08-28", "run_id": "2026-08-28T23:11:32Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "epl", "status": "no_store"}
 {"date": "2026-08-27", "note": "store covers 2026-08-27/2026-08-28", "run_id": "2026-08-28T23:11:32Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "cfb", "status": "no_store"}
+{"date": "2026-08-28", "note": "store covers 2026-08-29", "run_id": "2026-08-29T17:22:18Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "mlb", "status": "no_store"}
+{"date": "2026-08-28", "note": "store covers 2026-08-27/2026-08-28", "run_id": "2026-08-29T17:22:18Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "epl", "status": "no_store"}
+{"date": "2026-08-28", "note": "store covers 2026-08-27/2026-08-28/2026-08-29", "run_id": "2026-08-29T17:22:19Z", "schema_version": 2, "source": "data/insights.games.json", "sport": "cfb", "status": "no_store"}
