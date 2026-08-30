@@ -28,6 +28,8 @@ import os
 import shutil
 import traceback
 
+import slate_clock
+
 import pulse
 import training_capture
 from fetchers import cfb, epl, mlb, nfl
@@ -398,7 +400,13 @@ def _build_game_entities(config, generated_at, team_entities=None, failed_sports
     red with yesterday's data.json still served."""
     if config is None:
         return {}, {}, None
-    game_date = generated_at.date().isoformat()
+    # THE SLATE DATE IS EASTERN, NOT UTC. `generated_at` is
+    # datetime.now(timezone.utc), so .date() on it names the wrong day for any
+    # run between 00:00 and 04:00 UTC -- and the workflow's crons have been
+    # firing that late. signal_report grades against `yesterday` in Eastern, so
+    # a store stamped with a UTC date rolls PAST an ungraded day and takes its
+    # pre-game snapshot with it. See slate_clock for the two days that cost.
+    game_date = slate_clock.eastern_date(generated_at)
     try:
         box_cache_all = _load_store(BOXSCORE_CACHE_PATH)
         game_entities = {}
@@ -591,7 +599,7 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
                   "has live state.".format(GAMES_STORE_PATH, sport_key, why_frozen))
         if writable:
             updated_games_store[sport_key] = _carry_forward_games_store(
-                sport_entities, sport_store, now_iso)
+                sport_entities, sport_store, now_iso, game_date)
         # else: leave updated_games_store[sport_key] exactly as committed.
 
     # THE THREE DISABLE LAYERS, KEPT INTACT AND IN ORDER: the config kill switch
@@ -730,14 +738,22 @@ def _slate_started(game_entities):
 def _store_covers_date(store, game_date):
     """Whether the committed games store already holds a slate for `game_date`.
 
-    Same rule signal_report.store_slate_dates uses to decide which date a store
-    describes: entries stamp the run that produced them, and the store is pruned
-    to one slate per run, so a matching `generated_at` day means this date has
-    already been captured.
-    """
+    Reads `slate_date` -- the field stamped fresh each build (see
+    _carry_forward_games_store) -- and falls back to the `generated_at` day for
+    rows written before that field existed, which is the rule this used to use
+    for everything.
+
+    THE FALLBACK IS WRONG FOR SPAN STORES and is kept only so old committed rows
+    still answer. `generated_at` is carried forward per row, so an EPL fixture
+    first seen on the 27th reports the 27th forever -- and this function feeds
+    _games_store_writable, the guard that stops a late run replacing a clean
+    pre-game snapshot with a mid-game one. On MLB it happened to be right (a new
+    slate every day means all-new pks and all-new stamps); on EPL and CFB it was
+    answering about the wrong day. Rows written from here on carry slate_date
+    and are exact."""
     if not game_date:
         return False
-    return any((e.get("generated_at") or "")[:10] == game_date
+    return any((e.get("slate_date") or (e.get("generated_at") or "")[:10]) == game_date
                for e in (store or {}).values())
 
 
@@ -776,9 +792,19 @@ def _games_store_writable(game_entities, games_store, game_date):
                    "committed".format(len(started), len(game_entities), game_date))
 
 
-def _carry_forward_games_store(entities, store, now_iso):
+def _carry_forward_games_store(entities, store, now_iso, game_date=None):
     """The games store this module persists, pruned to today's slate, with
-    only previously-generated text carried forward. See _carry_forward_store."""
+    only previously-generated text carried forward. See _carry_forward_store.
+
+    `slate_date` IS STAMPED FRESH EVERY RUN and is deliberately NOT carried
+    forward, unlike `generated_at` beside it. That distinction is the whole
+    reason it exists. `generated_at` answers "when was this row's TEXT first
+    written", so it is preserved across runs -- which means for a store that
+    spans a fixture window (EPL 3 days, CFB 7), a fixture first seen on the
+    27th still reads 27th on the 29th, and anything inferring the slate date
+    from it infers a date the store no longer holds. `slate_date` answers
+    "which build is this row from", which is the question both readers below
+    are actually asking."""
     new_store = {}
     for pk, ent in entities.items():
         prev = store.get(pk)
@@ -792,6 +818,7 @@ def _carry_forward_games_store(entities, store, now_iso):
             "status": ent.get("status"),
             "template_version": GAME_PROMPT_VERSION,
             "generated_at": prev.get("generated_at", now_iso) if prev else now_iso,
+            "slate_date": game_date,
             "story": text.get("story"), "summary": text.get("summary"),
             "betting_note": text.get("betting_note"),
         }

@@ -164,6 +164,7 @@ import sys
 import requests
 import yaml
 
+import slate_clock      # the shared slate-date definition -- see yesterday_et
 import betting_signals  # read-only: ranking (list_markets / top_market)
 import cfb_grading      # the same, for CFB -- see SPORT_ADAPTERS
 import epl_grading      # the same, for EPL -- see SPORT_ADAPTERS
@@ -530,10 +531,25 @@ def is_recordable(args, min_score, threshold):
 
 
 def store_slate_dates(store):
-    """The date(s) the store's own `generated_at` stamps point at. A slate is
-    generated the morning of its games, so this is the slate date -- but it is a
-    hint, verified against the schedule before anything is graded."""
-    return sorted({(e.get("generated_at") or "")[:10] for e in store.values() if e.get("generated_at")})
+    """The slate date(s) this store's rows were built for. A hint, always
+    verified against the schedule before anything is graded.
+
+    Reads `slate_date`, which generate_insights stamps fresh on every build, and
+    falls back to the `generated_at` DAY for rows written before that field
+    existed.
+
+    THE FALLBACK IS ONLY A FALLBACK, and the reason is a message this function
+    actually printed: "store covers 2026-08-27/2026-08-28 (9 games), not
+    2026-08-28". Both halves are true and they look like a contradiction --
+    `generated_at` is preserved per row across runs, so for a store spanning a
+    fixture window it reports when rows were WRITTEN, while the sentence around
+    it claims that is which slate they hold. On a one-slate-per-run store (MLB)
+    the two coincide; on EPL's three-day and CFB's seven-day windows they do
+    not, and the operator reading that line has been handed a riddle instead of
+    a diagnosis."""
+    dates = {e.get("slate_date") or (e.get("generated_at") or "")[:10] or None
+             for e in store.values()}
+    return sorted(d for d in dates if d)
 
 
 def fetch_slate(session, base_url, date):
@@ -1136,13 +1152,13 @@ def die(msg, code=EXIT_USAGE):
 
 def yesterday_et():
     """Yesterday in US/Eastern -- the slate boundary that matches the site's
-    displayed start times."""
-    try:
-        from zoneinfo import ZoneInfo
-        now = datetime.datetime.now(ZoneInfo("America/New_York"))
-    except Exception:  # no tzdata: EDT-ish fallback, only shifts the default date
-        now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
-    return (now.date() - datetime.timedelta(days=1)).isoformat()
+    displayed start times.
+
+    Delegates to slate_clock, which generate_insights now uses to stamp the
+    store. That shared definition is the point: the two used to compute the
+    slate date independently, in different zones, and the disagreement cost two
+    days of MLB grading. See that module."""
+    return slate_clock.yesterday()
 
 
 def parse_args(argv=None):
@@ -1206,6 +1222,30 @@ def main(argv=None):
         slate = sport["fetch_slate"](session, config, args.date)
     except requests.RequestException as e:
         die("schedule fetch failed for {}: {}".format(args.date, e))
+
+    # A LEAGUE THAT DID NOT PLAY IS NOT A GAP IN OUR RECORD.
+    #
+    # An empty slate means the schedule itself is empty for this date, and the
+    # overlap check below cannot tell that apart from a store that has rolled
+    # forward -- both produce zero overlap. Before this, the two were treated
+    # identically: die, and write a `no_store` row saying the record has a hole
+    # in it. CFB alone would do that four days most weeks and every day from
+    # February to August; the real 2026-08-26..28 run wrote three such rows for
+    # CFB and two for EPL on dates neither league had a single fixture.
+    #
+    # The ledger describes days there were picks to grade. A day the league did
+    # not play has no row, and that absence is correct rather than missing.
+    #
+    # ACCEPTED LIMIT: an upstream returning an empty payload on a real game day
+    # would read as "no games" here. A fetch that FAILS still raises above, so
+    # this only covers a 200 with nothing in it. The alternative -- a warning on
+    # every genuinely empty day -- is the alarm fatigue this repo keeps refusing,
+    # and it would fire hundreds of times a year to catch something that has not
+    # happened yet.
+    if not slate:
+        print("signal_report: no {} games scheduled for {} -- nothing to grade. "
+              "(Not a gap: the league did not play.)".format(sport_key, args.date))
+        return EXIT_OK
 
     # Verify the store actually covers the requested date before grading anything
     # against it. A postponed game still appears on its original date, so a store

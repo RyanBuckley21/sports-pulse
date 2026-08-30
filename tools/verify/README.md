@@ -203,6 +203,55 @@ the fields the adapter reads. The POSTPONED and PENDING cases are built by
 editing a real event's status block, because no postponed FBS game appeared on
 any date sampled; the edit is confined to the one field those branches read.
 
+```
+python3 -m tools.verify.test_slate_dates      # from the repo root
+```
+
+**`test_slate_dates`** — the boundary between one day's games and the next, and
+the two bugs that came from the pipeline holding two different answers.
+`generate_insights` stamped the store with `generated_at.date()` — a UTC date —
+while `signal_report` graded `yesterday` in US/Eastern. Those agree for any run
+between about 04:00 and 23:59 UTC, which the workflow's 13:40/15:40 crons
+comfortably were, so it sat there invisible. Then GitHub began firing them nine
+to eleven hours late:
+
+```
+run 62  2026-08-27 23:02Z = 19:02 ET on the 27th -> yesterday = 08-26  graded
+run 63  2026-08-28 00:34Z = 20:34 ET on the 27th -> yesterday = 08-26  again
+run 64  2026-08-28 23:11Z = 19:11 ET on the 28th -> yesterday = 08-27  GONE
+```
+
+Both runs of that cycle asked about the same day, so nothing ever asked about
+the 27th — and run 63 rolled the store forward to a UTC date of the 28th,
+taking the 27th's pre-game snapshot with it. Two days of MLB picks went
+ungraded and were written into an append-only ledger as `no_store` gaps. Every
+run exited exactly as designed; nothing threw. The exact timestamps are pinned
+here, along with the boundary either side of 04:00 UTC.
+
+It also covers the two consequences. `slate_date` is a new per-row stamp saying
+which BUILD a row came from, because `generated_at` could not answer that — it
+is carried forward per row, so on EPL's three-day and CFB's seven-day fixture
+windows a fixture first seen on the 27th reports the 27th forever. That fed
+both the grader's diagnostic (which printed the genuinely baffling `covers
+2026-08-27/2026-08-28 …, not 2026-08-28`) and `generate_insights`' overwrite
+guard, which decides whether a late run may replace a clean pre-game snapshot
+with a mid-game one. Both readers now prefer the new field and fall back for
+pre-field rows. And an EMPTY SLATE — a league that simply did not play — is no
+longer treated as a store/date mismatch: it used to die and write a `no_store`
+row, which on the real 08-26..28 window produced three phantom gaps for CFB and
+two for EPL on dates neither league had a single fixture. A non-empty slate
+with no overlap is still fatal, and that contrast is asserted.
+
+Sabotage-checked in all three directions when written: reverting the slate date
+to UTC fails exactly the two source assertions, carrying `slate_date` forward
+like `generated_at` fails exactly the freshness one, and removing the
+empty-slate branch fails exactly the three clean-exit ones.
+
+Offline: no network, no committed file touched, and the one grading path
+exercised uses a stub slate. Both stdout and stderr are captured, because
+`die()` writes to stderr and a test watching one stream would call a fatal
+message "missing".
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
