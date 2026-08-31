@@ -190,6 +190,64 @@ ok("  reporting the slate_date, not the generated_at day",
    "2026-08-29" in out and "covers 2026-08-27" not in out, out.strip()[-120:])
 
 
+# ------------------------------------------------------- falling forward
+# A window tuned for a sport's usual cadence goes blank in any gap longer than
+# itself, and then the tab shows nothing while the fixtures it would show sit
+# in the schedule already, fully scoreable. NFL hit exactly that: the 2026
+# season opened NINE days out against a seven-day window, so week 1 -- whose
+# picks come from last season's margin and cannot change between now and
+# kickoff -- rendered as an empty tab.
+NFL_W1 = ["2026-09-09", "2026-09-10", "2026-09-13", "2026-09-14"]
+
+ok("an empty window falls forward to the next slate",
+   slate_clock.window_start(NFL_W1, "2026-08-31", 7) == "2026-09-09",
+   slate_clock.window_start(NFL_W1, "2026-08-31", 7))
+ok("  and the caller's own window then covers the WHOLE slate, not one game",
+   len([d for d in NFL_W1 if "2026-09-09" <= d <= "2026-09-16"]) == 4)
+ok("a window that already has fixtures is left alone",
+   slate_clock.window_start(NFL_W1, "2026-09-08", 7) == "2026-09-08")
+ok("  including when the fixture is on the last day of it",
+   slate_clock.window_start(["2026-09-07"], "2026-08-31", 7) == "2026-08-31")
+
+# THE CAP IS THE POINT OF THE FEATURE, not a safety rail on it: a real
+# offseason must stay visibly EMPTY. A CFB Games tab quietly showing
+# September's opener all through March would be worse than a blank one,
+# because "nothing on" is information.
+ok("a slate beyond the lookahead does NOT pull forward",
+   slate_clock.window_start(["2026-10-01"], "2026-08-31", 7) == "2026-08-31",
+   slate_clock.window_start(["2026-10-01"], "2026-08-31", 7))
+ok("  exactly at the horizon it does",
+   slate_clock.window_start(["2026-09-14"], "2026-08-31", 7) == "2026-09-14")
+ok("  one day past it does not",
+   slate_clock.window_start(["2026-09-15"], "2026-08-31", 7) == "2026-08-31")
+ok("the lookahead is two weeks", slate_clock.SLATE_LOOKAHEAD_DAYS == 14)
+
+# Feed-shaped junk must not raise -- these lists come from CSVs and scoreboards.
+ok("no fixtures at all leaves the start alone",
+   slate_clock.window_start([], "2026-08-31", 7) == "2026-08-31")
+ok("  unparseable entries are skipped, not fatal",
+   slate_clock.window_start(["", "NA", None, "2026-09-09"], "2026-08-31", 7) == "2026-09-09")
+ok("  past dates are ignored",
+   slate_clock.window_start(["2026-01-01", "2026-09-09"], "2026-08-31", 7) == "2026-09-09")
+ok("  a full ISO timestamp is accepted (ESPN sends these)",
+   slate_clock.window_start(["2026-09-09T23:20Z"], "2026-08-31", 7) == "2026-09-09")
+ok("a bad start date returns itself rather than raising",
+   slate_clock.window_start(NFL_W1, "not-a-date", 7) == "not-a-date")
+
+# Every windowed fetcher must actually use it. MLB is deliberately absent: it
+# is single-date by design ("today's games is already bounded") and plays daily
+# in season, so it has no gap to fall across.
+import os as _os  # noqa: E402
+_root = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+for sport in ("nfl", "cfb", "epl"):
+    src = open(_os.path.join(_root, "fetchers", "%s.py" % sport)).read()
+    ok("fetchers/{} windows through slate_clock.window_start".format(sport),
+       "slate_clock.window_start(" in src)
+mlb_src = open(_os.path.join(_root, "fetchers", "mlb.py")).read()
+ok("fetchers/mlb does NOT -- it is single-date by design",
+   "slate_clock.window_start(" not in mlb_src)
+
+
 print("slate dates: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "slate dates: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))
 for f in failures:
