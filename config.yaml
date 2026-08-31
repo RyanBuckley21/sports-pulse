@@ -845,6 +845,38 @@ betting_signals:
   # clears that baseline at every threshold tested, combined and regular-
   # season alike.
   nfl:
+    # THIS MODEL DOES NOT BEAT THE CLOSING LINE, and that is measured rather
+    # than assumed. NFL is the only sport here where it could be: nflverse's
+    # games.csv carries closing American moneylines with complete coverage back
+    # past 2010, so nfl_odds_backtest.py settles every standout pick this
+    # config produces at the real price for the side picked.
+    #
+    # Out-of-sample (2015-2020 -- outside the 2021-2025 window these weights
+    # were fit on), 649 picks, flat one-unit stakes:
+    #
+    #     hit rate       67.3%
+    #     average price  1.55   -- which needs 64.7% just to break even
+    #     ROI           -3.05%     95% CI [-8.7%, +2.8%]
+    #
+    # So the 67.3% is very nearly all explained by which side the market had
+    # already favoured, and the CI spans zero: this is INDISTINGUISHABLE from
+    # the closing line, not proven worse than it. That is the expected result
+    # for a model with no price input, and it is the honest reading of every
+    # hit rate in this file.
+    #
+    # In-sample 2021-2025 came in at -2.35%, barely better than out-of-sample,
+    # which is the reassuring half: the calibration did not buy much that fails
+    # to generalize.
+    #
+    # THE DETAIL THAT MATTERS MOST -- raising the bar does not help. The 80-100
+    # score band hits 72.6% and is priced at 1.45, needing 69.2%. The model's
+    # own confidence tracks the market's, band by band, so there is no
+    # threshold that turns this into an edge.
+    #
+    # None of this makes the numbers below wrong. They are correctly measured
+    # answers to "which side wins more often", which is what this project
+    # computes. They are not answers to "which side is mispriced", and nothing
+    # here should be read as if they were.
     min_threshold: 50
     standout_threshold: 50
     scales:
@@ -878,11 +910,9 @@ betting_signals:
         # games, so there is no in-season EPA to weight.
         #
         # Walk-forward 2002-2025 at threshold 50, straight-up: prior_margin
-        # 66.2% in week 1, season_margin 72.6% in weeks 10+. Same caveat as
-        # everywhere else here -- a hit rate on games where the favourite is
-        # obvious, NOT a claim of edge -- and it bites harder for the NFL than
-        # for CFB, because these games are far closer and 62-66% is much nearer
-        # a coin flip than the number looks.
+        # 66.2% in week 1, season_margin 72.6% in weeks 10+. Read those as hit
+        # rates and nothing more -- for this sport the usual caveat has been
+        # measured rather than merely stated. See the block note above.
         season_margin: 1.0
         prior_margin: 1.0
   # ------------------------------------------------------------------------ #
