@@ -1,0 +1,412 @@
+[
+ {
+  "id": "401772631",
+  "date": "2025-11-16T14:30Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final/OT",
+      "shortDetail": "Final/OT",
+      "altDetail": "OT"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "16",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Dolphins"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "13",
+      "team": {
+       "abbreviation": "WSH",
+       "displayName": "Washington Commanders"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772882",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final/OT",
+      "shortDetail": "Final/OT",
+      "altDetail": "OT"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "27",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Falcons"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "30",
+      "team": {
+       "abbreviation": "CAR",
+       "displayName": "Carolina Panthers"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772776",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "44",
+      "team": {
+       "abbreviation": "BUF",
+       "displayName": "Buffalo Bills"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "32",
+      "team": {
+       "abbreviation": "TB",
+       "displayName": "Tampa Bay Buccaneers"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772881",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "13",
+      "team": {
+       "abbreviation": "TEN",
+       "displayName": "Tennessee Titans"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "16",
+      "team": {
+       "abbreviation": "HOU",
+       "displayName": "Houston Texans"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772880",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "17",
+      "team": {
+       "abbreviation": "MIN",
+       "displayName": "Minnesota Vikings"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "19",
+      "team": {
+       "abbreviation": "CHI",
+       "displayName": "Chicago Bears"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772883",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "20",
+      "team": {
+       "abbreviation": "NYG",
+       "displayName": "New York Giants"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "27",
+      "team": {
+       "abbreviation": "GB",
+       "displayName": "Green Bay Packers"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772774",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "34",
+      "team": {
+       "abbreviation": "PIT",
+       "displayName": "Pittsburgh Steelers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "12",
+      "team": {
+       "abbreviation": "CIN",
+       "displayName": "Cincinnati Bengals"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772775",
+  "date": "2025-11-16T18:00Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "35",
+      "team": {
+       "abbreviation": "JAX",
+       "displayName": "Jacksonville Jaguars"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "6",
+      "team": {
+       "abbreviation": "LAC",
+       "displayName": "Los Angeles Chargers"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772884",
+  "date": "2025-11-16T21:05Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "21",
+      "team": {
+       "abbreviation": "LAR",
+       "displayName": "Los Angeles Rams"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "19",
+      "team": {
+       "abbreviation": "SEA",
+       "displayName": "Seattle Seahawks"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772885",
+  "date": "2025-11-16T21:05Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "22",
+      "team": {
+       "abbreviation": "ARI",
+       "displayName": "Arizona Cardinals"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "41",
+      "team": {
+       "abbreviation": "SF",
+       "displayName": "San Francisco 49ers"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "401772921",
+  "date": "2025-09-29T00:20Z",
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final/OT",
+      "shortDetail": "Final/OT",
+      "altDetail": "OT"
+     }
+    },
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "40",
+      "team": {
+       "abbreviation": "DAL",
+       "displayName": "Dallas Cowboys"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "40",
+      "team": {
+       "abbreviation": "GB",
+       "displayName": "Green Bay Packers"
+      }
+     }
+    ]
+   }
+  ]
+ }
+]

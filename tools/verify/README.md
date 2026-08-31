@@ -203,6 +203,137 @@ the fields the adapter reads. The POSTPONED and PENDING cases are built by
 editing a real event's status block, because no postponed FBS game appeared on
 any date sampled; the edit is confined to the one field those branches read.
 
+```
+python3 -m tools.verify.test_slate_dates      # from the repo root
+```
+
+**`test_slate_dates`** — the boundary between one day's games and the next, and
+the two bugs that came from the pipeline holding two different answers.
+`generate_insights` stamped the store with `generated_at.date()` — a UTC date —
+while `signal_report` graded `yesterday` in US/Eastern. Those agree for any run
+between about 04:00 and 23:59 UTC, which the workflow's 13:40/15:40 crons
+comfortably were, so it sat there invisible. Then GitHub began firing them nine
+to eleven hours late:
+
+```
+run 62  2026-08-27 23:02Z = 19:02 ET on the 27th -> yesterday = 08-26  graded
+run 63  2026-08-28 00:34Z = 20:34 ET on the 27th -> yesterday = 08-26  again
+run 64  2026-08-28 23:11Z = 19:11 ET on the 28th -> yesterday = 08-27  GONE
+```
+
+Both runs of that cycle asked about the same day, so nothing ever asked about
+the 27th — and run 63 rolled the store forward to a UTC date of the 28th,
+taking the 27th's pre-game snapshot with it. Two days of MLB picks went
+ungraded and were written into an append-only ledger as `no_store` gaps. Every
+run exited exactly as designed; nothing threw. The exact timestamps are pinned
+here, along with the boundary either side of 04:00 UTC.
+
+It also covers the two consequences. `slate_date` is a new per-row stamp saying
+which BUILD a row came from, because `generated_at` could not answer that — it
+is carried forward per row, so on EPL's three-day and CFB's seven-day fixture
+windows a fixture first seen on the 27th reports the 27th forever. That fed
+both the grader's diagnostic (which printed the genuinely baffling `covers
+2026-08-27/2026-08-28 …, not 2026-08-28`) and `generate_insights`' overwrite
+guard, which decides whether a late run may replace a clean pre-game snapshot
+with a mid-game one. Both readers now prefer the new field and fall back for
+pre-field rows. And an EMPTY SLATE — a league that simply did not play — is no
+longer treated as a store/date mismatch: it used to die and write a `no_store`
+row, which on the real 08-26..28 window produced three phantom gaps for CFB and
+two for EPL on dates neither league had a single fixture. A non-empty slate
+with no overlap is still fatal, and that contrast is asserted.
+
+Sabotage-checked in all three directions when written: reverting the slate date
+to UTC fails exactly the two source assertions, carrying `slate_date` forward
+like `generated_at` fails exactly the freshness one, and removing the
+empty-slate branch fails exactly the three clean-exit ones.
+
+Offline: no network, no committed file touched, and the one grading path
+exercised uses a stub slate. Both stdout and stderr are captured, because
+`die()` writes to stderr and a test watching one stream would call a fatal
+message "missing".
+
+```
+python3 -m tools.verify.test_nfl              # from the repo root
+```
+
+**`test_nfl`** — NFL's fallback tiers and its grading rules. Two groups, both
+covering things that fail silently.
+
+The tiers exist because nflverse publishes a season's `stats_team` release only
+once that season has games, so **every week-1 game scored 0 / "No clear lean",
+every year**. Two schedule-derived margin tiers fill it, and the property under
+test is that a calibrated lean never contains one and a fallback lean never
+contains more than one. THE BUG THAT MADE THIS FILE NECESSARY is pinned
+explicitly: tier 0 is "the signals this bet type WEIGHTS", not "every declared
+spec". NFL declares two specs carrying no weight — `scoring_margin` (excluded
+for collinearity with off_epa) and `rest_diff` (dropped by the calibration) —
+and `games.csv` publishes rest for FUTURE games. So a week-1 matchup with no
+play data at all still had a non-None `rest_diff`; reading that as "tier 0 has
+something" suppressed both fallbacks, while rest, carrying no weight,
+contributed nothing in their place. Every opening-weekend game scored 0 — the
+exact state the fallbacks exist to end. It was found by building the real 2026
+opener, not by reasoning, which is why it is measured here now.
+
+On grading, **a tie is a PUSH**. NFL overtime need not produce a winner and
+about one game a season ends level; every book returns the stake. `cfb_grading`
+returns UNRESOLVED for the same score line, because college football abolished
+ties in 1996 and there a level score means the feed is broken — same shape,
+opposite meaning, which is why the two are separate files rather than one
+"football" grader. Grading a tie MISS is a quiet once-a-season wrong verdict in
+an append-only ledger. And **the store's key is not the feed's key**: the store
+is keyed by nflverse's `game_id` (`2026_01_DAL_PHI`), which ESPN has never heard
+of, so `fetch_slate` re-keys the scoreboard through `games.csv`'s `espn` column
+and drops any ESPN event with no nflverse counterpart rather than keeping it
+under an id the store can never match.
+
+Sabotage-checked in three directions when written: keying tier 0 on declared
+specs rather than weights fails exactly the three unweighted-spec assertions,
+grading a tie as a result fails exactly the four tie assertions, and keying the
+slate by ESPN's id yields ids no store can match.
+
+`nfl_games_fixture.json` is REAL ESPN data captured across five dates — 11
+games including overtime finals and the genuine 40-40 GB-at-DAL tie of
+2025-09-28, found by scanning `games.csv` for `result=0` rather than hoping one
+turned up in a sample. PENDING and POSTPONED are built by editing a real
+event's status block; no postponed game appeared on any date sampled.
+
+```
+python3 -m tools.verify.test_epl_coldstart    # from the repo root
+```
+
+**`test_epl_coldstart`** — what August scores on. EPL form never crosses a
+season boundary (promotion and relegation turn over three clubs a summer, so
+last season's table is a different league), so below `MIN_MATCHES` `score_game`
+returned `{}` for every fixture: no lean, no Signal Score, **nothing to bet**,
+through the whole of August and most of September, every season. EPL was the
+last active sport producing no scores at all.
+
+ONE TIER, not the two CFB and NFL carry, and the asymmetry is deliberate: those
+sports need a mid-season fallback because their calibrated signals vanish for
+reasons unrelated to the calendar (no CFBD budget, an unjoinable schedule
+source, an unpublished nflverse release). EPL's inputs come from the same
+scoreboard as its fixtures, so above the gate the weighted model is always
+there — and `MIN_MATCHES = 5` already puts the handoff at match 6, which is
+where the measurement puts it.
+
+Four things are pinned, all silent when wrong. **The `{}` contract survives** —
+a cold match whose fallback is also empty (a promoted club, no prior Premier
+League season) must still return `{}`, or the store fills with markets reading
+"No clear lean" at score 0. **Above the gate nothing changes**, even with a
+prior-season number pointing hard the other way. **Both markets, one lean** —
+double_chance and match_result score off the same lean at bars 55 and 75, and
+the fallback feeds both. And **the card cannot lie**: unlike CFB and NFL, an EPL
+club under the gate usually HAS played, so the card would print "3.00 goals per
+match" off a single 3-0 beside a lean that deliberately ignored it. The
+prior-season row leads and the in-season rows carry their denominator.
+
+Sabotage-checked in three directions: not dropping the fallback above the gate
+fails exactly the four no-change assertions, removing the `{}` guard fails
+exactly the three promoted-club ones, and dropping the half-season floor fails
+exactly the exclusion ones.
+
+No network — every input is a number handed straight to `score_game`.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

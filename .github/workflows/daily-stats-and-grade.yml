@@ -184,6 +184,21 @@ jobs:
         continue-on-error: true
         run: python3 signal_report.py --sport cfb
 
+      # NFL, same isolation and the same leniency. The reason is its own: the
+      # NFL plays Thursday, Sunday and Monday, so THREE OR FOUR DAYS A WEEK
+      # have no games at all even at the height of the season, and from
+      # February to early September none do. signal_report exits clean on an
+      # empty slate rather than recording a gap, so those days are quiet -- but
+      # a genuine early-season gap (nflverse has not cut that week's release
+      # yet) would still exit non-zero, and redding this workflow for a
+      # third-party publishing lag is the alarm fatigue this file's header
+      # argues against. MLB's step stays strict.
+      - name: Grade yesterday's NFL picks
+        id: grade_picks_nfl
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 signal_report.py --sport nfl
+
       # Gated on the FILE having changed, not on grade_picks having exited 0.
       # signal_report.py's own "no gamePk overlap" die() path writes a
       # self-documenting no_store row to the ledger BEFORE it exits non-zero
