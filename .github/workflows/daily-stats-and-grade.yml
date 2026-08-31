@@ -63,36 +63,65 @@ name: Regenerate stats and grade picks
 # right when it matters. Every other die() path in signal_report.py writes
 # nothing, so this stays a no-op on a real crash.
 #
-# Two cron entries, not one, and not three:
-#   * This repo's scheduler has dropped entire days outright (all three of
-#     capture-training-data.yml's entries failed to fire on 2026-07-27) --
-#     that is scheduler downtime, not a timing problem, and a single entry
-#     has no defense against it.
-#   * Both entries stay BEFORE the earliest documented MLB first pitch
-#     (~16:05-16:15 UTC, per capture-training-data.yml's measurements). That
-#     line is a hard invariant here, not just a nice-to-have: unlike
-#     training capture, a late run wouldn't fail -- but it would compute
-#     some of the day's picks from a game already in progress instead of
-#     pre-game, silently mixing pre-game and mid-game picks into the same
-#     committed store that tomorrow's grading run reads as "the pick." A
-#     third entry pushed close to (or past) first pitch would trade that
-#     integrity for marginal extra outage coverage, which isn't worth it.
-#   * Unlike capture-training-data.yml's redundancy (which walks the
-#     probable-starter announcement curve -- each entry gets genuinely
-#     better data), these two entries are pure scheduler-outage insurance:
-#     the deterministic builder doesn't need starters announced to produce
-#     a valid (if less complete) score, and grading reads whatever the store
-#     already holds regardless of which entry fires it.
-#   * Residual risk: an outage spanning the full 13:40-15:40 UTC window
-#     (which is what actually happened on 2026-07-27) still leaves a
-#     `no_store` gap for that date. Recovery is manual `workflow_dispatch`,
-#     same as the rest of this project's rare-failure handling.
+# FOUR cron entries, and the two added in front of the original pair are there
+# for a reason the original pair could not have anticipated.
 #
-# Daylight saving: shift both entries by +1h in the fall to hold the wall-
-# clock times, same caveat as the other scheduled workflows here.
+# THE INVARIANT, unchanged: every entry stays BEFORE the earliest documented
+# MLB first pitch (~16:05-16:15 UTC, per capture-training-data.yml's
+# measurements). That is not a nice-to-have. A late run does not FAIL -- it
+# computes some of the day's picks from a game already in progress and writes
+# them into the same committed store tomorrow's grading run reads as "the
+# pick", silently mixing pre-game and mid-game selections. This comment used to
+# argue against a third entry on exactly that basis, and it was right: the
+# entries it was refusing were LATER ones. These two are EARLIER, so they serve
+# the invariant instead of trading it away.
+#
+# WHY EARLIER ENTRIES BECAME NECESSARY. The old pair assumed the scheduler
+# fires roughly on time, and for a long while it did (+26 to +56 minutes across
+# 2026-08-24..26). Then it did not. Measured lateness against the schedule:
+#
+#     2026-08-27   +9h22m / +8h54m     -> landed 23:02Z and 00:34Z
+#     2026-08-28   +9h31m              -> landed 23:11Z
+#     2026-08-29   +3h42m / +3h08m
+#     2026-08-30   +4h05m / +3h07m
+#
+# On the two worst days BOTH entries landed five to eight hours PAST first
+# pitch, so the invariant held on paper and was broken in fact. A 10:00 entry
+# absorbs six hours of delay before it crosses the line; the old 15:40 one
+# absorbs twenty-five minutes.
+#
+# WHY NOT EARLIER STILL. 10:00 UTC is 06:00 US Eastern, which is the earliest
+# hour that is safe to GRADE from. Grading runs first in this job, and a run
+# that grades before the previous day's games are final records PENDING picks
+# -- which then STICK: signal_report's "already graded, nothing to do" branch
+# sees a run that recorded picks and exits clean, so no later entry ever
+# revisits them. By 06:00 ET every sport here is done (an extra-inning MLB game
+# ends by ~01:30 ET, an NFL Monday nighter by ~23:30 ET), and an 02:00 ET entry
+# would not be.
+#
+# WHAT THE REDUNDANCY IS FOR, unchanged: pure scheduler insurance, not better
+# data. Unlike capture-training-data.yml's entries -- which walk the
+# probable-starter announcement curve and each get genuinely better inputs --
+# the deterministic builder needs no starters to produce a valid score, and
+# grading reads whatever the store holds regardless of which entry fires it.
+# The store-protection rule (generate_insights._games_store_writable) means a
+# later entry cannot overwrite an earlier entry's clean pre-game snapshot, so
+# extra entries can only help.
+#
+# RESIDUAL RISK: correlated delay. The four entries are separate draws but not
+# independent ones -- on 2026-08-27 both were ~9h late together, and four
+# entries all delayed nine hours all land past first pitch. This widens the
+# window that has to fail, it does not close it. Recovery stays manual
+# `workflow_dispatch`, same as the rest of this project's rare-failure
+# handling.
+#
+# Daylight saving: shift every entry by +1h in the fall to hold the wall-clock
+# times, same caveat as the other scheduled workflows here.
 
 on:
   schedule:
+    - cron: "0 10 * * *"
+    - cron: "0 12 * * *"
     - cron: "40 13 * * *"
     - cron: "40 15 * * *"
   workflow_dispatch: {}
