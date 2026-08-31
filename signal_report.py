@@ -167,6 +167,7 @@ import yaml
 import slate_clock      # the shared slate-date definition -- see yesterday_et
 import betting_signals  # read-only: ranking (list_markets / top_market)
 import cfb_grading      # the same, for CFB -- see SPORT_ADAPTERS
+import nfl_grading      # the same, for NFL -- see SPORT_ADAPTERS
 import epl_grading      # the same, for EPL -- see SPORT_ADAPTERS
 
 CONFIG_PATH = "config.yaml"
@@ -877,6 +878,24 @@ SPORT_ADAPTERS = {
         # grade() as "not on this date's schedule" and recorded UNRESOLVED --
         # a verdict meaning "this cannot be settled" for games that simply had
         # not kicked off yet, and on a seven-day window that is most of them.
+        "store_spans_dates": True,
+    },
+    "nfl": {
+        "fetch_slate": nfl_grading.fetch_slate,
+        "fetch_replay_dates": nfl_grading.fetch_replay_dates,
+        "is_final": nfl_grading.is_final,
+        "is_called_off": nfl_grading.is_called_off,
+        "live_state": nfl_grading.live_state,
+        "observed_facts": nfl_grading.observed_facts,
+        "grade": nfl_grading.grade,
+        "list_markets": nfl_grading.list_markets,
+        "top_market": nfl_grading.top_market,
+        # Seven days of fixtures in one store, same as CFB and for the same
+        # reason: the NFL week runs Thursday to Monday, so a one-date slate
+        # leaves the Games tab empty most days and the store has to span the
+        # week. Without this every stored game kicking off after the graded
+        # date would be recorded UNRESOLVED -- "cannot be settled" for games
+        # that had not kicked off.
         "store_spans_dates": True,
     },
 }

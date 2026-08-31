@@ -252,6 +252,51 @@ exercised uses a stub slate. Both stdout and stderr are captured, because
 `die()` writes to stderr and a test watching one stream would call a fatal
 message "missing".
 
+```
+python3 -m tools.verify.test_nfl              # from the repo root
+```
+
+**`test_nfl`** — NFL's fallback tiers and its grading rules. Two groups, both
+covering things that fail silently.
+
+The tiers exist because nflverse publishes a season's `stats_team` release only
+once that season has games, so **every week-1 game scored 0 / "No clear lean",
+every year**. Two schedule-derived margin tiers fill it, and the property under
+test is that a calibrated lean never contains one and a fallback lean never
+contains more than one. THE BUG THAT MADE THIS FILE NECESSARY is pinned
+explicitly: tier 0 is "the signals this bet type WEIGHTS", not "every declared
+spec". NFL declares two specs carrying no weight — `scoring_margin` (excluded
+for collinearity with off_epa) and `rest_diff` (dropped by the calibration) —
+and `games.csv` publishes rest for FUTURE games. So a week-1 matchup with no
+play data at all still had a non-None `rest_diff`; reading that as "tier 0 has
+something" suppressed both fallbacks, while rest, carrying no weight,
+contributed nothing in their place. Every opening-weekend game scored 0 — the
+exact state the fallbacks exist to end. It was found by building the real 2026
+opener, not by reasoning, which is why it is measured here now.
+
+On grading, **a tie is a PUSH**. NFL overtime need not produce a winner and
+about one game a season ends level; every book returns the stake. `cfb_grading`
+returns UNRESOLVED for the same score line, because college football abolished
+ties in 1996 and there a level score means the feed is broken — same shape,
+opposite meaning, which is why the two are separate files rather than one
+"football" grader. Grading a tie MISS is a quiet once-a-season wrong verdict in
+an append-only ledger. And **the store's key is not the feed's key**: the store
+is keyed by nflverse's `game_id` (`2026_01_DAL_PHI`), which ESPN has never heard
+of, so `fetch_slate` re-keys the scoreboard through `games.csv`'s `espn` column
+and drops any ESPN event with no nflverse counterpart rather than keeping it
+under an id the store can never match.
+
+Sabotage-checked in three directions when written: keying tier 0 on declared
+specs rather than weights fails exactly the three unweighted-spec assertions,
+grading a tie as a result fails exactly the four tie assertions, and keying the
+slate by ESPN's id yields ids no store can match.
+
+`nfl_games_fixture.json` is REAL ESPN data captured across five dates — 11
+games including overtime finals and the genuine 40-40 GB-at-DAL tie of
+2025-09-28, found by scanning `games.csv` for `result=0` rather than hoping one
+turned up in a sample. PENDING and POSTPONED are built by editing a real
+event's status block; no postponed game appeared on any date sampled.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

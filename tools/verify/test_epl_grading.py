@@ -150,7 +150,13 @@ def test_the_adapter_boundary_holds():
     # The builder looks three days ahead, so off-date fixtures must be deferred
     # rather than graded -- without this flag they record as UNRESOLVED.
     check("EPL's store is flagged as spanning dates", epl.get("store_spans_dates") is True)
-    check("an unregistered sport has no adapter", signal_report.adapter_for("nfl") is None)
+    # A sport with no adapter must be REFUSED rather than falling through to
+    # MLB's, which would grade a soccer match by codedGameState and innings.
+    # "nhl" rather than "nfl": this line named nfl until NFL was registered,
+    # at which point it started asserting a fact about NFL's rollout instead of
+    # about the refusal it is meant to cover. Any never-registered key does the
+    # job; the point is the None, not the sport.
+    check("an unregistered sport has no adapter", signal_report.adapter_for("nhl") is None)
 
 
 def main():

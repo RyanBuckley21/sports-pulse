@@ -121,15 +121,24 @@ def _base_signals(inp, scales):
             for name, spec in SIGNAL_SPECS.items()}
 
 
-def _apply_fallback_tiers(sig):
+def _apply_fallback_tiers(sig, weights):
     """`sig` with every tier below the best AVAILABLE one blanked out.
 
-    The calibrated signals are tier 0 and are never blanked: if any of them
-    survived, every fallback is dropped. Otherwise the first tier in
-    _FALLBACK_TIERS with a value keeps it and the rest go. Returns a new dict
-    -- the caller's is left alone."""
+    TIER 0 IS "THE SIGNALS THIS BET TYPE ACTUALLY WEIGHTS", not "every declared
+    spec". For CFB the two sets currently coincide, so this reads as a
+    distinction without a difference -- it is not. NFL declares specs that
+    carry no weight (rest_diff, which its calibration dropped, and which
+    games.csv publishes for FUTURE games), and keying tier 0 on declaration
+    rather than weight suppressed every fallback on its opening weekend while
+    contributing nothing in their place. Keying on the weights is the rule that
+    survives a signal being dropped or restored here too.
+
+    If any weighted non-fallback signal survived, every fallback is dropped.
+    Otherwise the first tier in _FALLBACK_TIERS with a value keeps it and the
+    rest go. Returns a new dict -- the caller's is left alone."""
     out = dict(sig)
-    if any(out.get(k) is not None for k in out if k not in _FALLBACK_SIGNALS):
+    weighted = set(weights or ())
+    if any(out.get(k) is not None for k in weighted if k not in _FALLBACK_SIGNALS):
         chosen = ()
     else:
         chosen = next((tier for tier in _FALLBACK_TIERS
@@ -154,11 +163,11 @@ def score_game(config, sport_key, inputs):
     min_t = cfg.get("min_threshold", 15)
 
     sig = _base_signals(inputs, scales)
-    sig = _apply_fallback_tiers(sig)
     home, away = inputs.get("home_abbr"), inputs.get("away_abbr")
     out = {}
     for bt, weights in bet_types.items():
-        bt_sig = {k: sig.get(k) for k in weights}
+        # Per bet type, because tier 0 is defined by that market's own weights.
+        bt_sig = {k: _apply_fallback_tiers(sig, weights).get(k) for k in weights}
         L, n, agree = _raw_lean(bt_sig, weights)
         out[bt] = _finalize(L, n, agree, min_t, (home, away))
     return out

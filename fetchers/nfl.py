@@ -46,6 +46,10 @@ Still out of scope here: CFB, and every NFL bet type other than moneyline.
 import csv
 import datetime
 import io
+import math
+
+import pulse
+import slate_clock
 
 import requests
 
@@ -57,6 +61,28 @@ NFLDATA_SCHEDULES_URL = "https://raw.githubusercontent.com/nflverse/nfldata/mast
 # Release assets: one CSV per season, generated from that season's completed
 # games -- see _get_csv's 404-as-[] handling for a season with none yet.
 NFLVERSE_RELEASES = "https://github.com/nflverse/nflverse-data/releases/download"
+
+# HOW FAR AHEAD A SLATE REACHES. Same reason fetchers/cfb uses seven and
+# fetchers/epl three: the NFL week runs Thursday to Monday, so a one-date slate
+# leaves the Games tab empty most of the week. Measured on the real 2026
+# opening week: Wed 0, Thu 1, Fri 0, Sat 0, Sun 13, Mon 1. Seven days always
+# shows the week ahead, which is the slate a reader wants on a Tuesday.
+FIXTURE_WINDOW_DAYS = 7
+
+# Completed games a team needs THIS season before its own points margin is
+# usable as a fallback signal. Five, and NOT the three CFB uses -- the number
+# was measured for each sport separately. Walk-forward over 2002-2025, hit rate
+# in weeks 1-5 at threshold 50: a floor of 3 hands off in week 4 and scores
+# 63.7%; a floor of 5 hands off in week 6 and scores 65.1%, with weeks 6+
+# unchanged at 71.4%. Week 6 is also where the measured crossover between last
+# season's margin and this season's actually sits. See nfl_signals._FALLBACK_TIERS.
+SEASON_MARGIN_MIN_GAMES = 5
+
+# Games a team must have played LAST season before its margin is usable as the
+# cold-start signal. Eight is half a season -- enough for a per-game average to
+# mean something, and it excludes a team whose prior season was truncated in
+# the source data rather than letting four games stand in for seventeen.
+PRIOR_SEASON_MIN_GAMES = 8
 
 
 def _team_stats_url(season):
@@ -115,6 +141,24 @@ def season_for_date(game_date):
     rows."""
     d = datetime.date.fromisoformat(game_date) if isinstance(game_date, str) else game_date
     return d.year if d.month >= 3 else d.year - 1
+
+
+def resolved_season(config):
+    """The NFL season this run is about, from config if pinned and derived if
+    not -- the SINGLE answer, used by fetch() and by generate_stats'
+    `competition` label alike.
+
+    `season` used to be a required config key, which is a standing annual trap:
+    leave it at last year and every August the boards publish LAST season's
+    leaders as if they were current, with nothing failing and nothing to notice.
+    season_for_date already encodes nflverse's convention (a season is named for
+    the year it starts; March-August resolves to the one about to begin), so the
+    right value is derivable and does not need remembering.
+
+    A pinned `season:` still wins, which is what a backtest or a replay needs.
+    """
+    pinned = (config.get("nfl") or {}).get("season")
+    return pinned or season_for_date(slate_clock.eastern_date())
 
 
 def get_schedule(session, season=None):
@@ -249,13 +293,18 @@ def build_team_form(team_stats_rows, upto_week):
     return out
 
 
-def build_scoring_margins(schedule_rows, upto_week):
+def build_scoring_margins(schedule_rows, upto_week, min_games=0):
     """Season-to-date average point differential per team, from completed
     (scored) games strictly before `upto_week` -- straight off the
     schedule's own away_score/home_score, independent of team_stats
     entirely (a team could in principle have a scoring-margin reading with
     no team_stats row at all, though in practice the two sources agree on
-    which games are complete)."""
+    which games are complete).
+
+    `min_games` defaults to 0, the unfiltered behaviour this has always had and
+    what `context` and nfl_backtest still want. The FALLBACK path passes
+    SEASON_MARGIN_MIN_GAMES -- see nfl_signals.SIGNAL_SPECS for why the floored
+    and unfloored versions are deliberately two different numbers."""
     totals = {}
     for row in schedule_rows:
         if row.get("game_type") != "REG":
@@ -271,7 +320,180 @@ def build_scoring_margins(schedule_rows, upto_week):
             continue
         totals.setdefault(row["away_team"], []).append(a_score - h_score)
         totals.setdefault(row["home_team"], []).append(h_score - a_score)
-    return {team: round(sum(vals) / len(vals), 3) for team, vals in totals.items()}
+    return {team: round(sum(vals) / len(vals), 3) for team, vals in totals.items()
+            if len(vals) >= min_games}
+
+
+def build_prior_season_margin(prior_schedule_rows, min_games=PRIOR_SEASON_MIN_GAMES):
+    """{team: last season's points margin per game}, regular season only.
+
+    WHY: week 1 has no in-season data of any kind, and nflverse publishes a
+    season's stats_team release only once that season has games -- so the whole
+    of week 1 scored "No clear lean" every year, on the weekend the tab most
+    needs to say something. This is the one real published number available
+    before a snap.
+
+    IT IS REAL BUT MODEST. Measured walk-forward over 2002-2025, the prior-season
+    margin gap correlates with the eventual points margin at r=+0.27 in week 1
+    (95% CI [+0.17, +0.36], 2,000 stdlib resamples, fixed seed), and picking the
+    side it favours won 66.2% of week-1 games outright at threshold 50. That is
+    well below the same measurement for college football (+0.46, 67.7%), which
+    is what a far more compressed league should look like -- read it as "better
+    than nothing and honestly scored", not as an edge.
+
+    KEYLESS: the prior season's rows are already in the games.csv this fetcher
+    fetches, so this costs no extra request at all.
+
+    Reuses build_scoring_margins with no week ceiling -- "before week 999" is
+    the whole regular season, and sharing it means the cold-start margin and the
+    in-season one cannot drift on what counts as a game."""
+    return build_scoring_margins(prior_schedule_rows, upto_week=999, min_games=min_games)
+
+
+# --------------------------------------------------------------------------- #
+# Teams tab -- built from the SCHEDULE alone.
+# --------------------------------------------------------------------------- #
+
+def build_schedule_form(schedule_rows, before_date, window=3):
+    """Per-club form from COMPLETED SCHEDULE ROWS ALONE, mirroring
+    fetchers/cfb.build_schedule_form.
+
+    Deliberately separate from build_team_form, which is the nflverse
+    team_stats/EPA path. This one needs no release asset at all -- games.csv is
+    already fetched for the slate -- and it exists because the Teams tab needs
+    a number on every run, including week 1 and every week before nflverse
+    publishes that season's stats. A tab that renders only once a third party
+    cuts a release is not a tab.
+
+    It is NOT a substitute for the scored model and does not feed it: points
+    scored and allowed are cruder than EPA, which is exactly why EPA carries the
+    weights. Nothing here reaches nfl_signals.
+
+    `before_date` of None means the whole (prior) season; a date means
+    point-in-time, the same discipline as everywhere else in this repo.
+    Regular season only -- a playoff run is a different competitive context and
+    would flatter the teams that made it.
+    """
+    hist = {}
+    for row in schedule_rows or []:
+        if row.get("game_type") != "REG":
+            continue
+        date = row.get("gameday")
+        if not date or (before_date and date >= before_date):
+            continue
+        hp, ap = _num(row.get("home_score")), _num(row.get("away_score"))
+        if hp is None or ap is None:
+            continue
+        for team, pf, pa in ((row["home_team"], hp, ap), (row["away_team"], ap, hp)):
+            hist.setdefault(team, []).append({"pf": pf, "pa": pa, "date": date, "won": pf > pa})
+    form = {}
+    for team, past in hist.items():
+        past.sort(key=lambda p: p["date"])
+        n = len(past)
+        recent = past[-window:]
+        form[team] = {
+            "played": n,
+            "pf_pg": sum(p["pf"] for p in past) / n,
+            "pa_pg": sum(p["pa"] for p in past) / n,
+            "margin_pg": sum(p["pf"] - p["pa"] for p in past) / n,
+            "wins": sum(1 for p in past if p["won"]),
+            "losses": sum(1 for p in past if not p["won"]),
+            "form_string": "".join("W" if p["won"] else "L" for p in recent),
+        }
+    return form
+
+
+def _nfl_team_pulse(form, cfg):
+    """Deterministic 0-100 notability score for ONE club, the same shape
+    fetchers/cfb._cfb_team_pulse and fetchers/mlb._team_pulse use: each
+    component tanh-squashed against a league-average `base` by a `scale` that
+    reads as a meaningful move, renormalized over whichever have data.
+
+    Direction is intrinsic and lives here, not in config -- more points scored
+    is good, FEWER allowed is good.
+
+    Returns None below the sample floor. NFL's floor is the harshest in this
+    repo relative to season length: three of seventeen games is a sixth of a
+    season, and a single blowout moves a three-game average further here than
+    anywhere else. A club with fewer gets no pulse rather than a number that
+    would look measured."""
+    if not cfg or not form:
+        return None
+    if (form.get("played") or 0) < cfg.get("min_games", 3):
+        return None
+    terms = []
+    for key, metric, favors_high in (("offense", "pf_pg", True), ("defense", "pa_pg", False)):
+        block = cfg.get(key) or {}
+        value = form.get(metric)
+        if value is None or not block.get("scale"):
+            continue
+        delta = (value - block["base"]) if favors_high else (block["base"] - value)
+        terms.append((math.tanh(delta / block["scale"]), block.get("weight", 0.5)))
+    if not terms:
+        return None
+    total_w = sum(w for _, w in terms) or 1.0
+    lean = sum(t * w for t, w in terms) / total_w
+    return pulse.pulse(max(0, min(100, int(math.floor(50 + 50 * lean * 1.0 + 0.5)))))
+
+
+def _stale_pulse(p, prior_season):
+    """A pulse computed from LAST season, marked as such.
+
+    A separate `qualifier` rather than a changed `label`, for the reason
+    fetchers/cfb._stale_pulse records: insights.js keys the band COLOUR off the
+    label word, so folding a season into it would silently grey out every one
+    of these cards."""
+    if not p or not prior_season:
+        return p
+    return {**p, "qualifier": "{} season".format(prior_season)}
+
+
+def build_nfl_team_entities(config, form, slate_teams, prior_form=None, prior_season=None):
+    """One Team card per club ON THIS SLATE, mirroring cfb/mlb/epl.
+
+    `prior_form` is last season's form, used only for a club with nothing this
+    season -- which in week 1 is every club, and would otherwise be an empty
+    Teams tab through the opening month. Same fallback discipline the scored
+    signals use: one window or the other, never blended, and every row built
+    that way is LABELLED with the season it came from.
+    """
+    cfg = ((config.get("team_pulse") or {}).get("nfl") or {})
+    if not cfg:
+        return []
+    prior_form = prior_form or {}
+    out = []
+    for team in slate_teams:
+        f = form.get(team)
+        stale = False
+        if not f:
+            f = prior_form.get(team)
+            stale = bool(f)
+        if not f:
+            continue
+        ref = _team_ref(team)
+        suffix = " ({})".format(prior_season) if stale and prior_season else ""
+        off_base = ((cfg.get("offense") or {}).get("base"))
+        def_base = ((cfg.get("defense") or {}).get("base"))
+        signals = [
+            {"label": "Points scored / game" + suffix, "value": "%.1f" % f["pf_pg"],
+             "tone": "pos" if (off_base is None or f["pf_pg"] >= off_base) else "neg"},
+            {"label": "Points allowed / game" + suffix, "value": "%.1f" % f["pa_pg"],
+             "tone": "pos" if (def_base is None or f["pa_pg"] <= def_base) else "neg"},
+            {"label": "Record" + suffix, "value": "%d-%d" % (f["wins"], f["losses"]),
+             "tone": "pos" if f["wins"] >= f["losses"] else "neg"},
+        ]
+        if f.get("form_string"):
+            signals.append({"label": "Last %d" % len(f["form_string"]) + suffix,
+                            "value": f["form_string"], "tone": "pos"})
+        p = _nfl_team_pulse(f, cfg)
+        out.append({
+            "id": team, "sport": "nfl", "abbr": ref.get("abbr"), "name": ref.get("name") or team,
+            "team_color": ref.get("color"),
+            "pulse": _stale_pulse(p, prior_season) if stale else p,
+            "signals": signals,
+        })
+    out.sort(key=lambda e: (-((e.get("pulse") or {}).get("score") or 0), e.get("abbr") or ""))
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -360,9 +582,16 @@ def _format_kickoff(gameday, gametime):
         return None
 
 
-def _display_signals(away, home, away_form, home_form):
+def _display_signals(away, home, away_form, home_form,
+                     away_season_margin=None, home_season_margin=None,
+                     away_prior_margin=None, home_prior_margin=None):
     """Team-relative framing chips, mirroring fetchers/mlb.py's `signals`
-    list: surface the single more-notable side per family."""
+    list: surface the single more-notable side per family.
+
+    The two margin rows are FALLBACKS IN THE SAME ORDER nfl_signals scores in,
+    and only one of the three tiers is ever shown. A card listing "last season"
+    beside live EPA would suggest the lean used both; it never does, and the
+    card has to say which one it did use."""
     signals = []
     ao, ho = away_form.get("off_epa"), home_form.get("off_epa")
     if ao is not None or ho is not None:
@@ -378,7 +607,30 @@ def _display_signals(away, home, away_form, home_form):
             signals.append({"label": "{} Def EPA/play allowed".format(home), "value": _fmt_epa(hd), "tone": "neg"})
         else:
             signals.append({"label": "{} Def EPA/play allowed".format(away), "value": _fmt_epa(ad), "tone": "neg"})
+    if not signals:
+        # Both sides on one row, LABELLED WITH THE WINDOW IT CAME FROM -- the
+        # whole point of these rows is that the reader can tell at a glance
+        # whether the number is this season's or last year's.
+        if away_season_margin is not None or home_season_margin is not None:
+            signals.append(_margin_signal("Points margin / game", away, home,
+                                          away_season_margin, home_season_margin))
+        elif away_prior_margin is not None or home_prior_margin is not None:
+            signals.append(_margin_signal("Last season margin / game", away, home,
+                                          away_prior_margin, home_prior_margin))
     return signals
+
+
+def _margin_signal(label, away, home, away_margin, home_margin):
+    return {
+        "label": label,
+        "value": "{} {} \u00b7 {} {}".format(
+            home, _fmt_margin(home_margin), away, _fmt_margin(away_margin)),
+        "tone": "pos" if (home_margin or 0) >= (away_margin or 0) else "neg",
+    }
+
+
+def _fmt_margin(v):
+    return "n/a" if v is None else "{:+.1f}".format(v)
 
 
 def _team_ref(abbr):
@@ -400,7 +652,7 @@ def _team_ref(abbr):
     return {"abbr": meta.get("abbr") or abbr, "name": abbr, "color": meta.get("color")}
 
 
-def _build_one_game(config, g, schedule, team_stats, injuries):
+def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None):
     import nfl_signals
 
     away, home = g["away_team"], g["home_team"]
@@ -408,6 +660,8 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
 
     form = build_team_form(team_stats, week)
     margins = build_scoring_margins(schedule, week)
+    season_margin = build_scoring_margins(schedule, week, min_games=SEASON_MARGIN_MIN_GAMES)
+    prior_margin = prior_margin or {}
     away_form, home_form = form.get(away, {}), form.get(home, {})
 
     away_qb_id, away_qb_name = get_starting_qb(schedule, away, week)
@@ -424,6 +678,12 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
         away_turnover_diff=away_form.get("turnover_diff"), home_turnover_diff=home_form.get("turnover_diff"),
         away_scoring_margin=margins.get(away), home_scoring_margin=margins.get(home),
         away_rest=_num(g.get("away_rest")), home_rest=_num(g.get("home_rest")),
+        # Fallback tiers, both keyless and both off the same games.csv already
+        # in hand. nfl_signals drops them the moment any in-season signal
+        # exists, so neither can dilute a calibrated lean -- see
+        # nfl_signals._FALLBACK_TIERS.
+        away_season_margin=season_margin.get(away), home_season_margin=season_margin.get(home),
+        away_prior_margin=prior_margin.get(away), home_prior_margin=prior_margin.get(home),
     )
     betting = nfl_signals.score_game(config, "nfl", inputs, availability=availability)
     standout_threshold = ((config.get("betting_signals") or {}).get("nfl") or {}).get("standout_threshold", 50)
@@ -459,7 +719,9 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
         "start": _format_kickoff(g.get("gameday"), g.get("gametime")),
         "venue": g.get("stadium"),
         "probables": probables,
-        "signals": _display_signals(away, home, away_form, home_form),
+        "signals": _display_signals(away, home, away_form, home_form,
+                                    season_margin.get(away), season_margin.get(home),
+                                    prior_margin.get(away), prior_margin.get(home)),
         # No team_pulse.nfl config block exists (out of scope this pass --
         # see docs/leagues.md's branding/config-population steps for what a
         # full sport rollout still needs), so there is no deterministic
@@ -480,6 +742,8 @@ def _build_one_game(config, g, schedule, team_stats, injuries):
             "away_turnover_diff": away_form.get("turnover_diff"), "home_turnover_diff": home_form.get("turnover_diff"),
             "away_scoring_margin": margins.get(away), "home_scoring_margin": margins.get(home),
             "away_rest": g.get("away_rest"), "home_rest": g.get("home_rest"),
+            "away_season_margin": season_margin.get(away), "home_season_margin": season_margin.get(home),
+            "away_prior_margin": prior_margin.get(away), "home_prior_margin": prior_margin.get(home),
         },
     }
 
@@ -509,23 +773,63 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     game is logged and skipped, the rest of the slate still builds.
     """
     session = requests.Session()
-    games = get_games_on_date(session, game_date)
+    season = season_for_date(game_date)
+    all_rows = get_schedule(session)
+    schedule = [r for r in all_rows if r.get("season") == str(season)]
+    if not schedule:
+        return {}, {}, []
+
+    # A WINDOW, NOT ONE DATE -- see FIXTURE_WINDOW_DAYS. The NFL week runs
+    # Thursday to Monday, so a single-date slate is empty most days.
+    window_end = (datetime.date.fromisoformat(game_date)
+                  + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)).isoformat()
+    games = [r for r in schedule
+             if r.get("gameday") and game_date <= r["gameday"] <= window_end]
     if not games:
         return {}, {}, []
 
-    season = season_for_date(game_date)
-    schedule = get_schedule(session, season)
     team_stats = get_team_stats(session, season)
     injuries = get_injuries(session, season)
+
+    # Last season's margins, for the games that have nothing else. Read from
+    # the SAME games.csv already in hand -- no extra request -- and only when
+    # some game on the slate actually lacks in-season form. A November slate
+    # never touches this.
+    prior_margin = {}
+    if not team_stats:
+        prior_rows = [r for r in all_rows if r.get("season") == str(season - 1)]
+        prior_margin = build_prior_season_margin(prior_rows)
+        if prior_margin:
+            print("insights(games): nfl cold start -- no {} team stats published yet, so "
+                  "{} teams carry a {} margin instead (see build_prior_season_margin)"
+                  .format(season, len(prior_margin), season - 1))
 
     entities = {}
     for g in games:
         try:
-            entities[g["game_id"]] = _build_one_game(config, g, schedule, team_stats, injuries)
+            entities[g["game_id"]] = _build_one_game(
+                config, g, schedule, team_stats, injuries, prior_margin)
         except Exception as e:  # noqa: BLE001 -- one bad game must not cost the slate
             print("insights(games): nfl game {} ({} @ {}) failed to build ({}: {}); skipped"
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
                           type(e).__name__, str(e)[:160]))
+
+    if team_entities is not None:
+        # Built from the SCHEDULE's own scores, never from the team_stats
+        # release -- so the Teams tab renders on every run, including week 1
+        # and any week nflverse has not published yet.
+        schools = []
+        for g in games:
+            for key in ("home_team", "away_team"):
+                if g.get(key) and g[key] not in schools:
+                    schools.append(g[key])
+        prior_form = {}
+        form = build_schedule_form(schedule, game_date)
+        if any(t not in form for t in schools):
+            prior_rows = [r for r in all_rows if r.get("season") == str(season - 1)]
+            prior_form = build_schedule_form(prior_rows, None)
+        team_entities.extend(build_nfl_team_entities(
+            config, form, schools, prior_form, season - 1))
 
     return entities, {}, []
 
@@ -707,7 +1011,7 @@ def fetch(config, season=None):
     rather than a failed build, and generate_stats simply emits no NFL section.
     """
     nfl_cfg = config["nfl"]
-    season = season or nfl_cfg["season"]
+    season = season or resolved_season(config)
     default_window = nfl_cfg.get("window_games", 4)
 
     session = requests.Session()

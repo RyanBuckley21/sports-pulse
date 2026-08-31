@@ -29,7 +29,12 @@ SPORT_FETCHERS = {
     },
     "nfl": {
         "fetch": nfl.fetch,
-        "competition": lambda cfg: f"NFL {cfg['nfl']['season']}",
+        # Derived, not read straight from config -- see nfl.resolved_season for
+        # why `season` stopped being a required key, and note that reaching for
+        # cfg['nfl']['season'] here was exactly the second place that had to
+        # change: it raised KeyError and silently skipped the whole NFL board
+        # set the first time the key was absent.
+        "competition": lambda cfg: f"NFL {nfl.resolved_season(cfg)}",
     },
     "epl": {
         "fetch": epl.fetch,
