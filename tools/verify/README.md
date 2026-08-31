@@ -297,6 +297,43 @@ games including overtime finals and the genuine 40-40 GB-at-DAL tie of
 turned up in a sample. PENDING and POSTPONED are built by editing a real
 event's status block; no postponed game appeared on any date sampled.
 
+```
+python3 -m tools.verify.test_epl_coldstart    # from the repo root
+```
+
+**`test_epl_coldstart`** — what August scores on. EPL form never crosses a
+season boundary (promotion and relegation turn over three clubs a summer, so
+last season's table is a different league), so below `MIN_MATCHES` `score_game`
+returned `{}` for every fixture: no lean, no Signal Score, **nothing to bet**,
+through the whole of August and most of September, every season. EPL was the
+last active sport producing no scores at all.
+
+ONE TIER, not the two CFB and NFL carry, and the asymmetry is deliberate: those
+sports need a mid-season fallback because their calibrated signals vanish for
+reasons unrelated to the calendar (no CFBD budget, an unjoinable schedule
+source, an unpublished nflverse release). EPL's inputs come from the same
+scoreboard as its fixtures, so above the gate the weighted model is always
+there — and `MIN_MATCHES = 5` already puts the handoff at match 6, which is
+where the measurement puts it.
+
+Four things are pinned, all silent when wrong. **The `{}` contract survives** —
+a cold match whose fallback is also empty (a promoted club, no prior Premier
+League season) must still return `{}`, or the store fills with markets reading
+"No clear lean" at score 0. **Above the gate nothing changes**, even with a
+prior-season number pointing hard the other way. **Both markets, one lean** —
+double_chance and match_result score off the same lean at bars 55 and 75, and
+the fallback feeds both. And **the card cannot lie**: unlike CFB and NFL, an EPL
+club under the gate usually HAS played, so the card would print "3.00 goals per
+match" off a single 3-0 beside a lean that deliberately ignored it. The
+prior-season row leads and the in-season rows carry their denominator.
+
+Sabotage-checked in three directions: not dropping the fallback above the gate
+fails exactly the four no-change assertions, removing the `{}` guard fails
+exactly the three promoted-club ones, and dropping the half-season floor fails
+exactly the exclusion ones.
+
+No network — every input is a number handed straight to `score_game`.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

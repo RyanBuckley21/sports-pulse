@@ -1133,6 +1133,11 @@ betting_signals:
       goal_diff_gap: 1.1297
       recent_gd_gap: 1.4378
       rest_gap: 4.8390
+      # COLD START ONLY. Stdev of the prior-season goal-difference-per-match
+      # gap across 2016/17-2025/26, over the ~72% of matches where BOTH clubs
+      # had a prior Premier League season. Free to measure: the same ESPN
+      # scoreboard the fixtures come from.
+      prior_gd_gap: 1.0247
     bet_types:
       # IDENTICAL WEIGHTS ON PURPOSE. There is one model here and two ways to
       # take it, not two models: both markets read the same lean, and the
@@ -1148,12 +1153,44 @@ betting_signals:
         defense: 0.2475
         venue_form: 0.2488
         recent_form: 0.1979
+        # COLD START ONLY, and never co-present with the four above --
+        # epl_signals drops the weighted set whole below MIN_MATCHES and drops
+        # this one above it, so it is always the only signal in its lean and is
+        # renormalized to 1.0. Its magnitude carries no meaning.
+        #
+        # Before it, score_game returned {} for every fixture until both clubs
+        # had five matches: no lean, no Signal Score, nothing to bet, for the
+        # whole of August and most of September, every season. Measured
+        # walk-forward over 3,800 real matches, in that window its picks went
+        # 82.9% on double chance at bar 55 and 71.4% on match result at bar 75,
+        # against the weighted model's 85.2% and 68.3% on the same measures.
+        #
+        # Matches involving a PROMOTED club stay unscored (about 28% of them) --
+        # a Championship goal difference is a different quantity, not a
+        # rescaling of this one.
+        prior_gd: 1.0
       # A draw LOSES this one: the side outright, 3-way moneyline.
       match_result:
         attack: 0.3057
         defense: 0.2475
         venue_form: 0.2488
         recent_form: 0.1979
+        # COLD START ONLY, and never co-present with the four above --
+        # epl_signals drops the weighted set whole below MIN_MATCHES and drops
+        # this one above it, so it is always the only signal in its lean and is
+        # renormalized to 1.0. Its magnitude carries no meaning.
+        #
+        # Before it, score_game returned {} for every fixture until both clubs
+        # had five matches: no lean, no Signal Score, nothing to bet, for the
+        # whole of August and most of September, every season. Measured
+        # walk-forward over 3,800 real matches, in that window its picks went
+        # 82.9% on double chance at bar 55 and 71.4% on match result at bar 75,
+        # against the weighted model's 85.2% and 68.3% on the same measures.
+        #
+        # Matches involving a PROMOTED club stay unscored (about 28% of them) --
+        # a Championship goal difference is a different quantity, not a
+        # rescaling of this one.
+        prior_gd: 1.0
     # WHERE THE DRAW GETS PRICED INTO AN OUTRIGHT PICK, rather than only
     # reported. A draw wins double_chance and loses match_result, so the two
     # markets cannot share a bar.

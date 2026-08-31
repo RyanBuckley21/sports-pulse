@@ -130,7 +130,51 @@ SIGNAL_SPECS = {
                   "scale_key": "recent_gd_gap", "favors": "higher"},
     "rest": {"home_key": "home_rest", "away_key": "away_rest",
              "scale_key": "rest_gap", "favors": "higher"},
+    # COLD START ONLY -- see _FALLBACK_SIGNALS. Never scored alongside the four
+    # weighted signals above.
+    "prior_gd": {"home_key": "home_prior_gd_pm", "away_key": "away_prior_gd_pm",
+                 "scale_key": "prior_gd_gap", "favors": "higher"},
 }
+
+# WHAT TO SCORE ON BEFORE MIN_MATCHES IS MET.
+#
+# ONE TIER, not the two CFB and NFL carry, and the asymmetry is real rather
+# than an omission: those sports needed a mid-season fallback because their
+# calibrated signals can go missing for reasons unrelated to the calendar (no
+# CFBD budget, an unjoinable schedule source, an unpublished nflverse release).
+# EPL's inputs come from the same ESPN scoreboard the fixtures do, so once
+# MIN_MATCHES is met the calibrated model is always available. The only gap is
+# the one below that gate -- and MIN_MATCHES = 5 already puts the handoff at
+# match 6, which is where the measurement below puts it too.
+#
+# THE GAP WAS THE WHOLE AUGUST. Form never crosses a season boundary (promotion
+# and relegation turn over three clubs a year), so every club sat under the
+# gate until roughly late September and score_game returned {} for every
+# fixture -- no lean, no Signal Score, nothing to bet, on the month the season
+# is most watched.
+#
+# MEASURED, walk-forward over 2016/17-2025/26 (3,800 real matches), against
+# GOAL DIFFERENCE rather than a home-win indicator -- epl_backtest established
+# that a point-biserial against a three-outcome sport measures the wrong thing.
+# Prior-season goal difference per match reaches r=+0.37 over a club's first
+# three matches (95% CI [+0.22, +0.50], 2,000 stdlib resamples, fixed seed).
+# In the cold-start window its picks went:
+#
+#     bar   double chance   match result
+#      55       82.9%           66.7%
+#      75       87.1%           71.4%
+#
+# against the calibrated model's 85.2% and 68.3% on the same measures. So both
+# markets clear their configured thresholds on this tier, and the draw-rate
+# curve that justifies the outright market's higher bar survives too: draws run
+# 35.2% below 55 and 13.3% in the 75-84 band, the same non-linear fall the
+# weighted model shows.
+#
+# PROMOTED CLUBS GET NOTHING, deliberately. About 28% of matches involve a club
+# with no prior Premier League season, and a Championship goal difference is
+# not the same quantity -- different opposition, not a rescaling of one. Those
+# fixtures stay unscored, exactly as every fixture did before this existed.
+_FALLBACK_SIGNALS = ("prior_gd",)
 
 # Minimum prior matches THIS SEASON each side needs before its form means
 # anything. Form never carries across a season boundary -- promotion and
@@ -183,13 +227,31 @@ def score_game(config, sport_key, inputs):
     bet_types = cfg.get("bet_types") or {}
     if not bet_types:
         return {}
-    if (inputs.get("home_played") or 0) < MIN_MATCHES or (inputs.get("away_played") or 0) < MIN_MATCHES:
-        return {}
     scales = cfg["scales"]
     min_t = cfg.get("min_threshold", 55)
     per_market = cfg.get("market_thresholds") or {}
 
+    # THE COLD-START GATE, which used to be an early `return {}`. Below
+    # MIN_MATCHES this season's form is a 90-minute sample -- a 4-0 opening day
+    # would read as the best attack in the league -- so the weighted signals are
+    # dropped whole and the fallback tier scores instead. Above it, the fallback
+    # is dropped and nothing changes from what this shipped with.
+    cold = ((inputs.get("home_played") or 0) < MIN_MATCHES
+            or (inputs.get("away_played") or 0) < MIN_MATCHES)
     sig = _base_signals(inputs, scales)
+    for k in sig:
+        if (k in _FALLBACK_SIGNALS) != cold:
+            sig[k] = None
+    # STILL {} WHEN THERE IS GENUINELY NOTHING, which is the contract this
+    # function shipped with and what callers that predate the fallback (
+    # epl_backtest above all) rely on. A cold-start match whose fallback is
+    # also empty -- a promoted club, with no prior Premier League season -- is
+    # exactly the case the old early `return {}` covered, and it returns the
+    # same thing now. Without this it would emit two markets reading "No clear
+    # lean" at score 0, which renders identically but writes noise into the
+    # committed store.
+    if cold and all(sig.get(k) is None for k in _FALLBACK_SIGNALS):
+        return {}
     labels = (inputs.get("home_abbr"), inputs.get("away_abbr"))
     out = {}
     for bt, weights in bet_types.items():
@@ -302,7 +364,8 @@ def build_inputs(away_abbr, home_abbr, away_played, home_played,
                  away_recent_ppm, home_recent_ppm,
                  away_recent_gd_pm, home_recent_gd_pm,
                  away_venue_ppm, home_venue_ppm,
-                 away_rest, home_rest):
+                 away_rest, home_rest,
+                 away_prior_gd_pm=None, home_prior_gd_pm=None):
     """Assemble the deterministic input dict from already-computed per-side
     form values, mirroring nfl_signals.build_inputs' role.
 
@@ -319,4 +382,9 @@ def build_inputs(away_abbr, home_abbr, away_played, home_played,
         "away_recent_gd_pm": _coerce(away_recent_gd_pm), "home_recent_gd_pm": _coerce(home_recent_gd_pm),
         "away_venue_ppm": _coerce(away_venue_ppm), "home_venue_ppm": _coerce(home_venue_ppm),
         "away_rest": _coerce(away_rest), "home_rest": _coerce(home_rest),
+        # Default None so every existing caller (epl_backtest above all) keeps
+        # its current behaviour: absent means the cold-start tier has nothing,
+        # which is what a below-gate match looked like before this existed.
+        "away_prior_gd_pm": _coerce(away_prior_gd_pm),
+        "home_prior_gd_pm": _coerce(home_prior_gd_pm),
     }
