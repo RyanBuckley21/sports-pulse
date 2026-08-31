@@ -71,3 +71,61 @@ def eastern_date(when=None):
 def yesterday():
     """The slate date one day back -- what a grading run means by "yesterday"."""
     return (eastern_now().date() - datetime.timedelta(days=1)).isoformat()
+
+
+# How far past an empty fixture window a slate may be pulled forward from.
+#
+# Two weeks, and both bounds are deliberate. Short enough that a genuine
+# offseason still shows an EMPTY tab -- "nothing on" is information, and a
+# college football Games tab quietly displaying September's opener all through
+# March would be worse than a blank one. Long enough to cover every real
+# in-season gap: an NFL preseason tail (nine days on the 2026 calendar), an EPL
+# international break, the CFB midweek desert, a bye.
+SLATE_LOOKAHEAD_DAYS = 14
+
+
+def window_start(available_dates, start, window_days,
+                 lookahead_days=SLATE_LOOKAHEAD_DAYS):
+    """Where a fixture window should actually begin.
+
+    Normally `start` -- today. But a window tuned for a sport's usual cadence
+    goes blank in any gap longer than itself, and then the tab shows nothing
+    while the fixtures it would show are sitting in the schedule already,
+    fully scoreable. That is what happened to NFL: the season opened nine days
+    out, the window reached seven, and week 1 -- the most anticipated slate of
+    the year, whose picks come from last season's margin and could not change
+    between now and kickoff -- rendered as an empty tab for two days.
+
+    So: if nothing falls inside [start, start + window_days], jump to the
+    NEXT date that has fixtures and let the caller window from there. The
+    caller keeps its own window length, so this shows the next SLATE rather
+    than a single next game -- pulling NFL forward to 2026-09-09 picks up the
+    whole of week 1 (Wed, Thu, Sun, Mon), not just the Wednesday opener.
+
+    Returns `start` unchanged when the window already has fixtures, and also
+    when the next one is further off than `lookahead_days` -- see
+    SLATE_LOOKAHEAD_DAYS for why an offseason must stay visibly empty.
+
+    `available_dates` is any iterable of YYYY-MM-DD strings; unparseable and
+    empty entries are ignored rather than raising, since they come from feeds.
+    """
+    try:
+        begin = datetime.date.fromisoformat(start)
+    except (TypeError, ValueError):
+        return start
+    window_end = begin + datetime.timedelta(days=window_days)
+    horizon = begin + datetime.timedelta(days=lookahead_days)
+    upcoming = []
+    for raw in available_dates or ():
+        try:
+            day = datetime.date.fromisoformat(str(raw)[:10])
+        except (TypeError, ValueError):
+            continue
+        if day >= begin:
+            upcoming.append(day)
+    if not upcoming:
+        return start
+    if any(day <= window_end for day in upcoming):
+        return start                      # the window already has fixtures
+    nxt = min(upcoming)
+    return nxt.isoformat() if nxt <= horizon else start

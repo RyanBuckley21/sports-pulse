@@ -64,6 +64,7 @@ import os
 import requests
 
 import pulse
+import slate_clock
 import team_meta
 
 REQUEST_TIMEOUT = 20
@@ -1366,11 +1367,25 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     #
     # Safe for the week logic below: form_cutoff is computed PER GAME, and the
     # comments there already anticipate a window straddling a week boundary.
-    window_end = (datetime.date.fromisoformat(game_date)
+    #
+    # AND IT FALLS FORWARD WHEN THE WINDOW IS EMPTY -- see
+    # slate_clock.window_start. Seven days covers a normal college week, but not
+    # the gap either side of it: championship week, the fortnight before the
+    # bowls, and the run-up to the opener all leave it blank while real
+    # fixtures sit in the schedule. The lookahead cap keeps the true offseason
+    # visibly empty, which is information rather than a bug.
+    fbs_dates = [et_date(r.get("start_date")) for r in schedule
+                 if r.get("start_date") and _is_fbs_matchup(r)]
+    start = slate_clock.window_start(fbs_dates, game_date, FIXTURE_WINDOW_DAYS)
+    window_end = (datetime.date.fromisoformat(start)
                   + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)).isoformat()
+    if start != game_date:
+        print("insights(games): cfb no fixtures within {} days of {} -- showing the "
+              "next slate instead ({} to {})".format(
+                  FIXTURE_WINDOW_DAYS, game_date, start, window_end))
     games = [r for r in schedule
              if r.get("start_date") and _is_fbs_matchup(r)
-             and game_date <= (et_date(r.get("start_date")) or "") <= window_end]
+             and start <= (et_date(r.get("start_date")) or "") <= window_end]
     if not games:
         return {}, {}, []
 

@@ -781,10 +781,25 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
 
     # A WINDOW, NOT ONE DATE -- see FIXTURE_WINDOW_DAYS. The NFL week runs
     # Thursday to Monday, so a single-date slate is empty most days.
-    window_end = (datetime.date.fromisoformat(game_date)
+    #
+    # AND IT FALLS FORWARD WHEN THE WINDOW IS EMPTY. Seven days is right in
+    # season -- any Tuesday catches Thursday, Sunday and Monday, the whole week
+    # -- but it goes blank in a gap longer than itself, and NFL has exactly one:
+    # the tail of the preseason. On the 2026 calendar the opener was nine days
+    # out, so week 1 rendered as an empty tab for two days while its fixtures
+    # sat in the schedule already, fully scoreable (their picks come from last
+    # season's margin and cannot change between now and kickoff). See
+    # slate_clock.window_start.
+    start = slate_clock.window_start(
+        [r.get("gameday") for r in schedule], game_date, FIXTURE_WINDOW_DAYS)
+    window_end = (datetime.date.fromisoformat(start)
                   + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)).isoformat()
+    if start != game_date:
+        print("insights(games): nfl no fixtures within {} days of {} -- showing the "
+              "next slate instead ({} to {})".format(
+                  FIXTURE_WINDOW_DAYS, game_date, start, window_end))
     games = [r for r in schedule
-             if r.get("gameday") and game_date <= r["gameday"] <= window_end]
+             if r.get("gameday") and start <= r["gameday"] <= window_end]
     if not games:
         return {}, {}, []
 

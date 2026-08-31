@@ -46,6 +46,8 @@ import math
 
 import requests
 
+import slate_clock
+
 import pulse
 import team_meta
 
@@ -1101,12 +1103,33 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                   "({}: {}); cold-start fixtures stay unscored as before"
                   .format(type(exc).__name__, str(exc)[:120]))
 
-    end = today + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)
+    # THE FETCH ASKS FOR THE LOOKAHEAD, THE SLATE IS WINDOWED LOCALLY, and that
+    # split is free: ESPN takes a date RANGE, so one call covers fourteen days
+    # exactly as cheaply as it covered three. Asking wide then narrowing is what
+    # lets the window fall forward without a second request.
+    #
+    # WHY IT NEEDS TO. Three days is right for a normal matchday round (a
+    # Premier League weekend sprawls Friday to Monday), but it goes blank across
+    # an international break -- a fortnight, twice before Christmas -- while the
+    # fixtures on the other side sit published and scoreable. See
+    # slate_clock.window_start; the lookahead cap keeps a real summer visibly
+    # empty.
+    horizon = today + datetime.timedelta(days=slate_clock.SLATE_LOOKAHEAD_DAYS)
     data = _get(session, scoreboard_url,
                 params={"dates": "{}-{}".format(today.strftime("%Y%m%d"),
-                                                end.strftime("%Y%m%d")),
+                                                horizon.strftime("%Y%m%d")),
                         "limit": SCOREBOARD_LIMIT})
-    fixtures = data.get("events") or []
+    all_events = data.get("events") or []
+    start = slate_clock.window_start([(e.get("date") or "")[:10] for e in all_events],
+                                     game_date, FIXTURE_WINDOW_DAYS)
+    window_end = (datetime.date.fromisoformat(start)
+                  + datetime.timedelta(days=FIXTURE_WINDOW_DAYS)).isoformat()
+    if start != game_date:
+        print("insights(games): epl no fixtures within {} days of {} -- showing the "
+              "next round instead ({} to {})".format(
+                  FIXTURE_WINDOW_DAYS, game_date, start, window_end))
+    fixtures = [e for e in all_events
+                if start <= (e.get("date") or "")[:10] <= window_end]
 
     entities = {}
     slate_ids = []

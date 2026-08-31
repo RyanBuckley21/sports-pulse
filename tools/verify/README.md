@@ -65,6 +65,17 @@ Sabotage-checked in both directions when written: dropping the
 fails exactly the three Who's Hot assertions, with the page both rendering the
 PREVIOUS league's boards and throwing.
 
+`test_slate_dates` also covers **falling forward**: a window tuned for a
+sport's usual cadence goes blank in any gap longer than itself, and then the
+tab shows nothing while the fixtures it would show sit in the schedule already,
+fully scoreable. NFL hit exactly that — the 2026 season opened nine days out
+against a seven-day window, so week 1, whose picks come from last season's
+margin and cannot change between then and kickoff, rendered as an empty tab.
+The lookahead CAP is tested as hard as the fall-forward itself, because it is
+the point rather than a safety rail: a real offseason has to stay visibly
+empty, since "nothing on" is information. Sabotage-checked both ways — never
+falling forward, and removing the cap.
+
 It also pins the `qualifier` a Pulse carries when it was computed over a
 different window than the card implies — CFB week 0, where a program's only
 form is last season's. Two assertions with opposite failure modes: the text
