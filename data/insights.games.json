@@ -3261,34 +3261,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 34,
-          "side": "BOS"
+          "score": 5,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 5,
+          "score": 7,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 28,
-          "side": "BOS"
+          "score": 9,
+          "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 19,
+          "side": "YRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 28,
+          "score": 5,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "SEA",
             "flags": [],
-            "score": 20,
+            "score": 4,
             "side": "No clear lean"
           },
           "home": {
@@ -3309,6 +3309,10 @@
         "away": {
           "era": "4.18",
           "name": "Bryan Woo"
+        },
+        "home": {
+          "era": "4.29",
+          "name": "Jedixson Paez"
         }
       },
       "pulse": {
@@ -3330,15 +3334,20 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "BOS 3-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.18 vs 4.29"
         }
       ],
       "slate_date": "2026-09-01",
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "nrfi_yrfi",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 34,
-        "side": "BOS"
+        "market": "First-Inning Runs",
+        "score": 19,
+        "side": "YRFI"
       },
       "start": "6:45 PM ET",
       "status": "Preview",
