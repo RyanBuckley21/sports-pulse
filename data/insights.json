@@ -112,7 +112,7 @@
   "daylen lile|wsh": {
     "entity": "Daylen Lile",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
-    "last_game_date": "2026-09-01",
+    "last_game_date": "2026-09-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -162,6 +162,17 @@
     "summary": null,
     "takeaways": [],
     "team": "AFC Bournemouth",
+    "template_version": "v2"
+  },
+  "griffin jax|tb": {
+    "entity": "Griffin Jax",
+    "generated_at": "2026-09-02T18:56:48.198441+00:00",
+    "last_game_date": "2026-08-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Tampa Bay Rays",
     "template_version": "v2"
   },
   "iliman ndiaye|eve": {
@@ -255,7 +266,7 @@
   "lawrence butler|ath": {
     "entity": "Lawrence Butler",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
-    "last_game_date": "2026-09-01",
+    "last_game_date": "2026-09-02",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -274,15 +285,15 @@
     "team": "Newcastle United",
     "template_version": "v2"
   },
-  "michael harris ii|atl": {
-    "entity": "Michael Harris II",
-    "generated_at": "2026-09-02T14:11:24.417720+00:00",
+  "miguel vargas|cws": {
+    "entity": "Miguel Vargas",
+    "generated_at": "2026-09-02T18:56:48.198441+00:00",
     "last_game_date": "2026-09-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Atlanta Braves",
+    "team": "Chicago White Sox",
     "template_version": "v2"
   },
   "mookie betts|lad": {
@@ -340,17 +351,6 @@
     "team": "San Francisco Giants",
     "template_version": "v2"
   },
-  "randy arozarena|sea": {
-    "entity": "Randy Arozarena",
-    "generated_at": "2026-09-02T14:11:24.417720+00:00",
-    "last_game_date": "2026-09-01",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Seattle Mariners",
-    "template_version": "v2"
-  },
   "rayan cherki|mci": {
     "entity": "Rayan Cherki",
     "generated_at": "2026-08-24T14:24:41.817845+00:00",
@@ -360,17 +360,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Manchester City",
-    "template_version": "v2"
-  },
-  "reid detmers|laa": {
-    "entity": "Reid Detmers",
-    "generated_at": "2026-09-02T17:20:35.462821+00:00",
-    "last_game_date": "2026-08-28",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Los Angeles Angels",
     "template_version": "v2"
   },
   "riccardo calafiori|ars": {
@@ -393,6 +382,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Sunderland",
+    "template_version": "v2"
+  },
+  "sal stewart|cin": {
+    "entity": "Sal Stewart",
+    "generated_at": "2026-09-02T18:56:48.198441+00:00",
+    "last_game_date": "2026-09-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cincinnati Reds",
     "template_version": "v2"
   },
   "seiya suzuki|chc": {
