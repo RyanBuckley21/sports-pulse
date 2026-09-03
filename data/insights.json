@@ -10,6 +10,17 @@
     "team": "Chicago Cubs",
     "template_version": "v2"
   },
+  "bobby witt jr.|kc": {
+    "entity": "Bobby Witt Jr.",
+    "generated_at": "2026-09-03T17:13:36.999312+00:00",
+    "last_game_date": "2026-09-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Kansas City Royals",
+    "template_version": "v2"
+  },
   "bruno fernandes|mun": {
     "entity": "Bruno Fernandes",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
@@ -30,17 +41,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Manchester United",
-    "template_version": "v2"
-  },
-  "bryce eldridge|sf": {
-    "entity": "Bryce Eldridge",
-    "generated_at": "2026-09-03T14:14:43.502475+00:00",
-    "last_game_date": "2026-09-02",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "San Francisco Giants",
     "template_version": "v2"
   },
   "bukayo saka|ars": {
@@ -307,17 +307,6 @@
     "team": "Newcastle United",
     "template_version": "v2"
   },
-  "michael wacha|kc": {
-    "entity": "Michael Wacha",
-    "generated_at": "2026-09-03T14:14:43.502475+00:00",
-    "last_game_date": "2026-08-28",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Kansas City Royals",
-    "template_version": "v2"
-  },
   "mookie betts|lad": {
     "entity": "Mookie Betts",
     "generated_at": "2026-09-02T17:20:35.462821+00:00",
@@ -365,7 +354,7 @@
   "rafael devers|sf": {
     "entity": "Rafael Devers",
     "generated_at": "2026-08-31T19:40:40.048379+00:00",
-    "last_game_date": "2026-09-02",
+    "last_game_date": "2026-09-03",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -437,6 +426,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Everton",
+    "template_version": "v2"
+  },
+  "yandy d\u00edaz|tb": {
+    "entity": "Yandy D\u00edaz",
+    "generated_at": "2026-09-03T17:13:36.999312+00:00",
+    "last_game_date": "2026-09-02",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Tampa Bay Rays",
     "template_version": "v2"
   }
 }
