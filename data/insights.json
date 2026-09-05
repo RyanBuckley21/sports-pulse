@@ -32,6 +32,17 @@
     "team": "Liverpool",
     "template_version": "v2"
   },
+  "anthony elanga|new": {
+    "entity": "Anthony Elanga",
+    "generated_at": "2026-09-05T14:21:21.144294+00:00",
+    "last_game_date": "2026-09-05",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Newcastle United",
+    "template_version": "v2"
+  },
   "bo bichette|nym": {
     "entity": "Bo Bichette",
     "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -156,23 +167,12 @@
   "djordje petrovic|bou": {
     "entity": "Djordje Petrovic",
     "generated_at": "2026-08-29T17:22:41.341148+00:00",
-    "last_game_date": "2026-08-29",
+    "last_game_date": "2026-09-05",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "AFC Bournemouth",
-    "template_version": "v2"
-  },
-  "dominik szoboszlai|liv": {
-    "entity": "Dominik Szoboszlai",
-    "generated_at": "2026-09-05T13:19:32.067806+00:00",
-    "last_game_date": "2026-09-04",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Liverpool",
     "template_version": "v2"
   },
   "emersonn|ips": {
@@ -241,17 +241,6 @@
     "team": "St. Louis Cardinals",
     "template_version": "v2"
   },
-  "jo\u00e3o pedro|che": {
-    "entity": "Jo\u00e3o Pedro",
-    "generated_at": "2026-08-30T17:45:58.498203+00:00",
-    "last_game_date": "2026-08-30",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Chelsea",
-    "template_version": "v2"
-  },
   "julio enciso|ips": {
     "entity": "Julio Enciso",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
@@ -310,12 +299,23 @@
   "luk\u00e1s horn\u00edcek|new": {
     "entity": "Luk\u00e1s Horn\u00edcek",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
-    "last_game_date": "2026-08-29",
+    "last_game_date": "2026-09-05",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "Newcastle United",
+    "template_version": "v2"
+  },
+  "marcus tavernier|bou": {
+    "entity": "Marcus Tavernier",
+    "generated_at": "2026-09-05T14:21:21.144294+00:00",
+    "last_game_date": "2026-09-05",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "AFC Bournemouth",
     "template_version": "v2"
   },
   "matthew liberatore|stl": {
