@@ -1,15 +1,4 @@
 {
-  "aaron nola|phi": {
-    "entity": "Aaron Nola",
-    "generated_at": "2026-09-06T13:28:32.578596+00:00",
-    "last_game_date": "2026-08-31",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
-    "template_version": "v2"
-  },
   "alex bregman|chc": {
     "entity": "Alex Bregman",
     "generated_at": "2026-09-01T14:38:41.298184+00:00",
@@ -162,6 +151,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Brighton & Hove Albion",
+    "template_version": "v2"
+  },
+  "elly de la cruz|cin": {
+    "entity": "Elly De La Cruz",
+    "generated_at": "2026-09-06T17:40:40.571366+00:00",
+    "last_game_date": "2026-09-06",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cincinnati Reds",
     "template_version": "v2"
   },
   "erling haaland|mci": {
@@ -343,7 +343,7 @@
   "mickey gasper|bos": {
     "entity": "Mickey Gasper",
     "generated_at": "2026-09-06T13:28:32.578596+00:00",
-    "last_game_date": "2026-09-05",
+    "last_game_date": "2026-09-06",
     "matchup_note": null,
     "story": null,
     "summary": null,
