@@ -43,10 +43,32 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
+  "ben rice|nyy": {
+    "entity": "Ben Rice",
+    "generated_at": "2026-09-06T16:25:59.218123+00:00",
+    "last_game_date": "2026-09-05",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "New York Yankees",
+    "template_version": "v2"
+  },
   "bruno fernandes|mun": {
     "entity": "Bruno Fernandes",
     "generated_at": "2026-08-30T17:45:58.498203+00:00",
-    "last_game_date": "2026-08-30",
+    "last_game_date": "2026-09-06",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Manchester United",
+    "template_version": "v2"
+  },
+  "bryan mbeumo|mun": {
+    "entity": "Bryan Mbeumo",
+    "generated_at": "2026-09-06T16:25:59.218123+00:00",
+    "last_game_date": "2026-09-06",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -197,17 +219,6 @@
     "team": "Houston Astros",
     "template_version": "v2"
   },
-  "jackson chourio|mil": {
-    "entity": "Jackson Chourio",
-    "generated_at": "2026-09-03T14:14:43.502475+00:00",
-    "last_game_date": "2026-09-05",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Milwaukee Brewers",
-    "template_version": "v2"
-  },
   "james trafford|lee": {
     "entity": "James Trafford",
     "generated_at": "2026-09-05T17:33:52.042007+00:00",
@@ -222,7 +233,7 @@
   "jordan pickford|eve": {
     "entity": "Jordan Pickford",
     "generated_at": "2026-08-25T14:26:58.556447+00:00",
-    "last_game_date": "2026-08-29",
+    "last_game_date": "2026-09-06",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -409,7 +420,7 @@
   "sal stewart|cin": {
     "entity": "Sal Stewart",
     "generated_at": "2026-09-04T14:05:23.691880+00:00",
-    "last_game_date": "2026-09-05",
+    "last_game_date": "2026-09-06",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -426,17 +437,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Colorado Rockies",
-    "template_version": "v2"
-  },
-  "tyrick mitchell|cry": {
-    "entity": "Tyrick Mitchell",
-    "generated_at": "2026-09-05T17:33:52.042007+00:00",
-    "last_game_date": "2026-09-05",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Crystal Palace",
     "template_version": "v2"
   }
 }
