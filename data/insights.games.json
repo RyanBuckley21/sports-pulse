@@ -29,7 +29,7 @@
           "value": "UTAH +19.5 \u00b7 ARK -5.1"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -78,7 +78,7 @@
           "value": "+0.05"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "7:45 PM ET",
       "status": "Preview",
@@ -121,7 +121,7 @@
           "value": "+0.56"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -170,7 +170,7 @@
           "value": "-0.20"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -211,15 +211,15 @@
         {
           "label": "MISS Off PPA/play",
           "tone": "pos",
-          "value": "+0.30"
+          "value": "+0.29"
         },
         {
           "label": "MISS Def PPA/play allowed",
           "tone": "neg",
-          "value": "+0.39"
+          "value": "+0.35"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -268,7 +268,7 @@
           "value": "-0.03"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "3:30 PM ET",
       "status": "Preview",
@@ -306,7 +306,7 @@
           "value": "KU -2.1 \u00b7 MIZ +8.9"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -355,7 +355,7 @@
           "value": "-0.04"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -404,7 +404,7 @@
           "value": "+0.05"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "7:00 PM ET",
       "status": "Preview",
@@ -447,7 +447,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -496,7 +496,7 @@
           "value": "-0.24"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -540,7 +540,7 @@
           "value": "VAN +15.3 \u00b7 DEL -4.6"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -581,7 +581,7 @@
         {
           "label": "WSU Off PPA/play",
           "tone": "pos",
-          "value": "-0.03"
+          "value": "-0.02"
         },
         {
           "label": "WSU Def PPA/play allowed",
@@ -589,7 +589,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "12:00 PM ET",
       "status": "Preview",
@@ -632,7 +632,7 @@
           "value": "+0.19"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -681,7 +681,7 @@
           "value": "+0.31"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -730,7 +730,7 @@
           "value": "-0.33"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -779,7 +779,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -823,7 +823,7 @@
           "value": "BYU +8.2 \u00b7 ARIZ +10.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "3:30 PM ET",
       "status": "Preview",
@@ -831,44 +831,6 @@
       "summary": null,
       "template_version": "v3",
       "venue": "LaVell Edwards Stadium"
-    },
-    "401858212": {
-      "away": {
-        "abbr": "SMU",
-        "color": "#EC2C2C",
-        "name": "SMU"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 33,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-08-31T19:40:40.048379+00:00",
-      "home": {
-        "abbr": "FSU",
-        "color": "#B06879",
-        "name": "Florida State"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Last season margin / game",
-          "tone": "neg",
-          "value": "FSU +5.3 \u00b7 SMU +10.7"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": null,
-      "start": "7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Doak Campbell Stadium"
     },
     "401858214": {
       "away": {
@@ -904,7 +866,7 @@
           "value": "+0.33"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "7:30 PM ET",
       "status": "Preview",
@@ -947,7 +909,7 @@
           "value": "+0.42"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -996,7 +958,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1045,7 +1007,7 @@
           "value": "+0.42"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1089,7 +1051,7 @@
           "value": "VT -12.5 \u00b7 ODU +10.3"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1138,7 +1100,7 @@
           "value": "+0.02"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1187,7 +1149,7 @@
           "value": "+0.28"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "3:30 PM ET",
       "status": "Preview",
@@ -1230,7 +1192,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1279,7 +1241,7 @@
           "value": "-0.17"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1328,7 +1290,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1372,7 +1334,7 @@
           "value": "CONN +7.9 \u00b7 MD -5.7"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1421,7 +1383,7 @@
           "value": "-0.06"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1467,10 +1429,10 @@
         {
           "label": "WASH Def PPA/play allowed",
           "tone": "neg",
-          "value": "-0.03"
+          "value": "-0.02"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1516,10 +1478,10 @@
         {
           "label": "ND Def PPA/play allowed",
           "tone": "neg",
-          "value": "+0.07"
+          "value": "-0.04"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1568,7 +1530,7 @@
           "value": "+0.28"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1617,7 +1579,7 @@
           "value": "+0.33"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1666,7 +1628,7 @@
           "value": "+0.46"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "3:30 PM ET",
       "status": "Preview",
@@ -1709,7 +1671,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1758,7 +1720,7 @@
           "value": "+0.62"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1807,7 +1769,7 @@
           "value": "+0.65"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1856,7 +1818,7 @@
           "value": "+0.16"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1905,7 +1867,7 @@
           "value": "+0.64"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1954,7 +1916,7 @@
           "value": "-0.32"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 PM ET",
       "status": "Preview",
@@ -1997,7 +1959,7 @@
           "value": "+0.29"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2046,7 +2008,7 @@
           "value": "-0.05"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2095,7 +2057,7 @@
           "value": "+0.29"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2144,7 +2106,7 @@
           "value": "-0.06"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "6:00 PM ET",
       "status": "Preview",
@@ -2187,7 +2149,7 @@
           "value": "+0.49"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "6:00 PM ET",
       "status": "Preview",
@@ -2230,7 +2192,7 @@
           "value": "-0.27"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "7:30 PM ET",
       "status": "Preview",
@@ -2268,7 +2230,7 @@
           "value": "KENN +3.2 \u00b7 GAST -21.2"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2317,7 +2279,7 @@
           "value": "+0.42"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "7:00 PM ET",
       "status": "Preview",
@@ -2393,7 +2355,7 @@
           "value": "SUN 3.0 home \u00b7 ARS 3.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "match_result",
         "flags": [],
@@ -2473,7 +2435,7 @@
           "value": "TOT 0.0 home \u00b7 EVE 1.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "12:30 PM ET",
       "status": "Preview",
@@ -2547,7 +2509,7 @@
           "value": "MUN 3.0 home \u00b7 MCI 3.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "11:30 AM ET",
       "status": "Preview",
@@ -2621,7 +2583,7 @@
           "value": "LIV 1.0 home \u00b7 FUL 0.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 AM ET",
       "status": "Preview",
@@ -2695,7 +2657,7 @@
           "value": "LEE 1.0 home \u00b7 NEW 3.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "3:00 PM ET",
       "status": "Preview",
@@ -2754,7 +2716,7 @@
           "value": "CRY 0.0 home \u00b7 IPS 0.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 AM ET",
       "status": "Preview",
@@ -2813,7 +2775,7 @@
           "value": "COV 0.0 home \u00b7 BHA 0.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "9:00 AM ET",
       "status": "Preview",
@@ -2872,7 +2834,7 @@
           "value": "CHE 3.0 home \u00b7 HUL 3.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 AM ET",
       "status": "Preview",
@@ -2946,7 +2908,7 @@
           "value": "AVL 0.0 home \u00b7 NFO 1.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 AM ET",
       "status": "Preview",
@@ -3020,7 +2982,7 @@
           "value": "BOU 1.0 home \u00b7 BRE 1.0 away"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "10:00 AM ET",
       "status": "Preview",
@@ -3031,7 +2993,98 @@
     }
   },
   "mlb": {
-    "823175": {
+    "823092": {
+      "away": {
+        "abbr": "TEX",
+        "color": "#DB3D4A",
+        "name": "Rangers"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 34,
+          "side": "TEX"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 3,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 24,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 0,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 25,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "TEX",
+            "flags": [],
+            "score": 16,
+            "side": "Over"
+          },
+          "home": {
+            "abbr": "SEA",
+            "flags": [],
+            "score": 11,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "SEA",
+        "color": "#4FC9C9",
+        "name": "Mariners"
+      },
+      "probables": null,
+      "pulse": {
+        "label": "Warm",
+        "score": 69
+      },
+      "signals": [
+        {
+          "label": "TEX OPS (14d)",
+          "tone": "pos",
+          "value": ".738"
+        },
+        {
+          "label": "TEX bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.28"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "TEX 8-4"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 34,
+        "side": "TEX"
+      },
+      "start": "9:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "T-Mobile Park"
+    },
+    "823174": {
       "away": {
         "abbr": "STL",
         "color": "#D5435C",
@@ -3041,7 +3094,7 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 6,
+          "score": 0,
           "side": "No clear lean"
         },
         "game_total": {
@@ -3051,35 +3104,35 @@
         },
         "moneyline": {
           "flags": [],
-          "score": 3,
+          "score": 1,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 4,
+          "score": 6,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 5,
+          "score": 0,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "STL",
             "flags": [],
-            "score": 10,
+            "score": 8,
             "side": "No clear lean"
           },
           "home": {
             "abbr": "SF",
             "flags": [],
-            "score": 9,
+            "score": 10,
             "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
       "home": {
         "abbr": "SF",
         "color": "#FD5A1E",
@@ -3087,12 +3140,12 @@
       },
       "probables": {
         "away": {
-          "era": "3.98",
-          "name": "Michael McGreevy"
+          "era": "4.06",
+          "name": "Quinn Mathews"
         },
         "home": {
-          "era": "4.11",
-          "name": "Logan Webb"
+          "era": "4.09",
+          "name": "Landen Roupp"
         }
       },
       "pulse": {
@@ -3103,29 +3156,34 @@
         {
           "label": "SF OPS (14d)",
           "tone": "pos",
-          "value": ".736"
+          "value": ".734"
         },
         {
           "label": "STL bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.32"
+          "value": "4.26"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "SF 1-0"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "3.98 vs 4.11"
+          "value": "4.06 vs 4.09"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
-      "start": "8:10 PM ET",
+      "start": "9:45 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "Oracle Park"
     },
-    "823254": {
+    "823250": {
       "away": {
         "abbr": "WSH",
         "color": "#E0393C",
@@ -3134,59 +3192,46 @@
       "betting_note": null,
       "betting_signals": {
         "first_five_moneyline": {
-          "flags": [
-            "home_probable_out",
-            "starter_scratched"
-          ],
-          "score": 0,
-          "side": "No clear lean"
+          "flags": [],
+          "score": 15,
+          "side": "WSH"
         },
         "game_total": {
-          "flags": [
-            "home_probable_out"
-          ],
-          "score": 20,
-          "side": "Over"
-        },
-        "moneyline": {
-          "flags": [
-            "home_probable_out"
-          ],
-          "score": 43,
-          "side": "WSH"
-        },
-        "nrfi_yrfi": {
-          "flags": [
-            "home_probable_out",
-            "starter_scratched"
-          ],
-          "score": 0,
+          "flags": [],
+          "score": 10,
           "side": "No clear lean"
         },
+        "moneyline": {
+          "flags": [],
+          "score": 8,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 27,
+          "side": "YRFI"
+        },
         "run_line": {
-          "flags": [
-            "home_probable_out",
-            "run_line_hot"
-          ],
-          "score": 43,
-          "side": "WSH"
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "WSH",
             "flags": [],
-            "score": 4,
+            "score": 9,
             "side": "No clear lean"
           },
           "home": {
             "abbr": "SD",
             "flags": [],
-            "score": 9,
+            "score": 3,
             "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
       "home": {
         "abbr": "SD",
         "color": "#FFC425",
@@ -3194,12 +3239,12 @@
       },
       "probables": {
         "away": {
-          "era": "4.59",
-          "name": "Jake Irvin"
+          "era": "4.27",
+          "name": "Riley Cornelio"
         },
         "home": {
-          "era": "4.05",
-          "name": "Nick Pivetta"
+          "era": "4.43",
+          "name": "Casey Mize"
         }
       },
       "pulse": {
@@ -3210,90 +3255,90 @@
         {
           "label": "WSH OPS (14d)",
           "tone": "pos",
-          "value": ".733"
+          "value": ".723"
         },
         {
           "label": "WSH bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.73"
+          "value": "4.69"
         },
         {
           "label": "Season series",
           "tone": "neutral",
-          "value": "WSH 2-1"
+          "value": "WSH 2-2"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "4.59 vs 4.05"
+          "value": "4.27 vs 4.43"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
-        "bet_type": "moneyline",
-        "flags": [
-          "home_probable_out"
-        ],
-        "market": "Moneyline",
-        "score": 43,
-        "side": "WSH"
+        "bet_type": "nrfi_yrfi",
+        "flags": [],
+        "market": "First-Inning Runs",
+        "score": 27,
+        "side": "YRFI"
       },
-      "start": "5:10 PM ET",
+      "start": "9:40 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "Petco Park"
     },
-    "823415": {
+    "823414": {
       "away": {
-        "abbr": "ATL",
-        "color": "#E03963",
-        "name": "Braves"
+        "abbr": "HOU",
+        "color": "#E97730",
+        "name": "Astros"
       },
       "betting_note": null,
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 12,
-          "side": "No clear lean"
+          "score": 41,
+          "side": "HOU"
         },
         "game_total": {
           "flags": [],
-          "score": 17,
-          "side": "Under"
+          "score": 4,
+          "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 2,
-          "side": "No clear lean"
+          "score": 33,
+          "side": "HOU"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 28,
-          "side": "NRFI"
+          "score": 19,
+          "side": "YRFI"
         },
         "run_line": {
-          "flags": [],
-          "score": 9,
-          "side": "No clear lean"
+          "flags": [
+            "run_line_hot"
+          ],
+          "score": 33,
+          "side": "HOU"
         },
         "team_total": {
           "away": {
-            "abbr": "ATL",
+            "abbr": "HOU",
             "flags": [],
-            "score": 11,
+            "score": 13,
             "side": "No clear lean"
           },
           "home": {
             "abbr": "PHI",
             "flags": [],
-            "score": 17,
-            "side": "Under"
+            "score": 14,
+            "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
       "home": {
         "abbr": "PHI",
         "color": "#E43442",
@@ -3302,55 +3347,152 @@
       "probables": {
         "away": {
           "era": "3.82",
-          "name": "Grant Holmes"
+          "name": "Hayden Wesneski"
         },
         "home": {
-          "era": "3.46",
-          "name": "Jes\u00fas Luzardo"
+          "era": "4.66",
+          "name": "Andrew Painter"
         }
       },
       "pulse": {
         "label": "Warm",
-        "score": 63
+        "score": 55
       },
       "signals": [
         {
-          "label": "ATL OPS (14d)",
+          "label": "HOU OPS (14d)",
           "tone": "pos",
-          "value": ".731"
+          "value": ".713"
         },
         {
           "label": "PHI bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.11"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "ATL 9-2"
+          "value": "4.17"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "3.82 vs 3.46"
+          "value": "3.82 vs 4.66"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
-        "bet_type": "nrfi_yrfi",
+        "bet_type": "first_five_moneyline",
         "flags": [],
-        "market": "First-Inning Runs",
-        "score": 28,
-        "side": "NRFI"
+        "market": "First Five Moneyline",
+        "score": 41,
+        "side": "HOU"
       },
-      "start": "1:05 PM ET",
+      "start": "6:40 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "Citizens Bank Park"
     },
-    "823742": {
+    "823500": {
+      "away": {
+        "abbr": "COL",
+        "color": "#7272A6",
+        "name": "Rockies"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 57,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 7,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 47,
+          "side": "NYY"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 19,
+          "side": "NRFI"
+        },
+        "run_line": {
+          "flags": [
+            "run_line_hot"
+          ],
+          "score": 47,
+          "side": "NYY"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "COL",
+            "flags": [],
+            "score": 24,
+            "side": "Under"
+          },
+          "home": {
+            "abbr": "NYY",
+            "flags": [],
+            "score": 21,
+            "side": "Over"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "NYY",
+        "color": "#4377D5",
+        "name": "Yankees"
+      },
+      "probables": {
+        "away": {
+          "era": "4.59",
+          "name": "Gabriel Hughes"
+        },
+        "home": {
+          "era": "2.92",
+          "name": "Cam Schlittler"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 61
+      },
+      "signals": [
+        {
+          "label": "COL OPS (14d)",
+          "tone": "pos",
+          "value": ".734"
+        },
+        {
+          "label": "COL bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.34"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.59 vs 2.92"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 47,
+        "side": "NYY"
+      },
+      "start": "7:05 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Yankee Stadium"
+    },
+    "823738": {
       "away": {
         "abbr": "CHC",
         "color": "#4E74CB",
@@ -3360,17 +3502,735 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 17,
-          "side": "CHC"
+          "score": 47,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 16,
+          "score": 8,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 36,
+          "side": "MIL"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 34,
+          "side": "NRFI"
+        },
+        "run_line": {
+          "flags": [
+            "run_line_hot"
+          ],
+          "score": 36,
+          "side": "MIL"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "CHC",
+            "flags": [],
+            "score": 13,
+            "side": "No clear lean"
+          },
+          "home": {
+            "abbr": "MIL",
+            "flags": [],
+            "score": 14,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "MIL",
+        "color": "#FFC52F",
+        "name": "Brewers"
+      },
+      "probables": {
+        "away": {
+          "era": "4.17",
+          "name": "David Peterson"
+        },
+        "home": {
+          "era": "2.94",
+          "name": "Jacob Misiorowski"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 63
+      },
+      "signals": [
+        {
+          "label": "CHC OPS (14d)",
+          "tone": "pos",
+          "value": ".751"
+        },
+        {
+          "label": "CHC bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.11"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "MIL 7-6"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.17 vs 2.94"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 36,
+        "side": "MIL"
+      },
+      "start": "7:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "American Family Field"
+    },
+    "823821": {
+      "away": {
+        "abbr": "NYM",
+        "color": "#FC611C",
+        "name": "Mets"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 30,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 2,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 21,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 2,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 27,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "NYM",
+            "flags": [],
+            "score": 11,
+            "side": "No clear lean"
+          },
+          "home": {
+            "abbr": "MIA",
+            "flags": [],
+            "score": 5,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "MIA",
+        "color": "#2AB9EF",
+        "name": "Marlins"
+      },
+      "probables": {
+        "away": {
+          "era": "4.33",
+          "name": "Sean Manaea"
+        },
+        "home": {
+          "era": "3.73",
+          "name": "Sandy Alcantara"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 63
+      },
+      "signals": [
+        {
+          "label": "NYM OPS (14d)",
+          "tone": "pos",
+          "value": ".720"
+        },
+        {
+          "label": "MIA bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.06"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "MIA 11-6"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.33 vs 3.73"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": null,
+      "start": "6:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "loanDepot park"
+    },
+    "823901": {
+      "away": {
+        "abbr": "CIN",
+        "color": "#E7324D",
+        "name": "Reds"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 20,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 11,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 8,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 19,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "CIN",
+            "flags": [],
+            "score": 8,
+            "side": "No clear lean"
+          },
+          "home": {
+            "abbr": "LAD",
+            "flags": [],
+            "score": 8,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "LAD",
+        "color": "#3D98DB",
+        "name": "Dodgers"
+      },
+      "probables": {
+        "away": {
+          "era": "4.41",
+          "name": "Nick Lodolo"
+        },
+        "home": {
+          "era": "3.80",
+          "name": "Tarik Skubal"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 55
+      },
+      "signals": [
+        {
+          "label": "CIN OPS (14d)",
+          "tone": "pos",
+          "value": ".747"
+        },
+        {
+          "label": "CIN bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.15"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "LAD 2-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.41 vs 3.80"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": null,
+      "start": "10:10 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "UNIQLO Field at Dodger Stadium"
+    },
+    "824063": {
+      "away": {
+        "abbr": "ARI",
+        "color": "#CE4A60",
+        "name": "D-backs"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [
+            "away_probable_out",
+            "starter_scratched"
+          ],
+          "score": 0,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [
+            "away_probable_out"
+          ],
+          "score": 20,
           "side": "Over"
+        },
+        "moneyline": {
+          "flags": [
+            "away_probable_out"
+          ],
+          "score": 48,
+          "side": "KC"
+        },
+        "nrfi_yrfi": {
+          "flags": [
+            "away_probable_out",
+            "starter_scratched"
+          ],
+          "score": 0,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [
+            "away_probable_out"
+          ],
+          "score": 48,
+          "side": "KC"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "ARI",
+            "flags": [],
+            "score": 22,
+            "side": "Under"
+          },
+          "home": {
+            "abbr": "KC",
+            "flags": [],
+            "score": 3,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "KC",
+        "color": "#438FD5",
+        "name": "Royals"
+      },
+      "probables": {
+        "away": {
+          "name": "Corbin Burnes"
+        },
+        "home": {
+          "era": "3.64",
+          "name": "Michael Wacha"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 65
+      },
+      "signals": [
+        {
+          "label": "KC OPS (14d)",
+          "tone": "pos",
+          "value": ".730"
+        },
+        {
+          "label": "KC bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.33"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "ARI 3-0"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [
+          "away_probable_out"
+        ],
+        "market": "Moneyline",
+        "score": 48,
+        "side": "KC"
+      },
+      "start": "7:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Kauffman Stadium"
+    },
+    "824228": {
+      "away": {
+        "abbr": "MIN",
+        "color": "#E13765",
+        "name": "Twins"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 21,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 4,
+          "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
           "score": 13,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 16,
+          "side": "YRFI"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 21,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "MIN",
+            "flags": [],
+            "score": 2,
+            "side": "No clear lean"
+          },
+          "home": {
+            "abbr": "DET",
+            "flags": [],
+            "score": 2,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "DET",
+        "color": "#F84E21",
+        "name": "Tigers"
+      },
+      "probables": {
+        "away": {
+          "era": "4.51",
+          "name": "Dean Kremer"
+        },
+        "home": {
+          "era": "3.89",
+          "name": "Drew Anderson"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 69
+      },
+      "signals": [
+        {
+          "label": "MIN OPS (14d)",
+          "tone": "pos",
+          "value": ".727"
+        },
+        {
+          "label": "MIN bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.34"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "MIN 9-4"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.51 vs 3.89"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": null,
+      "start": "6:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Comerica Park"
+    },
+    "824551": {
+      "away": {
+        "abbr": "PIT",
+        "color": "#FDB827",
+        "name": "Pirates"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 36,
+          "side": "CWS"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 32,
+          "side": "CWS"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 11,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [
+            "run_line_hot"
+          ],
+          "score": 32,
+          "side": "CWS"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "PIT",
+            "flags": [],
+            "score": 22,
+            "side": "Under"
+          },
+          "home": {
+            "abbr": "CWS",
+            "flags": [],
+            "score": 7,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "CWS",
+        "color": "#C4CED4",
+        "name": "White Sox"
+      },
+      "probables": {
+        "away": {
+          "era": "4.15",
+          "name": "Bubba Chandler"
+        },
+        "home": {
+          "era": "3.58",
+          "name": "Sean Burke"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 55
+      },
+      "signals": [
+        {
+          "label": "CWS OPS (14d)",
+          "tone": "pos",
+          "value": ".728"
+        },
+        {
+          "label": "PIT bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.05"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.15 vs 3.58"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 36,
+        "side": "CWS"
+      },
+      "start": "7:40 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Rate Field"
+    },
+    "824714": {
+      "away": {
+        "abbr": "LAA",
+        "color": "#E43554",
+        "name": "Angels"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 14,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 12,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 3,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 8,
+          "side": "No clear lean"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 10,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "LAA",
+            "flags": [],
+            "score": 15,
+            "side": "Under"
+          },
+          "home": {
+            "abbr": "BOS",
+            "flags": [],
+            "score": 11,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "BOS",
+        "color": "#C94F57",
+        "name": "Red Sox"
+      },
+      "probables": {
+        "away": {
+          "era": "3.70",
+          "name": "Reid Detmers"
+        },
+        "home": {
+          "era": "4.11",
+          "name": "Patrick Sandoval"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 63
+      },
+      "signals": [
+        {
+          "label": "BOS OPS (14d)",
+          "tone": "pos",
+          "value": ".720"
+        },
+        {
+          "label": "LAA bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.13"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "BOS 4-0"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.70 vs 4.11"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": null,
+      "start": "6:45 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Fenway Park"
+    },
+    "824792": {
+      "away": {
+        "abbr": "CLE",
+        "color": "#E23750",
+        "name": "Guardians"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 17,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 10,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 10,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
@@ -3385,633 +4245,20 @@
         },
         "team_total": {
           "away": {
-            "abbr": "CHC",
-            "flags": [],
-            "score": 24,
-            "side": "Over"
-          },
-          "home": {
-            "abbr": "MIL",
-            "flags": [],
-            "score": 11,
-            "side": "No clear lean"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "MIL",
-        "color": "#FFC52F",
-        "name": "Brewers"
-      },
-      "probables": {
-        "away": {
-          "era": "4.02",
-          "name": "Matthew Boyd"
-        },
-        "home": {
-          "era": "4.22",
-          "name": "Robert Gasser"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 63
-      },
-      "signals": [
-        {
-          "label": "CHC OPS (14d)",
-          "tone": "pos",
-          "value": ".754"
-        },
-        {
-          "label": "CHC bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.14"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "CHC 6-6"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "4.02 vs 4.22"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": {
-        "bet_type": "team_total",
-        "flags": [],
-        "high": 5,
-        "low": 4,
-        "market": "Team Total",
-        "point": 4,
-        "score": 24,
-        "side": "CHC Over",
-        "unit": "runs"
-      },
-      "start": "2:10 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "American Family Field"
-    },
-    "823820": {
-      "away": {
-        "abbr": "NYM",
-        "color": "#FC611C",
-        "name": "Mets"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 5,
-          "side": "No clear lean"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 6,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
-            "abbr": "NYM",
-            "flags": [],
-            "score": 9,
-            "side": "No clear lean"
-          },
-          "home": {
-            "abbr": "MIA",
-            "flags": [],
-            "score": 5,
-            "side": "No clear lean"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "MIA",
-        "color": "#2AB9EF",
-        "name": "Marlins"
-      },
-      "probables": {
-        "away": {
-          "era": "3.97",
-          "name": "Jonah Tong"
-        },
-        "home": {
-          "era": "3.86",
-          "name": "Eury P\u00e9rez"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 63
-      },
-      "signals": [
-        {
-          "label": "MIA OPS (14d)",
-          "tone": "pos",
-          "value": ".719"
-        },
-        {
-          "label": "MIA bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.16"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "MIA 11-5"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "3.97 vs 3.86"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": null,
-      "start": "1:10 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "loanDepot park"
-    },
-    "823902": {
-      "away": {
-        "abbr": "CIN",
-        "color": "#E7324D",
-        "name": "Reds"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 29,
-          "side": "CIN"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 21,
-          "side": "No clear lean"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 0,
-          "side": "No clear lean"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 22,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
-            "abbr": "CIN",
-            "flags": [],
-            "score": 18,
-            "side": "Over"
-          },
-          "home": {
-            "abbr": "LAD",
-            "flags": [],
-            "score": 20,
-            "side": "Under"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "LAD",
-        "color": "#3D98DB",
-        "name": "Dodgers"
-      },
-      "probables": {
-        "away": {
-          "era": "3.39",
-          "name": "Chase Burns"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 55
-      },
-      "signals": [
-        {
-          "label": "CIN OPS (14d)",
-          "tone": "pos",
-          "value": ".743"
-        },
-        {
-          "label": "CIN bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.09"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "CIN 1-1"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": {
-        "bet_type": "first_five_moneyline",
-        "flags": [],
-        "market": "First Five Moneyline",
-        "score": 29,
-        "side": "CIN"
-      },
-      "start": "9:10 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "UNIQLO Field at Dodger Stadium"
-    },
-    "824062": {
-      "away": {
-        "abbr": "ARI",
-        "color": "#CE4A60",
-        "name": "D-backs"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 6,
-          "side": "No clear lean"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 5,
-          "side": "No clear lean"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 1,
-          "side": "No clear lean"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 3,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
-            "abbr": "ARI",
-            "flags": [],
-            "score": 12,
-            "side": "No clear lean"
-          },
-          "home": {
-            "abbr": "KC",
-            "flags": [],
-            "score": 1,
-            "side": "No clear lean"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "KC",
-        "color": "#438FD5",
-        "name": "Royals"
-      },
-      "probables": {
-        "away": {
-          "era": "3.93",
-          "name": "Derek Law"
-        },
-        "home": {
-          "era": "4.04",
-          "name": "Noah Cameron"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 65
-      },
-      "signals": [
-        {
-          "label": "KC OPS (14d)",
-          "tone": "pos",
-          "value": ".732"
-        },
-        {
-          "label": "KC bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.26"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "ARI 2-0"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "3.93 vs 4.04"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": null,
-      "start": "2:10 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Kauffman Stadium"
-    },
-    "824229": {
-      "away": {
-        "abbr": "MIN",
-        "color": "#E13765",
-        "name": "Twins"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 17,
-          "side": "No clear lean"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 22,
-          "side": "Under"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 7,
-          "side": "No clear lean"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 36,
-          "side": "NRFI"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 16,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
-            "abbr": "MIN",
-            "flags": [],
-            "score": 15,
-            "side": "No clear lean"
-          },
-          "home": {
-            "abbr": "DET",
-            "flags": [],
-            "score": 21,
-            "side": "Under"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "DET",
-        "color": "#F84E21",
-        "name": "Tigers"
-      },
-      "probables": {
-        "away": {
-          "era": "3.83",
-          "name": "Joe Ryan"
-        },
-        "home": {
-          "era": "3.24",
-          "name": "Troy Melton"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 69
-      },
-      "signals": [
-        {
-          "label": "MIN OPS (14d)",
-          "tone": "pos",
-          "value": ".731"
-        },
-        {
-          "label": "MIN bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.31"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "MIN 9-3"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "3.83 vs 3.24"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": {
-        "bet_type": "nrfi_yrfi",
-        "flags": [],
-        "market": "First-Inning Runs",
-        "score": 36,
-        "side": "NRFI"
-      },
-      "start": "3:10 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Comerica Park"
-    },
-    "824715": {
-      "away": {
-        "abbr": "LAA",
-        "color": "#E43554",
-        "name": "Angels"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 23,
-          "side": "BOS"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 13,
-          "side": "No clear lean"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 24,
-          "side": "BOS"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 43,
-          "side": "YRFI"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 24,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
-            "abbr": "LAA",
-            "flags": [],
-            "score": 6,
-            "side": "No clear lean"
-          },
-          "home": {
-            "abbr": "BOS",
-            "flags": [],
-            "score": 16,
-            "side": "Over"
-          }
-        }
-      },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
-      "home": {
-        "abbr": "BOS",
-        "color": "#C94F57",
-        "name": "Red Sox"
-      },
-      "probables": {
-        "away": {
-          "era": "4.72",
-          "name": "Grayson Rodriguez"
-        },
-        "home": {
-          "era": "4.44",
-          "name": "Brayan Bello"
-        }
-      },
-      "pulse": {
-        "label": "Warm",
-        "score": 59
-      },
-      "signals": [
-        {
-          "label": "BOS OPS (14d)",
-          "tone": "pos",
-          "value": ".717"
-        },
-        {
-          "label": "LAA bullpen ERA (7d)",
-          "tone": "neg",
-          "value": "4.17"
-        },
-        {
-          "label": "Season series",
-          "tone": "neutral",
-          "value": "BOS 3-0"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "4.72 vs 4.44"
-        }
-      ],
-      "slate_date": "2026-09-07",
-      "standout": {
-        "bet_type": "nrfi_yrfi",
-        "flags": [],
-        "market": "First-Inning Runs",
-        "score": 43,
-        "side": "YRFI"
-      },
-      "start": "1:35 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Fenway Park"
-    },
-    "824793": {
-      "away": {
-        "abbr": "CLE",
-        "color": "#E23750",
-        "name": "Guardians"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "first_five_moneyline": {
-          "flags": [],
-          "score": 16,
-          "side": "CLE"
-        },
-        "game_total": {
-          "flags": [],
-          "score": 5,
-          "side": "No clear lean"
-        },
-        "moneyline": {
-          "flags": [],
-          "score": 14,
-          "side": "No clear lean"
-        },
-        "nrfi_yrfi": {
-          "flags": [],
-          "score": 2,
-          "side": "No clear lean"
-        },
-        "run_line": {
-          "flags": [],
-          "score": 16,
-          "side": "No clear lean"
-        },
-        "team_total": {
-          "away": {
             "abbr": "CLE",
             "flags": [],
-            "score": 0,
+            "score": 13,
             "side": "No clear lean"
           },
           "home": {
             "abbr": "BAL",
             "flags": [],
-            "score": 13,
+            "score": 7,
             "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
       "home": {
         "abbr": "BAL",
         "color": "#EE672B",
@@ -4019,17 +4266,17 @@
       },
       "probables": {
         "away": {
-          "era": "3.90",
-          "name": "Joey Cantillo"
+          "era": "4.03",
+          "name": "Tanner Bibee"
         },
         "home": {
-          "era": "4.15",
-          "name": "Trevor Rogers"
+          "era": "3.71",
+          "name": "Brandon Young"
         }
       },
       "pulse": {
         "label": "Warm",
-        "score": 59
+        "score": 55
       },
       "signals": [
         {
@@ -4040,29 +4287,134 @@
         {
           "label": "BAL bullpen ERA (7d)",
           "tone": "neg",
-          "value": "3.92"
+          "value": "4.05"
         },
         {
           "label": "Season series",
           "tone": "neutral",
-          "value": "CLE 3-1"
+          "value": "CLE 3-2"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "3.90 vs 4.15"
+          "value": "4.03 vs 3.71"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
-      "start": "1:35 PM ET",
+      "start": "6:35 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "Oriole Park at Camden Yards"
     },
-    "824958": {
+    "824875": {
+      "away": {
+        "abbr": "TB",
+        "color": "#8FBCE6",
+        "name": "Rays"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "first_five_moneyline": {
+          "flags": [],
+          "score": 6,
+          "side": "No clear lean"
+        },
+        "game_total": {
+          "flags": [],
+          "score": 14,
+          "side": "No clear lean"
+        },
+        "moneyline": {
+          "flags": [],
+          "score": 9,
+          "side": "No clear lean"
+        },
+        "nrfi_yrfi": {
+          "flags": [],
+          "score": 31,
+          "side": "YRFI"
+        },
+        "run_line": {
+          "flags": [],
+          "score": 8,
+          "side": "No clear lean"
+        },
+        "team_total": {
+          "away": {
+            "abbr": "TB",
+            "flags": [],
+            "score": 6,
+            "side": "No clear lean"
+          },
+          "home": {
+            "abbr": "ATL",
+            "flags": [],
+            "score": 14,
+            "side": "No clear lean"
+          }
+        }
+      },
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
+      "home": {
+        "abbr": "ATL",
+        "color": "#E03963",
+        "name": "Braves"
+      },
+      "probables": {
+        "away": {
+          "era": "4.44",
+          "name": "Freddy Peralta"
+        },
+        "home": {
+          "era": "4.35",
+          "name": "AJ Smith-Shawver"
+        }
+      },
+      "pulse": {
+        "label": "Warm",
+        "score": 63
+      },
+      "signals": [
+        {
+          "label": "ATL OPS (14d)",
+          "tone": "pos",
+          "value": ".724"
+        },
+        {
+          "label": "TB bullpen ERA (7d)",
+          "tone": "neg",
+          "value": "4.17"
+        },
+        {
+          "label": "Season series",
+          "tone": "neutral",
+          "value": "ATL 5-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.44 vs 4.35"
+        }
+      ],
+      "slate_date": "2026-09-08",
+      "standout": {
+        "bet_type": "nrfi_yrfi",
+        "flags": [],
+        "market": "First-Inning Runs",
+        "score": 31,
+        "side": "YRFI"
+      },
+      "start": "7:15 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Truist Park"
+    },
+    "824957": {
       "away": {
         "abbr": "TOR",
         "color": "#4F86CA",
@@ -4072,47 +4424,47 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 49,
+          "score": 45,
           "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 7,
-          "side": "No clear lean"
+          "score": 25,
+          "side": "Over"
         },
         "moneyline": {
           "flags": [],
-          "score": 40,
+          "score": 38,
           "side": "TOR"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 24,
-          "side": "NRFI"
+          "score": 41,
+          "side": "YRFI"
         },
         "run_line": {
           "flags": [
             "run_line_hot"
           ],
-          "score": 40,
+          "score": 38,
           "side": "TOR"
         },
         "team_total": {
           "away": {
             "abbr": "TOR",
             "flags": [],
-            "score": 15,
+            "score": 33,
             "side": "Over"
           },
           "home": {
             "abbr": "ATH",
             "flags": [],
-            "score": 19,
-            "side": "Under"
+            "score": 5,
+            "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-09-07T15:37:26.414126+00:00",
+      "generated_at": "2026-09-08T14:15:37.679442+00:00",
       "home": {
         "abbr": "ATH",
         "color": "#5ABFB2",
@@ -4120,12 +4472,12 @@
       },
       "probables": {
         "away": {
-          "era": "3.08",
-          "name": "Dylan Cease"
+          "era": "4.07",
+          "name": "Jos\u00e9 Soriano"
         },
         "home": {
-          "era": "4.30",
-          "name": "Jacob Lopez"
+          "era": "5.03",
+          "name": "Jack Perkins"
         }
       },
       "pulse": {
@@ -4136,33 +4488,33 @@
         {
           "label": "ATH OPS (14d)",
           "tone": "pos",
-          "value": ".737"
+          "value": ".733"
         },
         {
           "label": "ATH bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.37"
+          "value": "4.38"
         },
         {
           "label": "Season series",
           "tone": "neutral",
-          "value": "TOR 3-0"
+          "value": "TOR 3-1"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "3.08 vs 4.30"
+          "value": "4.07 vs 5.03"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
-        "bet_type": "moneyline",
+        "bet_type": "nrfi_yrfi",
         "flags": [],
-        "market": "Moneyline",
-        "score": 40,
-        "side": "TOR"
+        "market": "First-Inning Runs",
+        "score": 41,
+        "side": "YRFI"
       },
-      "start": "10:05 PM ET",
+      "start": "9:40 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
@@ -4200,7 +4552,7 @@
           "value": "LAC +1.6 \u00b7 ARI -7.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4244,7 +4596,7 @@
           "value": "PIT +0.6 \u00b7 ATL -2.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "1:00 PM ET",
       "status": "Preview",
@@ -4282,7 +4634,7 @@
           "value": "IND +3.2 \u00b7 BAL +1.5"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "1:00 PM ET",
       "status": "Preview",
@@ -4320,7 +4672,7 @@
           "value": "HOU +6.4 \u00b7 BUF +6.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "1:00 PM ET",
       "status": "Preview",
@@ -4358,7 +4710,7 @@
           "value": "CAR -4.1 \u00b7 CHI +1.5"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4402,7 +4754,7 @@
           "value": "JAX +8.1 \u00b7 CLE -5.9"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4446,7 +4798,7 @@
           "value": "NYG -3.4 \u00b7 DAL -2.4"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "8:20 PM ET",
       "status": "Preview",
@@ -4484,7 +4836,7 @@
           "value": "KC +2.0 \u00b7 DEN +5.3"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "8:15 PM ET",
       "status": "Preview",
@@ -4522,7 +4874,7 @@
           "value": "MIN +0.6 \u00b7 GB +1.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "4:25 PM ET",
       "status": "Preview",
@@ -4560,7 +4912,7 @@
           "value": "LV -11.2 \u00b7 MIA -4.5"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4604,7 +4956,7 @@
           "value": "SEA +11.2 \u00b7 NE +10.0"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "8:20 PM ET",
       "status": "Preview",
@@ -4642,7 +4994,7 @@
           "value": "DET +4.0 \u00b7 NO -4.5"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4686,7 +5038,7 @@
           "value": "TEN -11.4 \u00b7 NYJ -11.9"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "1:00 PM ET",
       "status": "Preview",
@@ -4724,7 +5076,7 @@
           "value": "LA +10.1 \u00b7 SF +3.9"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4768,7 +5120,7 @@
           "value": "CIN -4.6 \u00b7 TB -1.8"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": null,
       "start": "1:00 PM ET",
       "status": "Preview",
@@ -4806,7 +5158,7 @@
           "value": "PHI +3.2 \u00b7 WAS -5.6"
         }
       ],
-      "slate_date": "2026-09-07",
+      "slate_date": "2026-09-08",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
