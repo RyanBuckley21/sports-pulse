@@ -43,6 +43,17 @@
     "team": "Manchester United",
     "template_version": "v2"
   },
+  "bryan reynolds|pit": {
+    "entity": "Bryan Reynolds",
+    "generated_at": "2026-09-10T18:40:24.322258+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Pittsburgh Pirates",
+    "template_version": "v2"
+  },
   "bukayo saka|ars": {
     "entity": "Bukayo Saka",
     "generated_at": "2026-09-01T14:38:41.298184+00:00",
@@ -208,17 +219,6 @@
     "team": "Texas Rangers",
     "template_version": "v2"
   },
-  "isaac paredes|hou": {
-    "entity": "Isaac Paredes",
-    "generated_at": "2026-09-10T17:12:10.403658+00:00",
-    "last_game_date": "2026-09-10",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Houston Astros",
-    "template_version": "v2"
-  },
   "jacob degrom|tex": {
     "entity": "Jacob deGrom",
     "generated_at": "2026-09-10T14:09:23.264660+00:00",
@@ -343,7 +343,7 @@
   "kyle schwarber|phi": {
     "entity": "Kyle Schwarber",
     "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
+    "last_game_date": "2026-09-10",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -360,6 +360,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Seattle Mariners",
+    "template_version": "v2"
+  },
+  "luis arraez|phi": {
+    "entity": "Luis Arraez",
+    "generated_at": "2026-09-10T18:40:24.322258+00:00",
+    "last_game_date": "2026-09-10",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Philadelphia Phillies",
     "template_version": "v2"
   },
   "luk\u00e1s horn\u00edcek|new": {
@@ -448,17 +459,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Colorado Rockies",
-    "template_version": "v2"
-  },
-  "trea turner|phi": {
-    "entity": "Trea Turner",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
     "template_version": "v2"
   },
   "yandy d\u00edaz|tb": {
