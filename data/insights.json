@@ -1,15 +1,4 @@
 {
-  "alex bregman|chc": {
-    "entity": "Alex Bregman",
-    "generated_at": "2026-09-11T14:08:45.224898+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Chicago Cubs",
-    "template_version": "v2"
-  },
   "alexander isak|liv": {
     "entity": "Alexander Isak",
     "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -241,6 +230,17 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
+  "henry bolte|ath": {
+    "entity": "Henry Bolte",
+    "generated_at": "2026-09-11T18:44:03.286267+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Athletics",
+    "template_version": "v2"
+  },
   "jackson chourio|mil": {
     "entity": "Jackson Chourio",
     "generated_at": "2026-09-11T14:08:45.224898+00:00",
@@ -439,6 +439,17 @@
     "team": "Los Angeles Dodgers",
     "template_version": "v2"
   },
+  "nathan lukes|tor": {
+    "entity": "Nathan Lukes",
+    "generated_at": "2026-09-11T18:44:03.286267+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Toronto Blue Jays",
+    "template_version": "v2"
+  },
   "nolan mclean|nym": {
     "entity": "Nolan McLean",
     "generated_at": "2026-09-11T14:08:45.224898+00:00",
@@ -470,17 +481,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Cleveland Guardians",
-    "template_version": "v2"
-  },
-  "pete crow-armstrong|chc": {
-    "entity": "Pete Crow-Armstrong",
-    "generated_at": "2026-09-11T14:08:45.224898+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Chicago Cubs",
     "template_version": "v2"
   },
   "rafael devers|sf": {
