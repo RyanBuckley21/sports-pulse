@@ -10,7 +10,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 92,
+          "score": 97,
           "side": "UTAH"
         }
       },
@@ -34,7 +34,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 92,
+        "score": 97,
         "side": "UTAH"
       },
       "start": "Sat Sep 12 \u00b7 10:15 PM ET",
@@ -54,8 +54,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 10,
-          "side": "No clear lean"
+          "score": 57,
+          "side": "AUB"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -79,7 +79,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 57,
+        "side": "AUB"
+      },
       "start": "Sat Sep 12 \u00b7 7:45 PM ET",
       "status": "Preview",
       "story": null,
@@ -97,7 +103,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 68,
+          "score": 88,
           "side": "UGA"
         }
       },
@@ -126,7 +132,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 68,
+        "score": 88,
         "side": "UGA"
       },
       "start": "Sat Sep 12 \u00b7 12:45 PM ET",
@@ -146,7 +152,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 79,
+          "score": 49,
           "side": "ALA"
         }
       },
@@ -175,7 +181,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 79,
+        "score": 49,
         "side": "ALA"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -195,7 +201,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 99,
+          "score": 100,
           "side": "MISS"
         }
       },
@@ -224,7 +230,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 99,
+        "score": 100,
         "side": "MISS"
       },
       "start": "Sat Sep 12 \u00b7 7:45 PM ET",
@@ -244,8 +250,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 12,
-          "side": "No clear lean"
+          "score": 40,
+          "side": "MINN"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -269,7 +275,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 40,
+        "side": "MINN"
+      },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
       "status": "Preview",
       "story": null,
@@ -287,8 +299,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 61,
-          "side": "MIZ"
+          "score": 15,
+          "side": "No clear lean"
         }
       },
       "generated_at": "2026-09-04T14:05:23.691880+00:00",
@@ -307,13 +319,7 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 61,
-        "side": "MIZ"
-      },
+      "standout": null,
       "start": "Fri Sep 11 \u00b7 8:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -380,7 +386,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 22,
+          "score": 31,
           "side": "No clear lean"
         }
       },
@@ -472,7 +478,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 62,
+          "score": 85,
           "side": "TA&M"
         }
       },
@@ -501,7 +507,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 62,
+        "score": 85,
         "side": "TA&M"
       },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
@@ -521,7 +527,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 85,
+          "score": 95,
           "side": "VAN"
         }
       },
@@ -545,7 +551,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 85,
+        "score": 95,
         "side": "VAN"
       },
       "start": "Sat Sep 12 \u00b7 4:15 PM ET",
@@ -565,8 +571,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 9,
-          "side": "No clear lean"
+          "score": 56,
+          "side": "KSU"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -590,7 +596,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 56,
+        "side": "KSU"
+      },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -657,7 +669,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 99,
+          "score": 98,
           "side": "TTU"
         }
       },
@@ -686,7 +698,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 99,
+        "score": 98,
         "side": "TTU"
       },
       "start": "Sat Sep 12 \u00b7 7:30 PM ET",
@@ -706,7 +718,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 52,
+          "score": 81,
           "side": "IOWA"
         }
       },
@@ -735,7 +747,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 52,
+        "score": 81,
         "side": "IOWA"
       },
       "start": "Sat Sep 12 \u00b7 7:30 PM ET",
@@ -755,7 +767,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 61,
+          "score": 85,
           "side": "PITT"
         }
       },
@@ -784,7 +796,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 61,
+        "score": 85,
         "side": "PITT"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -804,7 +816,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 16,
+          "score": 37,
           "side": "No clear lean"
         }
       },
@@ -842,7 +854,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 92,
+          "score": 97,
           "side": "TTU"
         }
       },
@@ -871,7 +883,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 92,
+        "score": 97,
         "side": "TTU"
       },
       "start": "Fri Sep 18 \u00b7 8:00 PM ET",
@@ -934,7 +946,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 75,
+          "score": 40,
           "side": "CAL"
         }
       },
@@ -963,7 +975,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 75,
+        "score": 40,
         "side": "CAL"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -1032,7 +1044,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 75,
+          "score": 91,
           "side": "CLEM"
         }
       },
@@ -1061,7 +1073,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 75,
+        "score": 91,
         "side": "CLEM"
       },
       "start": "Sat Sep 12 \u00b7 7:30 PM ET",
@@ -1081,7 +1093,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 90,
+          "score": 72,
           "side": "ODU"
         }
       },
@@ -1105,7 +1117,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 90,
+        "score": 72,
         "side": "ODU"
       },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
@@ -1125,7 +1137,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 83,
+          "score": 57,
           "side": "WAKE"
         }
       },
@@ -1154,7 +1166,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 83,
+        "score": 57,
         "side": "WAKE"
       },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
@@ -1174,7 +1186,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 93,
+          "score": 98,
           "side": "PITT"
         }
       },
@@ -1203,7 +1215,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 93,
+        "score": 98,
         "side": "PITT"
       },
       "start": "Thu Sep 17 \u00b7 7:30 PM ET",
@@ -1309,7 +1321,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 47,
+          "score": 78,
           "side": "NEB"
         }
       },
@@ -1338,7 +1350,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 47,
+        "score": 78,
         "side": "NEB"
       },
       "start": "Sat Sep 12 \u00b7 7:00 PM ET",
@@ -1358,8 +1370,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 70,
-          "side": "PSU"
+          "score": 30,
+          "side": "No clear lean"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -1383,13 +1395,7 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 70,
-        "side": "PSU"
-      },
+      "standout": null,
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -1407,7 +1413,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 92,
+          "score": 77,
           "side": "SDSU"
         }
       },
@@ -1436,7 +1442,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 92,
+        "score": 77,
         "side": "SDSU"
       },
       "start": "Sat Sep 12 \u00b7 7:15 PM ET",
@@ -1456,7 +1462,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 70,
+          "score": 89,
           "side": "CONN"
         }
       },
@@ -1480,7 +1486,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 70,
+        "score": 89,
         "side": "CONN"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -1500,7 +1506,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 85,
+          "score": 95,
           "side": "USC"
         }
       },
@@ -1529,7 +1535,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 85,
+        "score": 95,
         "side": "USC"
       },
       "start": "Sat Sep 12 \u00b7 11:00 PM ET",
@@ -1549,7 +1555,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 57,
+          "score": 83,
           "side": "WASH"
         }
       },
@@ -1578,7 +1584,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 57,
+        "score": 83,
         "side": "WASH"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -1598,7 +1604,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 99,
+          "score": 100,
           "side": "ND"
         }
       },
@@ -1627,7 +1633,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 99,
+        "score": 100,
         "side": "ND"
       },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
@@ -1745,8 +1751,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 7,
-          "side": "No clear lean"
+          "score": 55,
+          "side": "TXST"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -1770,7 +1776,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 55,
+        "side": "TXST"
+      },
       "start": "Sat Sep 12 \u00b7 3:30 PM ET",
       "status": "Preview",
       "story": null,
@@ -1788,7 +1800,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 78,
+          "score": 46,
           "side": "USF"
         }
       },
@@ -1817,7 +1829,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 78,
+        "score": 46,
         "side": "USF"
       },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
@@ -1837,8 +1849,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 67,
-          "side": "NAVY"
+          "score": 26,
+          "side": "No clear lean"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -1862,13 +1874,7 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 67,
-        "side": "NAVY"
-      },
+      "standout": null,
       "start": "Sat Sep 12 \u00b7 7:30 PM ET",
       "status": "Preview",
       "story": null,
@@ -2076,7 +2082,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 75,
+          "score": 91,
           "side": "ECU"
         }
       },
@@ -2105,7 +2111,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 75,
+        "score": 91,
         "side": "ECU"
       },
       "start": "Sat Sep 12 \u00b7 12:00 PM ET",
@@ -2125,7 +2131,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 65,
+          "score": 87,
           "side": "TULN"
         }
       },
@@ -2154,7 +2160,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 65,
+        "score": 87,
         "side": "TULN"
       },
       "start": "Sat Sep 12 \u00b7 7:00 PM ET",
@@ -2223,8 +2229,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 10,
-          "side": "No clear lean"
+          "score": 57,
+          "side": "FIU"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -2248,7 +2254,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 57,
+        "side": "FIU"
+      },
       "start": "Sat Sep 12 \u00b7 6:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -2309,7 +2321,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 31,
+          "score": 22,
           "side": "No clear lean"
         }
       },
@@ -2352,7 +2364,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 91,
+          "score": 97,
           "side": "KENN"
         }
       },
@@ -2376,7 +2388,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 91,
+        "score": 97,
         "side": "KENN"
       },
       "start": "Sat Sep 12 \u00b7 7:00 PM ET",
@@ -2396,8 +2408,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 32,
-          "side": "No clear lean"
+          "score": 71,
+          "side": "MRSH"
         }
       },
       "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -2421,7 +2433,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 71,
+        "side": "MRSH"
+      },
       "start": "Sat Sep 12 \u00b7 7:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -4682,7 +4700,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 80,
+          "score": 93,
           "side": "LAC"
         }
       },
@@ -4706,7 +4724,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 80,
+        "score": 93,
         "side": "LAC"
       },
       "start": "Sun Sep 13 \u00b7 4:25 PM ET",
@@ -4726,8 +4744,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 37,
-          "side": "No clear lean"
+          "score": 75,
+          "side": "PIT"
         }
       },
       "generated_at": "2026-09-06T13:28:32.578596+00:00",
@@ -4746,7 +4764,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 75,
+        "side": "PIT"
+      },
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -4764,8 +4788,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 19,
-          "side": "No clear lean"
+          "score": 64,
+          "side": "IND"
         }
       },
       "generated_at": "2026-09-06T13:28:32.578596+00:00",
@@ -4784,7 +4808,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 64,
+        "side": "IND"
+      },
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -4802,7 +4832,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 5,
+          "score": 48,
           "side": "No clear lean"
         }
       },
@@ -4840,8 +4870,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 57,
-          "side": "CHI"
+          "score": 7,
+          "side": "No clear lean"
         }
       },
       "generated_at": "2026-09-06T13:28:32.578596+00:00",
@@ -4860,13 +4890,7 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 57,
-        "side": "CHI"
-      },
+      "standout": null,
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -4884,7 +4908,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 92,
+          "score": 97,
           "side": "JAX"
         }
       },
@@ -4908,7 +4932,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 92,
+        "score": 97,
         "side": "JAX"
       },
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
@@ -4928,7 +4952,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 12,
+          "score": 42,
           "side": "No clear lean"
         }
       },
@@ -4966,7 +4990,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 36,
+          "score": 19,
           "side": "No clear lean"
         }
       },
@@ -5004,7 +5028,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 13,
+          "score": 41,
           "side": "No clear lean"
         }
       },
@@ -5042,8 +5066,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 65,
-          "side": "MIA"
+          "score": 19,
+          "side": "No clear lean"
         }
       },
       "generated_at": "2026-09-06T13:28:32.578596+00:00",
@@ -5062,13 +5086,7 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 65,
-        "side": "MIA"
-      },
+      "standout": null,
       "start": "Sun Sep 13 \u00b7 4:25 PM ET",
       "status": "Preview",
       "story": null,
@@ -5086,7 +5104,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 75,
+          "score": 91,
           "side": "DET"
         }
       },
@@ -5110,7 +5128,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 75,
+        "score": 91,
         "side": "DET"
       },
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
@@ -5130,8 +5148,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 6,
-          "side": "No clear lean"
+          "score": 56,
+          "side": "TEN"
         }
       },
       "generated_at": "2026-09-06T13:28:32.578596+00:00",
@@ -5150,7 +5168,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 56,
+        "side": "TEN"
+      },
       "start": "Sun Sep 13 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -5168,7 +5192,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 31,
+          "score": 25,
           "side": "No clear lean"
         }
       },
@@ -5206,7 +5230,7 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 76,
+          "score": 92,
           "side": "PHI"
         }
       },
@@ -5230,7 +5254,7 @@
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 76,
+        "score": 92,
         "side": "PHI"
       },
       "start": "Sun Sep 13 \u00b7 4:25 PM ET",
@@ -5250,8 +5274,8 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 31,
-          "side": "No clear lean"
+          "score": 72,
+          "side": "BUF"
         }
       },
       "generated_at": "2026-09-10T14:09:23.264660+00:00",
@@ -5277,7 +5301,13 @@
         }
       ],
       "slate_date": "2026-09-11",
-      "standout": null,
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 72,
+        "side": "BUF"
+      },
       "start": "Thu Sep 17 \u00b7 8:15 PM ET",
       "status": "Preview",
       "story": null,
