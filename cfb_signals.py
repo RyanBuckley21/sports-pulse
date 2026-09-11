@@ -112,11 +112,21 @@ _FALLBACK_TIERS = (("season_margin",), ("prior_margin",))
 _FALLBACK_SIGNALS = tuple(k for tier in _FALLBACK_TIERS for k in tier)
 
 
-def _base_signals(inp, scales):
+def _base_signals(inp, scales, home_field=None):
     """Every base signal's directional value toward HOME, or None where
     inputs are missing. Iterates SIGNAL_SPECS rather than hardcoding each
-    extraction -- see that table's docstring for why."""
-    return {name: _paired(inp.get(spec["home_key"]), inp.get(spec["away_key"]),
+    extraction -- see that table's docstring for why.
+
+    `home_field` is {signal_name: shift in that signal's input units}, from
+    config.betting_signals.cfb.home_field. A signal absent from it gets no
+    adjustment, so the calibrated PPA tier -- which has never been measured for
+    a venue term and must not be given an asserted one -- is byte-identical to
+    what it computed before this argument existed. See signal_core.home_field."""
+    hf = home_field or {}
+    neutral = bool(inp.get("neutral_site"))
+    return {name: _paired(signal_core.home_field(inp.get(spec["home_key"]),
+                                                 hf.get(name), neutral),
+                          inp.get(spec["away_key"]),
                           scales[spec["scale_key"]], spec["favors"])
             for name, spec in SIGNAL_SPECS.items()}
 
@@ -162,7 +172,7 @@ def score_game(config, sport_key, inputs):
     scales = cfg["scales"]
     min_t = cfg.get("min_threshold", 15)
 
-    sig = _base_signals(inputs, scales)
+    sig = _base_signals(inputs, scales, cfg.get("home_field"))
     home, away = inputs.get("home_abbr"), inputs.get("away_abbr")
     out = {}
     for bt, weights in bet_types.items():
@@ -206,11 +216,18 @@ def build_inputs(away_abbr, home_abbr, away_off_ppa, home_off_ppa,
                  away_def_ppa_allowed, home_def_ppa_allowed,
                  away_turnover_diff, home_turnover_diff,
                  away_season_margin=None, home_season_margin=None,
-                 away_prior_margin=None, home_prior_margin=None):
+                 away_prior_margin=None, home_prior_margin=None,
+                 neutral_site=False):
     """Assemble the deterministic input dict from fetchers.cfb's already-
     computed team-form values, mirroring nfl_signals.build_inputs' role."""
     return {
         "away_abbr": away_abbr, "home_abbr": home_abbr,
+        # Defaults to False, i.e. "a real home team", which is what every
+        # caller that predates the home-field adjustment meant. A caller that
+        # omits it on an actual neutral-site game gets the shift applied when
+        # it should not be -- so fetchers/cfb.py and cfb_backtest.py both pass
+        # it explicitly off the schedule's own neutral_site column.
+        "neutral_site": bool(neutral_site),
         "away_off_ppa": _coerce(away_off_ppa), "home_off_ppa": _coerce(home_off_ppa),
         "away_def_ppa_allowed": _coerce(away_def_ppa_allowed),
         "home_def_ppa_allowed": _coerce(home_def_ppa_allowed),

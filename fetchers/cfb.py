@@ -1088,6 +1088,13 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
         home_season_margin=season_margin.get(home),
         away_prior_margin=prior_margin.get(away),
         home_prior_margin=prior_margin.get(home),
+        # VENUE, for the home-field adjustment on the fallback tiers -- see
+        # signal_core.home_field. cfbfastR publishes this as the string "TRUE"
+        # /"FALSE" and the ESPN fallback schedule mirrors that spelling
+        # exactly (_espn_rows), so one comparison covers both sources. Bowls
+        # and kickoff-classic games are the ones this catches, and getting
+        # them wrong would add a home edge to a game with no home team.
+        neutral_site=str(g.get("neutral_site", "")).upper() == "TRUE",
     )
     # No `availability` argument anywhere in this call: CFB has no injury
     # feed, so there is no QB override to apply. See the module docstring.

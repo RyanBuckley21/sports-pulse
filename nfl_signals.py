@@ -150,12 +150,22 @@ def _apply_fallback_tiers(sig, weights):
     return out
 
 
-def _base_signals(inp, scales):
+def _base_signals(inp, scales, home_field=None):
     """Every base signal's directional value toward HOME, or None where
     inputs are missing. Availability is NOT applied here -- it's the later
     override (see score_game). Iterates SIGNAL_SPECS rather than hardcoding
-    each signal's extraction -- see that table's docstring for why."""
-    return {name: _paired(inp.get(spec["home_key"]), inp.get(spec["away_key"]),
+    each signal's extraction -- see that table's docstring for why.
+
+    `home_field` is {signal_name: shift in that signal's input units}, from
+    config.betting_signals.nfl.home_field. A signal absent from it gets no
+    adjustment, so the calibrated EPA tier -- which has not been measured for a
+    venue term and must not be handed an asserted one -- computes exactly what
+    it computed before this argument existed. See signal_core.home_field."""
+    hf = home_field or {}
+    neutral = bool(inp.get("neutral_site"))
+    return {name: _paired(signal_core.home_field(inp.get(spec["home_key"]),
+                                                 hf.get(name), neutral),
+                          inp.get(spec["away_key"]),
                           scales[spec["scale_key"]], spec["favors"])
             for name, spec in SIGNAL_SPECS.items()}
 
@@ -178,7 +188,7 @@ def score_game(config, sport_key, inputs, availability=None):
     availability = availability or {}
     any_out = bool(_qb_flags(availability))
 
-    sig = _base_signals(inputs, scales)
+    sig = _base_signals(inputs, scales, cfg.get("home_field"))
     home, away = inputs.get("home_abbr"), inputs.get("away_abbr")
     out = {}
 
@@ -260,12 +270,19 @@ def build_inputs(away_abbr, home_abbr, away_off_epa, home_off_epa,
                  away_scoring_margin, home_scoring_margin,
                  away_rest, home_rest,
                  away_season_margin=None, home_season_margin=None,
-                 away_prior_margin=None, home_prior_margin=None):
+                 away_prior_margin=None, home_prior_margin=None,
+                 neutral_site=False):
     """Assemble the deterministic input dict from fetchers.nfl's already-
     computed team-form values, mirroring betting_signals.build_inputs' role
     for MLB."""
     return {
         "away_abbr": away_abbr, "home_abbr": home_abbr,
+        # Defaults to False, i.e. "a real home team" -- what every caller that
+        # predates the home-field adjustment meant. games.csv's `location`
+        # column is the source of truth ("Neutral" for the international series
+        # and the Super Bowl); fetchers/nfl.py and nfl_backtest.py both read it
+        # rather than leaving this defaulted.
+        "neutral_site": bool(neutral_site),
         "away_off_epa": _coerce(away_off_epa), "home_off_epa": _coerce(home_off_epa),
         "away_def_epa_allowed": _coerce(away_def_epa_allowed), "home_def_epa_allowed": _coerce(home_def_epa_allowed),
         "away_turnover_diff": _coerce(away_turnover_diff), "home_turnover_diff": _coerce(home_turnover_diff),

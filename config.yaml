@@ -894,6 +894,56 @@ betting_signals:
       # part-season does, which is the compression you would expect.
       season_margin_gap: 9.9246
       prior_margin_gap: 8.7074
+    # HOME-FIELD ADJUSTMENT, in each signal's own input units, added to the
+    # HOME side's value before the gap is taken. Applied only at real home
+    # games -- games.csv's `location` column marks the international series and
+    # the Super Bowl "Neutral", and those get nothing. See
+    # signal_core.home_field.
+    #
+    # THE DEFECT THIS FIXES IS CALIBRATION, NOT HIT RATE. A points-margin gap
+    # has no venue term at all, so the fallback tiers scored a team the same
+    # whether it was at home or on the road -- and the Signal Score therefore
+    # meant two different things depending on which. Walk-forward over
+    # 2002-2025 regular-season games, at threshold 40:
+    #
+    #                          home leans      road leans       gap (95% CI)
+    #   season tier, before    75.6% (1361)    62.6% (1441)    +13.0pp [+9.7, +16.4]
+    #   season tier, after     70.8% (2037)    68.5% ( 856)     +2.3pp [-1.3, +6.0]
+    #   prior tier,  before    69.5% ( 587)    57.8% ( 599)    +11.7pp [+6.1, +17.0]
+    #   prior tier,  after     65.5% ( 962)    61.8% ( 306)     +3.7pp [-2.2, +9.8]
+    #
+    # Both tiers go from a venue bias whose CI clears zero comfortably to one
+    # that straddles it. Road leans stop being systematically worse bets at the
+    # same score, mostly by not being taken: the road pick count falls by more
+    # than half, which is the "leans that should never have cleared the bar"
+    # effect this was predicted to have.
+    #
+    # THE OVERALL HIT RATE BARELY MOVES, and that is reported rather than
+    # buried. Paired bootstrap (2,000 resamples of the game population, both
+    # configurations scored on each resample, stdlib, seed 17): season tier
+    # 68.9% -> 70.1%, +1.19pp, 95% CI [-0.00, +2.44]; prior tier 63.6% ->
+    # 64.6%, +1.01pp, CI [-1.20, +2.92]. Neither clears zero. The case for
+    # shipping this is that the score now means the same thing at both venues,
+    # NOT that it wins more often -- the aggregate gain is not established.
+    # Pairing matters here: an unpaired read of these same numbers is how the
+    # opponent-adjustment experiment manufactured a +2.1pp gain that turned out
+    # to be -0.2% once the comparison was done correctly.
+    #
+    # FITTED, NOT SEARCHED. Each value is intercept/slope from OLS of the
+    # actual home margin on that tier's own gap: the intercept is the home edge
+    # in points (+2.34 season, +2.27 prior -- both close to the league's
+    # long-run home edge, which is the reassuring part), and dividing by the
+    # slope converts it into the shift the input needs for the lean to flip in
+    # the right place. Grid-searching a constant against hit rate would tune on
+    # the thing being evaluated.
+    #
+    # NOT LISTED HERE = NO ADJUSTMENT. off_epa, def_epa_allowed, turnover_diff
+    # and rest_diff are deliberately absent: the calibrated tier has not been
+    # measured for a venue term, and asserting one without measuring it is what
+    # the rest of this file refuses to do.
+    home_field:
+      season_margin: 3.926
+      prior_margin: 4.994
     bet_types:
       moneyline:
         off_epa: 0.8380
@@ -985,6 +1035,46 @@ betting_signals:
       # the 5,233 games across 2015-2025 where both sides had the three-game
       # minimum. Also schedule-derived, also free.
       season_margin_gap: 17.0004
+    # HOME-FIELD ADJUSTMENT -- see the nfl block above for the full rationale;
+    # the defect, the estimator and the shape of the result are identical.
+    # Added to the HOME side's input, and only when the schedule's
+    # neutral_site column is FALSE, so bowls and kickoff-classic games get
+    # nothing. See signal_core.home_field.
+    #
+    # Walk-forward over 2015-2025 FBS-vs-FBS games (2020 excluded, COVID), at
+    # threshold 40:
+    #
+    #                          home leans      road leans       gap (95% CI)
+    #   season tier, before    81.9% (1739)    70.4% (1776)    +11.5pp [+8.8, +14.3]
+    #   season tier, after     79.2% (2275)    73.7% (1283)     +5.4pp [+2.5, +8.4]
+    #   prior tier,  before    81.1% ( 472)    63.5% ( 323)    +17.7pp [+11.2, +24.1]
+    #   prior tier,  after     76.9% ( 684)    72.6% ( 157)     +4.3pp [-3.2, +11.9]
+    #
+    # NOTE THE SEASON TIER IS NOT FULLY FIXED: its venue bias halves but its CI
+    # still clears zero, so a CFB home lean remains a somewhat better bet than
+    # a road lean at the same score. That is expected -- college home-field
+    # advantage varies enormously by venue in a way one league-wide constant
+    # cannot absorb -- and it is left visible rather than tuned away. A
+    # per-program home edge is the obvious next measurement and is deliberately
+    # not asserted here.
+    #
+    # Overall hit rate, paired bootstrap (2,000 resamples, seed 17): season
+    # tier 76.1% -> 77.2%, +1.08pp, 95% CI [+0.25, +1.92] (the one tier of the
+    # four whose aggregate gain clears zero); prior tier 74.0% -> 76.1%,
+    # +2.14pp, CI [-0.24, +4.60] (does not clear). Read the season tier's gain
+    # as real but small, and the prior tier's as unproven.
+    #
+    # Home edges from the fit: +3.16 pts (season tier), +6.33 pts (prior tier).
+    # The prior tier's is larger because a full prior season regresses harder
+    # to the mean, so the same points of home edge take a bigger input shift to
+    # express -- the same reason prior_margin_gap is the tighter scale.
+    #
+    # NOT LISTED HERE = NO ADJUSTMENT. off_ppa, def_ppa_allowed and
+    # turnover_diff are absent because measuring a venue term for them needs
+    # CFBD data, which this work deliberately spent none of.
+    home_field:
+      season_margin: 4.770
+      prior_margin: 8.568
     bet_types:
       # Moneyline only in v1. Weights are reliability-proportional over the
       # three signals that survived measurement: r = 0.3351 / 0.2612 / 0.1891
@@ -1168,6 +1258,24 @@ betting_signals:
       # had a prior Premier League season. Free to measure: the same ESPN
       # scoreboard the fixtures come from.
       prior_gd_gap: 1.0247
+    # NO home_field BLOCK, AND THAT IS A MEASURED DECISION, NOT AN OVERSIGHT.
+    # The nfl and cfb blocks above both carry a home-field adjustment on their
+    # cold-start margin tiers, because a points-margin gap has no venue term
+    # and the resulting Signal Score meant two different things at home and on
+    # the road. The same estimator was run on this sport's prior_gd tier over
+    # 2016/17-2025/26 (322 matches inside the five-match cold start) and the
+    # answer came back the other way:
+    #
+    #   home edge from the fit  +0.096 goals  ->  input shift +0.119 goals
+    #   hit rate  no adjustment 64.5% (197 picks)   with it 60.8% (212 picks)
+    #
+    # A tenth of a goal, and applying it made the picks WORSE. That is
+    # coherent rather than surprising: unlike the other two sports' fallback
+    # tiers, this model already weights venue_form directly (see
+    # venue_form_gap above and its weight below), so the venue information is
+    # in the lean already and shifting the prior-season input adds it twice.
+    # The number is recorded here so nobody measures it a third time and so
+    # the asymmetry between this block and the other two reads as deliberate.
     bet_types:
       # IDENTICAL WEIGHTS ON PURPOSE. There is one model here and two ways to
       # take it, not two models: both markets read the same lean, and the

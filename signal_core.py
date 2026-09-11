@@ -70,6 +70,39 @@ def paired(val_home, val_away, scale, favors):
     return d if favors == "higher" else -d
 
 
+def home_field(home_val, shift, neutral_site):
+    """`home_val` with a venue adjustment folded in, for use as the HOME side of
+    `paired`.
+
+    WHY THIS EXISTS. The cold-start fallback tiers score a game purely on a
+    points-margin gap, and a margin gap carries NO VENUE TERM AT ALL: a team
+    +7 per game playing at a team +1 per game gets the same lean whether it is
+    at home or on the road. Measured over ten CFB seasons and twenty-four NFL
+    ones, that made the Signal Score mean two different things depending on
+    venue -- picks on the home side hit 81.9% while picks on the road side, at
+    the SAME score, hit 70.4% (CFB season-margin tier; the other three tiers
+    look the same). A score is a calibration claim, so a venue-dependent one is
+    broken even when the aggregate hit rate looks fine.
+
+    The shift is in the SIGNAL'S OWN INPUT UNITS, and it is fitted rather than
+    searched: regress the actual home margin on the tier's gap, and
+    intercept/slope is the amount that must be added to the home input for the
+    lean to flip in the right place. Grid-searching a constant against hit rate
+    would tune on the thing being evaluated. See config.yaml's `home_field`
+    blocks for each measured value and its evidence.
+
+    NEUTRAL SITES GET NOTHING, which is the whole point of taking the flag: a
+    bowl game or an international-series game has no home field to advantage,
+    and applying the shift there would introduce the same bias it removes.
+
+    A None input stays None (the signal is simply absent), and a zero or
+    missing shift returns the input untouched -- so a signal with no measured
+    home-field term behaves exactly as it did before this existed."""
+    if home_val is None or not shift or neutral_site:
+        return home_val
+    return home_val + shift
+
+
 def raw_lean(sig, weights):
     """Weighted net lean L in [-1, 1] over the available (non-None) signals,
     renormalized by their weights. A signal present with value 0 (e.g. an even
