@@ -698,6 +698,13 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         # nfl_signals._FALLBACK_TIERS.
         away_season_margin=season_margin.get(away), home_season_margin=season_margin.get(home),
         away_prior_margin=prior_margin.get(away), home_prior_margin=prior_margin.get(home),
+        # VENUE, for the home-field adjustment on the fallback tiers -- see
+        # signal_core.home_field. games.csv's `location` is "Home" or
+        # "Neutral"; 2026 has eight neutral games (the international series),
+        # and crediting one of those clubs with a home edge would introduce
+        # exactly the bias the adjustment exists to remove. Absent/unknown
+        # reads as a normal home game, which is what 98.6% of them are.
+        neutral_site=(g.get("location") or "Home") != "Home",
     )
     betting = nfl_signals.score_game(config, "nfl", inputs, availability=availability)
     standout_threshold = ((config.get("betting_signals") or {}).get("nfl") or {}).get("standout_threshold", 50)

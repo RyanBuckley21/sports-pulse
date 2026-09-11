@@ -202,6 +202,12 @@ def collect_season(session, season, cache_dir=None):
             home_def_ppa_allowed=home_form.get("def_ppa_allowed"),
             away_turnover_diff=away_form.get("turnover_diff"),
             home_turnover_diff=home_form.get("turnover_diff"),
+            # Read off the schedule rather than left defaulted. None of the
+            # three signals this script measures carries a home_field term
+            # today, so this changes no current number -- it is here so that
+            # the moment one does, the calibration is measured under the same
+            # venue rule production scores under.
+            neutral_site=str(g.get("neutral_site", "")).upper() == "TRUE",
         )
         # Measured-only candidate, kept OUT of `inputs` so score_game's
         # contract is exactly what production passes it.

@@ -155,6 +155,11 @@ def collect_game_records(session, seasons):
                 away_turnover_diff=away_form.get("turnover_diff"), home_turnover_diff=home_form.get("turnover_diff"),
                 away_scoring_margin=margins.get(away), home_scoring_margin=margins.get(home),
                 away_rest=g.get("away_rest"), home_rest=g.get("home_rest"),
+                # Read off games.csv rather than left defaulted. No signal this
+                # script measures carries a home_field term today, so this
+                # changes no current number -- it is here so a future one is
+                # calibrated under the same venue rule production scores under.
+                neutral_site=(g.get("location") or "Home") != "Home",
             )
             a_f, h_f = float(a_score), float(h_score)
             home_win = None if a_f == h_f else (h_f > a_f)  # None -- tie, excluded from win/loss correlation and PUSHed when graded

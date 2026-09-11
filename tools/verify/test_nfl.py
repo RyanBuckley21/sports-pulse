@@ -131,9 +131,13 @@ blank = score()
 ok("no signals at all is still 'No clear lean'", blank["side"] == "No clear lean", blank)
 ok("  scoring 0", blank["score"] == 0, blank)
 
-ok("equal and opposite gaps score equally",
-   score(away_season_margin=-6.0, home_season_margin=6.0)["score"]
-   == score(away_season_margin=6.0, home_season_margin=-6.0)["score"])
+# AT A NEUTRAL SITE. At a real home game the home-field adjustment breaks this
+# symmetry on purpose -- see the home_field section below. Asserting it
+# unconditionally, as this used to, would now pass only if the adjustment had
+# quietly stopped being applied.
+ok("equal and opposite gaps score equally at a neutral site",
+   score(away_season_margin=-6.0, home_season_margin=6.0, neutral_site=True)["score"]
+   == score(away_season_margin=6.0, home_season_margin=-6.0, neutral_site=True)["score"])
 scores = [score(away_season_margin=0.0, home_season_margin=g)["score"]
           for g in (0, 2, 5, 10, 18, 30, 60)]
 ok("score is monotone in the gap", scores == sorted(scores), scores)
@@ -187,6 +191,55 @@ legacy = nfl_signals.build_inputs(
     away_rest=None, home_rest=None)
 ok("a caller passing no margins gets the calibrated lean unchanged",
    nfl_signals.score_game(CONFIG, "nfl", legacy)["moneyline"] == plain)
+ok("  and its inputs read as a normal home game, not a neutral one",
+   legacy["neutral_site"] is False, legacy["neutral_site"])
+
+
+# ------------------------------------------------------- home-field adjustment
+# THE PROPERTY: a points-margin gap carries no venue term, so the fallback
+# tiers scored a club identically home or away -- and the same Signal Score
+# meant two different things. Measured over 2002-2025, an NFL road lean hit
+# 11.7-13.0pp worse than a home lean at the same score. The fix (config.
+# betting_signals.nfl.home_field, evidence in that block's comments) shifts the
+# HOME side's margin input, and only at a real home game -- games.csv marks the
+# international series "Neutral".
+hf = cfg.get("home_field") or {}
+ok("config carries a home_field block", bool(hf), hf)
+for key in ("season_margin", "prior_margin"):
+    ok("  with a {} shift".format(key), (hf.get(key) or 0) > 0, hf)
+ok("  and no shift on any calibrated EPA signal -- never measured, never asserted",
+   not any(k in hf for k in ("off_epa", "def_epa_allowed", "turnover_diff", "rest_diff")), hf)
+
+# A DEAD-EVEN MATCHUP is where this bites: with no venue term it scores 0 by
+# construction, so anything it scores at all is home field and nothing else.
+# Delete the home_field lookup from nfl_signals._base_signals and the first of
+# these flips straight back to 0.
+even_home = score(away_season_margin=0.0, home_season_margin=0.0)
+even_neutral = score(away_season_margin=0.0, home_season_margin=0.0, neutral_site=True)
+ok("an even matchup at home scores toward HOME on the venue alone",
+   even_home["score"] > 0, even_home)
+ok("  and the same matchup at a neutral site scores nothing at all",
+   even_neutral["score"] == 0, even_neutral)
+
+# Worth exactly what config says, in the signal's own units.
+offset = score(away_season_margin=0.0, home_season_margin=-hf["season_margin"])
+ok("the applied shift equals the configured one",
+   offset == even_neutral, "{} vs {}".format(offset, even_neutral))
+prior_offset = score(away_prior_margin=0.0, home_prior_margin=-hf["prior_margin"])
+ok("the prior tier uses its own shift, not the season tier's",
+   prior_offset["score"] == 0, prior_offset)
+ok("  the two shifts are genuinely different numbers",
+   hf["season_margin"] != hf["prior_margin"], hf)
+
+# DIRECTION: only ever toward the home side.
+road = score(away_season_margin=8.0, home_season_margin=0.0)
+road_neutral = score(away_season_margin=8.0, home_season_margin=0.0, neutral_site=True)
+ok("playing at home cuts the road side's score, never the home side's",
+   road["score"] < road_neutral["score"], "{} vs {}".format(road, road_neutral))
+
+# THE CALIBRATED TIER IS UNTOUCHED, at either venue.
+ok("the calibrated EPA lean is unchanged by venue",
+   score(neutral_site=True, **EPA) == plain and score(**EPA) == plain, plain)
 
 
 # ================================================================ grading
