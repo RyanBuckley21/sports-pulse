@@ -265,6 +265,33 @@ ok("home_field applies nothing at a neutral site", signal_core.home_field(3.0, 5
 ok("home_field adds the shift at a home game", signal_core.home_field(3.0, 5.0, False) == 8.0)
 
 
+# -------------------------------------------------- CFBD spending gate
+# Not a signals check, but it belongs with the offline CFB suite: this gate is
+# the only thing standing between a stray run and a 1,000-call monthly quota,
+# and it used to fail OPEN on the most natural way to turn it off. bool("0") is
+# True in Python, so `CFB_ALLOW_CFBD=0` spent calls exactly as if it said 1.
+import os as _os  # noqa: E402
+from fetchers import cfb as _cfb  # noqa: E402
+
+_saved = _os.environ.get("CFB_ALLOW_CFBD")
+try:
+    for _v, _want in ((None, False), ("", False), ("   ", False),
+                      ("0", False), ("false", False), ("FALSE", False),
+                      ("No", False), ("off", False), ("none", False),
+                      ("1", True), ("true", True), ("yes", True)):
+        if _v is None:
+            _os.environ.pop("CFB_ALLOW_CFBD", None)
+        else:
+            _os.environ["CFB_ALLOW_CFBD"] = _v
+        ok("CFB_ALLOW_CFBD={!r} means {}".format(_v, "spend" if _want else "do not spend"),
+           _cfb.cfbd_spending_allowed() is _want)
+finally:
+    if _saved is None:
+        _os.environ.pop("CFB_ALLOW_CFBD", None)
+    else:
+        _os.environ["CFB_ALLOW_CFBD"] = _saved
+
+
 print("cfb signals: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "cfb signals: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))
 for f in failures:

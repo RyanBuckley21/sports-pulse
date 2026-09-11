@@ -143,9 +143,22 @@ CFBD_ALLOW_ENV = "CFB_ALLOW_CFBD"
 _cfbd_calls = {"count": 0, "capped": False}
 
 
+# Values of CFBD_ALLOW_ENV that mean "no", beyond empty/unset. Without these,
+# the guard failed OPEN on the most natural way to switch it off: bool("0") is
+# True in Python, so `CFB_ALLOW_CFBD=0 python3 ...` -- which reads to any human
+# as "off" -- spent quota exactly as if it said 1. A gate whose entire job is
+# protecting a 1,000-call monthly budget must not do that. Compared
+# case-insensitively after stripping.
+CFBD_ALLOW_FALSEY = frozenset({"0", "false", "no", "off", "none"})
+
+
 def cfbd_spending_allowed():
-    """Whether this run may spend CFBD calls -- see CFBD_ALLOW_ENV."""
-    return bool((os.environ.get(CFBD_ALLOW_ENV) or "").strip())
+    """Whether this run may spend CFBD calls -- see CFBD_ALLOW_ENV.
+
+    Unset, empty, and any of CFBD_ALLOW_FALSEY all mean no. Anything else --
+    including the "1" daily-stats-and-grade.yml sets -- means yes."""
+    raw = (os.environ.get(CFBD_ALLOW_ENV) or "").strip()
+    return bool(raw) and raw.lower() not in CFBD_ALLOW_FALSEY
 
 
 def reset_cfbd_budget():
