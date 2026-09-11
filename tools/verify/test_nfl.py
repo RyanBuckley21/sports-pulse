@@ -50,6 +50,7 @@ import yaml  # noqa: E402
 import nfl_grading  # noqa: E402
 import nfl_signals  # noqa: E402
 import signal_report as sr  # noqa: E402
+import slate_clock  # noqa: E402
 from fetchers import nfl as nfl_fetcher  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -281,6 +282,49 @@ ok("  and falls back without it", nfl_grading._scoreboard_url(None) == nfl_gradi
 ok("the fetcher's window is a week", nfl_fetcher.FIXTURE_WINDOW_DAYS == 7)
 ok("the season-margin floor is 5, not CFB's 3",
    nfl_fetcher.SEASON_MARGIN_MIN_GAMES == 5, nfl_fetcher.SEASON_MARGIN_MIN_GAMES)
+
+# ============================================== the cold-start gate is PER GAME
+# It used to be `if not team_stats` -- "has nflverse published this season's
+# release yet". That reads the release EXISTING as the data being there, and it
+# is not: nflverse publishes stats_team INCREMENTALLY as games complete. On
+# 2026-09-10, the Thursday of week 2, that release held TWO rows (the two clubs
+# from Wednesday's opener), so thirty clubs had no form, the fallback never
+# fired because the file was non-empty, and all sixteen games on the tab scored
+# 0 with no signals at all.
+FORM = {"KC": {"off_epa": 0.1}, "BAL": {"off_epa": -0.05}}
+
+ok("a matchup with both clubs' form is NOT cold",
+   nfl_fetcher.matchup_is_cold(FORM, "KC", "BAL") is False)
+ok("neither club having form is cold",
+   nfl_fetcher.matchup_is_cold(FORM, "NYJ", "MIA") is True)
+ok("ONE club missing is still cold -- every weighted signal is a pair",
+   nfl_fetcher.matchup_is_cold(FORM, "KC", "MIA") is True)
+ok("  and the same the other way round",
+   nfl_fetcher.matchup_is_cold(FORM, "MIA", "KC") is True)
+ok("an empty form table makes everything cold",
+   nfl_fetcher.matchup_is_cold({}, "KC", "BAL") is True)
+ok("a club present but with no usable form counts as cold",
+   nfl_fetcher.matchup_is_cold({"KC": {}, "BAL": {"off_epa": 0.1}}, "KC", "BAL") is True)
+
+# The regression in one line: a NON-EMPTY stats table must not, by itself,
+# suppress the fallback.
+ok("a partially-published release does not make an unlisted matchup warm",
+   nfl_fetcher.matchup_is_cold(FORM, "CHI", "CAR") is True)
+src_nfl = open(os.path.join(REPO, "fetchers", "nfl.py")).read()
+ok("  and the slate-wide `if not team_stats` gate is gone",
+   "if not team_stats:" not in src_nfl)
+
+
+# =========================================================== dated kickoffs
+# NFL's window spans Thursday to Monday, so a bare "1:00 PM ET" cannot say
+# which day -- and these cards refresh on the pipeline's schedule, not per
+# fixture, so it could not distinguish a current card from a stale one either.
+ok("the kickoff label carries the day",
+   slate_clock.kickoff_label("1:00 PM ET", "2026-09-13") == "Sun Sep 13 \u00b7 1:00 PM ET",
+   slate_clock.kickoff_label("1:00 PM ET", "2026-09-13"))
+ok("  and nfl emits it through that helper",
+   "slate_clock.kickoff_label(" in src_nfl)
+
 
 print("nfl: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "nfl: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))
