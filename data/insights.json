@@ -1,4 +1,15 @@
 {
+  "alex bregman|chc": {
+    "entity": "Alex Bregman",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Chicago Cubs",
+    "template_version": "v2"
+  },
   "alexander isak|liv": {
     "entity": "Alexander Isak",
     "generated_at": "2026-09-05T13:19:32.067806+00:00",
@@ -21,15 +32,15 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
-  "brandon lowe|pit": {
-    "entity": "Brandon Lowe",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
+  "brock purdy|sf": {
+    "entity": "Brock Purdy",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-10",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Pittsburgh Pirates",
+    "team": "SF",
     "template_version": "v2"
   },
   "bruno fernandes|mun": {
@@ -43,15 +54,15 @@
     "team": "Manchester United",
     "template_version": "v2"
   },
-  "bryan reynolds|pit": {
-    "entity": "Bryan Reynolds",
-    "generated_at": "2026-09-10T18:40:24.322258+00:00",
+  "bryce eldridge|sf": {
+    "entity": "Bryce Eldridge",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Pittsburgh Pirates",
+    "team": "San Francisco Giants",
     "template_version": "v2"
   },
   "bukayo saka|ars": {
@@ -65,26 +76,37 @@
     "team": "Arsenal",
     "template_version": "v2"
   },
-  "cal raleigh|sea": {
-    "entity": "Cal Raleigh",
-    "generated_at": "2026-09-08T14:15:37.679442+00:00",
+  "cade cavalli|wsh": {
+    "entity": "Cade Cavalli",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-05",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Washington Nationals",
+    "template_version": "v2"
+  },
+  "carter jensen|kc": {
+    "entity": "Carter Jensen",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Seattle Mariners",
+    "team": "Kansas City Royals",
     "template_version": "v2"
   },
-  "chandler simpson|tb": {
-    "entity": "Chandler Simpson",
-    "generated_at": "2026-09-09T14:15:27.632721+00:00",
-    "last_game_date": "2026-09-10",
+  "chris sale|atl": {
+    "entity": "Chris Sale",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-04",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Tampa Bay Rays",
+    "team": "Atlanta Braves",
     "template_version": "v2"
   },
   "cody gakpo|liv": {
@@ -96,28 +118,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Liverpool",
-    "template_version": "v2"
-  },
-  "colson montgomery|cws": {
-    "entity": "Colson Montgomery",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Chicago White Sox",
-    "template_version": "v2"
-  },
-  "corey seager|tex": {
-    "entity": "Corey Seager",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Texas Rangers",
     "template_version": "v2"
   },
   "david raya|ars": {
@@ -140,6 +140,28 @@
     "summary": null,
     "takeaways": [],
     "team": "Crystal Palace",
+    "template_version": "v2"
+  },
+  "deebo samuel sr.|sf": {
+    "entity": "Deebo Samuel Sr.",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-10",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "SF",
+    "template_version": "v2"
+  },
+  "demarcus robinson|sf": {
+    "entity": "Demarcus Robinson",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-10",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "SF",
     "template_version": "v2"
   },
   "diego g\u00f3mez|bha": {
@@ -186,6 +208,17 @@
     "team": "NE",
     "template_version": "v2"
   },
+  "elly de la cruz|cin": {
+    "entity": "Elly De La Cruz",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cincinnati Reds",
+    "template_version": "v2"
+  },
   "emiliano mart\u00ednez|che": {
     "entity": "Emiliano Mart\u00ednez",
     "generated_at": "2026-09-07T15:37:26.414126+00:00",
@@ -208,43 +241,21 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
-  "ezequiel duran|tex": {
-    "entity": "Ezequiel Duran",
-    "generated_at": "2026-09-10T17:12:10.403658+00:00",
+  "jackson chourio|mil": {
+    "entity": "Jackson Chourio",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Texas Rangers",
-    "template_version": "v2"
-  },
-  "jacob degrom|tex": {
-    "entity": "Jacob deGrom",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-05",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Texas Rangers",
-    "template_version": "v2"
-  },
-  "jake burger|tex": {
-    "entity": "Jake Burger",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Texas Rangers",
+    "team": "Milwaukee Brewers",
     "template_version": "v2"
   },
   "jake mccarthy|col": {
     "entity": "Jake McCarthy",
     "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-09",
+    "last_game_date": "2026-09-10",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -252,15 +263,15 @@
     "team": "Colorado Rockies",
     "template_version": "v2"
   },
-  "jared jones|pit": {
-    "entity": "Jared Jones",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-04",
+  "javier sanoja|mia": {
+    "entity": "Javier Sanoja",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Pittsburgh Pirates",
+    "team": "Miami Marlins",
     "template_version": "v2"
   },
   "jaxon smith-njigba|sea": {
@@ -329,6 +340,17 @@
     "team": "Ipswich Town",
     "template_version": "v2"
   },
+  "kody clemens|min": {
+    "entity": "Kody Clemens",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Minnesota Twins",
+    "template_version": "v2"
+  },
   "konstantinos tzolakis|hul": {
     "entity": "Konstantinos Tzolakis",
     "generated_at": "2026-08-22T13:57:13.118045+00:00",
@@ -351,26 +373,15 @@
     "team": "Philadelphia Phillies",
     "template_version": "v2"
   },
-  "logan gilbert|sea": {
-    "entity": "Logan Gilbert",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-04",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Seattle Mariners",
-    "template_version": "v2"
-  },
-  "luis arraez|phi": {
-    "entity": "Luis Arraez",
-    "generated_at": "2026-09-10T18:40:24.322258+00:00",
+  "kyren williams|la": {
+    "entity": "Kyren Williams",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-10",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Philadelphia Phillies",
+    "team": "LA",
     "template_version": "v2"
   },
   "luk\u00e1s horn\u00edcek|new": {
@@ -406,15 +417,81 @@
     "team": "Arsenal",
     "template_version": "v2"
   },
-  "randy arozarena|sea": {
-    "entity": "Randy Arozarena",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
+  "mike evans|sf": {
+    "entity": "Mike Evans",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-10",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "SF",
+    "template_version": "v2"
+  },
+  "mookie betts|lad": {
+    "entity": "Mookie Betts",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Seattle Mariners",
+    "team": "Los Angeles Dodgers",
+    "template_version": "v2"
+  },
+  "nolan mclean|nym": {
+    "entity": "Nolan McLean",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-04",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "New York Mets",
+    "template_version": "v2"
+  },
+  "otto lopez|mia": {
+    "entity": "Otto Lopez",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Miami Marlins",
+    "template_version": "v2"
+  },
+  "parker messick|cle": {
+    "entity": "Parker Messick",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-05",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Cleveland Guardians",
+    "template_version": "v2"
+  },
+  "pete crow-armstrong|chc": {
+    "entity": "Pete Crow-Armstrong",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-09",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Chicago Cubs",
+    "template_version": "v2"
+  },
+  "rafael devers|sf": {
+    "entity": "Rafael Devers",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-08",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "San Francisco Giants",
     "template_version": "v2"
   },
   "rayan cherki|mci": {
@@ -439,48 +516,26 @@
     "team": "Arsenal",
     "template_version": "v2"
   },
-  "ronald acu\u00f1a jr.|atl": {
-    "entity": "Ronald Acu\u00f1a Jr.",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-10",
+  "taj bradley|min": {
+    "entity": "Taj Bradley",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
+    "last_game_date": "2026-09-05",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Atlanta Braves",
+    "team": "Minnesota Twins",
     "template_version": "v2"
   },
-  "tj rumfield|col": {
-    "entity": "TJ Rumfield",
-    "generated_at": "2026-09-08T14:15:37.679442+00:00",
+  "teoscar hern\u00e1ndez|lad": {
+    "entity": "Teoscar Hern\u00e1ndez",
+    "generated_at": "2026-09-11T14:08:45.224898+00:00",
     "last_game_date": "2026-09-09",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Colorado Rockies",
-    "template_version": "v2"
-  },
-  "yandy d\u00edaz|tb": {
-    "entity": "Yandy D\u00edaz",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-10",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Tampa Bay Rays",
-    "template_version": "v2"
-  },
-  "zack wheeler|phi": {
-    "entity": "Zack Wheeler",
-    "generated_at": "2026-09-10T14:09:23.264660+00:00",
-    "last_game_date": "2026-09-10",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
+    "team": "Los Angeles Dodgers",
     "template_version": "v2"
   }
 }
