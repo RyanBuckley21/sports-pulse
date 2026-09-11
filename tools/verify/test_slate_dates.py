@@ -248,6 +248,45 @@ ok("fetchers/mlb does NOT -- it is single-date by design",
    "slate_clock.window_start(" not in mlb_src)
 
 
+# ------------------------------------------------------- dated kickoffs
+# MLB's Games tab is one date, so "4:05 PM ET" is unambiguous there. The other
+# three span days -- NFL Thursday to Monday, CFB a whole week, EPL a round from
+# Friday to Monday -- and they refresh on the pipeline's schedule, not per
+# fixture, so a bare time could not say which day OR whether the card was
+# current.
+ok("a kickoff label carries weekday, month and day",
+   slate_clock.kickoff_label("1:00 PM ET", "2026-09-13") == "Sun Sep 13 \u00b7 1:00 PM ET",
+   slate_clock.kickoff_label("1:00 PM ET", "2026-09-13"))
+ok("  a full ISO timestamp works too",
+   slate_clock.kickoff_label("8:20 PM ET", "2026-09-14T20:20Z") == "Mon Sep 14 \u00b7 8:20 PM ET")
+ok("  no leading zero on the day", "Sep 3 " in slate_clock.kickoff_label("1:00 PM ET", "2026-09-03"),
+   slate_clock.kickoff_label("1:00 PM ET", "2026-09-03"))
+ok("  no year -- every fixture these tabs show is inside a fortnight",
+   "2026" not in slate_clock.kickoff_label("1:00 PM ET", "2026-09-13"))
+
+# IT IS NEVER RELATIVE, and that is the point rather than an omission. These
+# strings are written into the committed store signal_report grades from days
+# later, so "Today" would age into a lie in the one place a date gets read back.
+ok("today is still stamped absolutely, not as 'Today'",
+   "Today" not in slate_clock.kickoff_label("1:00 PM ET", slate_clock.eastern_date()))
+
+ok("a missing date degrades to the bare time",
+   slate_clock.kickoff_label("1:00 PM ET", None) == "1:00 PM ET")
+ok("  an unparseable one does too",
+   slate_clock.kickoff_label("1:00 PM ET", "garbage") == "1:00 PM ET")
+ok("a missing time leaves the date alone",
+   slate_clock.kickoff_label(None, "2026-09-13") == "Sun Sep 13")
+ok("  and neither gives None, which every caller already handles",
+   slate_clock.kickoff_label(None, None) is None)
+
+# Which fetchers date their kickoffs, and which deliberately does not.
+for sport in ("nfl", "cfb", "epl"):
+    src = open(_os.path.join(_root, "fetchers", "%s.py" % sport)).read()
+    ok("fetchers/{} dates its kickoffs".format(sport), "slate_clock.kickoff_label(" in src)
+ok("fetchers/mlb does NOT -- its tab is a single date, so the time is unambiguous",
+   "slate_clock.kickoff_label(" not in mlb_src)
+
+
 print("slate dates: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "slate dates: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))
 for f in failures:

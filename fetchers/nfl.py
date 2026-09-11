@@ -293,6 +293,20 @@ def build_team_form(team_stats_rows, upto_week):
     return out
 
 
+def matchup_is_cold(form, home_team, away_team):
+    """Whether this matchup has no usable in-season form -- the test that
+    decides whether the cold-start fallback is needed.
+
+    BOTH SIDES, because every weighted signal is a PAIR: nfl_signals pairs home
+    against away, so one club missing makes the signal None just as surely as
+    both missing. A game where only one club has played scores on nothing, and
+    calling that "warm" is what left sixteen games at zero on 2026-09-10.
+
+    Module-level rather than a closure so it can be tested without a network
+    round trip -- see tools/verify/test_nfl.py."""
+    return not (form.get(home_team) and form.get(away_team))
+
+
 def build_scoring_margins(schedule_rows, upto_week, min_games=0):
     """Season-to-date average point differential per team, from completed
     (scored) games strictly before `upto_week` -- straight off the
@@ -716,7 +730,10 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         "status": "Final" if g.get("home_score") not in (None, "") else "Preview",
         "away": _team_ref(away),
         "home": _team_ref(home),
-        "start": _format_kickoff(g.get("gameday"), g.get("gametime")),
+        # DATED, because this tab spans Thursday to Monday -- see
+        # slate_clock.kickoff_label.
+        "start": slate_clock.kickoff_label(
+            _format_kickoff(g.get("gameday"), g.get("gametime")), g.get("gameday")),
         "venue": g.get("stadium"),
         "probables": probables,
         "signals": _display_signals(away, home, away_form, home_form,
@@ -810,14 +827,34 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # the SAME games.csv already in hand -- no extra request -- and only when
     # some game on the slate actually lacks in-season form. A November slate
     # never touches this.
+    #
+    # COLDNESS IS PER GAME, NOT PER SLATE, and the difference is a bug this
+    # shipped with. The test used to be `if not team_stats` -- "has nflverse
+    # published this season's release yet" -- which reads the release existing
+    # as the data being there. It is not: nflverse publishes stats_team
+    # INCREMENTALLY as games complete. On 2026-09-10, the Thursday of week 2,
+    # that release held TWO rows -- the two clubs from Wednesday's opener --
+    # so thirty clubs had no form, the fallback never fired because the file
+    # was non-empty, and all sixteen games on the tab scored 0 with no signals
+    # at all. Asking per game is the same shape fetchers/cfb already uses.
+    form_by_week = {}
+
+    def _form(week):
+        if week not in form_by_week:
+            form_by_week[week] = build_team_form(team_stats, week)
+        return form_by_week[week]
+
     prior_margin = {}
-    if not team_stats:
+    cold = [g for g in games
+            if matchup_is_cold(_form(int(g["week"])), g["home_team"], g["away_team"])]
+    if cold:
         prior_rows = [r for r in all_rows if r.get("season") == str(season - 1)]
         prior_margin = build_prior_season_margin(prior_rows)
         if prior_margin:
-            print("insights(games): nfl cold start -- no {} team stats published yet, so "
-                  "{} teams carry a {} margin instead (see build_prior_season_margin)"
-                  .format(season, len(prior_margin), season - 1))
+            print("insights(games): nfl cold start -- {} of {} games have no {} form "
+                  "on file yet, so their clubs carry a {} margin instead ({} teams; "
+                  "see build_prior_season_margin)"
+                  .format(len(cold), len(games), season, season - 1, len(prior_margin)))
 
     entities = {}
     for g in games:

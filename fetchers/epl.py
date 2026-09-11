@@ -889,6 +889,22 @@ def _team_pulse(form, cfg):
     return pulse.pulse(max(0, min(100, int(math.floor(50 + 50 * combined + 0.5)))))
 
 
+def _et_date(iso):
+    """The EASTERN calendar date of a UTC kickoff -- the day the card's own
+    time belongs to. Shares _kickoff's fixed -4 offset for the reason recorded
+    there (this repo ships no tzdata dependency); an hour's error in November
+    can only move a fixture kicking off within an hour of midnight ET, and the
+    Premier League does not schedule those."""
+    if not iso:
+        return None
+    try:
+        utc = datetime.datetime.strptime(iso[:16], "%Y-%m-%dT%H:%M").replace(
+            tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+    return (utc + datetime.timedelta(hours=-4)).date().isoformat()
+
+
 def _kickoff(iso):
     """"2026-08-29T14:00Z" -> "10:00 AM ET". EPL kicks off in UK time and this
     site's audience reads Eastern, which is what mlb.build_game_entities also
@@ -971,7 +987,13 @@ def _build_one_match(config, event, form, prior_gd=None):
         "status": "Preview" if status_type.get("state") == "pre" else (
             "Final" if status_type.get("completed") else "Live"),
         "away": away_ref, "home": home_ref,
-        "start": _kickoff(event.get("date")),
+        # DATED, because a Premier League round sprawls Friday to Monday -- see
+        # slate_clock.kickoff_label. The ET date, not the UTC one: these kick
+        # off in UK time and the card reads Eastern, so a 20:00 UK Monday
+        # fixture is 19:00Z Monday and 3:00 PM ET the same day -- but the late
+        # ones cross back, and the stamp has to match the time beside it.
+        "start": slate_clock.kickoff_label(
+            _kickoff(event.get("date")), _et_date(event.get("date"))),
         "venue": ((comp.get("venue") or {}).get("fullName")),
         "probables": None,   # no pregame XI feed -- see epl_signals' docstring
         "signals": _display_signals(away_ref, home_ref, af, hf,

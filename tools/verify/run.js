@@ -1179,6 +1179,28 @@ async function gameOnlyLeagueChecks(browser, base) {
   ok("  and NOTHING from the other league", shown.every((a) => cfbAbbrs.includes(a) ||
      extra.games.some((g) => g.away.abbr === a)), shown.join(","));
 
+  // THE CARDS JUST GOT A DATE ON THEM. NFL, CFB and EPL kickoffs now read
+  // "Sat Sep 12 - 7:45 PM ET" rather than "7:45 PM ET", because those tabs span
+  // days and a bare time could not say which one. That is eleven more
+  // characters on a row that already carries two team chips and a Pulse, at
+  // 430px. Nothing throws if it overflows -- the row just goes ragged or the
+  // page starts scrolling sideways -- so it is measured here rather than
+  // eyeballed once.
+  const when = await p.$$eval("#insightsRoot .gr-when", (n) => n.map((x) => x.textContent.trim()));
+  ok("the dated kickoff reaches the card", when.some((w) => /[A-Z][a-z]{2} [A-Z][a-z]{2} \d/.test(w)),
+     when.slice(0, 2).join(" | ") || "none");
+  const overflow = await p.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    client: document.documentElement.clientWidth,
+  }));
+  ok("  and the page still does not scroll sideways at 430px",
+     overflow.scroll <= overflow.client,
+     overflow.scroll + " vs " + overflow.client);
+  const ragged = await p.$$eval("#insightsRoot .gr-row", (rows) =>
+    rows.filter((r) => r.scrollWidth > r.clientWidth + 1).length);
+  ok("  and no game row overflows its own box", ragged === 0, ragged + " ragged rows");
+
+
   await goRoute(p, "#/teams");
   const teamNames = await p.$$eval("#insightsRoot .ti-name", (n) => n.map((x) => x.textContent.trim()));
   const cfbTeams = extra.teams.map((t) => t.name);

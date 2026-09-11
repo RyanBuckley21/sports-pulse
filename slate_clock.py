@@ -84,6 +84,40 @@ def yesterday():
 SLATE_LOOKAHEAD_DAYS = 14
 
 
+def kickoff_label(time_label, date_iso, today=None):
+    """A kickoff string that says WHICH DAY, for the sports whose tab spans one.
+
+    MLB's Games tab is one date, so "4:05 PM ET" is unambiguous there and
+    fetchers/mlb keeps emitting exactly that. The other three are not: NFL's
+    window covers Thursday to Monday, CFB's a whole week, EPL's a round from
+    Friday to Monday -- and they refresh on the pipeline's schedule, not per
+    fixture. A reader looking at "1:00 PM ET" on a card had no way to tell
+    whether that was today, Sunday, or the Monday nighter, and no way to tell a
+    stale card from a current one.
+
+    Returns "Sun Sep 13 - 1:00 PM ET". `today` (a YYYY-MM-DD string, defaulting
+    to the current slate date) is accepted so a caller can pass its own notion
+    of now; it is NOT used to substitute the word "Today", deliberately. These
+    strings are written into the committed store that signal_report grades from
+    days later, so a relative word would age into a lie -- the one place a date
+    must be absolute is the one place it gets read back.
+
+    Degrades to `time_label` unchanged when the date is missing or unparseable,
+    and returns None when there is no time either, which is what every caller
+    already handles.
+    """
+    if not date_iso:
+        return time_label
+    try:
+        day = datetime.date.fromisoformat(str(date_iso)[:10])
+    except (TypeError, ValueError):
+        return time_label
+    # "Sun Sep 13" -- weekday first because that is how a football week is read,
+    # and no year because every fixture these tabs show is inside a fortnight.
+    stamp = "{} {} {}".format(day.strftime("%a"), day.strftime("%b"), day.day)
+    return "{} \u00b7 {}".format(stamp, time_label) if time_label else stamp
+
+
 def window_start(available_dates, start, window_days,
                  lookahead_days=SLATE_LOOKAHEAD_DAYS):
     """Where a fixture window should actually begin.

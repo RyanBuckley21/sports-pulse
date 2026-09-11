@@ -65,6 +65,21 @@ Sabotage-checked in both directions when written: dropping the
 fails exactly the three Who's Hot assertions, with the page both rendering the
 PREVIOUS league's boards and throwing.
 
+`test_slate_dates` also covers **dated kickoffs**. MLB's tab is a single date,
+so "4:05 PM ET" is unambiguous there and `fetchers/mlb` keeps emitting exactly
+that — the test asserts it stays that way. The other three span days (NFL
+Thursday to Monday, CFB a week, EPL a round Friday to Monday) and refresh on
+the pipeline's schedule rather than per fixture, so a bare time could say
+neither which day nor whether the card was current. The stamp is deliberately
+never relative: these strings are written into the committed store
+`signal_report` grades from days later, so "Today" would age into a lie in the
+one place a date gets read back. Sabotage-checked by making it relative.
+
+The `game-only-league` browser group carries the other half — that eleven extra
+characters land on a 430px row already holding two team chips and a Pulse
+without the page scrolling sideways or a row overflowing its own box. Nothing
+throws when that breaks, the row just goes ragged, so it is measured.
+
 `test_slate_dates` also covers **falling forward**: a window tuned for a
 sport's usual cadence goes blank in any gap longer than itself, and then the
 tab shows nothing while the fixtures it would show sit in the schedule already,

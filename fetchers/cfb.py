@@ -1111,7 +1111,13 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
         "status": "Final" if str(g.get("completed", "")).upper() == "TRUE" else "Preview",
         "away": away_ref,
         "home": home_ref,
-        "start": _format_kickoff(g.get("start_date")),
+        # DATED, because this tab spans a whole college week -- see
+        # slate_clock.kickoff_label. et_date, not the raw UTC date: a 7:00 PM ET
+        # Saturday kickoff is 23:00Z Saturday but an 8:00 PM ET one is 00:00Z
+        # SUNDAY, and stamping that card "Sun" would be wrong on the one detail
+        # this field exists to get right.
+        "start": slate_clock.kickoff_label(
+            _format_kickoff(g.get("start_date")), et_date(g.get("start_date"))),
         "venue": g.get("venue"),
         "probables": None,   # no starter feed for CFB -- see module docstring
         "signals": _display_signals(away_ref["abbr"], home_ref["abbr"], away_form, home_form,
