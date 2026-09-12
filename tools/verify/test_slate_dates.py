@@ -248,6 +248,80 @@ ok("fetchers/mlb does NOT -- it is single-date by design",
    "slate_clock.window_start(" not in mlb_src)
 
 
+# ----------------------------------------------- one week, not one window
+# THE SECOND HALF OF "WHICH GAMES ARE THIS SLATE". window_start decides where
+# the slate begins; a fixed window cannot decide where it ENDS, because for a
+# weekly sport it always straddles a boundary. Seven days from a Saturday
+# reaches the following Thursday -- so on 2026-09-12 the CFB tab served all of
+# week 2 AND all of week 3 (104 games on a 47-game Saturday), and the NFL tab
+# put a week-3 Thursday nighter among week 2's leans. Both sets were real and
+# correctly scored; nothing on the card said which week a game was from.
+#
+# Shortening the window is NOT the fix: it is what carries the tab across the
+# midweek desert, and window_start's fall-forward is measured against it.
+CFB_SPAN = [{"week": "2", "season_type": "regular", "id": "sat12"},
+            {"week": "3", "season_type": "regular", "id": "thu17"},
+            {"week": "3", "season_type": "regular", "id": "sat19"},
+            {"week": "2", "season_type": "regular", "id": "sat12b"}]
+# THE REAL KEY FUNCTIONS, imported rather than reimplemented -- a local copy
+# here would be free to be correct about junk input while production's was not,
+# which is exactly the drift these files exist to catch.
+from fetchers.cfb import _slate_week_key as _wk  # noqa: E402
+from fetchers.nfl import _slate_week_key as _nfl_wk  # noqa: E402
+ok("a window spanning two weeks serves only the first",
+   [r["id"] for r in slate_clock.first_week(CFB_SPAN, _wk)] == ["sat12", "sat12b"],
+   [r["id"] for r in slate_clock.first_week(CFB_SPAN, _wk)])
+ok("  in the caller's original order",
+   [r["id"] for r in slate_clock.first_week(CFB_SPAN[::-1], _wk)] == ["sat12b", "sat12"])
+ok("  a window already inside one week is untouched",
+   len(slate_clock.first_week([CFB_SPAN[1], CFB_SPAN[2]], _wk)) == 2)
+ok("  a Thursday-through-Saturday week stays whole",
+   [r["id"] for r in slate_clock.first_week([CFB_SPAN[1], CFB_SPAN[2]], _wk)]
+   == ["thu17", "sat19"])
+
+# SEASON TYPE LEADS FOR CFB, and it must: cfbfastR restarts postseason weeks at
+# 1, so a bare week number sorts the national championship ahead of the opener.
+BOWLS = [{"week": "1", "season_type": "postseason", "id": "bowl"},
+         {"week": "15", "season_type": "regular", "id": "championship-week"}]
+ok("a bowl's week=1 does not outrank a week-15 regular-season game",
+   [r["id"] for r in slate_clock.first_week(BOWLS, _wk)] == ["championship-week"],
+   [r["id"] for r in slate_clock.first_week(BOWLS, _wk)])
+ok("  and a bowl slate, all week 1 postseason, stays whole",
+   len(slate_clock.first_week([BOWLS[0], dict(BOWLS[0], id="bowl2")], _wk)) == 2)
+
+# Feed-shaped junk, same contract window_start has.
+ok("an unclassifiable row is KEPT, not silently dropped",
+   [r["id"] for r in slate_clock.first_week(
+       [{"week": "2", "season_type": "regular", "id": "ok"},
+        {"week": "NA", "season_type": "regular", "id": "junk"}], _wk)] == ["ok", "junk"])
+ok("  rows with no usable week at all are all kept",
+   len(slate_clock.first_week([{"id": "a"}, {"id": "b"}], _wk)) == 2)
+ok("  an empty slate stays empty", slate_clock.first_week([], _wk) == [])
+# Week 0 is real in college football and is falsy -- an `or`-based default
+# would mistake it for "unknown" and serve week 1 alongside it.
+ok("week 0 is a week, not a missing value",
+   [r["id"] for r in slate_clock.first_week(
+       [{"week": "0", "season_type": "regular", "id": "wk0"},
+        {"week": "1", "season_type": "regular", "id": "wk1"}], _wk)] == ["wk0"])
+
+# NFL needs no season-type term: nflverse numbers the postseason straight on
+# (WC 19, DIV 20, CON 21, SB 22), so a plain int already sorts the season.
+ok("NFL's plain-int key orders the postseason correctly",
+   [r["id"] for r in slate_clock.first_week(
+       [{"week": 19, "id": "wildcard"}, {"week": 18, "id": "week18"}],
+       _nfl_wk)] == ["week18"])
+
+for sport in ("nfl", "cfb"):
+    src = open(_os.path.join(_root, "fetchers", "%s.py" % sport)).read()
+    ok("fetchers/{} narrows its window to one week".format(sport),
+       "slate_clock.first_week(" in src)
+# EPL is deliberately absent: its three-day window already fits inside one
+# matchweek (Friday to Monday), so there is no boundary for it to straddle.
+epl_src = open(_os.path.join(_root, "fetchers", "epl.py")).read()
+ok("fetchers/epl does NOT -- its window already fits one matchweek",
+   "slate_clock.first_week(" not in epl_src)
+
+
 # ------------------------------------------------------- dated kickoffs
 # MLB's Games tab is one date, so "4:05 PM ET" is unambiguous there. The other
 # three span days -- NFL Thursday to Monday, CFB a whole week, EPL a round from

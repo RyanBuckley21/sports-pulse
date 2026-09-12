@@ -307,6 +307,19 @@ def matchup_is_cold(form, home_team, away_team):
     return not (form.get(home_team) and form.get(away_team))
 
 
+def _slate_week_key(row):
+    """Sort key identifying which week a schedule row belongs to, for
+    slate_clock.first_week. None when the row carries no usable week.
+
+    A plain int, because nflverse numbers the postseason straight on from the
+    regular season (WC 19, DIV 20, CON 21, SB 22) -- so unlike CFB, whose bowls
+    restart at week 1, no season-type term is needed to keep the order right."""
+    try:
+        return int(row["week"])
+    except (TypeError, ValueError, KeyError):
+        return None
+
+
 def build_scoring_margins(schedule_rows, upto_week, min_games=0):
     """Season-to-date average point differential per team, from completed
     (scored) games strictly before `upto_week` -- straight off the
@@ -824,6 +837,22 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                   FIXTURE_WINDOW_DAYS, game_date, start, window_end))
     games = [r for r in schedule
              if r.get("gameday") and start <= r["gameday"] <= window_end]
+    # ...AND THEN ONE WEEK OF IT. The window has to reach Monday to cover a
+    # week that opens on Thursday, which means from Saturday onward it also
+    # reaches the NEXT Thursday -- so week 2's tab carried a week-3 Thursday
+    # nighter among its leans with nothing on the card to say so. Shortening
+    # the window would break the Thursday-to-Monday span it exists for. See
+    # slate_clock.first_week.
+    #
+    # `week` alone is the key here, unlike CFB: nflverse numbers the postseason
+    # straight on from the regular season (WC 19, DIV 20, CON 21, SB 22), so it
+    # already sorts correctly across the whole season.
+    spanned = games
+    games = slate_clock.first_week(games, _slate_week_key)
+    if len(games) != len(spanned):
+        print("insights(games): nfl slate window {} to {} spans more than one week -- "
+              "serving the first ({} games, {} dropped to the following week)"
+              .format(start, window_end, len(games), len(spanned) - len(games)))
     if not games:
         return {}, {}, []
 

@@ -889,6 +889,22 @@ def _team_turnovers(team_entry):
     return None
 
 
+def _slate_week_key(row):
+    """Sort key identifying which WEEK a schedule row belongs to, for
+    slate_clock.first_week. None when the row cannot be classified.
+
+    SEASON TYPE LEADS, and it has to: cfbfastR restarts postseason weeks at 1
+    (every 2024 bowl and playoff game carries week=1), so a bare week number
+    would sort the national championship ahead of the season opener. The same
+    renumbering is what cfb_backtest's form_cutoff correction exists for -- see
+    its module docstring."""
+    try:
+        week = int(row["week"])
+    except (TypeError, ValueError, KeyError):
+        return None
+    return (1 if str(row.get("season_type", "")).lower() == "postseason" else 0, week)
+
+
 def build_scoring_margins(schedule_rows, fbs_index, upto_week, min_games=0):
     """Season-to-date average point differential per team, over the same
     FBS-vs-FBS regular-season games before `upto_week` that team form uses.
@@ -1412,6 +1428,19 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     games = [r for r in schedule
              if r.get("start_date") and _is_fbs_matchup(r)
              and start <= (et_date(r.get("start_date")) or "") <= window_end]
+    # ...AND THEN ONE WEEK OF IT. Seven days from a Saturday reaches the
+    # FOLLOWING Thursday, so the window on its own served all of week 3 and all
+    # of week 4 at once -- 104 games on a 52-game Saturday, with next week's
+    # Thursday and Friday openers sitting among today's leans and nothing on the
+    # card to say which was which. Shortening the window is not the fix; it is
+    # what carries the tab across the midweek desert and what window_start's
+    # fall-forward measures against. See slate_clock.first_week.
+    spanned = games
+    games = slate_clock.first_week(games, _slate_week_key)
+    if len(games) != len(spanned):
+        print("insights(games): cfb slate window {} to {} spans more than one week -- "
+              "serving the first ({} games, {} dropped to the following week)"
+              .format(start, window_end, len(games), len(spanned) - len(games)))
     if not games:
         return {}, {}, []
 

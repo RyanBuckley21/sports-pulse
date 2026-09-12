@@ -118,6 +118,43 @@ def kickoff_label(time_label, date_iso, today=None):
     return "{} \u00b7 {}".format(stamp, time_label) if time_label else stamp
 
 
+def first_week(rows, week_of):
+    """`rows` narrowed to the earliest week present among them.
+
+    WHY A DATE WINDOW IS NOT ENOUGH ON ITS OWN. window_start picks where a
+    slate begins, and the caller takes everything within its own window length
+    of that. For a sport played on a weekly cycle that window cannot help
+    straddling a week boundary: seven days from a Saturday reaches the
+    FOLLOWING Thursday, so the college slate showed all of week 3 and all of
+    week 4 at once -- 104 games on a 52-game Saturday -- and the NFL tab showed
+    week 2 with a week-3 Thursday nighter sitting in it. Both are real fixtures
+    correctly scored; they are just not this week's slate, and a reader cannot
+    tell which is which.
+
+    Shortening the window is the wrong fix: it is what makes the tab survive
+    the gaps (a Tuesday in college football has no fixtures within a day or
+    two of it), and window_start's fall-forward depends on it. The window
+    decides WHICH SLATE; this decides WHERE THAT SLATE ENDS. Both are needed.
+
+    `week_of(row)` returns any sortable key -- an int, or a tuple where the
+    season type leads, since college football restarts postseason weeks at 1
+    and a bare week number would sort a bowl ahead of September. Returning
+    None means "cannot classify": those rows are KEPT rather than dropped,
+    because a schedule row with no usable week is a feed problem and silently
+    vanishing is the worse failure of the two.
+
+    Returns a new list in the caller's original order."""
+    # Keyed once and zipped rather than re-called per comparison: `week_of`
+    # parses a feed field, and an `or`-based default would also mistake a
+    # falsy-but-valid key (week 0 -- college football has one) for "unknown".
+    keyed = [(r, week_of(r)) for r in rows]
+    present = [k for _, k in keyed if k is not None]
+    if not present:
+        return list(rows)
+    first = min(present)
+    return [r for r, k in keyed if k is None or k == first]
+
+
 def window_start(available_dates, start, window_days,
                  lookahead_days=SLATE_LOOKAHEAD_DAYS):
     """Where a fixture window should actually begin.
