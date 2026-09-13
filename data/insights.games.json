@@ -3175,27 +3175,27 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 33,
+          "score": 36,
           "side": "STL"
         },
         "game_total": {
           "flags": [],
-          "score": 2,
+          "score": 7,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 18,
-          "side": "No clear lean"
+          "score": 28,
+          "side": "STL"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 16,
+          "side": "YRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 18,
+          "score": 31,
           "side": "No clear lean"
         },
         "team_total": {
@@ -3208,8 +3208,8 @@
           "home": {
             "abbr": "STL",
             "flags": [],
-            "score": 8,
-            "side": "No clear lean"
+            "score": 18,
+            "side": "Over"
           }
         }
       },
@@ -3220,6 +3220,10 @@
         "name": "Cardinals"
       },
       "probables": {
+        "away": {
+          "era": "4.44",
+          "name": "David Sandlin"
+        },
         "home": {
           "era": "3.96",
           "name": "Michael McGreevy"
@@ -3244,6 +3248,11 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "CWS 1-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.44 vs 3.96"
         }
       ],
       "slate_date": "2026-09-13",
@@ -3251,7 +3260,7 @@
         "bet_type": "first_five_moneyline",
         "flags": [],
         "market": "First Five Moneyline",
-        "score": 33,
+        "score": 36,
         "side": "STL"
       },
       "start": "2:15 PM ET",
@@ -3477,8 +3486,8 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 5,
-          "side": "No clear lean"
+          "score": 17,
+          "side": "MIN"
         },
         "game_total": {
           "flags": [],
@@ -3487,17 +3496,17 @@
         },
         "moneyline": {
           "flags": [],
-          "score": 7,
+          "score": 8,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 1,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 7,
+          "score": 11,
           "side": "No clear lean"
         },
         "team_total": {
@@ -3525,6 +3534,10 @@
         "away": {
           "era": "4.12",
           "name": "Tanner Bibee"
+        },
+        "home": {
+          "era": "3.85",
+          "name": "Joe Ryan"
         }
       },
       "pulse": {
@@ -3546,10 +3559,21 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "MIN 7-5"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.12 vs 3.85"
         }
       ],
       "slate_date": "2026-09-13",
-      "standout": null,
+      "standout": {
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 17,
+        "side": "MIN"
+      },
       "start": "2:10 PM ET",
       "status": "Preview",
       "story": null,
