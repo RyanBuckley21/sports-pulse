@@ -195,6 +195,17 @@ def _with_signals(game, i):
         {"market": "Run Line", "side": away, "score": 64 - i * 2},
         {"market": "Game Total Under", "side": None, "score": 58 - i},
     ]
+    # THE FIRST GAME IS PRICED AND THE REST ARE NOT, on purpose: both states have
+    # to render and the UNPRICED one is the half that regresses silently. ESPN
+    # drops a game's odds block at kickoff, so most live cards lose their price
+    # mid-game -- an empty row or a stray "undefined" there would sit on screen
+    # for hours. Shaped exactly like generate_insights._price_block's output.
+    if i == 0:
+        game["price"] = {
+            "american": -180, "display": "-180",
+            "break_even": 0.6429, "break_even_display": "64%",
+            "provider": "DraftKings", "spread": "BOS -1.5",
+        }
     game.setdefault("story", STORY)
     return game
 
