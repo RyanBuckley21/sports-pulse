@@ -164,6 +164,7 @@ import sys
 import requests
 import yaml
 
+import espn_odds
 import slate_clock      # the shared slate-date definition -- see yesterday_et
 import betting_signals  # read-only: ranking (list_markets / top_market)
 import cfb_grading      # the same, for CFB -- see SPORT_ADAPTERS
@@ -455,6 +456,16 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, spo
             "score": pick["score"], "flags": pick["flags"], "point": pick.get("point"),
             "result": result, "verdict": verdict, "basis": basis,
             "observed": sport["observed_facts"](game),
+            # PRICE AND BREAK-EVEN, so the standing record can answer "did this
+            # make money" and not only "was it right". A hit rate without a
+            # price is not an edge -- 48% of the CFB rows above this one were
+            # games decided by 21+ points, where the model is 20-1 at prices
+            # around -3000. None for a pick the feed never priced; that row
+            # still grades normally and is simply excluded from any ROI.
+            "price": pick.get("price"),
+            "break_even": (None if pick.get("price") is None
+                           else round(espn_odds.break_even(pick["price"]), 4)),
+            "odds": pick.get("odds"),
         })
     return out
 
@@ -998,6 +1009,15 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 "side": m["side"],
                 "score": m["score"],
                 "flags": m.get("flags") or [],
+                # THE PRICE THIS PICK WOULD HAVE BEEN TAKEN AT, carried from the
+                # store's sticky `odds` block (see generate_insights) rather than
+                # fetched here -- by grading time ESPN has dropped the line, so a
+                # fetch at this point would return nothing for every settled game.
+                # Both sides are stored; the side actually picked is resolved now.
+                "odds": entry.get("odds"),
+                "price": espn_odds.for_side(entry.get("odds"), m["side"],
+                                            (entry.get("home") or {}).get("abbr"),
+                                            (entry.get("away") or {}).get("abbr")),
             }
             # Resolved here rather than in grade(), which sees one pick at a time
             # and has no access to the game's other markets. `scored` is the full
@@ -1041,6 +1061,55 @@ def matchup(pick, game):
     if game and game.get("doubleHeader") in ("S", "Y") and game.get("gameNumber"):
         label += " (g{})".format(game["gameNumber"])
     return label
+
+
+def priced_record_lines(all_rows):
+    """The standing record AT THE PRICES THE PICKS WERE AVAILABLE AT.
+
+    THE LINE ABOVE THIS ONE IS NOT AN EDGE and never was. A hit rate answers
+    "was the pick right"; only this answers "did it make money", and for a
+    model with no price input the two come apart badly. Measured on CFB's first
+    44 graded picks: 77.3% right, but 48% of them were games decided by 21+
+    points where the model went 20-1 at prices around -3000, and on games
+    decided by a touchdown or less it was 7-5. nfl_odds_backtest.py made the
+    same point retrospectively for NFL -- 67.3% at an average price of 1.55,
+    which needs 64.7% just to break even.
+
+    FLAT ONE-UNIT STAKES, which is a choice and not the only one: it answers
+    "what would betting every pick the same have returned", the only staking
+    plan that does not smuggle in a second model. A push returns the stake. A
+    row with no price sits out entirely rather than being counted as a loss --
+    it was a real pick, just not one this record can price.
+
+    Says nothing at all when nothing is priced yet, rather than printing a
+    zero: the capture only started once espn_odds shipped, and an empty ROI
+    dressed up as 0.0% would read as a measurement."""
+    priced = [r for r in all_rows
+              if r.get("price") is not None and r.get("verdict") in ("HIT", "MISS", "PUSH")]
+    if not priced:
+        return []
+    staked = len(priced)
+    ret = 0.0
+    for row in priced:
+        if row["verdict"] == "PUSH":
+            ret += 1.0
+        elif row["verdict"] == "HIT":
+            ret += espn_odds.american_to_decimal(row["price"]) or 1.0
+    roi = (ret - staked) / staked
+    hits = sum(1 for r in priced if r["verdict"] == "HIT")
+    decided = sum(1 for r in priced if r["verdict"] in ("HIT", "MISS"))
+    need = sum(r.get("break_even") or 0.0 for r in priced) / staked
+    unpriced = sum(1 for r in all_rows
+                   if r.get("verdict") in ("HIT", "MISS") and r.get("price") is None)
+    line = ("At the price:      {}-{} on {} priced pick{}  ·  hit {:.1%}  ·  "
+            "needed {:.1%}  ·  ROI {:+.1%}".format(
+                hits, decided - hits, staked, "" if staked == 1 else "s",
+                (hits / decided) if decided else 0.0, need, roi))
+    out = [line]
+    if unpriced:
+        out.append("         ({} graded pick{} carry no price and are excluded)".format(
+            unpriced, "" if unpriced == 1 else "s"))
+    return out
 
 
 def render(date, picks, rows, store_size, assume_lines, ledger_rows=None,
@@ -1155,6 +1224,7 @@ def alltime_lines(all_rows, not_recorded=None):
         if gaps:
             lines.append("         gaps: {} — recorded as such, not counted as losses".format(
                 ", ".join(gaps)))
+        lines.extend(priced_record_lines(all_rows))
     if not_recorded:
         lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
     return lines

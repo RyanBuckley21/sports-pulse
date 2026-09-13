@@ -64,6 +64,7 @@ import os
 import requests
 
 import pulse
+import espn_odds
 import slate_clock
 import team_meta
 
@@ -1531,6 +1532,14 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
             print("insights(games): cfb game {} ({} @ {}) failed to build ({}: {}); skipped"
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
                           type(e).__name__, str(e)[:160]))
+
+    # THE PRICE, captured before kickoff because it cannot be captured after.
+    # ESPN drops the odds block the moment a game goes final, and unlike NFL
+    # there is no archive to fall back on -- so a lean that is not priced on
+    # the day is never priceable. Keyless, one request per slate date, and it
+    # changes no model input: see espn_odds' module docstring.
+    espn_odds.attach(session, "cfb", entities,
+                     {et_date(g.get("start_date")) for g in games})
 
     if team_entities is not None:
         # Built from the SCHEDULE, never from CFBD -- see build_schedule_form.

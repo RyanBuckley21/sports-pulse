@@ -28,6 +28,7 @@ import os
 import shutil
 import traceback
 
+import espn_odds
 import slate_clock
 
 import pulse
@@ -601,6 +602,17 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
             updated_games_store[sport_key] = _carry_forward_games_store(
                 sport_entities, sport_store, now_iso, game_date)
         # else: leave updated_games_store[sport_key] exactly as committed.
+        # THE CARD READS THE STICKY PRICE, NOT THIS RUN'S FETCH. ESPN drops a
+        # game's odds block at kickoff, so from the first quarter onward a
+        # freshly built entity has no price while the store still holds the
+        # closing one. Backfilling here keeps the card showing what the pick
+        # cost all the way through the game, and keeps it agreeing with the
+        # ledger -- which settles from that same stored number.
+        for pk, ent in sport_entities.items():
+            if not ent.get("odds"):
+                stored = (updated_games_store.get(sport_key) or {}).get(pk) or {}
+                if stored.get("odds"):
+                    ent["odds"] = stored["odds"]
 
     # THE THREE DISABLE LAYERS, KEPT INTACT AND IN ORDER: the config kill switch
     # is evaluated first and short-circuits SP_SKIP_INSIGHTS, which short-circuits
@@ -819,6 +831,19 @@ def _carry_forward_games_store(entities, store, now_iso, game_date=None):
             "template_version": GAME_PROMPT_VERSION,
             "generated_at": prev.get("generated_at", now_iso) if prev else now_iso,
             "slate_date": game_date,
+            # THE PRICE IS STICKY, and it is the one field here that must never
+            # be cleared by a rebuild. ESPN drops a game's odds block the moment
+            # it goes final, so the run that grades is always a run that can no
+            # longer see the line -- a plain `ent.get("odds")` would blank every
+            # price at exactly the moment it becomes worth having. Taking the
+            # newest non-empty value instead means the stored number is the last
+            # one published before kickoff, which is the closing line.
+            #
+            # Deliberately unlike `betting_signals` and `standout` beside it,
+            # which ARE rebuilt every run: those are the model's current answer
+            # and should move when the model does. A price is a fact about a
+            # moment, and it is kept.
+            "odds": ent.get("odds") or (prev or {}).get("odds"),
             "story": text.get("story"), "summary": text.get("summary"),
             "betting_note": text.get("betting_note"),
         }
@@ -858,6 +883,37 @@ def _build_players_section(entities, insight_map, generated_at):
         })
     players.sort(key=lambda p: (p.get("pulse") or {}).get("score", 0), reverse=True)
     return {"generated_at": generated_at.isoformat(), "players": players}
+
+
+def _price_block(ent):
+    """The card's price line for one game: what the standout pick costs, and
+    the hit rate that price needs just to break even.
+
+    BREAK-EVEN IS THE POINT OF THIS FIELD, not the odds themselves. A Signal
+    Score cannot see price, so the card had no way to distinguish a 100 priced
+    at -180 from a 100 priced at -8000 -- and on a real CFB board those sit two
+    rows apart. Showing the number the pick must clear puts that back in front
+    of the reader without letting it touch the model.
+
+    Returns None when the game was never priced or no market cleared the bar,
+    which the renderer treats as "just don't draw the line"."""
+    odds, standout = ent.get("odds"), ent.get("standout")
+    if not odds or not standout:
+        return None
+    american = espn_odds.for_side(odds, standout.get("side"),
+                                  (ent.get("home") or {}).get("abbr"),
+                                  (ent.get("away") or {}).get("abbr"))
+    if american is None:
+        return None
+    be = espn_odds.break_even(american)
+    return {
+        "american": american,
+        "display": "{:+d}".format(int(american)),
+        "break_even": round(be, 4) if be is not None else None,
+        "break_even_display": "{:.0f}%".format(100.0 * be) if be is not None else None,
+        "provider": odds.get("provider"),
+        "spread": odds.get("details"),
+    }
 
 
 def _build_games_section(entities, text_map):
@@ -902,6 +958,12 @@ def _build_games_section(entities, text_map):
             # builder emits and this misses is silently dropped, which is
             # exactly what happened to this one first time round.
             "outcome_split": ent.get("outcome_split"),
+            # WHAT THE PICK COSTS. Resolved here rather than in the browser so
+            # the American-odds conversion lives in exactly one place (see
+            # espn_odds) -- a second copy in JS would be free to drift, and the
+            # ledger settles from the Python one. None whenever the feed never
+            # priced the game or no market cleared the bar.
+            "price": _price_block(ent),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),

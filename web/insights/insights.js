@@ -268,7 +268,7 @@
 
     // Best Angle -- the single standout market, promoted out of the ranked list
     // into a larger tinted card (market's team color if it has one, else gold).
-    bestAngle: function (ba, away, home) {
+    bestAngle: function (ba, away, home, price) {
       if (!ba) return "";
       var pct = Math.max(0, Math.min(100, Number(ba.score) || 0));
       var color = sideColor(ba.side, away, home);
@@ -283,6 +283,31 @@
         '<div class="ba-scorebox"><div class="ba-score">' + pct + "</div>" +
         '<div class="ba-scorelabel">Score</div></div>' +
         "</div>" +
+        Cards.price(price) +
+        "</div>"
+      );
+    },
+
+    // WHAT THE PICK COSTS, and the hit rate that price has to clear. The Signal
+    // Score beside it cannot see price at all, so without this a 100 quoted at
+    // -180 and a 100 quoted at -8000 render identically -- and on a real college
+    // board those sit two rows apart. Every number here is computed in Python
+    // (generate_insights._price_block); this only lays it out, so the odds math
+    // has one home and cannot drift between the card and the ledger.
+    //
+    // Silent when the game was never priced. A missing line is common and
+    // uninteresting -- ESPN drops the block at kickoff and never carries one
+    // for some smaller games -- so it draws nothing rather than an empty row.
+    price: function (p) {
+      if (!p || !p.display) return "";
+      var be = p.break_even_display
+        ? '<span class="ba-price-be">needs ' + esc(p.break_even_display) + "</span>"
+        : "";
+      return (
+        '<div class="ba-price">' +
+        '<span class="ba-price-ml">' + esc(p.display) + "</span>" +
+        be +
+        (p.provider ? '<span class="ba-price-src">' + esc(p.provider) + "</span>" : "") +
         "</div>"
       );
     },
@@ -527,7 +552,7 @@
         Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        Cards.bestAngle(g.best_angle, away, home) +
+        Cards.bestAngle(g.best_angle, away, home, g.price) +
         section("How This Result Splits",
                 Cards.outcomeSplit(g.outcome_split, away, home,
                                    (g.best_angle || {}).side)) +

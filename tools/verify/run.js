@@ -328,6 +328,38 @@ async function reEntryChecks(browser, base) {
   await p.waitForTimeout(200);
   ok("clicks still work after five re-mounts",
      (await p.$$eval(".gr-item.is-open", (e) => e.length)) === 1);
+
+  // WHAT THE PICK COSTS. The Signal Score beside it cannot see price at all, so
+  // without this line a 78 quoted at -180 and a 78 quoted at -8000 render
+  // identically -- and on a real college board those sit two rows apart. The
+  // mock carries one priced game and one deliberately unpriced one, because
+  // "draws nothing when there is no line" is the half that regresses silently:
+  // ESPN drops the odds block at kickoff, so most cards lose their price mid-game
+  // and an empty row or a stray "undefined" there would be on screen for hours.
+  const openAll = async () => {
+    await goRoute(p, "#/games");
+    await p.$$eval(".gr-row", (rows) => rows.forEach((r) => r.click()));
+    await p.waitForTimeout(250);
+  };
+  await openAll();
+  const prices = await p.$$eval("#insightsRoot .ba-price", (n) => n.map((x) => x.textContent.trim()));
+  ok("the price reaches the Best Angle card", prices.length === 1, prices.join(" | ") || "none");
+  ok("  showing the moneyline", /-180/.test(prices[0] || ""), prices[0] || "none");
+  ok("  and the break-even the score cannot see", /needs\s*64%/.test(prices[0] || ""),
+     prices[0] || "none");
+  ok("  naming the book rather than an anonymous consensus",
+     /DraftKings/.test(prices[0] || ""), prices[0] || "none");
+  const angles = await p.$$eval("#insightsRoot .best-angle", (n) => n.length);
+  ok("the UNPRICED picks still render their Best Angle", angles === 3, angles);
+  ok("  but draw no price row at all -- not an empty one",
+     prices.length === 1, prices.length + " price rows for " + angles + " angles");
+  const undef = await p.$$eval("#insightsRoot .best-angle",
+     (n) => n.filter((x) => /undefined|null|NaN/.test(x.textContent)).length);
+  ok("  and no card leaks undefined/null/NaN", undef === 0, undef);
+  const raggedBA = await p.$$eval("#insightsRoot .ba-price",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
+  ok("  the price row does not overflow its card at 430px", raggedBA === 0, raggedBA);
+
   await p.close();
 }
 
