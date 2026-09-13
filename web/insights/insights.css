@@ -678,3 +678,29 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 .ba-price-ml { font-variant-numeric: tabular-nums; font-weight: 600; }
 .ba-price-be { opacity: 0.78; }
 .ba-price-src { margin-left: auto; opacity: 0.55; font-size: 0.72rem; }
+
+/* Why there is no pick, in the slot the Best Angle would have taken. Muted
+   rather than alarming: this is not an error, it is the board declining to
+   recommend a game it has an opinion about. */
+.no-bet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+}
+.nb-tag {
+  flex: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.64rem;
+  font-weight: 700;
+  opacity: 0.7;
+  padding-top: 0.15rem;
+}
+.nb-body { min-width: 0; }
+.nb-line { line-height: 1.35; }
+.nb-why { margin-top: 0.2rem; opacity: 0.7; font-size: 0.75rem; line-height: 1.35; }

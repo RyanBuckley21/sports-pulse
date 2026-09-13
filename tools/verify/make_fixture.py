@@ -206,6 +206,19 @@ def _with_signals(game, i):
             "break_even": 0.6429, "break_even_display": "64%",
             "provider": "DraftKings", "spread": "BOS -1.5",
         }
+    # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
+    # That combination is the whole point of the bettability filter: the model
+    # still has an opinion, it just is not backable at -8000, and a card that
+    # simply went quiet would be indistinguishable from one where the model saw
+    # nothing. Shaped exactly like espn_odds.apply_bettability's output.
+    if i == 2:
+        game["best_angle"] = None
+        game["no_bet"] = {
+            "reason": "price", "american": -8000, "display": "-8000",
+            "break_even": 0.9877, "break_even_display": "99%",
+            "cap_display": "91%", "spread": "HOU -29.5",
+            "score": 91, "side": home,
+        }
     game.setdefault("story", STORY)
     return game
 

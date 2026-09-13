@@ -349,8 +349,10 @@ async function reEntryChecks(browser, base) {
      prices[0] || "none");
   ok("  naming the book rather than an anonymous consensus",
      /DraftKings/.test(prices[0] || ""), prices[0] || "none");
+  // Two Best Angles, not three: the fixture's third game is suppressed for
+  // price and renders a No bet block in that slot instead (asserted below).
   const angles = await p.$$eval("#insightsRoot .best-angle", (n) => n.length);
-  ok("the UNPRICED picks still render their Best Angle", angles === 3, angles);
+  ok("the UNPRICED pick still renders its Best Angle", angles === 2, angles);
   ok("  but draw no price row at all -- not an empty one",
      prices.length === 1, prices.length + " price rows for " + angles + " angles");
   const undef = await p.$$eval("#insightsRoot .best-angle",
@@ -359,6 +361,26 @@ async function reEntryChecks(browser, base) {
   const raggedBA = await p.$$eval("#insightsRoot .ba-price",
      (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
   ok("  the price row does not overflow its card at 430px", raggedBA === 0, raggedBA);
+
+  // A PICK SUPPRESSED FOR PRICE must say so. The board's most confident games
+  // are systematically its least bettable -- -4000, -8000, -50000 sat at the
+  // top of a real college slate -- so the filter removes the bet. If the card
+  // then just went quiet, a reader could not tell "the model saw nothing" from
+  // "the model saw plenty and it costs -8000", which is a worse failure than
+  // showing the bad price was.
+  const nb = await p.$$eval("#insightsRoot .no-bet", (n) => n.map((x) => x.textContent.trim()));
+  ok("a price-suppressed pick renders a No bet block", nb.length === 1, nb.join(" | ") || "none");
+  ok("  naming the price that killed it", /-8000/.test(nb[0] || ""), nb[0] || "none");
+  ok("  and what it would have needed", /99%/.test(nb[0] || ""), nb[0] || "none");
+  ok("  and the model's own ceiling it passed", /91%/.test(nb[0] || ""), nb[0] || "none");
+  ok("  while still showing the score the model gave it", /91/.test(nb[0] || ""), nb[0] || "none");
+  // THE OPINION SURVIVES: the suppressed game keeps its Signal Scores table.
+  // Removing those too would be hiding the analysis, not declining the bet.
+  const ss = await p.$$eval("#insightsRoot .signal-scores", (n) => n.length);
+  ok("  and the suppressed game keeps its Signal Scores", ss === 3, ss);
+  const nbRagged = await p.$$eval("#insightsRoot .no-bet",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
+  ok("  the No bet block does not overflow at 430px", nbRagged === 0, nbRagged);
 
   await p.close();
 }

@@ -88,15 +88,47 @@ ok("  capture time is stamped", str(p["captured_at"]).endswith("Z"), p)
 # and re-reading it every run is what makes the stored value converge on it.
 ok("the CLOSE price is taken, not the open", (p["home_ml"], p["away_ml"]) == (-180, 150))
 
+ok("  a quoted market is not flagged off", p["moneyline_off"] is False, p)
+
 # HALF A PRICE IS WORSE THAN NONE -- it would settle one side at a real number
-# and the other at nothing, silently.
-half = {"id": "1", "competitions": [{"odds": [{"provider": {"name": "X"},
+# and the other at nothing, silently. Neither side is kept, but the BLOCK is:
+# its spread is what says how lopsided the game was.
+half = {"id": "1", "competitions": [{"odds": [{"provider": {"name": "X"}, "spread": -3,
         "moneyline": {"home": {"close": {"odds": "-180"}}}}]}]}
-ok("a one-sided moneyline is rejected outright", espn_odds.parse_event(half) is None)
+hp = espn_odds.parse_event(half)
+ok("a one-sided moneyline yields no price at all", hp["home_ml"] is None and hp["away_ml"] is None, hp)
+ok("  but the spread survives", hp["spread"] == -3.0, hp)
 spread_only = {"id": "1", "competitions": [{"odds": [{"provider": {"name": "X"}, "spread": -3}]}]}
-ok("a spread-only block is not a moneyline", espn_odds.parse_event(spread_only) is None)
+ok("a spread-only block carries no moneyline",
+   (espn_odds.parse_event(spread_only) or {}).get("home_ml") is None)
 for junk in ({}, {"competitions": []}, {"competitions": [{}]}, {"competitions": [{"odds": []}]}):
-    ok("feed-shaped junk parses to None, never raises", espn_odds.parse_event(junk) is None)
+    ok("NO odds block at all parses to None -- nothing known", espn_odds.parse_event(junk) is None)
+
+
+# --------------------------------------------------- OFF is not "missing"
+# THE WORST BUG THIS MODULE HAD. ESPN prints the literal string "OFF" when a
+# book has PULLED a market rather than never offered one -- 10 of the 142
+# moneyline cells on the 2026-09-19 board, every one behind a spread of 36 to
+# 51.5 points. Read as missing data, those games sailed through the
+# bettability filter untouched and were PROMOTED to the top of the board the
+# filter had just cleared, which is exactly backwards: a market the book
+# refuses to quote is more unbettable than -8000, not less.
+OFF_EVENT = {"id": "9", "competitions": [{"odds": [{
+    "provider": {"name": "DraftKings"}, "details": "IU -44.5", "spread": -44.5,
+    "moneyline": {"home": {"close": {"odds": "OFF"}},
+                  "away": {"close": {"odds": "OFF"}}}}]}]}
+off = espn_odds.parse_event(OFF_EVENT)
+ok("an OFF market still parses to a block", bool(off), off)
+ok("  flagged as pulled, not absent", off["moneyline_off"] is True, off)
+ok("  with no price on either side", off["home_ml"] is None and off["away_ml"] is None, off)
+ok("  and the spread kept, which is what says how lopsided it was",
+   off["spread"] == -44.5, off)
+ok("  lowercase 'off' counts too", espn_odds.parse_event(
+    {"id": "9", "competitions": [{"odds": [{"moneyline": {
+        "home": {"close": {"odds": "off"}}, "away": {"close": {"odds": "off"}}}}]}]})["moneyline_off"] is True)
+ok("  one side OFF is enough -- the market is off", espn_odds.parse_event(
+    {"id": "9", "competitions": [{"odds": [{"moneyline": {
+        "home": {"close": {"odds": "OFF"}}, "away": {"close": {"odds": "+2200"}}}}]}]})["moneyline_off"] is True)
 
 
 # --------------------------------------------------------------- for_side
@@ -285,6 +317,98 @@ ok("  and their exclusion is stated out loud", "2 graded picks carry no price" i
 ok("an unresolved row is not staked",
    signal_report.priced_record_lines(
        [{"verdict": "UNRESOLVED", "price": -110}]) == [])
+
+
+# --------------------------------------------------- the bettability filter
+# A Signal Score cannot see price, which makes the TOP of a college board
+# systematically its LEAST bettable part: on 2026-09-19 the three
+# highest-scored picks were quoted -4000, -8000 and -3200. The cap is the
+# model's own ceiling -- its best-ever measured band, scores of 90+, went 10-1
+# live, which is 90.9%, which is exactly -1000.
+CAP = 0.9091   # == American -1000 exactly (10/11)
+
+
+def _ent(side="HME", score=80, odds=None):
+    e = {"away": {"abbr": "AWY"}, "home": {"abbr": "HME"},
+         "standout": {"side": side, "score": score, "bet_type": "moneyline"},
+         "best_angle": {"side": side, "score": score},
+         "betting_signals": {"moneyline": {"side": side, "score": score}},
+         "signal_scores": [{"market": "Moneyline", "side": side, "score": score}]}
+    if odds is not None:
+        e["odds"] = odds
+    return e
+
+
+ok("a price inside the cap is untouched",
+   espn_odds.unbettable(-500, CAP) == (False, espn_odds.break_even(-500)))
+ok("a price past it is unbettable", espn_odds.unbettable(-8000, CAP)[0] is True)
+# THE BOUNDARY IS THE MEASUREMENT. 10/11 is both the model's best-ever band
+# (10-1 at scores of 90+) and the break-even of -1000, so a -1000 line is
+# admitted and anything worse is not. Set as the fraction rather than a rounded
+# 0.909, which would have excluded -1000 itself by four ten-thousandths.
+ok("  and the cap lands exactly on the model's ceiling",
+   espn_odds.unbettable(-1000, CAP)[0] is False
+   and espn_odds.unbettable(-1001, CAP)[0] is True,
+   (espn_odds.break_even(-1000), CAP))
+ok("  a rounded 0.909 would have excluded -1000 itself",
+   espn_odds.unbettable(-1000, 0.909)[0] is True)
+
+# UNPRICED IS NOT UNBETTABLE, and conflating them is the failure mode worth
+# naming: ESPN publishes no market at all for a chunk of every board, mostly
+# the smaller programs -- exactly the part least likely to be efficiently
+# priced. Dropping those would be the opposite of what this filter is for.
+ok("no price is NOT unbettable -- unknown is not the same as unbackable",
+   espn_odds.unbettable(None, CAP) == (False, None))
+ok("no cap configured disables the filter entirely",
+   espn_odds.unbettable(-50000, None) == (False, espn_odds.break_even(-50000)))
+
+# Suppression removes the BET, never the analysis.
+ents = {"a": _ent(odds={"home_ml": -8000, "away_ml": 2000}),
+        "b": _ent(odds={"home_ml": -150, "away_ml": 130}),
+        "c": _ent()}                      # unpriced
+cut = espn_odds.apply_bettability(ents, CAP, "cfb")
+ok("the -8000 pick is suppressed", cut == 1 and ents["a"]["standout"] is None, ents["a"])
+ok("  and its best_angle with it", ents["a"]["best_angle"] is None)
+ok("  but the OPINION survives -- signal_scores untouched",
+   [r["score"] for r in ents["a"].get("signal_scores") or []] == [80],
+   ents["a"].get("signal_scores"))
+ok("  and betting_signals untouched",
+   ((ents["a"].get("betting_signals") or {}).get("moneyline") or {}).get("score") == 80,
+   ents["a"].get("betting_signals"))
+ok("  with a reason the card can render",
+   ents["a"]["no_bet"]["reason"] == "price"
+   and ents["a"]["no_bet"]["display"] == "-8000"
+   and ents["a"]["no_bet"]["break_even_display"] == "99%", ents["a"].get("no_bet"))
+ok("a bettable pick keeps its standout", ents["b"]["standout"] is not None)
+ok("  and gets no no_bet block", "no_bet" not in ents["b"])
+ok("an UNPRICED pick is left alone", ents["c"]["standout"] is not None, ents["c"])
+
+# A MARKET THE BOOK PULLED outranks any price for unbettability.
+off_ent = {"o": _ent(odds={"home_ml": None, "away_ml": None, "moneyline_off": True,
+                           "details": "IU -44.5"})}
+espn_odds.apply_bettability(off_ent, CAP, "cfb")
+ok("an OFF market suppresses the pick", off_ent["o"]["standout"] is None, off_ent["o"])
+ok("  labelled as pulled, not as a price",
+   off_ent["o"]["no_bet"]["reason"] == "off_the_board"
+   and off_ent["o"]["no_bet"]["display"] == "OFF", off_ent["o"].get("no_bet"))
+ok("  carrying the spread that explains it",
+   off_ent["o"]["no_bet"]["spread"] == "IU -44.5", off_ent["o"].get("no_bet"))
+ok("  and no break-even, because there is no price",
+   off_ent["o"]["no_bet"]["break_even"] is None)
+
+# The side the pick took is what gets priced, not the favourite.
+dog = {"d": _ent(side="AWY", odds={"home_ml": -8000, "away_ml": 2000})}
+espn_odds.apply_bettability(dog, CAP, "cfb")
+ok("backing the +2000 dog is bettable even when the other side is -8000",
+   dog["d"]["standout"] is not None, dog["d"])
+
+# A game with no lean at all has nothing to suppress.
+none_ent = {"n": {"away": {"abbr": "A"}, "home": {"abbr": "B"}, "standout": None}}
+ok("a game with no pick is a no-op",
+   espn_odds.apply_bettability(none_ent, CAP, "cfb") == 0)
+ok("no cap means no suppression anywhere",
+   espn_odds.apply_bettability({"a": _ent(odds={"home_ml": -50000, "away_ml": 9000})},
+                               None, "cfb") == 0)
 
 
 print("odds: {} checks pass".format(checks["pass"]) if not checks["fail"]
