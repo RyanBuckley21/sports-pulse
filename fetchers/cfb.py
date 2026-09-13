@@ -1540,6 +1540,9 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # changes no model input: see espn_odds' module docstring.
     espn_odds.attach(session, "cfb", entities,
                      {et_date(g.get("start_date")) for g in games})
+    espn_odds.apply_bettability(
+        entities, ((config.get("betting_signals") or {}).get("cfb") or {}).get("max_break_even"),
+        "cfb")
 
     if team_entities is not None:
         # Built from the SCHEDULE, never from CFBD -- see build_schedule_form.

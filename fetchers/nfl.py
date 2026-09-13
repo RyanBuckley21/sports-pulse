@@ -915,6 +915,9 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                      {g.get("gameday") for g in games},
                      espn_ids={g["game_id"]: (g.get("espn") or "").strip()
                                for g in games if g.get("espn")})
+    espn_odds.apply_bettability(
+        entities, ((config.get("betting_signals") or {}).get("nfl") or {}).get("max_break_even"),
+        "nfl")
 
     if team_entities is not None:
         # Built from the SCHEDULE's own scores, never from the team_stats

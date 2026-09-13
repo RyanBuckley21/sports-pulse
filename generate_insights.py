@@ -964,6 +964,11 @@ def _build_games_section(entities, text_map):
             # ledger settles from the Python one. None whenever the feed never
             # priced the game or no market cleared the bar.
             "price": _price_block(ent),
+            # WHY THERE IS NO PICK, when the reason is the price rather than the
+            # model. Without this the card just goes quiet on its most confident
+            # games -- the reader cannot tell "the model saw nothing" from "the
+            # model saw plenty and it costs -8000". See espn_odds.apply_bettability.
+            "no_bet": ent.get("no_bet"),
             "betting_note": t.get("betting_note"),
             "summary": t.get("summary"),
             "story": t.get("story"),

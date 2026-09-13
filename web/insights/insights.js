@@ -312,6 +312,35 @@
       );
     },
 
+    // WHY THERE IS NO PICK, when the price is the reason. Takes the slot the
+    // Best Angle would have used, so the card never just goes quiet on its most
+    // confident games -- a reader has to be able to tell "the model saw nothing"
+    // from "the model saw plenty and it costs -8000". The Signal Scores below
+    // still render: the opinion is intact, it is only the bet that is gone.
+    noBet: function (nb) {
+      if (!nb || !nb.display) return "";  // display is "OFF" or a signed price
+      return (
+        '<div class="no-bet">' +
+        '<span class="nb-tag">No bet</span>' +
+        '<div class="nb-body">' +
+        '<div class="nb-line">' + esc(nb.side || "") +
+        ' scores <strong>' + (Number(nb.score) || 0) + "</strong>" +
+        (nb.reason === "off_the_board"
+          ? ' but the moneyline is <strong>OFF</strong>'
+          : ' but is priced <strong>' + esc(nb.display) + "</strong>") +
+        "</div>" +
+        '<div class="nb-why">' +
+        (nb.reason === "off_the_board"
+          ? "the book has pulled this market" +
+            (nb.spread ? " (" + esc(nb.spread) + ")" : "")
+          : "needs " + esc(nb.break_even_display) +
+            " to break even — past the " + esc(nb.cap_display) +
+            " this model has ever cleared") +
+        "</div>" +
+        "</div></div>"
+      );
+    },
+
     // Compare Metrics -- a generic "compare N metrics between two entities" table.
     // Knows nothing about what the metrics are: it renders resolved rows
     // ({label, a, b, better}) and bolds the winning side per row. The metric list
@@ -553,6 +582,7 @@
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
         Cards.bestAngle(g.best_angle, away, home, g.price) +
+        Cards.noBet(g.no_bet) +
         section("How This Result Splits",
                 Cards.outcomeSplit(g.outcome_split, away, home,
                                    (g.best_angle || {}).side)) +
