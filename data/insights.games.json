@@ -2937,34 +2937,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 12,
-          "side": "No clear lean"
+          "score": 18,
+          "side": "TEX"
         },
         "game_total": {
           "flags": [],
-          "score": 0,
+          "score": 1,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 1,
+          "score": 10,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 2,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 1,
+          "score": 13,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "BOS",
             "flags": [],
-            "score": 0,
+            "score": 3,
             "side": "No clear lean"
           },
           "home": {
@@ -2985,6 +2985,10 @@
         "away": {
           "era": "4.16",
           "name": "Patrick Sandoval"
+        },
+        "home": {
+          "era": "3.90",
+          "name": "Jacob deGrom"
         }
       },
       "pulse": {
@@ -3006,10 +3010,21 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "BOS 2-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.16 vs 3.90"
         }
       ],
       "slate_date": "2026-09-15",
-      "standout": null,
+      "standout": {
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 18,
+        "side": "TEX"
+      },
       "start": "8:05 PM ET",
       "status": "Preview",
       "story": null,
@@ -3887,27 +3902,27 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 29,
+          "score": 27,
           "side": "CLE"
         },
         "game_total": {
           "flags": [],
-          "score": 14,
-          "side": "No clear lean"
+          "score": 15,
+          "side": "Under"
         },
         "moneyline": {
           "flags": [],
-          "score": 23,
+          "score": 22,
           "side": "CLE"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 17,
+          "score": 18,
           "side": "NRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 27,
+          "score": 25,
           "side": "No clear lean"
         },
         "team_total": {
@@ -3920,7 +3935,7 @@
           "home": {
             "abbr": "CLE",
             "flags": [],
-            "score": 3,
+            "score": 5,
             "side": "No clear lean"
           }
         }
@@ -3933,8 +3948,8 @@
       },
       "probables": {
         "away": {
-          "era": "4.03",
-          "name": "Davis Martin"
+          "era": "3.99",
+          "name": "Chris Murphy"
         },
         "home": {
           "era": "3.55",
@@ -3964,7 +3979,7 @@
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "4.03 vs 3.55"
+          "value": "3.99 vs 3.55"
         }
       ],
       "slate_date": "2026-09-15",
@@ -3972,7 +3987,7 @@
         "bet_type": "first_five_moneyline",
         "flags": [],
         "market": "First Five Moneyline",
-        "score": 29,
+        "score": 27,
         "side": "CLE"
       },
       "start": "6:40 PM ET",
