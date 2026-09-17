@@ -1,4 +1,15 @@
 {
+  "aaron nola|phi": {
+    "entity": "Aaron Nola",
+    "generated_at": "2026-09-17T17:44:43.706171+00:00",
+    "last_game_date": "2026-09-11",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Philadelphia Phillies",
+    "template_version": "v2"
+  },
   "amon-ra st. brown|det": {
     "entity": "Amon-Ra St. Brown",
     "generated_at": "2026-09-14T16:14:17.556157+00:00",
@@ -24,7 +35,7 @@
   "brice turang|mil": {
     "entity": "Brice Turang",
     "generated_at": "2026-09-15T14:42:48.519950+00:00",
-    "last_game_date": "2026-09-16",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -79,7 +90,7 @@
   "chandler simpson|tb": {
     "entity": "Chandler Simpson",
     "generated_at": "2026-09-16T19:03:21.583839+00:00",
-    "last_game_date": "2026-09-16",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -96,6 +107,17 @@
     "summary": null,
     "takeaways": [],
     "team": "GB",
+    "template_version": "v2"
+  },
+  "corey seager|tex": {
+    "entity": "Corey Seager",
+    "generated_at": "2026-09-17T17:44:43.706171+00:00",
+    "last_game_date": "2026-09-16",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Texas Rangers",
     "template_version": "v2"
   },
   "d'andre swift|chi": {
@@ -145,7 +167,7 @@
   "drew rasmussen|tb": {
     "entity": "Drew Rasmussen",
     "generated_at": "2026-09-17T14:46:58.557285+00:00",
-    "last_game_date": "2026-09-11",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -156,7 +178,7 @@
   "elly de la cruz|cin": {
     "entity": "Elly De La Cruz",
     "generated_at": "2026-09-11T14:08:45.224898+00:00",
-    "last_game_date": "2026-09-16",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -200,7 +222,7 @@
   "jackson chourio|mil": {
     "entity": "Jackson Chourio",
     "generated_at": "2026-09-15T14:42:48.519950+00:00",
-    "last_game_date": "2026-09-16",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -274,17 +296,6 @@
     "team": "NYG",
     "template_version": "v2"
   },
-  "jonathan aranda|tb": {
-    "entity": "Jonathan Aranda",
-    "generated_at": "2026-09-17T14:46:58.557285+00:00",
-    "last_game_date": "2026-09-15",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Tampa Bay Rays",
-    "template_version": "v2"
-  },
   "jonathan taylor|ind": {
     "entity": "Jonathan Taylor",
     "generated_at": "2026-09-14T16:14:17.556157+00:00",
@@ -294,17 +305,6 @@
     "summary": null,
     "takeaways": [],
     "team": "IND",
-    "template_version": "v2"
-  },
-  "junior caminero|tb": {
-    "entity": "Junior Caminero",
-    "generated_at": "2026-09-17T14:46:58.557285+00:00",
-    "last_game_date": "2026-09-16",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Tampa Bay Rays",
     "template_version": "v2"
   },
   "justin jefferson|min": {
@@ -321,7 +321,7 @@
   "justin wrobleski|lad": {
     "entity": "Justin Wrobleski",
     "generated_at": "2026-09-17T14:46:58.557285+00:00",
-    "last_game_date": "2026-09-12",
+    "last_game_date": "2026-09-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -373,15 +373,15 @@
     "team": "New York Mets",
     "template_version": "v2"
   },
-  "sal stewart|cin": {
-    "entity": "Sal Stewart",
-    "generated_at": "2026-09-17T14:46:58.557285+00:00",
+  "riley greene|det": {
+    "entity": "Riley Greene",
+    "generated_at": "2026-09-17T17:44:43.706171+00:00",
     "last_game_date": "2026-09-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Cincinnati Reds",
+    "team": "Detroit Tigers",
     "template_version": "v2"
   },
   "taj bradley|min": {
