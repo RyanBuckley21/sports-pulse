@@ -3192,30 +3192,28 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 49,
+          "score": 20,
           "side": "NYM"
         },
         "game_total": {
           "flags": [],
-          "score": 10,
+          "score": 0,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 42,
+          "score": 21,
           "side": "NYM"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 20,
-          "side": "YRFI"
+          "score": 0,
+          "side": "No clear lean"
         },
         "run_line": {
-          "flags": [
-            "run_line_hot"
-          ],
-          "score": 42,
-          "side": "NYM"
+          "flags": [],
+          "score": 21,
+          "side": "No clear lean"
         },
         "team_total": {
           "away": {
@@ -3227,8 +3225,8 @@
           "home": {
             "abbr": "NYM",
             "flags": [],
-            "score": 26,
-            "side": "Over"
+            "score": 11,
+            "side": "No clear lean"
           }
         }
       },
@@ -3239,10 +3237,6 @@
         "name": "Mets"
       },
       "probables": {
-        "away": {
-          "era": "4.69",
-          "name": "Andrew Painter"
-        },
         "home": {
           "era": "3.81",
           "name": "Zac Thornton"
@@ -3267,19 +3261,14 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "PHI 6-4"
-        },
-        {
-          "label": "Probables ERA",
-          "tone": "neutral",
-          "value": "4.69 vs 3.81"
         }
       ],
       "slate_date": "2026-09-18",
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "moneyline",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 49,
+        "market": "Moneyline",
+        "score": 21,
         "side": "NYM"
       },
       "start": "7:15 PM ET",
@@ -4010,34 +3999,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 38,
-          "side": "MIL"
+          "score": 3,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 6,
+          "score": 7,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 30,
-          "side": "MIL"
+          "score": 8,
+          "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 7,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 30,
+          "score": 3,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "MIL",
             "flags": [],
-            "score": 22,
+            "score": 14,
             "side": "No clear lean"
           },
           "home": {
@@ -4058,6 +4047,10 @@
         "away": {
           "era": "4.17",
           "name": "Dustin May"
+        },
+        "home": {
+          "era": "4.01",
+          "name": "Cade Povich"
         }
       },
       "pulse": {
@@ -4074,16 +4067,15 @@
           "label": "BAL bullpen ERA (7d)",
           "tone": "neg",
           "value": "3.87"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.17 vs 4.01"
         }
       ],
       "slate_date": "2026-09-18",
-      "standout": {
-        "bet_type": "first_five_moneyline",
-        "flags": [],
-        "market": "First Five Moneyline",
-        "score": 38,
-        "side": "MIL"
-      },
+      "standout": null,
       "start": "7:05 PM ET",
       "status": "Preview",
       "story": null,
