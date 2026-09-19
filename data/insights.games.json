@@ -2695,8 +2695,8 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 29,
-          "side": "TB"
+          "score": 3,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
@@ -2705,17 +2705,17 @@
         },
         "moneyline": {
           "flags": [],
-          "score": 17,
+          "score": 4,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 29,
+          "side": "YRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 18,
+          "score": 0,
           "side": "No clear lean"
         },
         "team_total": {
@@ -2728,7 +2728,7 @@
           "home": {
             "abbr": "TB",
             "flags": [],
-            "score": 1,
+            "score": 10,
             "side": "No clear lean"
           }
         }
@@ -2740,6 +2740,10 @@
         "name": "Rays"
       },
       "probables": {
+        "away": {
+          "era": "4.32",
+          "name": "Brayan Bello"
+        },
         "home": {
           "era": "4.44",
           "name": "Freddy Peralta"
@@ -2764,15 +2768,20 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "BOS 9-7"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.32 vs 4.44"
         }
       ],
       "slate_date": "2026-09-19",
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "nrfi_yrfi",
         "flags": [],
-        "market": "First Five Moneyline",
+        "market": "First-Inning Runs",
         "score": 29,
-        "side": "TB"
+        "side": "YRFI"
       },
       "start": "4:10 PM ET",
       "status": "Preview",
@@ -3205,23 +3214,23 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 27,
+          "score": 22,
           "side": "LAD"
         },
         "game_total": {
           "flags": [],
-          "score": 12,
+          "score": 5,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
           "score": 20,
-          "side": "No clear lean"
+          "side": "LAD"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 21,
+          "side": "NRFI"
         },
         "run_line": {
           "flags": [],
@@ -3238,8 +3247,8 @@
           "home": {
             "abbr": "LAD",
             "flags": [],
-            "score": 22,
-            "side": "Over"
+            "score": 9,
+            "side": "No clear lean"
           }
         }
       },
@@ -3250,6 +3259,10 @@
         "name": "Dodgers"
       },
       "probables": {
+        "away": {
+          "era": "3.85",
+          "name": "Yunior Marte"
+        },
         "home": {
           "era": "3.61",
           "name": "Tarik Skubal"
@@ -3274,6 +3287,11 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "SF 5-5"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.85 vs 3.61"
         }
       ],
       "slate_date": "2026-09-19",
@@ -3281,7 +3299,7 @@
         "bet_type": "first_five_moneyline",
         "flags": [],
         "market": "First Five Moneyline",
-        "score": 27,
+        "score": 22,
         "side": "LAD"
       },
       "start": "9:10 PM ET",
