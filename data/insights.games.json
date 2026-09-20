@@ -3902,28 +3902,30 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 28,
+          "score": 48,
           "side": "CHC"
         },
         "game_total": {
           "flags": [],
-          "score": 4,
-          "side": "No clear lean"
+          "score": 15,
+          "side": "Over"
         },
         "moneyline": {
           "flags": [],
-          "score": 23,
+          "score": 40,
           "side": "CHC"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 34,
+          "side": "YRFI"
         },
         "run_line": {
-          "flags": [],
-          "score": 23,
-          "side": "No clear lean"
+          "flags": [
+            "run_line_hot"
+          ],
+          "score": 40,
+          "side": "CHC"
         },
         "team_total": {
           "away": {
@@ -3935,8 +3937,8 @@
           "home": {
             "abbr": "CIN",
             "flags": [],
-            "score": 16,
-            "side": "Under"
+            "score": 8,
+            "side": "No clear lean"
           }
         }
       },
@@ -3947,6 +3949,10 @@
         "name": "Reds"
       },
       "probables": {
+        "away": {
+          "era": "4.05",
+          "name": "David Peterson"
+        },
         "home": {
           "era": "4.84",
           "name": "Rhett Lowder"
@@ -3971,6 +3977,11 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "CHC 8-6"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.05 vs 4.84"
         }
       ],
       "slate_date": "2026-09-20",
@@ -3978,7 +3989,7 @@
         "bet_type": "first_five_moneyline",
         "flags": [],
         "market": "First Five Moneyline",
-        "score": 28,
+        "score": 48,
         "side": "CHC"
       },
       "start": "1:40 PM ET",
