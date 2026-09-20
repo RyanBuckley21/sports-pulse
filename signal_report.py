@@ -466,6 +466,11 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, spo
             "break_even": (None if pick.get("price") is None
                            else round(espn_odds.break_even(pick["price"]), 4)),
             "odds": pick.get("odds"),
+            # Flattened alongside the full block so a reader can aggregate
+            # without unpacking: `clv_delta` is in probability points, positive
+            # when the market moved toward the pick.
+            "clv": pick.get("clv"),
+            "clv_delta": (pick.get("clv") or {}).get("delta"),
         })
     return out
 
@@ -1018,6 +1023,14 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 "price": espn_odds.for_side(entry.get("odds"), m["side"],
                                             (entry.get("home") or {}).get("abbr"),
                                             (entry.get("away") or {}).get("abbr")),
+                # DID THE MARKET MOVE TOWARD THIS PICK. Read from the same
+                # stored block, which carries the book's own opening number
+                # alongside its last published one. This converges far faster
+                # than ROI does -- weeks rather than a season -- which is the
+                # whole reason it is recorded. See espn_odds.clv.
+                "clv": espn_odds.clv(entry.get("odds"), m["side"],
+                                     (entry.get("home") or {}).get("abbr"),
+                                     (entry.get("away") or {}).get("abbr")),
             }
             # Resolved here rather than in grade(), which sees one pick at a time
             # and has no access to the game's other markets. `scored` is the full
@@ -1109,6 +1122,45 @@ def priced_record_lines(all_rows):
     if unpriced:
         out.append("         ({} graded pick{} carry no price and are excluded)".format(
             unpriced, "" if unpriced == 1 else "s"))
+    return out
+
+
+def clv_record_lines(all_rows):
+    """Did the market move toward these picks? The fastest honest read on edge.
+
+    WHY THIS AND NOT ROI. Three walk-forward tests over 2010-2025 NFL said the
+    signals here cannot out-predict a closing line -- jointly they explain
+    R2=0.0027 of its residual -- so the interesting question is no longer
+    "is our number better" but "does the market come toward us at all". That
+    is answerable in weeks; an ROI with a usable confidence interval on a few
+    dozen picks a week is not answerable until next season.
+
+    MEAN MOVEMENT IN PROBABILITY POINTS, plus the share of picks the market
+    moved toward. Both are reported because they fail differently: a single
+    steamed longshot can carry the mean while most picks drifted the wrong
+    way, and a 51% share can sit on movement too small to mean anything.
+
+    THE NULL IS ZERO, not 50%. With no edge the market is as likely to move
+    away as toward, so a mean of +0.0pp and a share near half is the expected
+    result -- and the honest one to report. Picks the feed could not measure
+    (unpriced, or a book that pulled the market) are EXCLUDED rather than
+    counted as no movement, which would drag the mean toward zero by
+    construction.
+
+    Silent until something is measurable, rather than printing a 0.0pp that
+    would read as a finding."""
+    moved = [r["clv_delta"] for r in all_rows
+             if r.get("clv_delta") is not None and r.get("verdict") in ("HIT", "MISS", "PUSH")]
+    if not moved:
+        return []
+    n = len(moved)
+    mean = sum(moved) / n
+    toward = sum(1 for d in moved if d > 0)
+    flat = sum(1 for d in moved if d == 0)
+    out = ["Line movement:     mean {:+.2f}pp toward the pick  ·  moved toward {} of {} "
+           "({:.0%})  ·  {} unmoved".format(100.0 * mean, toward, n, toward / n, flat)]
+    if n < 100:
+        out.append("         (n={} -- too few to read yet; the null is 0.0pp and ~50%)".format(n))
     return out
 
 
@@ -1225,6 +1277,7 @@ def alltime_lines(all_rows, not_recorded=None):
             lines.append("         gaps: {} — recorded as such, not counted as losses".format(
                 ", ".join(gaps)))
         lines.extend(priced_record_lines(all_rows))
+        lines.extend(clv_record_lines(all_rows))
     if not_recorded:
         lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
     return lines

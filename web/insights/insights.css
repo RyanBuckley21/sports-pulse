@@ -704,3 +704,18 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 .nb-body { min-width: 0; }
 .nb-line { line-height: 1.35; }
 .nb-why { margin-top: 0.2rem; opacity: 0.7; font-size: 0.75rem; line-height: 1.35; }
+
+/* Direction of the market's move since the book opened. Green toward, amber
+   away -- muted, because it is context on the price rather than a verdict. */
+.ba-price-move { font-variant-numeric: tabular-nums; opacity: 0.85; }
+.ba-price-move.is-toward { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
+.ba-price-move.is-away { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
+
+/* The game's shape: spread, line movement, total. Display only -- nothing in
+   this repo predicts margin or total, so it must not read as a second pick. */
+.ba-shape {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}

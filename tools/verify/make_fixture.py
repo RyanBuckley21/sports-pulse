@@ -205,6 +205,11 @@ def _with_signals(game, i):
             "american": -180, "display": "-180",
             "break_even": 0.6429, "break_even_display": "64%",
             "provider": "DraftKings", "spread": "BOS -1.5",
+            # The market's own opinion, alongside the model's: this line
+            # shortened after the pick existed. Plus the game's shape, which is
+            # display only -- nothing here predicts margin or total.
+            "opened": "-150", "move_display": "+3.5pp", "move_direction": "toward",
+            "spread_move": "-1 → -1.5", "total": 8.5,
         }
     # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
     # That combination is the whole point of the bettability filter: the model

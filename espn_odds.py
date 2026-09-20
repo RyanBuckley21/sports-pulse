@@ -110,6 +110,23 @@ def _odds_int(node, side, phase="close"):
         return None
 
 
+def _line_float(node, side, phase):
+    """One spread line out of ESPN's pointSpread block, as a float.
+
+    Same nesting as the moneyline (side -> phase -> value) but the key is
+    `line` rather than `odds`, and the value is a signed string ('-4.5',
+    '+4.5'). Home-relative throughout, matching nflverse's `spread_line`
+    convention: negative means the home side is laying points."""
+    try:
+        raw = ((node or {}).get(side) or {}).get(phase, {}).get("line")
+    except AttributeError:
+        return None
+    try:
+        return float(str(raw).replace("+", ""))
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_event(event):
     """One scoreboard event -> its price block, or None when the feed carries
     no usable moneyline for it.
@@ -140,13 +157,32 @@ def parse_event(event):
         # to quote rather than an absence of data.
         home = away = None
     spread = book.get("spread")
+    ps = book.get("pointSpread") or {}
     return {
         "provider": ((book.get("provider") or {}).get("name")
                      or (book.get("provider") or {}).get("displayName")),
         "home_ml": home,
         "away_ml": away,
         "moneyline_off": off,
+        # THE OPENING NUMBER, which is what makes closing-line value
+        # measurable. ESPN publishes it alongside the current one and it is a
+        # genuinely different number -- 45 of 54 CFB games and 13 of 14 NFL
+        # games on the 2026-09-19/20 boards had open != close. Without it,
+        # "did the market move toward this pick" cannot be asked at all.
+        #
+        # Captured but NOT used to settle anything: a bet is graded at the
+        # price it was available at, which is the close. See clv().
+        "home_ml_open": _odds_int(ml, "home", "open"),
+        "away_ml_open": _odds_int(ml, "away", "open"),
         "spread": float(spread) if isinstance(spread, (int, float)) else None,
+        # The spread, both ends, home-relative. Display only -- nothing in this
+        # repo predicts margin, and the moneyline lean does NOT transfer to a
+        # spread (see the scoping note in nfl_spread_backtest's absence). It is
+        # here because a card showing "-8000, no bet" is far more useful when
+        # it can also say the game is a 29.5-point mismatch.
+        "spread_open": _line_float(ps, "home", "open"),
+        "spread_close": _line_float(ps, "home", "close"),
+        "total": book.get("overUnder") if isinstance(book.get("overUnder"), (int, float)) else None,
         "details": book.get("details"),
         "captured_at": datetime.datetime.now(datetime.timezone.utc)
                                .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
@@ -341,3 +377,92 @@ def apply_bettability(entities, cap, sport=""):
               "Their Signal Scores still render; they are no longer bets."
               .format(sport, cut, "" if cut == 1 else "s", cap))
     return cut
+
+
+# ------------------------------------------------------------------------- #
+# Closing-line value.
+# ------------------------------------------------------------------------- #
+#
+# WHY THIS IS THE MEASUREMENT WORTH HAVING. Three walk-forward tests over
+# 2010-2025 NFL (~7,000 games with real closing spreads) said this repo's
+# signals cannot beat a spread: the margin gap explains R2=0.0001 of the
+# closing line's residual, all six signals jointly explain R2=0.0027
+# in-sample, and the unused columns -- wind, temperature, roof, surface,
+# divisional, rest, referee -- are priced too (0 of 28 referee crews deviate
+# at 2se, where chance alone predicts ~1). ATS came out 50.96% on 2,560
+# out-of-sample bets against a 52.4% break-even.
+#
+# So the question is not "can we build a better number than the market" -- it
+# is "does the market move toward our picks at all". That is closing-line
+# value, and it is the standard proxy for edge precisely because it converges
+# roughly an order of magnitude faster than ROI does: a read in weeks rather
+# than a season, which for a board that grades a few dozen picks a week is the
+# difference between knowing by November and knowing by next August.
+#
+# WHAT IT IS NOT. It is not profit, and it is not a claim that these prices
+# were ever taken. The board publishes continuously and bets nothing. This
+# measures one thing only: between the book's own opening number and its last
+# published one, did the market move toward the side this model picked.
+
+def clv(odds, side_abbr, home_abbr, away_abbr):
+    """Line movement toward a pick, or None when it cannot be measured.
+
+    Returns {open, close, open_break_even, close_break_even, delta,
+    direction}, where `delta` is in PROBABILITY POINTS and positive means the
+    market moved TOWARD the picked side -- its price shortened, so the same
+    bet got more expensive after the board named it.
+
+    Probability points rather than raw American odds because American odds are
+    not linear: -110 to -130 and +200 to +180 are wildly different moves in
+    cents and comparable ones in probability. Summing raw American deltas
+    across a board would be meaningless arithmetic.
+
+    None whenever either end is missing -- an unpriced game, a market the book
+    pulled, or a side the book does not quote. An unmeasurable pick is
+    excluded from the aggregate rather than counted as zero movement, which
+    would quietly drag every average toward nothing."""
+    if not odds or not side_abbr:
+        return None
+    lead = str(side_abbr).split()[0]
+    if lead == home_abbr:
+        close_am, open_am = odds.get("home_ml"), odds.get("home_ml_open")
+    elif lead == away_abbr:
+        close_am, open_am = odds.get("away_ml"), odds.get("away_ml_open")
+    else:
+        return None
+    ob, cb = break_even(open_am), break_even(close_am)
+    if ob is None or cb is None:
+        return None
+    delta = cb - ob
+    return {
+        "open": int(open_am),
+        "close": int(close_am),
+        "open_break_even": round(ob, 4),
+        "close_break_even": round(cb, 4),
+        "delta": round(delta, 4),
+        "delta_display": "{:+.1f}pp".format(100.0 * delta),
+        "direction": "toward" if delta > 0 else ("away" if delta < 0 else "flat"),
+    }
+
+
+def spread_move(odds):
+    """How far the SPREAD moved, home-relative, or None.
+
+    Display only. Nothing here predicts margin, and the moneyline lean does
+    not transfer to a spread -- "does Notre Dame win" and "does Notre Dame
+    cover -27.5" are different questions, and this model has only ever been
+    calibrated against the first.
+
+    SIGN: ESPN's line is home-relative and NEGATIVE when the home side lays
+    points (ILL @ OSU reads home_line -27.5). That is the OPPOSITE of
+    nflverse's `spread_line`, which is positive when the home team is
+    favoured, and nfl_odds_backtest reads the nflverse one. Two conventions,
+    both live in this repo; conflating them silently inverts every number
+    built on top."""
+    if not odds:
+        return None
+    op, cl = odds.get("spread_open"), odds.get("spread_close")
+    if op is None or cl is None:
+        return None
+    return {"open": op, "close": cl, "move": round(cl - op, 2),
+            "display": "{:+g} → {:+g}".format(op, cl)}

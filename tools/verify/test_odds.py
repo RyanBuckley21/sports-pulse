@@ -411,6 +411,138 @@ ok("no cap means no suppression anywhere",
                                None, "cfb") == 0)
 
 
+# ------------------------------------------------------- closing-line value
+# THE MEASUREMENT THAT REPLACED A SPREAD MODEL. Three walk-forward tests over
+# 2010-2025 NFL (~7,000 games with real closing spreads) said this repo's
+# signals cannot out-predict a line: margin gap explains R2=0.0001 of its
+# residual, all six signals jointly R2=0.0027 in-sample, and the unused columns
+# are priced too (0 of 28 referee crews deviate at 2se where chance predicts
+# ~1). ATS came out 50.96% on 2,560 out-of-sample bets against 52.4%.
+#
+# So the question became "does the market move toward our picks at all", which
+# is CLV -- and it converges in weeks rather than a season.
+MOVED = {"home_ml": 180, "away_ml": -218, "home_ml_open": 210, "away_ml_open": -258}
+
+toward = espn_odds.clv(MOVED, "HME", "HME", "AWY")
+away = espn_odds.clv(MOVED, "AWY", "HME", "AWY")
+ok("a price that SHORTENED moved toward the pick",
+   toward["direction"] == "toward" and toward["delta"] > 0, toward)
+ok("  measured in probability points, not raw American odds",
+   toward["delta_display"] == "+3.5pp", toward)
+ok("  carrying both ends so the move is auditable",
+   (toward["open"], toward["close"]) == (210, 180), toward)
+ok("the other side of the same game moved the OTHER WAY",
+   toward["delta"] > 0 > away["delta"], (toward["delta"], away["delta"]))
+ok("  and is labelled as such", away["direction"] == "away", away)
+# NOT EXACTLY EQUAL AND OPPOSITE, and that is correct rather than sloppy.
+# break_even() is the RAW implied probability, vig included, so the two sides
+# sum to the book's hold (1.0433 at the open here, 1.0427 at the close) rather
+# than to 1. The residual is the hold's own drift. Asserting exact symmetry
+# would be asserting a de-vigged number this deliberately does not compute --
+# because the question is "what must I clear at this price", and the vig is
+# part of that.
+ok("  differing only by the book's own hold drift",
+   abs(toward["delta"] + away["delta"]) < 0.001, toward["delta"] + away["delta"])
+
+# PROBABILITY POINTS ARE THE POINT. American odds are not linear -- -110 to
+# -130 and +200 to +180 are wildly different in cents and comparable in
+# probability -- so summing raw American deltas across a board would be
+# meaningless arithmetic. Pinned with a case that makes it obvious.
+short_fav = espn_odds.clv({"home_ml": -130, "away_ml": 110,
+                           "home_ml_open": -110, "away_ml_open": -110}, "HME", "HME", "AWY")
+long_dog = espn_odds.clv({"home_ml": 180, "away_ml": -218,
+                          "home_ml_open": 200, "away_ml_open": -258}, "HME", "HME", "AWY")
+ok("a 20-cent favourite move and a 20-cent dog move are NOT the same move",
+   abs(short_fav["delta"] - long_dog["delta"]) > 0.01,
+   (short_fav["delta_display"], long_dog["delta_display"]))
+
+flat = espn_odds.clv({"home_ml": -150, "away_ml": 130,
+                      "home_ml_open": -150, "away_ml_open": 130}, "HME", "HME", "AWY")
+ok("an unmoved line reads flat, not toward", flat["direction"] == "flat" and flat["delta"] == 0.0)
+
+# UNMEASURABLE IS NOT ZERO. A pick with no opening number, no closing number,
+# or a market the book pulled is EXCLUDED -- counting it as no movement would
+# drag every average toward zero by construction.
+ok("no opening number is unmeasurable",
+   espn_odds.clv({"home_ml": -150, "away_ml": 130}, "HME", "HME", "AWY") is None)
+ok("no closing number is unmeasurable",
+   espn_odds.clv({"home_ml_open": -150, "away_ml_open": 130}, "HME", "HME", "AWY") is None)
+ok("a pulled market is unmeasurable",
+   espn_odds.clv({"home_ml": None, "away_ml": None, "moneyline_off": True,
+                  "home_ml_open": None, "away_ml_open": None}, "HME", "HME", "AWY") is None)
+ok("no odds at all is unmeasurable", espn_odds.clv(None, "HME", "HME", "AWY") is None)
+ok("a side the book does not quote is unmeasurable",
+   espn_odds.clv(MOVED, "DRAW", "HME", "AWY") is None)
+ok("an 'X or Draw' side still matches on its leading token",
+   espn_odds.clv(MOVED, "HME or Draw", "HME", "AWY") is not None)
+
+
+# ------------------------------------------------------- open/close capture
+# ESPN publishes the book's own OPENING number beside the current one, and it
+# is a genuinely different value -- 45 of 54 CFB and 13 of 14 NFL games on the
+# 2026-09-19/20 boards had open != close. Without it CLV cannot be asked.
+OC = {"id": "1", "competitions": [{"odds": [{
+    "provider": {"name": "DraftKings"}, "details": "TEX -5.5", "spread": 5.5,
+    "overUnder": 57.5,
+    "moneyline": {"home": {"close": {"odds": "+180"}, "open": {"odds": "+210"}},
+                  "away": {"close": {"odds": "-218"}, "open": {"odds": "-258"}}},
+    "pointSpread": {"home": {"close": {"line": "+5.5"}, "open": {"line": "+7.0"}},
+                    "away": {"close": {"line": "-5.5"}, "open": {"line": "-7.0"}}}}]}]}
+oc = espn_odds.parse_event(OC)
+ok("the closing moneyline is captured", (oc["home_ml"], oc["away_ml"]) == (180, -218), oc)
+ok("  and the OPENING one alongside it",
+   (oc["home_ml_open"], oc["away_ml_open"]) == (210, -258), oc)
+ok("the total comes through", oc["total"] == 57.5, oc)
+ok("both ends of the spread come through",
+   (oc["spread_open"], oc["spread_close"]) == (7.0, 5.5), oc)
+
+# SIGN: ESPN's spread is HOME-RELATIVE and NEGATIVE when the home side lays
+# points -- ILL @ OSU reads home_line -27.5. That is the OPPOSITE of nflverse's
+# `spread_line`, which is POSITIVE when the home team is favoured and is what
+# nfl_odds_backtest reads. Two conventions live in this repo; conflating them
+# silently inverts everything built on top, so both are pinned here.
+HOME_FAV = {"id": "2", "competitions": [{"odds": [{"details": "OSU -27.5", "spread": -27.5,
+    "pointSpread": {"home": {"close": {"line": "-27.5"}, "open": {"line": "-24.5"}}},
+    "moneyline": {"home": {"close": {"odds": "-6500"}, "open": {"odds": "-5000"}},
+                  "away": {"close": {"odds": "+2000"}, "open": {"odds": "+1600"}}}}]}]}
+hf = espn_odds.parse_event(HOME_FAV)
+ok("a home favourite's ESPN spread is NEGATIVE", hf["spread_close"] == -27.5, hf)
+sm = espn_odds.spread_move(hf)
+ok("the spread move is reported home-relative", sm["move"] == -3.0, sm)
+ok("  with both ends shown", sm["display"] == "-24.5 → -27.5", sm)
+ok("an unmeasurable spread move is None", espn_odds.spread_move({"spread_open": 3}) is None)
+ok("no odds means no spread move", espn_odds.spread_move(None) is None)
+
+# The card block carries all of it.
+CARD = dict(PRICED, odds=dict(MOVED, spread_open=7.0, spread_close=5.5,
+                              total=57.5, details="TEX -5.5", provider="DraftKings"))
+blk = generate_insights._price_block(CARD)
+# PRICED's standout takes the HOME side, so the card resolves the home price:
+# +210 open -> +180 close, a move toward the pick.
+ok("the card shows which way the market moved", blk["move_display"] == "+3.5pp", blk)
+ok("  naming the direction", blk["move_direction"] == "toward", blk)
+ok("  and from what", blk["opened"] == "+210", blk)
+ok("  the total", blk["total"] == 57.5, blk)
+ok("  and the spread's travel", blk["spread_move"] == "+7 → +5.5", blk)
+
+
+# ------------------------------------------------- the CLV standing record
+ok("no measurable movement says NOTHING, rather than printing 0.0pp",
+   signal_report.clv_record_lines([{"verdict": "HIT", "clv_delta": None}]) == [])
+line = signal_report.clv_record_lines(
+    [{"verdict": "HIT", "clv_delta": 0.03}, {"verdict": "MISS", "clv_delta": 0.01},
+     {"verdict": "MISS", "clv_delta": -0.02}, {"verdict": "PUSH", "clv_delta": 0.0}])[0]
+ok("the mean movement is reported in probability points", "+0.50pp" in line, line)
+ok("  with the share the market moved toward", "2 of 4" in line, line)
+ok("  and the unmoved counted separately", "1 unmoved" in line, line)
+ok("a thin sample says so out loud, and names the null",
+   "the null is 0.0pp" in signal_report.clv_record_lines(
+       [{"verdict": "HIT", "clv_delta": 0.01}])[1])
+# Ungraded rows are not yet evidence of anything.
+ok("a pick with no verdict is not counted",
+   signal_report.clv_record_lines([{"clv_delta": 0.05}]) == [])
+
+
 print("odds: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "odds: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))
 for f in failures:

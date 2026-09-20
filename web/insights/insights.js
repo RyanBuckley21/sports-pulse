@@ -303,12 +303,30 @@
       var be = p.break_even_display
         ? '<span class="ba-price-be">needs ' + esc(p.break_even_display) + "</span>"
         : "";
+      // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on
+      // the card that is the market's opinion rather than the model's. Tinted
+      // by direction because that is the whole content: "toward" means the
+      // price shortened after this pick existed.
+      var mv = p.move_display
+        ? '<span class="ba-price-move is-' + esc(p.move_direction || "flat") + '">' +
+          (p.opened ? "from " + esc(p.opened) + " " : "") +
+          esc(p.move_display) + "</span>"
+        : "";
+      // The game's shape, not a second pick: nothing here predicts margin or
+      // total. Second row so it never competes with the price above it.
+      var shape = [];
+      if (p.spread) shape.push(esc(p.spread));
+      if (p.spread_move) shape.push("line " + esc(p.spread_move));
+      if (p.total) shape.push("O/U " + esc(String(p.total)));
       return (
         '<div class="ba-price">' +
         '<span class="ba-price-ml">' + esc(p.display) + "</span>" +
-        be +
+        be + mv +
         (p.provider ? '<span class="ba-price-src">' + esc(p.provider) + "</span>" : "") +
-        "</div>"
+        "</div>" +
+        (shape.length
+          ? '<div class="ba-shape">' + shape.join(" &middot; ") + "</div>"
+          : "")
       );
     },
 

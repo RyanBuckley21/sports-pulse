@@ -906,6 +906,10 @@ def _price_block(ent):
     if american is None:
         return None
     be = espn_odds.break_even(american)
+    move = espn_odds.clv(odds, standout.get("side"),
+                         (ent.get("home") or {}).get("abbr"),
+                         (ent.get("away") or {}).get("abbr"))
+    sm = espn_odds.spread_move(odds)
     return {
         "american": american,
         "display": "{:+d}".format(int(american)),
@@ -913,6 +917,20 @@ def _price_block(ent):
         "break_even_display": "{:.0f}%".format(100.0 * be) if be is not None else None,
         "provider": odds.get("provider"),
         "spread": odds.get("details"),
+        # THE GAME'S SHAPE, alongside the price. Display only: nothing here
+        # predicts margin or total, and the moneyline lean does not transfer to
+        # either -- "does ND win" and "does ND cover -27.5" are different
+        # questions and only the first has ever been calibrated. They are shown
+        # because "-8000, no bet" is far more useful when the card can also say
+        # the game is a 29-point mismatch.
+        "total": odds.get("total"),
+        "spread_move": (sm or {}).get("display"),
+        # WHICH WAY THE MARKET WENT since the book opened. Positive means it
+        # moved toward this pick. The one number on the card that is about the
+        # market's opinion rather than the model's.
+        "move_display": (move or {}).get("delta_display"),
+        "move_direction": (move or {}).get("direction"),
+        "opened": "{:+d}".format(move["open"]) if move else None,
     }
 
 
