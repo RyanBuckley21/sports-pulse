@@ -13,7 +13,7 @@
   "brandon lowe|pit": {
     "entity": "Brandon Lowe",
     "generated_at": "2026-09-20T14:01:27.398679+00:00",
-    "last_game_date": "2026-09-19",
+    "last_game_date": "2026-09-20",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -57,7 +57,7 @@
   "cristopher s\u00e1nchez|phi": {
     "entity": "Cristopher S\u00e1nchez",
     "generated_at": "2026-09-20T14:01:27.398679+00:00",
-    "last_game_date": "2026-09-15",
+    "last_game_date": "2026-09-20",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -109,21 +109,21 @@
     "team": "BUF",
     "template_version": "v2"
   },
-  "drake baldwin|atl": {
-    "entity": "Drake Baldwin",
-    "generated_at": "2026-09-20T14:01:27.398679+00:00",
+  "dominic canzone|sea": {
+    "entity": "Dominic Canzone",
+    "generated_at": "2026-09-20T18:17:56.856357+00:00",
     "last_game_date": "2026-09-19",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Atlanta Braves",
+    "team": "Seattle Mariners",
     "template_version": "v2"
   },
   "elly de la cruz|cin": {
     "entity": "Elly De La Cruz",
     "generated_at": "2026-09-11T14:08:45.224898+00:00",
-    "last_game_date": "2026-09-19",
+    "last_game_date": "2026-09-20",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -140,17 +140,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Cleveland Guardians",
-    "template_version": "v2"
-  },
-  "hunter brown|hou": {
-    "entity": "Hunter Brown",
-    "generated_at": "2026-09-20T14:01:27.398679+00:00",
-    "last_game_date": "2026-09-15",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Houston Astros",
     "template_version": "v2"
   },
   "isaiah likely|nyg": {
@@ -263,6 +252,17 @@
     "team": "DET",
     "template_version": "v2"
   },
+  "javier sanoja|mia": {
+    "entity": "Javier Sanoja",
+    "generated_at": "2026-09-20T18:17:56.856357+00:00",
+    "last_game_date": "2026-09-19",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Miami Marlins",
+    "template_version": "v2"
+  },
   "josh allen|buf": {
     "entity": "Josh Allen",
     "generated_at": "2026-09-18T14:14:08.110562+00:00",
@@ -373,6 +373,17 @@
     "team": "BUF",
     "template_version": "v2"
   },
+  "riley greene|det": {
+    "entity": "Riley Greene",
+    "generated_at": "2026-09-20T18:17:56.856357+00:00",
+    "last_game_date": "2026-09-19",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Detroit Tigers",
+    "template_version": "v2"
+  },
   "sam laporta|det": {
     "entity": "Sam LaPorta",
     "generated_at": "2026-09-18T14:14:08.110562+00:00",
@@ -415,17 +426,6 @@
     "summary": null,
     "takeaways": [],
     "team": "JAX",
-    "template_version": "v2"
-  },
-  "trevor story|bos": {
-    "entity": "Trevor Story",
-    "generated_at": "2026-09-20T14:01:27.398679+00:00",
-    "last_game_date": "2026-09-19",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Boston Red Sox",
     "template_version": "v2"
   },
   "tyler shough|no": {
