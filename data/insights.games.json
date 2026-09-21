@@ -2849,41 +2849,29 @@
       "betting_note": null,
       "betting_signals": {
         "first_five_moneyline": {
-          "flags": [
-            "away_probable_out",
-            "starter_scratched"
-          ],
-          "score": 0,
-          "side": "No clear lean"
+          "flags": [],
+          "score": 31,
+          "side": "DET"
         },
         "game_total": {
-          "flags": [
-            "away_probable_out"
-          ],
-          "score": 20,
-          "side": "Over"
+          "flags": [],
+          "score": 3,
+          "side": "No clear lean"
         },
         "moneyline": {
-          "flags": [
-            "away_probable_out"
-          ],
-          "score": 60,
+          "flags": [],
+          "score": 30,
           "side": "DET"
         },
         "nrfi_yrfi": {
-          "flags": [
-            "away_probable_out",
-            "starter_scratched"
-          ],
+          "flags": [],
           "score": 0,
           "side": "No clear lean"
         },
         "run_line": {
-          "flags": [
-            "away_probable_out"
-          ],
-          "score": 60,
-          "side": "DET"
+          "flags": [],
+          "score": 30,
+          "side": "No clear lean"
         },
         "team_total": {
           "away": {
@@ -2932,12 +2920,10 @@
       ],
       "slate_date": "2026-09-21",
       "standout": {
-        "bet_type": "moneyline",
-        "flags": [
-          "away_probable_out"
-        ],
-        "market": "Moneyline",
-        "score": 60,
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 31,
         "side": "DET"
       },
       "start": "6:40 PM ET",
