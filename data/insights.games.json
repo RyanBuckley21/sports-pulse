@@ -3651,30 +3651,28 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 44,
+          "score": 24,
           "side": "DET"
         },
         "game_total": {
           "flags": [],
-          "score": 9,
+          "score": 1,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 42,
+          "score": 27,
           "side": "DET"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 12,
+          "score": 5,
           "side": "No clear lean"
         },
         "run_line": {
-          "flags": [
-            "run_line_hot"
-          ],
-          "score": 42,
-          "side": "DET"
+          "flags": [],
+          "score": 24,
+          "side": "No clear lean"
         },
         "team_total": {
           "away": {
@@ -3686,7 +3684,7 @@
           "home": {
             "abbr": "DET",
             "flags": [],
-            "score": 30,
+            "score": 17,
             "side": "Over"
           }
         }
@@ -3699,8 +3697,8 @@
       },
       "probables": {
         "away": {
-          "era": "4.45",
-          "name": "Jackson Kent"
+          "era": "4.04",
+          "name": "Riley Cornelio"
         },
         "home": {
           "era": "3.84",
@@ -3730,15 +3728,15 @@
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "4.45 vs 3.84"
+          "value": "4.04 vs 3.84"
         }
       ],
       "slate_date": "2026-09-22",
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "moneyline",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 44,
+        "market": "Moneyline",
+        "score": 27,
         "side": "DET"
       },
       "start": "6:40 PM ET",
@@ -3865,34 +3863,34 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 10,
-          "side": "No clear lean"
+          "score": 21,
+          "side": "CHC"
         },
         "game_total": {
           "flags": [],
-          "score": 11,
+          "score": 8,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 10,
-          "side": "No clear lean"
+          "score": 18,
+          "side": "CHC"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
+          "score": 4,
           "side": "No clear lean"
         },
         "run_line": {
           "flags": [],
-          "score": 10,
+          "score": 20,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "MIA",
             "flags": [],
-            "score": 6,
+            "score": 0,
             "side": "No clear lean"
           },
           "home": {
@@ -3913,6 +3911,10 @@
         "away": {
           "era": "4.22",
           "name": "Janson Junk"
+        },
+        "home": {
+          "era": "3.89",
+          "name": "Shota Imanaga"
         }
       },
       "pulse": {
@@ -3934,10 +3936,21 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "CHC 2-1"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "4.22 vs 3.89"
         }
       ],
       "slate_date": "2026-09-22",
-      "standout": null,
+      "standout": {
+        "bet_type": "first_five_moneyline",
+        "flags": [],
+        "market": "First Five Moneyline",
+        "score": 21,
+        "side": "CHC"
+      },
       "start": "7:40 PM ET",
       "status": "Preview",
       "story": null,
