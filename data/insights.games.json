@@ -2750,27 +2750,27 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 21,
+          "score": 33,
           "side": "NYM"
         },
         "game_total": {
           "flags": [],
-          "score": 5,
+          "score": 11,
           "side": "No clear lean"
         },
         "moneyline": {
           "flags": [],
-          "score": 21,
+          "score": 30,
           "side": "NYM"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 0,
-          "side": "No clear lean"
+          "score": 16,
+          "side": "NRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 21,
+          "score": 32,
           "side": "No clear lean"
         },
         "team_total": {
@@ -2798,6 +2798,10 @@
         "away": {
           "era": "3.55",
           "name": "Nolan McLean"
+        },
+        "home": {
+          "era": "4.04",
+          "name": "Cody Bradford"
         }
       },
       "pulse": {
@@ -2819,19 +2823,20 @@
           "label": "Season series",
           "tone": "neutral",
           "value": "NYM 1-0"
+        },
+        {
+          "label": "Probables ERA",
+          "tone": "neutral",
+          "value": "3.55 vs 4.04"
         }
       ],
       "slate_date": "2026-09-23",
       "standout": {
-        "bet_type": "team_total",
+        "bet_type": "first_five_moneyline",
         "flags": [],
-        "high": 4,
-        "low": 3,
-        "market": "Team Total",
-        "point": 4,
-        "score": 23,
-        "side": "TEX Under",
-        "unit": "runs"
+        "market": "First Five Moneyline",
+        "score": 33,
+        "side": "NYM"
       },
       "start": "8:05 PM ET",
       "status": "Preview",
