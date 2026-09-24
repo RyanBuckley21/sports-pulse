@@ -21,41 +21,47 @@ and the design proposal). It invalidates that side's now-stale probable-ERA
 signal, penalizes the team on the side markets, pushes the game total toward
 Over, and clamps the first-five / NRFI markets (a bullpen/opener game is
 genuinely unpredictable), flagging every market it touches.
+
+THE GENERIC MATH COMES FROM signal_core.py -- coerce, paired, raw_lean, finalize
+and the "first market over the bar" half of top_market -- shared with NFL, CFB
+and EPL. This module used to carry its own copy of every one of them, and was
+the last sport to: NFL and CFB migrated in PR #52, EPL was written against the
+shared module, and MLB was left for last because it is the live, graded sport.
+While two copies existed nothing kept them in step, so a fix made in
+signal_core silently skipped MLB's scores.
+
+The switch was proved a behavioural no-op before it was made, not assumed:
+AST-normalised hashes of the five helper bodies matched signal_core's exactly;
+the old and new helpers were cross-executed over 349,776 grid cases, and the
+whole old and new modules over 150,000 random games under every one of the five
+distinct `betting_signals.mlb` blocks config.yaml has ever held, with zero
+mismatches; and 777 real games (1,181 replays across 92 committed revisions of
+data/insights.games.json, 39 of them with a scratched starter) scored
+byte-identically before and after. Every one of those harnesses was
+sabotage-checked -- break the shared math and each reports mismatches -- so a
+zero is a measurement rather than a harness that cannot fail.
+
+What stays HERE is MLB's own wiring: _base_signals (seven signals, including
+the three combined totals and the inline season-series ratio), _total and
+_solo (baseline-relative squashes no other sport uses), the availability
+override, _apply_run_line_guard, team_total and its per-side expansion in
+list_markets, score_game and build_inputs.
 """
 
 import math
+
+import signal_core
+# Underscore aliases, the same ones nfl_signals.py and cfb_signals.py import
+# under, so every call site below reads exactly as it did when these were local
+# definitions. round_half_up is not imported: its only caller here was the old
+# local _finalize, which is now signal_core.finalize itself.
+from signal_core import (coerce as _coerce, finalize as _finalize,
+                         paired as _paired, raw_lean as _raw_lean)
 
 # Side-market bet types score toward (+) HOME; totals toward (+) OVER; NRFI/YRFI
 # toward (+) YRFI. These label pairs turn the sign of the net lean into a side.
 _SIDE_MARKETS = ("moneyline", "run_line", "first_five_moneyline")
 _TOTAL_MARKETS = ("game_total", "first_five_total")
-
-
-def _coerce(v):
-    """Parse a numeric input (float, int, or display string like ".812"/"4.02")
-    to float, or None if absent/unparseable."""
-    if v is None:
-        return None
-    try:
-        return float(v)
-    except (TypeError, ValueError):
-        return None
-
-
-def _round(x):
-    """Round half UP (not banker's rounding) so scores match the hand-mocked
-    proposal values, e.g. 60.5 -> 61."""
-    return int(math.floor(x + 0.5))
-
-
-def _paired(val_home, val_away, scale, favors):
-    """Directional value toward HOME (+1) from a home-vs-away gap, tanh-squashed
-    by `scale`. favors='higher' -> a higher home value leans home; favors='lower'
-    -> a lower home value leans home. None if either side is missing."""
-    if val_home is None or val_away is None:
-        return None
-    d = math.tanh((val_home - val_away) / scale)
-    return d if favors == "higher" else -d
 
 
 def _total(combined, spec):
@@ -100,39 +106,6 @@ def _base_signals(inp, scales):
         "combined_starter_era": _total(_add(as_, hs), scales["starter_total"]),
         "combined_bullpen_era": _total(_add(ab, hb), scales["bullpen_total"]),
     }
-
-
-def _raw_lean(sig, weights):
-    """Weighted net lean L in [-1, 1] over the available (non-None) signals,
-    renormalized by their weights. A signal present with value 0 (e.g. an even
-    series) still counts toward the weight sum -- it's a real neutral input, not
-    a missing one. Returns (L, n_available, n_agreeing) or (None, 0, 0)."""
-    pairs = [(sig.get(k), w) for k, w in weights.items() if sig.get(k) is not None]
-    if not pairs:
-        return None, 0, 0
-    wsum = sum(w for _, w in pairs)
-    if wsum <= 0:
-        return None, 0, 0
-    L = sum(d * w for d, w in pairs) / wsum
-    agree = sum(1 for d, _ in pairs if abs(d) > 1e-9 and (d > 0) == (L > 0))
-    return L, len(pairs), agree
-
-
-def _finalize(L, n_avail, n_agree, threshold, labels, flags=(), force_aligned=False):
-    """Turn a net lean into {side, score, flags}. 'No clear lean' when the score
-    is under threshold, or (for multi-signal bets) fewer than 2 signals agree
-    with the net direction. `force_aligned` bypasses the alignment guard when an
-    exogenous availability penalty has been applied."""
-    flags = sorted(set(flags))
-    if L is None:
-        return {"side": "No clear lean", "score": 0, "flags": flags}
-    score = _round(100 * min(1.0, abs(L)))
-    aligned = True if (force_aligned or n_avail < 2) else (n_agree >= 2)
-    if score >= threshold and aligned:
-        side = labels[0] if L >= 0 else labels[1]
-    else:
-        side = "No clear lean"
-    return {"side": side, "score": score, "flags": flags}
 
 
 def _apply_run_line_guard(out):
@@ -314,12 +287,19 @@ def top_market(scored, threshold):
     """Deterministically pick a game's single most-notable market: the highest
     Signal Score among markets that carry a real lean AND clear `threshold`.
     Returns {bet_type, side, score, flags} or None when nothing clears the bar.
-    Drawn from list_markets() (already ranked), so the standout is just the first
-    candidate that meets the bar."""
-    for m in list_markets(scored):
-        if m["score"] >= threshold:
-            return dict(m)
-    return None
+
+    KEEPS ITS (scored, threshold) SIGNATURE, and so stays a function here rather
+    than becoming an import. signal_core.top_market takes an already-RANKED list
+    instead, because MLB's ranking is its own: list_markets() below expands
+    team_total into one candidate per side, which NFL, CFB and EPL do not. This
+    wrapper supplies that ranking and leaves the shared part -- "first one over
+    the bar wins" -- to signal_core. fetchers/mlb.py and signal_report's MLB
+    adapter both call it with `scored`, so the public shape does not move.
+
+    Verified identical to the local body it replaced: 200,000 random `scored`
+    dicts (team_total included, every threshold from 0 to above 100) returned
+    the same repr from both, with zero mismatches."""
+    return signal_core.top_market(list_markets(scored), threshold)
 
 
 def build_inputs(away_ref, home_ref, away_ops, home_ops, away_bullpen, home_bullpen,

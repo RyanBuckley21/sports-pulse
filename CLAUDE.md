@@ -195,9 +195,13 @@ goes stale the day the sport goes live.** When you activate or migrate
 something, grep for the old status (`inactive`, `LEADERBOARD ONLY`,
 `not graded`, `NOTHING IMPORTS`) and update it in the same change.
 
-One real gap remains open, not a doc bug: **MLB's `betting_signals.py` has not
-migrated onto `signal_core`** and carries its own copy of the math. A change to
-`signal_core` does not reach MLB's scores.
+**`signal_core.py` is now the only copy of the Signal Score math**: MLB's
+`betting_signals.py` migrated on 2026-09-24, so a change there moves all four
+sports' scores, MLB's graded record included. Re-run every sport's backtest
+before changing it. The MLB season backtest (`backtest_season.py`) had been
+silently grading nothing since 2026-08-27, which the same change fixed; if it
+ever reports "0 dates graded" with every date skipped, treat that as a bug, not
+a quiet week.
 
 Operational items to keep in mind:
 

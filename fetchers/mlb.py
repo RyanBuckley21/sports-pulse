@@ -1190,7 +1190,7 @@ def _team_pulse(ops, bullpen_era, cfg):
     if wsum <= 0:
         return None
     combined = sum(d * w for d, w in terms) / wsum
-    # Round half UP, matching betting_signals._round -- banker's rounding would
+    # Round half UP, matching signal_core.round_half_up -- banker's rounding would
     # make a hand-checked score off by one at exact .5 boundaries.
     score = int(math.floor(50 + 50 * combined + 0.5))
     return pulse.pulse(max(0, min(100, score)))
