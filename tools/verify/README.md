@@ -393,6 +393,22 @@ across dates that cover every phase: MLB R/F/D/W/S, NFL preseason, regular
 season and postseason, CFB regular season, a bowl and the championship, and
 EPL.
 
+```
+python3 -m tools.verify.test_backtest_season  # from the repo root
+```
+
+**`test_backtest_season`** pins `backtest_season.py`'s exit code. From
+2026-08-27 to 2026-09-24 every date raised, was logged and skipped, and the
+script still exited 0 ("0 dates graded, 7 skipped"). The suite drives the real
+`main()` with only `backtest_date` stubbed:
+- every date skipped exits 1, for both a TypeError and a network error;
+- an all-off-days range (an offseason) exits 0;
+- a partial skip exits 0 with a WARNING naming how many dates are missing;
+- a clean run is quiet.
+
+Sabotage-checked: removing the all-skipped branch fails 4 of 10 checks, and
+counting off days as skips fails 2.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
@@ -405,6 +421,15 @@ data after a deploy.
 ## Dependencies
 
 Playwright is resolved from `./node_modules` if present, otherwise from the
-global install. This repo intentionally has no `package.json` and CI runs Python
-only — making the suite runnable is deliberately separate from wiring it into
-CI, which is a decision to take alongside the deploy workflow.
+global install. This repo intentionally has no `package.json`. CI
+(`.github/workflows/tests.yml`, added 2026-09-24) installs a pinned
+`playwright@1.56.1` with `npm install --no-save` into the gitignored
+`node_modules/`, then `npx playwright install --with-deps chromium`, and runs the
+suite on every pull request. 1.56.1 is the version the 186 checks were verified
+on; bump it deliberately and re-verify.
+
+The same workflow runs every Python suite, found by glob, under
+`PYTHONPATH=tools/verify/offline`. That directory's `sitecustomize.py` refuses
+any non-loopback connection, so the "offline and deterministic" claim above is
+enforced, not just stated. It then runs `git diff --exit-code`, so a suite that
+writes to a committed file fails CI.

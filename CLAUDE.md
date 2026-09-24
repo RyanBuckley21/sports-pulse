@@ -36,6 +36,7 @@ python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chanc
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
+python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
@@ -47,8 +48,16 @@ python3 signal_report.py --sport mlb --date YYYY-MM-DD --no-record  # read-only 
 python3 signal_report.py --date D --rev <sha> --no-record           # grade from a past store
 ```
 
-**CI runs none of the tests.** Run every suite your change could touch, plus the
-browser suite for any `web/` change, and paste the real output and exit codes.
+**CI runs every suite** (`.github/workflows/tests.yml`, since 2026-09-24) on each
+pull request and each push to `main`: all `tools/verify/test_*.py` and
+`tools/tokens/test_*.py` found by glob, with the network blocked by
+`tools/verify/offline/sitecustomize.py`, then `git diff --exit-code`, then the
+browser suite. So a new suite must be **offline** (a live request fails CI) and
+must **not write committed files**. Still run the relevant suites locally before
+pushing, and paste the real output and exit codes; CI is the backstop, not the
+first check. Locally in a proxied container, reproduce the guard with
+`env -u HTTPS_PROXY -u HTTP_PROXY PYTHONPATH=tools/verify/offline python3 -m ...`,
+because a loopback proxy otherwise slips past it.
 
 ## Non-negotiable invariants
 

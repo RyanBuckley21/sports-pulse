@@ -1,0 +1,115 @@
+name: Tests
+
+# The repo's test suites, on every pull request and every push to main.
+#
+# WHY THIS EXISTS. Until 2026-09-24 CI ran none of them. Eleven Python suites
+# and a 186-check browser suite existed, all offline, all runnable in seconds,
+# and nothing ran them but whoever remembered to. The cost was measured, not
+# hypothetical: backtest_season.py exited 0 while grading nothing for four
+# weeks (2026-08-27 .. 09-24), found only by accident. Every other workflow in
+# this repo runs the data pipeline or deploys; this is the only one that
+# checks the code.
+#
+# PERMISSIONS: contents: read, nothing else. It commits nothing, pushes
+# nothing and reads no secrets. It also runs `git diff --exit-code` after the
+# suites, so a test that writes to a committed file fails here -- the suites
+# are meant to redirect every store to a temp copy, and this makes that a
+# rule rather than a habit.
+#
+# TRIGGERS. pull_request covers review; push to main covers a merge. Bot
+# commits to main (grading, regenerate, capture) are pushed with
+# GITHUB_TOKEN and never start another workflow, so this does not run on
+# the several data commits a day -- which is correct, since those change
+# data/, not code.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    # Every suite together runs in ~10s locally; 10 minutes is a hang
+    # detector, not a budget.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # DISCOVERED BY GLOB, not listed, so a new tools/verify/test_*.py is in
+      # CI the moment it exists. Every suite runs even after one fails, so a
+      # red run names all the failures at once instead of one per push.
+      #
+      # PYTHONPATH=tools/verify/offline loads a sitecustomize that refuses any
+      # non-loopback connection: the suites are offline by design, and this
+      # makes a suite that starts calling a live API fail here, loudly, rather
+      # than turn CI flaky on some future bad-API morning. Set only on the
+      # suite step -- pip above needs the network.
+      - name: Run the Python suites (network blocked)
+        env:
+          PYTHONPATH: tools/verify/offline
+        run: |
+          set -u
+          suites=(tools/verify/test_*.py tools/tokens/test_*.py)
+          if [ ! -e "${suites[0]}" ]; then
+            echo "::error::no test suites found -- the glob matched nothing"
+            exit 1
+          fi
+          failed=()
+          for f in "${suites[@]}"; do
+            m="${f%.py}"; m="${m//\//.}"
+            echo "::group::$m"
+            if ! python3 -m "$m"; then
+              failed+=("$m")
+              echo "::error title=Suite failed::$m"
+            fi
+            echo "::endgroup::"
+          done
+          echo "${#suites[@]} suites run, ${#failed[@]} failed"
+          if [ "${#failed[@]}" -gt 0 ]; then
+            printf '  %s\n' "${failed[@]}"
+            exit 1
+          fi
+
+      - name: Suites left the tree untouched
+        run: |
+          if ! git diff --exit-code --stat; then
+            echo "::error::a test suite modified a committed file (listed above)"
+            exit 1
+          fi
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      # Standard library only: writes the gitignored web/data.json the suite
+      # serves, so the run is offline and deterministic.
+      - run: python3 -m tools.verify.make_fixture
+
+      # PINNED to the version the suite was verified on (186 passed, 0 failed,
+      # 2026-09-24). There is deliberately no package.json in this repo, so
+      # this is a one-off --no-save install into the gitignored node_modules/,
+      # which run.js resolves first. Uses the runner's preinstalled Node.
+      - name: Install Playwright and Chromium
+        run: |
+          node --version
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - run: node tools/verify/run.js

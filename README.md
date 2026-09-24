@@ -140,19 +140,19 @@ deterministic, and most use **real captured API payloads** as fixtures.
 
 ```bash
 # Python pipeline suites (run from the repo root)
-for t in test_game_isolation test_slate_dates test_odds test_nfl \
-         test_cfb_signals test_cfb_grading test_epl_grading test_epl_coldstart test_epl_fetch \
-         test_season_phase; do
-  python3 -m tools.verify.$t || echo "FAILED: $t"
+for f in tools/verify/test_*.py tools/tokens/test_*.py; do
+  m=${f%.py}; python3 -m ${m//\//.} || echo "FAILED: $m"
 done
-python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright + Chromium)
 python3 -m tools.verify.make_fixture && node tools/verify/run.js
 ```
 
 See [`tools/verify/README.md`](tools/verify/README.md) for what each suite guards
-and why. CI does **not** run these, so run them before you push.
+and why. The **Tests** workflow (`.github/workflows/tests.yml`) runs all of them
+on every pull request and push to `main`, with the network blocked so a suite
+that starts calling a live API fails instead of flaking. Run the ones your
+change touches locally first anyway.
 
 ---
 
@@ -164,6 +164,7 @@ and why. CI does **not** run these, so run them before you push.
 | `capture-training-data.yml` | 01:20–11:20, every 2h | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
+| `tests.yml` | pull requests, push to `main` | Every Python suite (network blocked), a clean-tree check, then the browser suite | nothing (`contents: read`) |
 
 GitHub's scheduler is routinely hours late and sometimes drops runs. That's why
 there are several redundant cron entries and cross-workflow alarms, and why
