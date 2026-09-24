@@ -208,8 +208,10 @@ Operational items to keep in mind:
 - **US DST ends 2026-11-01.** Every workflow cron is UTC and its comments say to
   shift it +1h in the fall to hold wall-clock times. Check the MLB first-pitch
   invariant in `daily-stats-and-grade.yml` before moving anything.
-- **The EPL club table** (`team_meta.EPL_TEAMS`) needs its annual refresh and a
-  re-run of the "Fetch team logos" workflow. See `docs/leagues.md`.
+- **The EPL club table** (`team_meta.EPL_TEAMS`) was pruned to the 20 clubs
+  of 2026-27 on 2026-09-24. Next due **late May 2027**: add the promoted three,
+  re-run the "Fetch team logos" workflow, prune the relegated three in August.
+  See `docs/leagues.md`.
 - The grading drop alarm in `deploy-pages.yml` checks the **MLB** schedule only,
   so it goes quiet once MLB's season ends.
 - The MLB season ends in late September. Expect `no_picks`/empty-slate rows and
