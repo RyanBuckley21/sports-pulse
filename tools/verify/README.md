@@ -367,6 +367,32 @@ exactly the exclusion ones.
 
 No network — every input is a number handed straight to `score_game`.
 
+```
+python3 -m tools.verify.test_season_phase     # from the repo root
+```
+
+**`test_season_phase`** — every ledger pick row names its season phase, and
+the all-time record keeps each phase apart. Nothing in the pipeline filters by
+game type, so MLB's playoffs and spring training, CFB's bowls and NFL's playoffs
+are scored and graded like any other slate. Without the tag they would fold
+silently into the regular-season headline and change what it means. Pinned:
+each adapter reads its own feed (MLB `gameType`, ESPN `season.type`; EPL is
+always regular), and an unknown code maps to None rather than "regular"; every
+pick row is stamped; an untagged row, meaning every row written before the
+field existed, reads as regular and reports byte-identically; and once a
+postseason pick exists, the headline is regular season only, with the
+postseason on its own line and its own date count.
+
+Sabotage-checked in three directions: mapping MLB's wild-card `F` to regular
+fails 8 of 53, dropping the phase filter from `ledger_totals` fails 3, and
+defaulting an untagged row to None fails 3. The second also caught a real bug
+before commit: a 19-character label left no space before the record.
+
+`season_phase_fixture.json` is REAL StatsAPI and ESPN data captured 2026-09-24
+across dates that cover every phase: MLB R/F/D/W/S, NFL preseason, regular
+season and postseason, CFB regular season, a bowl and the championship, and
+EPL.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

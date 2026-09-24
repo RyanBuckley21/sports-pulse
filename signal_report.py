@@ -268,7 +268,10 @@ def _sport_partition(raw_store, sport_key):
     return raw_store.get(sport_key, {})
 
 
-SCHEMA_VERSION = 2
+# 3 (2026-09-24): pick rows carry `season_phase` -- see build_pick_rows. Rows
+# without it are all regular season (read via _row_phase); nothing checks this
+# number, it labels which rows can answer the question.
+SCHEMA_VERSION = 3
 
 # Per-date outcomes the ledger distinguishes. A date with no entry at all means
 # the report was never run for it -- which is why "the store had nothing" and
@@ -429,6 +432,49 @@ def observed_facts(game):
     }
 
 
+# MLB StatsAPI `gameType` -> season phase. The authoritative list is
+# /api/v1/gameTypes (fetched 2026-09-24): S Spring Training, R Regular Season,
+# F Wild Card, D Division Series, L League Championship Series, W World Series,
+# C Championship, P Postseason, A All-Star Game, I Intrasquad, E Exhibition.
+# Verified on real slates: 2026-09-23 is all R, 2025-10-01 is all F ("AL Wild
+# Card Series"). Anything not listed maps to None -- an unknown code is not
+# silently promoted into the regular-season record.
+_MLB_PHASES = {"R": "regular", "S": "preseason",
+               "F": "postseason", "D": "postseason", "L": "postseason",
+               "W": "postseason", "C": "postseason", "P": "postseason",
+               "A": "exhibition", "I": "exhibition", "E": "exhibition"}
+
+
+def season_phase(game):
+    """MLB's season phase for a slate game: "regular", "postseason",
+    "preseason", "exhibition", or None when the game or its code is unknown.
+
+    WHY PICKS ARE TAGGED. The pipeline has no gameType filter, so the playoffs
+    (from 2026-09-30) and spring training are scored and graded like any other
+    slate. That is deliberate -- they are real games and the record should say
+    how the model does on them -- but they are a different population (short
+    series, aces on extra rest, bullpens used differently, split-squad spring
+    lineups), and folding them into the regular-season record would quietly
+    change what that number means. So every pick row names its phase and the
+    all-time report keeps each phase's record apart. Read off the GRADER's own
+    schedule fetch, not the pre-game store, so a `--rev` replay of an old store
+    is tagged too."""
+    if not game:
+        return None
+    return _MLB_PHASES.get(game.get("gameType"))
+
+
+def _row_phase(row):
+    """The season phase a ledger row belongs to. Rows written before
+    SCHEMA_VERSION 3 carry no `season_phase`, and every one of them is regular
+    season -- the ledger's first date is 2026-07-23 and its last pre-v3 date
+    2026-09-23, inside every graded league's regular season (EPL has no other
+    phase) -- so a missing tag reads as "regular", read-time only, the same
+    convention _row_sport uses. A row that HAS the field but could not be
+    tagged (no slate game, unknown code) also reads as regular: such a row is
+    UNRESOLVED or a status row and carries no HIT/MISS/PUSH to misplace."""
+    return row.get("season_phase") or "regular"
+
 def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """One ledger row per pick -- the grain that makes "how have moneyline picks
     done" and "do 90+ scores outperform 60s" answerable later. Aggregates are
@@ -451,6 +497,10 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, spo
             "gamePk": pick["gamePk"],
             "away": pick["away_abbr"], "home": pick["home_abbr"],
             "game_number": (game or {}).get("gameNumber"),
+            # Which part of the season this game belongs to, from the grader's
+            # own slate fetch -- see season_phase. Kept apart in the all-time
+            # record, never blended into the regular-season number.
+            "season_phase": sport["season_phase"](game),
             "start": pick["start"],
             "bet_type": pick["bet_type"], "market": pick["market"], "side": pick["side"],
             "score": pick["score"], "flags": pick["flags"], "point": pick.get("point"),
@@ -500,13 +550,18 @@ def append_ledger(new_rows, path=LEDGER_PATH):
         sys.stderr.write("signal_report: warning: could not write {} ({})\n".format(path, e))
 
 
-def ledger_totals(all_rows):
+def ledger_totals(all_rows, phase=None):
     """Records and date counts derived from the ledger on every read.
 
     Returns (per-basis records, {status: date count}). Nothing here is cached to
     disk: the JSONL rows are the only source of truth, so a change to how a
     verdict is counted takes effect on the next read rather than needing a
     stored aggregate to be rebuilt.
+
+    `phase`, when given, restricts the RECORDS to pick rows of that season
+    phase (see _row_phase). The date counts are deliberately left unfiltered:
+    a no_picks / no_store status row has no slate game to take a phase from,
+    and the gaps it records are gaps in the whole ledger either way.
     """
     latest = latest_run_rows(all_rows)
     records = {b: {"HIT": 0, "MISS": 0, "PUSH": 0} for b in BASES}
@@ -517,6 +572,8 @@ def ledger_totals(all_rows):
         counts[status if not has_pick else STATUS_RECORDED] = \
             counts.get(status if not has_pick else STATUS_RECORDED, 0) + 1
         for row in date_rows:
+            if phase is not None and _row_phase(row) != phase:
+                continue
             basis, verdict = row.get("basis"), row.get("verdict")
             if basis in records and verdict in records[basis]:
                 records[basis][verdict] += 1
@@ -842,6 +899,7 @@ SPORT_ADAPTERS = {
         "live_state": live_state,
         "observed_facts": observed_facts,
         "grade": grade,
+        "season_phase": season_phase,
         "list_markets": lambda scored: betting_signals.list_markets(scored),
         "top_market": lambda scored, t: betting_signals.top_market(scored, t),
         # MLB's store holds exactly one date's games, so a stored pk missing
@@ -857,6 +915,7 @@ SPORT_ADAPTERS = {
         "live_state": epl_grading.live_state,
         "observed_facts": epl_grading.observed_facts,
         "grade": epl_grading.grade,
+        "season_phase": epl_grading.season_phase,
         "list_markets": epl_grading.list_markets,
         "top_market": epl_grading.top_market,
         # EPL'S STORE SPANS SEVERAL DATES, and this flag is what stops that
@@ -884,6 +943,7 @@ SPORT_ADAPTERS = {
         "live_state": cfb_grading.live_state,
         "observed_facts": cfb_grading.observed_facts,
         "grade": cfb_grading.grade,
+        "season_phase": cfb_grading.season_phase,
         "list_markets": cfb_grading.list_markets,
         "top_market": cfb_grading.top_market,
         # SEVEN DAYS OF FIXTURES IN ONE STORE, for the same reason EPL has
@@ -904,6 +964,7 @@ SPORT_ADAPTERS = {
         "live_state": nfl_grading.live_state,
         "observed_facts": nfl_grading.observed_facts,
         "grade": nfl_grading.grade,
+        "season_phase": nfl_grading.season_phase,
         "list_markets": nfl_grading.list_markets,
         "top_market": nfl_grading.top_market,
         # Seven days of fixtures in one store, same as CFB and for the same
@@ -1251,6 +1312,47 @@ def summary_lines(date, rows):
     return lines
 
 
+# Report order for the non-regular phases, each on its own line under the
+# regular-season headline. Explicit rather than sorted so the playoffs always
+# read directly below the season they follow.
+_PHASE_ORDER = ("regular", "postseason", "preseason", "exhibition")
+
+
+def _label(text):
+    """A report label padded to the column the record starts in, with at least
+    one space after it. A plain 19-wide pad was used first and printed
+    "All-time (regular):Outcome-graded" -- that label is exactly 19 characters,
+    so the pad added nothing. "All-time:" still comes out byte-identical."""
+    return text.ljust(18) + " "
+
+
+def _phase_dates(all_rows, phase):
+    """How many slates' latest runs recorded at least one pick of `phase`."""
+    return sum(1 for rows in latest_run_rows(all_rows).values()
+               if any(r.get("status") == STATUS_RECORDED and r.get("bet_type")
+                      and _row_phase(r) == phase for r in rows))
+
+
+def _record_parts(records):
+    """The per-basis "Outcome-graded 12-8 (60%) on 20 picks [1 push]" segments,
+    shared by the all-time headline and each phase line so the two can never
+    format a record differently."""
+    parts = []
+    for basis in BASES:
+        rec = records[basis]
+        n = rec["HIT"] + rec["MISS"]
+        if not n and not rec["PUSH"]:
+            continue
+        seg = "{} {}-{}{} on {} pick{}".format(
+            BASIS_LABEL[basis], rec["HIT"], rec["MISS"],
+            " ({:.0f}%)".format(100.0 * rec["HIT"] / n) if n else "",
+            n, "" if n == 1 else "s")
+        if rec["PUSH"]:
+            seg += " [{} push]".format(rec["PUSH"])
+        parts.append(seg)
+    return parts
+
+
 def alltime_lines(all_rows, not_recorded=None):
     """The standing record across every date in the ledger, computed from the
     rows on each read. Same two-basis split as the day's summary -- an all-time
@@ -1262,23 +1364,23 @@ def alltime_lines(all_rows, not_recorded=None):
     """
     lines = []
     if all_rows:
-        records, counts = ledger_totals(all_rows)
-        parts = []
-        for basis in BASES:
-            rec = records[basis]
-            n = rec["HIT"] + rec["MISS"]
-            if not n and not rec["PUSH"]:
-                continue
-            seg = "{} {}-{}{} on {} pick{}".format(
-                BASIS_LABEL[basis], rec["HIT"], rec["MISS"],
-                " ({:.0f}%)".format(100.0 * rec["HIT"] / n) if n else "",
-                n, "" if n == 1 else "s")
-            if rec["PUSH"]:
-                seg += " [{} push]".format(rec["PUSH"])
-            parts.append(seg)
-        graded = counts.get(STATUS_RECORDED, 0)
+        # THE HEADLINE IS REGULAR SEASON ONLY once any other phase has picks.
+        # Until then every row is regular (see _row_phase) and this block prints
+        # exactly what it always did -- checked byte-for-byte against the real
+        # ledger for all four sports when the split was added. After, each other
+        # phase gets its own line below and is never summed into this one.
+        pick_phases = {_row_phase(r) for r in all_rows
+                       if r.get("status") == STATUS_RECORDED and r.get("bet_type")}
+        split = bool(pick_phases - {"regular"})
+        records, counts = ledger_totals(all_rows, phase="regular" if split else None)
+        parts = _record_parts(records)
+        # Dates counted per phase from each slate's LATEST run -- the same rows
+        # the records come from -- so a line's date count and its record always
+        # describe the same slates. Unsplit, this is exactly the old count.
+        graded = (_phase_dates(all_rows, "regular") if split
+                  else counts.get(STATUS_RECORDED, 0))
         parts.append("{} date{}".format(graded, "" if graded == 1 else "s"))
-        lines.append("All-time:          {}".format("  ·  ".join(parts)))
+        lines.append(_label("All-time (regular):" if split else "All-time:") + "  ·  ".join(parts))
         gaps = []
         if counts.get(STATUS_NO_PICKS):
             gaps.append("{} with no pick over the bar".format(counts[STATUS_NO_PICKS]))
@@ -1287,8 +1389,20 @@ def alltime_lines(all_rows, not_recorded=None):
         if gaps:
             lines.append("         gaps: {} — recorded as such, not counted as losses".format(
                 ", ".join(gaps)))
-        lines.extend(priced_record_lines(all_rows))
-        lines.extend(clv_record_lines(all_rows))
+        regular = [r for r in all_rows if _row_phase(r) == "regular"] if split else all_rows
+        lines.extend(priced_record_lines(regular))
+        lines.extend(clv_record_lines(regular))
+        for phase in _PHASE_ORDER:
+            if phase == "regular" or phase not in pick_phases:
+                continue
+            p_records, _ = ledger_totals(all_rows, phase=phase)
+            p_rows = [r for r in all_rows if _row_phase(r) == phase]
+            p_dates = _phase_dates(all_rows, phase)
+            parts = _record_parts(p_records)
+            parts.append("{} date{}".format(p_dates, "" if p_dates == 1 else "s"))
+            lines.append(_label(phase.capitalize() + ":") + "  ·  ".join(parts))
+            lines.extend("  " + line for line in priced_record_lines(p_rows))
+            lines.extend("  " + line for line in clv_record_lines(p_rows))
     if not_recorded:
         lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
     return lines

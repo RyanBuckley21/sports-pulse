@@ -141,7 +141,8 @@ deterministic, and most use **real captured API payloads** as fixtures.
 ```bash
 # Python pipeline suites (run from the repo root)
 for t in test_game_isolation test_slate_dates test_odds test_nfl \
-         test_cfb_signals test_cfb_grading test_epl_grading test_epl_coldstart test_epl_fetch; do
+         test_cfb_signals test_cfb_grading test_epl_grading test_epl_coldstart test_epl_fetch \
+         test_season_phase; do
   python3 -m tools.verify.$t || echo "FAILED: $t"
 done
 python3 -m tools.tokens.test_colorkit

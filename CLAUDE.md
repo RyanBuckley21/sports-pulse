@@ -35,6 +35,7 @@ python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED
 python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chance, loses match_result
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
+python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
