@@ -195,6 +195,35 @@ def _with_signals(game, i):
         {"market": "Run Line", "side": away, "score": 64 - i * 2},
         {"market": "Game Total Under", "side": None, "score": 58 - i},
     ]
+    # THE FIRST GAME IS PRICED AND THE REST ARE NOT, on purpose: both states have
+    # to render and the UNPRICED one is the half that regresses silently. ESPN
+    # drops a game's odds block at kickoff, so most live cards lose their price
+    # mid-game -- an empty row or a stray "undefined" there would sit on screen
+    # for hours. Shaped exactly like generate_insights._price_block's output.
+    if i == 0:
+        game["price"] = {
+            "american": -180, "display": "-180",
+            "break_even": 0.6429, "break_even_display": "64%",
+            "provider": "DraftKings", "spread": "BOS -1.5",
+            # The market's own opinion, alongside the model's: this line
+            # shortened after the pick existed. Plus the game's shape, which is
+            # display only -- nothing here predicts margin or total.
+            "opened": "-150", "move_display": "+3.5pp", "move_direction": "toward",
+            "spread_move": "-1 → -1.5", "total": 8.5,
+        }
+    # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
+    # That combination is the whole point of the bettability filter: the model
+    # still has an opinion, it just is not backable at -8000, and a card that
+    # simply went quiet would be indistinguishable from one where the model saw
+    # nothing. Shaped exactly like espn_odds.apply_bettability's output.
+    if i == 2:
+        game["best_angle"] = None
+        game["no_bet"] = {
+            "reason": "price", "american": -8000, "display": "-8000",
+            "break_even": 0.9877, "break_even_display": "99%",
+            "cap_display": "91%", "spread": "HOU -29.5",
+            "score": 91, "side": home,
+        }
     game.setdefault("story", STORY)
     return game
 

@@ -49,6 +49,7 @@ import io
 import math
 
 import pulse
+import espn_odds
 import slate_clock
 
 import requests
@@ -901,6 +902,22 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
             print("insights(games): nfl game {} ({} @ {}) failed to build ({}: {}); skipped"
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
                           type(e).__name__, str(e)[:160]))
+
+    # THE PRICE. Unlike CFB this sport HAS an archive -- games.csv carries
+    # closing moneylines back past 2010, which is what nfl_odds_backtest.py
+    # settles against -- so capturing live adds nothing retrospective here. It
+    # is done anyway, and for two reasons: the card should show what a pick
+    # costs while the pick is still live (the archive lands weeks later), and
+    # a ledger that prices one sport and not the other cannot be read side by
+    # side. Keyed through games.csv's own `espn` column, the same join
+    # nfl_grading.py uses to grade at all.
+    espn_odds.attach(session, "nfl", entities,
+                     {g.get("gameday") for g in games},
+                     espn_ids={g["game_id"]: (g.get("espn") or "").strip()
+                               for g in games if g.get("espn")})
+    espn_odds.apply_bettability(
+        entities, ((config.get("betting_signals") or {}).get("nfl") or {}).get("max_break_even"),
+        "nfl")
 
     if team_entities is not None:
         # Built from the SCHEDULE's own scores, never from the team_stats

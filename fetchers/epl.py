@@ -46,6 +46,7 @@ import math
 
 import requests
 
+import espn_dates
 import slate_clock
 
 import pulse
@@ -107,6 +108,10 @@ def _get(session, url, params=None):
     return resp.json()
 
 
+
+
+
+
 def get_completed_events(session, scoreboard_url, start_compact, end_compact):
     """Matches ESPN marks as finished in a date range, newest last.
 
@@ -115,11 +120,22 @@ def get_completed_events(session, scoreboard_url, start_compact, end_compact):
     beyond 90 minutes reports STATUS_FINAL_AET / STATUS_FINAL_PENALTIES
     instead of STATUS_FULL_TIME. League matches rarely go to extra time, but
     the flag is correct regardless and costs nothing."""
-    data = _get(session, scoreboard_url,
-                params={"dates": "{}-{}".format(start_compact, end_compact),
-                        "limit": SCOREBOARD_LIMIT})
+    # BY MONTH, because ESPN stopped serving date ranges on 2026-09-15 -- see
+    # SEASON_LOOKBACK_DAYS. This is the LEADERBOARD half of the module, and it
+    # broke on the same day and for the same reason; the Who's Hot boards were
+    # skipping EPL entirely while the Games tab sat on a stale fixture.
+    lo, hi = str(start_compact)[:8], str(end_compact)[:8]
+    raw = []
+    for key in espn_dates.month_keys(espn_dates.from_compact(lo), espn_dates.from_compact(hi)):
+        raw.extend(_get(session, scoreboard_url,
+                        params={"dates": key,
+                                "limit": SCOREBOARD_LIMIT}).get("events", []))
     events = []
-    for event in data.get("events", []):
+    for event in raw:
+        # A month query returns the WHOLE month; the caller asked for a range
+        # inside it and the rest is not theirs.
+        if not (lo <= (event.get("date") or "").replace("-", "")[:8] <= hi):
+            continue
         if not event.get("status", {}).get("type", {}).get("completed"):
             continue
         events.append({"id": event["id"], "date": event["date"][:10]})
@@ -560,10 +576,27 @@ def fetch(config, today=None):
 # source and nothing else; neither calls the other.
 # --------------------------------------------------------------------------- #
 
-# How far back to look for this season's completed matches. One scoreboard call
-# covers it: ESPN 400s on a range wider than about a year, and an EPL season
-# never exceeds that even when COVID pushed 2019/20 to 26 July.
+# How far back to look for this season's completed matches.
+#
+# ONE CALL PER MONTH, NOT ONE PER SEASON, and that is forced by the feed rather
+# than chosen. ESPN's soccer scoreboard USED to accept `dates=START-END` and a
+# single request covered a whole season; on 2026-09-15 it began returning HTTP
+# 400 for ANY range -- measured, not inferred: 60, 120, 200, 250, 300, 320, 330,
+# 340 and 360 days all 400, at every `limit` and with none, while a single
+# `dates=YYYYMMDD` and a month `dates=YYYYMM` both still return 200. It is not a
+# width cap (the old comment here guessed one and picked 360 to duck it); ranges
+# are simply gone.
+#
+# The cost of getting that wrong was nine days of silence: the fetch raised,
+# generate_insights froze the EPL partition rather than clearing it -- which is
+# the store-protection rule working exactly as designed -- and the Games tab sat
+# on a single stale fixture from 2026-09-15 with nothing on screen to say so.
+#
+# The lookback still bounds the walk, but months stop early at the season
+# boundary (see _season_months), so a September run costs two calls and a May
+# run about ten, not thirteen.
 SEASON_LOOKBACK_DAYS = 360
+
 # Fixtures ahead of `game_date` that count as "today's slate". Soccer has no
 # fixed matchday -- a round sprawls Friday to Monday and midweek rounds exist --
 # so a single-date slate would show an empty Games tab most days of the week.
@@ -575,6 +608,53 @@ FORM_WINDOW = 5
 
 def _season_slug_year(event):
     return (event.get("season") or {}).get("year")
+
+
+
+
+
+def _season_events(session, scoreboard_url, today, lookback_days):
+    """Every scoreboard event of the season in progress, newest month first.
+
+    WALKS BACKWARDS AND STOPS AT THE SEASON BOUNDARY rather than fetching the
+    whole lookback. The caller keeps only `max(season.year)` anyway, so months
+    belonging to an older season are requests that buy nothing. Two rules end
+    the walk, and between them they land on the real boundary:
+
+      an EMPTY month -- English football plays every month from August to May,
+      so a blank one is the summer gap and nothing older can belong to this
+      season;
+
+      a month carrying NONE of the newest season year seen so far -- which
+      catches the August straddle, where the first days can still belong to the
+      previous campaign.
+
+    Neither fires before the first month with any events, so a run during the
+    summer gap still reaches back to May and finds the season that just ended.
+
+    Bounded three ways: the caller's `lookback_days`, espn_dates.MAX_MONTHS, and the
+    boundary itself -- whichever comes first."""
+    oldest = espn_dates.month_key(today - datetime.timedelta(days=lookback_days))
+    events, newest_season, seen_any = [], None, False
+    cursor = today
+    for _ in range(espn_dates.MAX_MONTHS):
+        key = espn_dates.month_key(cursor)
+        if key < oldest:
+            break
+        month = _get(session, scoreboard_url,
+                     params={"dates": key, "limit": SCOREBOARD_LIMIT}).get("events", [])
+        if seen_any and not month:
+            break                      # the summer gap
+        years = {_season_slug_year(e) for e in month} - {None}
+        if seen_any and newest_season is not None and newest_season not in years:
+            break                      # wholly a previous season
+        if month:
+            seen_any = True
+            if years:
+                newest_season = max(years) if newest_season is None else max(newest_season, max(years))
+        events.extend(month)
+        cursor = espn_dates.prev_month(cursor)
+    return events
 
 
 def get_season_matches(session, scoreboard_url, today, lookback_days=SEASON_LOOKBACK_DAYS):
@@ -589,14 +669,13 @@ def get_season_matches(session, scoreboard_url, today, lookback_days=SEASON_LOOK
 
     Returns (matches, season_year). `season_year` is the newest season seen,
     which is the one being played; an empty list gives ([], None).
+
+    COSTS ONE REQUEST PER MONTH OF THE SEASON SO FAR -- two in September, about
+    ten by May -- because ESPN stopped serving date ranges. See
+    SEASON_LOOKBACK_DAYS and _season_events.
     """
-    start = today - datetime.timedelta(days=lookback_days)
-    data = _get(session, scoreboard_url,
-                params={"dates": "{}-{}".format(start.strftime("%Y%m%d"),
-                                                today.strftime("%Y%m%d")),
-                        "limit": SCOREBOARD_LIMIT})
     rows = []
-    for event in data.get("events", []):
+    for event in _season_events(session, scoreboard_url, today, lookback_days):
         comp = (event.get("competitions") or [{}])[0]
         if not ((comp.get("status") or {}).get("type") or {}).get("completed"):
             continue
@@ -657,12 +736,16 @@ def get_prior_season_matches(session, scoreboard_url, today, season_year):
         return []
     start = datetime.date(season_year - 1, 8, 1)
     end = datetime.date(season_year, 7, 31)
-    data = _get(session, scoreboard_url,
-                params={"dates": "{}-{}".format(start.strftime("%Y%m%d"),
-                                                end.strftime("%Y%m%d")),
-                        "limit": SCOREBOARD_LIMIT})
+    # TWELVE MONTH CALLS rather than one range -- see SEASON_LOOKBACK_DAYS for
+    # why ranges stopped working. Expensive, and deliberately still gated to
+    # the cold start: from late September on, nothing asks for this at all.
     rows = []
-    for event in data.get("events", []):
+    raw = []
+    for key in espn_dates.month_keys(start, end):
+        raw.extend(_get(session, scoreboard_url,
+                        params={"dates": key,
+                                "limit": SCOREBOARD_LIMIT}).get("events", []))
+    for event in raw:
         comp = (event.get("competitions") or [{}])[0]
         if not ((comp.get("status") or {}).get("type") or {}).get("completed"):
             continue
@@ -1125,10 +1208,9 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
                   "({}: {}); cold-start fixtures stay unscored as before"
                   .format(type(exc).__name__, str(exc)[:120]))
 
-    # THE FETCH ASKS FOR THE LOOKAHEAD, THE SLATE IS WINDOWED LOCALLY, and that
-    # split is free: ESPN takes a date RANGE, so one call covers fourteen days
-    # exactly as cheaply as it covered three. Asking wide then narrowing is what
-    # lets the window fall forward without a second request.
+    # THE FETCH ASKS FOR THE LOOKAHEAD, THE SLATE IS WINDOWED LOCALLY. Asking
+    # wide then narrowing is what lets the window fall forward without a second
+    # request.
     #
     # WHY IT NEEDS TO. Three days is right for a normal matchday round (a
     # Premier League weekend sprawls Friday to Monday), but it goes blank across
@@ -1136,12 +1218,22 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # fixtures on the other side sit published and scoreable. See
     # slate_clock.window_start; the lookahead cap keeps a real summer visibly
     # empty.
+    #
+    # BY MONTH, because ESPN stopped serving date ranges on 2026-09-15 (see
+    # SEASON_LOOKBACK_DAYS -- this was the SECOND range call in this file, and
+    # fixing only the first still left the Games tab dead). One or two requests:
+    # the fourteen-day horizon touches a second month only near a month end.
     horizon = today + datetime.timedelta(days=slate_clock.SLATE_LOOKAHEAD_DAYS)
-    data = _get(session, scoreboard_url,
-                params={"dates": "{}-{}".format(today.strftime("%Y%m%d"),
-                                                horizon.strftime("%Y%m%d")),
-                        "limit": SCOREBOARD_LIMIT})
-    all_events = data.get("events") or []
+    all_events = []
+    for key in espn_dates.month_keys(today, horizon):
+        all_events.extend(_get(session, scoreboard_url,
+                               params={"dates": key,
+                                       "limit": SCOREBOARD_LIMIT}).get("events") or [])
+    # Trimmed to the horizon the window logic expects: a month query returns the
+    # WHOLE month, including fixtures beyond the lookahead and days already
+    # played, and window_start treats anything it is handed as a candidate.
+    lo, hi = today.isoformat(), horizon.isoformat()
+    all_events = [e for e in all_events if lo <= (e.get("date") or "")[:10] <= hi]
     start = slate_clock.window_start([(e.get("date") or "")[:10] for e in all_events],
                                      game_date, FIXTURE_WINDOW_DAYS)
     window_end = (datetime.date.fromisoformat(start)

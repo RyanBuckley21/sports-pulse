@@ -37,6 +37,8 @@ UNPRICED is unreachable -- moneyline needs no line.
 
 import datetime
 
+import espn_dates
+
 REQUEST_TIMEOUT = 30
 ESPN_NFL_SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/"
                        "football/nfl/scoreboard")
@@ -130,9 +132,11 @@ def fetch_replay_dates(session, config, pks):
     today = datetime.date.today()
     end = today + datetime.timedelta(days=REPLAY_LOOKAHEAD_DAYS)
     id_map = _espn_to_nflverse(session, today.isoformat())
-    events = _fetch_events(session, config, {
-        "dates": "{}-{}".format(today.strftime("%Y%m%d"), end.strftime("%Y%m%d")),
-        "limit": 1000})
+    # BY MONTH -- ESPN stopped serving date ranges on 2026-09-15. See
+    # espn_dates. Only runs when a game was postponed.
+    events = espn_dates.fetch_window(
+        lambda params: {"events": _fetch_events(session, config, params)},
+        today, end, params={"limit": 1000})
     out = {}
     for e in events:
         game_id = id_map.get(str(e.get("id")))

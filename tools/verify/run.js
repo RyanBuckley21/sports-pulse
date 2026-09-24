@@ -328,6 +328,80 @@ async function reEntryChecks(browser, base) {
   await p.waitForTimeout(200);
   ok("clicks still work after five re-mounts",
      (await p.$$eval(".gr-item.is-open", (e) => e.length)) === 1);
+
+  // WHAT THE PICK COSTS. The Signal Score beside it cannot see price at all, so
+  // without this line a 78 quoted at -180 and a 78 quoted at -8000 render
+  // identically -- and on a real college board those sit two rows apart. The
+  // mock carries one priced game and one deliberately unpriced one, because
+  // "draws nothing when there is no line" is the half that regresses silently:
+  // ESPN drops the odds block at kickoff, so most cards lose their price mid-game
+  // and an empty row or a stray "undefined" there would be on screen for hours.
+  const openAll = async () => {
+    await goRoute(p, "#/games");
+    await p.$$eval(".gr-row", (rows) => rows.forEach((r) => r.click()));
+    await p.waitForTimeout(250);
+  };
+  await openAll();
+  const prices = await p.$$eval("#insightsRoot .ba-price", (n) => n.map((x) => x.textContent.trim()));
+  ok("the price reaches the Best Angle card", prices.length === 1, prices.join(" | ") || "none");
+  ok("  showing the moneyline", /-180/.test(prices[0] || ""), prices[0] || "none");
+  ok("  and the break-even the score cannot see", /needs\s*64%/.test(prices[0] || ""),
+     prices[0] || "none");
+  ok("  naming the book rather than an anonymous consensus",
+     /DraftKings/.test(prices[0] || ""), prices[0] || "none");
+  // Two Best Angles, not three: the fixture's third game is suppressed for
+  // price and renders a No bet block in that slot instead (asserted below).
+  const angles = await p.$$eval("#insightsRoot .best-angle", (n) => n.length);
+  ok("the UNPRICED pick still renders its Best Angle", angles === 2, angles);
+  ok("  but draw no price row at all -- not an empty one",
+     prices.length === 1, prices.length + " price rows for " + angles + " angles");
+  const undef = await p.$$eval("#insightsRoot .best-angle",
+     (n) => n.filter((x) => /undefined|null|NaN/.test(x.textContent)).length);
+  ok("  and no card leaks undefined/null/NaN", undef === 0, undef);
+  const raggedBA = await p.$$eval("#insightsRoot .ba-price",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
+  ok("  the price row does not overflow its card at 430px", raggedBA === 0, raggedBA);
+
+  // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on the
+  // card that is the market's opinion rather than the model's, and the one
+  // that answers "does anyone else agree" without waiting a season for an ROI.
+  ok("  the card shows the market's move", /\+3\.5pp/.test(prices[0] || ""), prices[0] || "none");
+  ok("  and where it opened", /from -150/.test(prices[0] || ""), prices[0] || "none");
+  const dir = await p.$$eval("#insightsRoot .ba-price-move.is-toward", (n) => n.length);
+  ok("  tinted by direction", dir === 1, dir);
+
+  // The game's SHAPE -- spread, its travel, total. Display only: this repo
+  // predicts neither margin nor total, and the moneyline lean transfers to
+  // neither, so it must never read as a second pick.
+  const shape = await p.$$eval("#insightsRoot .ba-shape", (n) => n.map((x) => x.textContent.trim()));
+  ok("the card carries the game's shape", shape.length === 1, shape.join(" | ") || "none");
+  ok("  the spread", /BOS -1\.5/.test(shape[0] || ""), shape[0] || "none");
+  ok("  how far it travelled", /line -1 → -1\.5/.test(shape[0] || ""), shape[0] || "none");
+  ok("  and the total", /O\/U 8\.5/.test(shape[0] || ""), shape[0] || "none");
+  const raggedShape = await p.$$eval("#insightsRoot .ba-shape",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
+  ok("  the shape row does not overflow at 430px", raggedShape === 0, raggedShape);
+
+  // A PICK SUPPRESSED FOR PRICE must say so. The board's most confident games
+  // are systematically its least bettable -- -4000, -8000, -50000 sat at the
+  // top of a real college slate -- so the filter removes the bet. If the card
+  // then just went quiet, a reader could not tell "the model saw nothing" from
+  // "the model saw plenty and it costs -8000", which is a worse failure than
+  // showing the bad price was.
+  const nb = await p.$$eval("#insightsRoot .no-bet", (n) => n.map((x) => x.textContent.trim()));
+  ok("a price-suppressed pick renders a No bet block", nb.length === 1, nb.join(" | ") || "none");
+  ok("  naming the price that killed it", /-8000/.test(nb[0] || ""), nb[0] || "none");
+  ok("  and what it would have needed", /99%/.test(nb[0] || ""), nb[0] || "none");
+  ok("  and the model's own ceiling it passed", /91%/.test(nb[0] || ""), nb[0] || "none");
+  ok("  while still showing the score the model gave it", /91/.test(nb[0] || ""), nb[0] || "none");
+  // THE OPINION SURVIVES: the suppressed game keeps its Signal Scores table.
+  // Removing those too would be hiding the analysis, not declining the bet.
+  const ss = await p.$$eval("#insightsRoot .signal-scores", (n) => n.length);
+  ok("  and the suppressed game keeps its Signal Scores", ss === 3, ss);
+  const nbRagged = await p.$$eval("#insightsRoot .no-bet",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
+  ok("  the No bet block does not overflow at 430px", nbRagged === 0, nbRagged);
+
   await p.close();
 }
 

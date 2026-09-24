@@ -268,7 +268,7 @@
 
     // Best Angle -- the single standout market, promoted out of the ranked list
     // into a larger tinted card (market's team color if it has one, else gold).
-    bestAngle: function (ba, away, home) {
+    bestAngle: function (ba, away, home, price) {
       if (!ba) return "";
       var pct = Math.max(0, Math.min(100, Number(ba.score) || 0));
       var color = sideColor(ba.side, away, home);
@@ -283,7 +283,79 @@
         '<div class="ba-scorebox"><div class="ba-score">' + pct + "</div>" +
         '<div class="ba-scorelabel">Score</div></div>' +
         "</div>" +
+        Cards.price(price) +
         "</div>"
+      );
+    },
+
+    // WHAT THE PICK COSTS, and the hit rate that price has to clear. The Signal
+    // Score beside it cannot see price at all, so without this a 100 quoted at
+    // -180 and a 100 quoted at -8000 render identically -- and on a real college
+    // board those sit two rows apart. Every number here is computed in Python
+    // (generate_insights._price_block); this only lays it out, so the odds math
+    // has one home and cannot drift between the card and the ledger.
+    //
+    // Silent when the game was never priced. A missing line is common and
+    // uninteresting -- ESPN drops the block at kickoff and never carries one
+    // for some smaller games -- so it draws nothing rather than an empty row.
+    price: function (p) {
+      if (!p || !p.display) return "";
+      var be = p.break_even_display
+        ? '<span class="ba-price-be">needs ' + esc(p.break_even_display) + "</span>"
+        : "";
+      // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on
+      // the card that is the market's opinion rather than the model's. Tinted
+      // by direction because that is the whole content: "toward" means the
+      // price shortened after this pick existed.
+      var mv = p.move_display
+        ? '<span class="ba-price-move is-' + esc(p.move_direction || "flat") + '">' +
+          (p.opened ? "from " + esc(p.opened) + " " : "") +
+          esc(p.move_display) + "</span>"
+        : "";
+      // The game's shape, not a second pick: nothing here predicts margin or
+      // total. Second row so it never competes with the price above it.
+      var shape = [];
+      if (p.spread) shape.push(esc(p.spread));
+      if (p.spread_move) shape.push("line " + esc(p.spread_move));
+      if (p.total) shape.push("O/U " + esc(String(p.total)));
+      return (
+        '<div class="ba-price">' +
+        '<span class="ba-price-ml">' + esc(p.display) + "</span>" +
+        be + mv +
+        (p.provider ? '<span class="ba-price-src">' + esc(p.provider) + "</span>" : "") +
+        "</div>" +
+        (shape.length
+          ? '<div class="ba-shape">' + shape.join(" &middot; ") + "</div>"
+          : "")
+      );
+    },
+
+    // WHY THERE IS NO PICK, when the price is the reason. Takes the slot the
+    // Best Angle would have used, so the card never just goes quiet on its most
+    // confident games -- a reader has to be able to tell "the model saw nothing"
+    // from "the model saw plenty and it costs -8000". The Signal Scores below
+    // still render: the opinion is intact, it is only the bet that is gone.
+    noBet: function (nb) {
+      if (!nb || !nb.display) return "";  // display is "OFF" or a signed price
+      return (
+        '<div class="no-bet">' +
+        '<span class="nb-tag">No bet</span>' +
+        '<div class="nb-body">' +
+        '<div class="nb-line">' + esc(nb.side || "") +
+        ' scores <strong>' + (Number(nb.score) || 0) + "</strong>" +
+        (nb.reason === "off_the_board"
+          ? ' but the moneyline is <strong>OFF</strong>'
+          : ' but is priced <strong>' + esc(nb.display) + "</strong>") +
+        "</div>" +
+        '<div class="nb-why">' +
+        (nb.reason === "off_the_board"
+          ? "the book has pulled this market" +
+            (nb.spread ? " (" + esc(nb.spread) + ")" : "")
+          : "needs " + esc(nb.break_even_display) +
+            " to break even — past the " + esc(nb.cap_display) +
+            " this model has ever cleared") +
+        "</div>" +
+        "</div></div>"
       );
     },
 
@@ -527,7 +599,8 @@
         Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        Cards.bestAngle(g.best_angle, away, home) +
+        Cards.bestAngle(g.best_angle, away, home, g.price) +
+        Cards.noBet(g.no_bet) +
         section("How This Result Splits",
                 Cards.outcomeSplit(g.outcome_split, away, home,
                                    (g.best_angle || {}).side)) +

@@ -64,6 +64,8 @@ import os
 import requests
 
 import pulse
+import espn_dates
+import espn_odds
 import slate_clock
 import team_meta
 
@@ -385,11 +387,19 @@ def _espn_rows(session, season):
     (m1, d1), (m2, d2) = ESPN_SEASON_WINDOW
     start = "{}{:02d}{:02d}".format(season, m1, d1)
     end = "{}{:02d}{:02d}".format(season + 1, m2, d2)
-    payload = _get_json(session, ESPN_CFB_SCOREBOARD,
-                        {"dates": "{}-{}".format(start, end),
-                         "limit": 1000, "groups": ESPN_FBS_GROUP})
+    # BY MONTH -- ESPN stopped serving date ranges on 2026-09-15 (see
+    # espn_dates). This is the FALLBACK schedule, used only when cfbfastR has
+    # not published the season yet, so it was latent rather than broken: it
+    # would have failed the next time the primary source was late.
+    #
+    # A season window is about eleven months of requests. That is acceptable
+    # precisely because this path is the exception, and it costs no CFBD quota
+    # -- the scoreboard is keyless.
     rows = []
-    for event in payload.get("events") or []:
+    for event in espn_dates.fetch_window(
+            lambda params: _get_json(session, ESPN_CFB_SCOREBOARD, params),
+            espn_dates.from_compact(start), espn_dates.from_compact(end),
+            params={"limit": 1000, "groups": ESPN_FBS_GROUP}):
         if (event.get("season") or {}).get("year") != season:
             continue
         comp = (event.get("competitions") or [{}])[0]
@@ -1531,6 +1541,17 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
             print("insights(games): cfb game {} ({} @ {}) failed to build ({}: {}); skipped"
                   .format(g.get("game_id"), g.get("away_team"), g.get("home_team"),
                           type(e).__name__, str(e)[:160]))
+
+    # THE PRICE, captured before kickoff because it cannot be captured after.
+    # ESPN drops the odds block the moment a game goes final, and unlike NFL
+    # there is no archive to fall back on -- so a lean that is not priced on
+    # the day is never priceable. Keyless, one request per slate date, and it
+    # changes no model input: see espn_odds' module docstring.
+    espn_odds.attach(session, "cfb", entities,
+                     {et_date(g.get("start_date")) for g in games})
+    espn_odds.apply_bettability(
+        entities, ((config.get("betting_signals") or {}).get("cfb") or {}).get("max_break_even"),
+        "cfb")
 
     if team_entities is not None:
         # Built from the SCHEDULE, never from CFBD -- see build_schedule_form.

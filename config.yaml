@@ -879,6 +879,16 @@ betting_signals:
     # here should be read as if they were.
     min_threshold: 50
     standout_threshold: 50
+    # THE BETTABILITY CAP -- see the cfb block for the full rationale and how
+    # 0.9091 (American -1000) was derived. Same value here for the same reason:
+    # a price needing more than the model's best measured band is one it has
+    # never shown it can clear. NFL's own graded record is empty so far, so
+    # this borrows CFB's ceiling rather than inventing a number; it should be
+    # re-derived from NFL's own bands once there are any.
+    #
+    # It bites far less often here -- NFL moneylines cluster much tighter than
+    # college ones, because the league has nothing like a 50-point mismatch.
+    max_break_even: 0.9091
     scales:
       off_epa_gap: 0.1566
       def_epa_gap: 0.1356
@@ -1016,6 +1026,35 @@ betting_signals:
     # judgment call, not a measurement.
     min_threshold: 40
     standout_threshold: 40
+    # THE BETTABILITY CAP -- the most a price may need before its pick stops
+    # being a pick. Expressed as a break-even hit rate; 0.9091 is American -1000
+    # exactly (10/11), so a -1000 line is admitted and anything worse is not.
+    #
+    # A Signal Score cannot see price, which makes the TOP of a college board
+    # systematically its least bettable part. On the 2026-09-19 slate the three
+    # highest-scored picks were quoted -4000, -8000 and -3200 -- needing 98%,
+    # 99% and 97% -- and one the model scored 61 was quoted -50000, or 998 wins
+    # in 1000. Those are not bets, and presenting them as the model's most
+    # confident work is the single most misleading thing this board did.
+    #
+    # THE NUMBER IS NOT ARBITRARY. It is the model's own ceiling: its best-ever
+    # measured band, scores of 90+, went 10-1 in live grading -- 10/11 = 90.91%,
+    # which is exactly -1000, and the cap is set to that fraction rather than a
+    # rounded 0.909 so the boundary lands on the real number. A price needing more than the best the model has ever done
+    # is one it has no demonstrated ability to clear, so the cap is set there
+    # rather than at a round number someone liked. Small sample (n=11), and it
+    # should move when there is more of it.
+    #
+    # WHAT IT DOES NOT DO: hide the analysis. The Signal Score still renders and
+    # the card says why there is no bet. It also does NOT touch unpriced games
+    # -- ESPN carries no line for 17 of 71 events on a typical Saturday, mostly
+    # smaller programs, and dropping those would delete the part of the slate
+    # least likely to be efficiently priced. Unknown is not unbettable.
+    #
+    # CONSEQUENCE, STATED: the graded record from here counts bettable picks
+    # only. It will read lower than the 77.3% that preceded it and mean more --
+    # 48% of those 44 picks were games decided by 21+ points.
+    max_break_even: 0.9091
     # MEASURED dispersion -- the stdev of each signal's own raw home-away gap
     # across all 2,398 games, replacing the round-number guesses. turnover_gap
     # moved most (0.50 -> 1.3292, 2.7x): college turnover margins swing far
