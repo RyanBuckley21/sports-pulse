@@ -980,7 +980,18 @@ def _run_line_laying(scored, side):
 def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
-    what the site showed."""
+    what the site showed.
+
+    `sport` DEFAULTS TO THE ADAPTER FOR `sport_key`, like build_pick_rows' does.
+    It did not, from the EPL grading change (92d717e, 2026-08-27) until
+    2026-09-24: main() always passes it, so live grading never noticed, but
+    backtest_season.py calls this with no adapter, and every date died on
+    `sport["list_markets"]` with a TypeError that its per-date `except
+    Exception` logged and skipped. The script still exited 0 -- "0 dates
+    graded, 7 skipped" -- so the MLB season backtest had silently stopped
+    producing results for four weeks. Keyed on `sport_key` rather than
+    hardcoded to MLB so the two arguments cannot disagree."""
+    sport = sport or SPORT_ADAPTERS[sport_key]
     labels = dict((config.get("insights_ui") or {}).get(sport_key, {}).get("market_labels") or {})
     labels.update(SHORT_LABELS)
     picks = []

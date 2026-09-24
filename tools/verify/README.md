@@ -164,6 +164,13 @@ Sabotage-checked in both directions when written: swapping the draw rules fails
 exactly the double-chance assertions, making `match_result` push on a draw fails
 exactly the match-result ones.
 
+Also pins that `collect_picks` called with **no adapter** ranks through the one
+its `sport_key` names. `backtest_season.py` calls it that way, and from the EPL
+grading change until 2026-09-24 the default was `None`: every backtest date
+raised, was logged and skipped, and the script exited 0 having graded nothing.
+Sabotage-checked by removing the default, which fails exactly the two
+`collect_picks` assertions.
+
 Offline and deterministic. `epl_matches_fixture.json` is REAL ESPN data captured
 from live responses over four 2025/26 matchdays — 21 completed matches, 7 home
 wins, 8 draws, 6 away wins — trimmed to the fields the adapter reads. Real
