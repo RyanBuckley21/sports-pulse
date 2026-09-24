@@ -27,6 +27,8 @@ pushes. Stated because its absence is a fact about the sport, not an omission.
 
 import datetime
 
+import espn_dates
+
 REQUEST_TIMEOUT = 30
 # ESPN status names that mean "not played on this date". A soccer fixture can be
 # postponed (weather, cup replays, mid-season disruption) or abandoned after
@@ -93,12 +95,16 @@ def fetch_replay_dates(session, config, pks):
         return {}
     today = datetime.date.today()
     end = today + datetime.timedelta(days=120)
-    r = session.get(url, params={"dates": "{}-{}".format(today.strftime("%Y%m%d"),
-                                                         end.strftime("%Y%m%d")),
-                                 "limit": 1000}, timeout=REQUEST_TIMEOUT)
-    r.raise_for_status()
+    # BY MONTH -- ESPN stopped serving date ranges on 2026-09-15. See
+    # espn_dates. A 120-day horizon is four or five requests, and this only
+    # runs at all when a match was postponed.
+    def _get(params):
+        r = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
+        return r.json()
+
     out = {}
-    for e in r.json().get("events") or []:
+    for e in espn_dates.fetch_window(_get, today, end, params={"limit": 1000}):
         pk = str(e.get("id"))
         if pk in pks and is_final(e):
             out[pk] = (e.get("date") or "")[:10]

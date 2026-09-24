@@ -38,6 +38,8 @@ PUSH and UNPRICED are unreachable, per the paragraph above.
 
 import datetime
 
+import espn_dates
+
 REQUEST_TIMEOUT = 30
 # ESPN status names that mean "no result on this date". Weather is the common
 # one in college football (a lightning delay that runs out of daylight), and a
@@ -129,13 +131,17 @@ def fetch_replay_dates(session, config, pks):
     url, group = _scoreboard_url(config)
     today = datetime.date.today()
     end = today + datetime.timedelta(days=REPLAY_LOOKAHEAD_DAYS)
-    r = session.get(url, params={"dates": "{}-{}".format(today.strftime("%Y%m%d"),
-                                                         end.strftime("%Y%m%d")),
-                                 "groups": group, "limit": 1000},
-                    timeout=REQUEST_TIMEOUT)
-    r.raise_for_status()
+    # BY MONTH -- ESPN stopped serving date ranges on 2026-09-15. See
+    # espn_dates. This path only runs when a game was postponed, so it would
+    # have failed the first time it was needed, which is the worst time.
+    def _get(params):
+        r = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
+        return r.json()
+
     out = {}
-    for e in r.json().get("events") or []:
+    for e in espn_dates.fetch_window(_get, today, end,
+                                     params={"groups": group, "limit": 1000}):
         pk = str(e.get("id"))
         if pk in pks and is_final(e):
             out[pk] = (e.get("date") or "")[:10]
