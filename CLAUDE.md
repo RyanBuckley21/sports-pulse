@@ -187,21 +187,17 @@ days later in an append-only file. Most have a test. Don't weaken them.
 
 ## Known drift and open items (as of 2026-09-24)
 
-These docstrings and docs are **stale**. Trust the code and `config.yaml` over
-them, and fix them opportunistically when you're in the file:
+The stale docs found in the 2026-09-24 review (leagues.md, the EPL fetcher and
+`GAME_BUILDERS` docstrings, config.yaml's gate comments, `signal_core.py`,
+`web/insights/README.md`) have been corrected. The pattern that produced them
+is worth remembering: **a docstring written at "registered but inactive" time
+goes stale the day the sport goes live.** When you activate or migrate
+something, grep for the old status (`inactive`, `LEADERBOARD ONLY`,
+`not graded`, `NOTHING IMPORTS`) and update it in the same change.
 
-- `docs/leagues.md` "Currently active" still says MLB only. Actual:
-  `active_sports: [mlb, epl, nfl]`, `active_game_sports: [mlb, epl, cfb, nfl]`.
-- `fetchers/epl.py` module docstring says "LEADERBOARD ONLY… no GAME_BUILDERS
-  entry… nothing graded". EPL now has games, teams and grading.
-- `generate_insights.py` `GAME_BUILDERS` comment says nfl/cfb are "registered but
-  not active". Both are active.
-- `config.yaml` comments on `active_sports`/`active_game_sports` still say EPL is
-  ungraded and has no builder.
-- `signal_core.py` says "NOTHING IMPORTS THIS YET". NFL, CFB and EPL import it.
-  MLB's `betting_signals.py` still carries its own copy of the math and has not
-  been migrated.
-- `web/insights/README.md` "League scoping" says only MLB can fill Games/Teams.
+One real gap remains open, not a doc bug: **MLB's `betting_signals.py` has not
+migrated onto `signal_core`** and carries its own copy of the math. A change to
+`signal_core` does not reach MLB's scores.
 
 Operational items to keep in mind:
 

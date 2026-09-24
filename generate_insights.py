@@ -68,19 +68,25 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # Team Pulse, training capture) by adding its own entry here -- same
 # mechanism, deliberately, as SPORT_FETCHERS.
 #
-# nfl and cfb are REGISTERED but not ACTIVE -- _active_game_sports only
-# attempts a sport that is both registered here AND listed by the config key
-# it reads, so their builders never run in production until that key says so
-# (same staged-rollout precedent worldcup already sets in the stat-categories
-# pipeline). They are wired and calibrated, pending the decision to go live.
+# REGISTERING IS NOT ACTIVATING. _active_game_sports only attempts a sport
+# that is both registered here AND listed by the config key it reads, so a
+# builder can sit here wired and calibrated without ever running in
+# production -- the staged rollout every sport in this dict went through
+# (nfl and cfb were registered for weeks before config named them).
 #
-# epl is registered AND active. Registering it here is the second of the two
-# steps that switch a sport on; the first is `active_game_sports` naming it,
-# which config.yaml now does. Note what that means for August: EPL form never
-# crosses a season boundary, so every club starts each season below
-# epl_signals.MIN_MATCHES and the builder returns fixtures with NO markets
-# scored for the opening weeks. That is the designed output, not a fault --
-# the Games tab shows the slate and no picks until the sample exists.
+# All four are registered AND active as of 2026-08-31 (config.yaml's
+# `active_game_sports: [mlb, epl, cfb, nfl]`). This comment used to say nfl
+# and cfb were "registered but not active"; that stopped being true when they
+# went live (PRs #54, #55), and a reader trusting it would go looking for a
+# gate that no longer exists.
+#
+# EPL in August: form never crosses a season boundary, so every club starts
+# each season below epl_signals.MIN_MATCHES. That no longer means an empty
+# board -- the cold-start tier (PR #55, tools/verify/test_epl_coldstart.py)
+# scores those clubs off last season's goal difference until the in-season
+# sample takes over. The one designed exception is a PROMOTED club, which has
+# no prior Premier League season to fall back on: its fixtures still carry no
+# markets, which is the honest output rather than a fault.
 #
 # That key is `active_game_sports`, which is SEPARATE from the `active_sports`
 # key gating generate_stats.py's leaderboards -- see _active_game_sports for

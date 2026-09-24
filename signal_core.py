@@ -29,9 +29,17 @@ rather than a framework:
   * Every MLB-only helper (run_line guard, team_total, probable-pitcher
     availability flags) stays in betting_signals.py.
 
-NOTHING IMPORTS THIS YET. It is added on its own so the extraction can be
-reviewed as a pure addition with no behavioural risk, before any sport
-module is migrated onto it.
+WHO IMPORTS IT. It landed on its own (PR #51, imported by nothing) so the
+extraction could be reviewed as a pure addition with no behavioural risk.
+nfl_signals.py and cfb_signals.py migrated onto it in PR #52; epl_signals.py
+was written against it from the start.
+
+MLB HAS NOT MIGRATED. betting_signals.py still carries its own copy of this
+math and does not import this module. The copies were identical when the
+extraction was verified, but nothing now keeps them in step: a change made
+here does not reach MLB's scores, and a change made there does not reach
+anyone else's. Migrating MLB means re-running the same equivalence proof
+the #52 migration used, over MLB's inputs.
 """
 
 import math

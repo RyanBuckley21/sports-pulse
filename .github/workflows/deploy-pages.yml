@@ -337,7 +337,8 @@ jobs:
           cp output/data.json site/data.json
           cp -r assets site/assets
           # insights.css and insights.js are loaded by the shell from here, and
-          # the teams + components views fetch mock-insights.json from here too.
+          # the hidden #/components gallery fetches mock-insights.json from here
+          # too (games, players and teams all read the live data.json).
           cp -r web/insights site/insights
           # Cache-bust every local stylesheet and script on each deploy: without
           # this, Safari (especially in "Add to Home Screen" standalone mode) can
