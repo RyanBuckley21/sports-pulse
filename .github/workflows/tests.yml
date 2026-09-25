@@ -58,17 +58,24 @@ jobs:
       # than turn CI flaky on some future bad-API morning. Set only on the
       # suite step -- pip above needs the network.
       #
-      # GITHUB_ACTIONS is CLEARED for this step. The pipeline prints ::error::
-      # annotations when it sees that variable (generate_insights, on a failed
-      # sport builder), and test_game_isolation forces builder outages on
-      # purpose, so every GREEN run used to carry six red "forced mlb outage"
-      # annotations on its summary (runs 1 and 2, 2026-09-24/25). A green run
-      # that looks red trains people to ignore red. No suite asserts on
-      # annotations; they all pass locally, where the variable is never set.
+      # GITHUB_ACTIONS IS UNSET FOR EACH SUITE, inside the loop (`env -u`). The
+      # pipeline prints ::error:: annotations when it sees that variable
+      # (generate_insights, on a failed sport builder), and test_game_isolation
+      # forces builder outages on purpose, so every GREEN run used to carry
+      # red "forced mlb outage" annotations on its summary. A green run that
+      # looks red trains people to ignore red. No suite asserts on annotations;
+      # they all pass locally, where the variable is never set.
+      #
+      # INSIDE THE LOOP, NOT IN `env:` BELOW -- that was tried first (run 3,
+      # 2026-09-25) and did nothing: the step's env block showed GITHUB_ACTIONS
+      # empty, and the runner still handed its reserved GITHUB_* defaults to the
+      # process, so the annotations kept coming. `env -u` in the command is
+      # applied after the runner, so it holds. The workflow's own "Suite failed"
+      # annotation is echoed by bash, outside `env -u`, so real failures still
+      # show.
       - name: Run the Python suites (network blocked)
         env:
           PYTHONPATH: tools/verify/offline
-          GITHUB_ACTIONS: ""
         run: |
           set -u
           suites=(tools/verify/test_*.py tools/tokens/test_*.py)
@@ -80,7 +87,7 @@ jobs:
           for f in "${suites[@]}"; do
             m="${f%.py}"; m="${m//\//.}"
             echo "::group::$m"
-            if ! python3 -m "$m"; then
+            if ! env -u GITHUB_ACTIONS python3 -m "$m"; then
               failed+=("$m")
               echo "::error title=Suite failed::$m"
             fi
