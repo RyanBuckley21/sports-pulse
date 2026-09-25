@@ -210,6 +210,9 @@ def _with_signals(game, i):
             # display only -- nothing here predicts margin or total.
             "opened": "-150", "move_display": "+3.5pp", "move_direction": "toward",
             "spread_move": "-1 → -1.5", "total": 8.5,
+            # The plain-words fields the card prints (2026-09-25 redesign).
+            "market_display": "-150 → -180", "move_text": "moved toward " + away,
+            "spread_text": "BOS -1.5 (opened BOS -1)",
         }
     # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
     # That combination is the whole point of the bettability filter: the model

@@ -345,8 +345,13 @@ async function reEntryChecks(browser, base) {
   const prices = await p.$$eval("#insightsRoot .ba-price", (n) => n.map((x) => x.textContent.trim()));
   ok("the price reaches the Best Angle card", prices.length === 1, prices.join(" | ") || "none");
   ok("  showing the moneyline", /-180/.test(prices[0] || ""), prices[0] || "none");
-  ok("  and the break-even the score cannot see", /needs\s*64%/.test(prices[0] || ""),
+  ok("  and the break-even the score cannot see", /must win\s*64%/.test(prices[0] || ""),
      prices[0] || "none");
+  // LABELLED ROWS (2026-09-25): the one-line version was unreadable without
+  // knowing the code, so every fact now carries its label on the card.
+  const labels = await p.$$eval("#insightsRoot .ba-price dt", (n) => n.map((x) => x.textContent.trim()));
+  ok("  each fact is labelled: Price, Break-even, Market, Game",
+     labels.join(",") === "Price,Break-even,Market,Game", labels.join(","));
   ok("  naming the book rather than an anonymous consensus",
      /DraftKings/.test(prices[0] || ""), prices[0] || "none");
   // Two Best Angles, not three: the fixture's third game is suppressed for
@@ -365,8 +370,11 @@ async function reEntryChecks(browser, base) {
   // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on the
   // card that is the market's opinion rather than the model's, and the one
   // that answers "does anyone else agree" without waiting a season for an ROI.
-  ok("  the card shows the market's move", /\+3\.5pp/.test(prices[0] || ""), prices[0] || "none");
-  ok("  and where it opened", /from -150/.test(prices[0] || ""), prices[0] || "none");
+  ok("  the card shows where the market opened and where it is now",
+     /opened -150 → -180/.test(prices[0] || ""), prices[0] || "none");
+  ok("  and which way that is, named for the picked side",
+     /moved toward \w+/.test(prices[0] || ""), prices[0] || "none");
+  ok("  in words, not probability-point jargon", !/pp\b/.test(prices[0] || ""), prices[0] || "none");
   const dir = await p.$$eval("#insightsRoot .ba-price-move.is-toward", (n) => n.length);
   ok("  tinted by direction", dir === 1, dir);
 
@@ -376,11 +384,14 @@ async function reEntryChecks(browser, base) {
   const shape = await p.$$eval("#insightsRoot .ba-shape", (n) => n.map((x) => x.textContent.trim()));
   ok("the card carries the game's shape", shape.length === 1, shape.join(" | ") || "none");
   ok("  the spread", /BOS -1\.5/.test(shape[0] || ""), shape[0] || "none");
-  ok("  how far it travelled", /line -1 → -1\.5/.test(shape[0] || ""), shape[0] || "none");
-  ok("  and the total", /O\/U 8\.5/.test(shape[0] || ""), shape[0] || "none");
-  const raggedShape = await p.$$eval("#insightsRoot .ba-shape",
-     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
-  ok("  the shape row does not overflow at 430px", raggedShape === 0, raggedShape);
+  ok("  where it opened, naming the favoured team", /\(opened BOS -1\)/.test(shape[0] || ""),
+     shape[0] || "none");
+  ok("  and the total", /total 8\.5/.test(shape[0] || ""), shape[0] || "none");
+  // Measured on the VALUE cells: each row is `display: contents`, which has no
+  // box of its own, so measuring the row would pass vacuously.
+  const raggedShape = await p.$$eval("#insightsRoot .ba-price dd",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1 || x.clientWidth === 0).length);
+  ok("  no price value overflows (or collapses) at 430px", raggedShape === 0, raggedShape);
 
   // A PICK SUPPRESSED FOR PRICE must say so. The board's most confident games
   // are systematically its least bettable -- -4000, -8000, -50000 sat at the

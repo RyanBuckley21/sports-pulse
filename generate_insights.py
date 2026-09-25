@@ -918,6 +918,21 @@ def _price_block(ent):
                          (ent.get("away") or {}).get("abbr"),
                          bet_type=standout.get("bet_type"))
     sm = espn_odds.spread_move(odds)
+    home_abbr = (ent.get("home") or {}).get("abbr")
+    away_abbr = (ent.get("away") or {}).get("abbr")
+    side = str(standout.get("side") or "").split()[0] or None
+    # THE SPREAD IN WORDS. ESPN's own `details` string ("BUF -7") for the
+    # current line, and the opening line put the same way -- naming the team
+    # it favoured, because on 2026-09-25's NFL board MIN @ TB opened TB -1.5 and
+    # moved to MIN -1.5, which the home-relative "-1.5 → +1.5" it replaced only
+    # said to a reader who knew ESPN's sign convention. Omitted when the line
+    # never moved.
+    spread_now = odds.get("details") or espn_odds.favored_line(
+        odds.get("spread_close"), home_abbr, away_abbr)
+    spread_text = spread_now
+    if sm and sm["open"] != sm["close"] and spread_now:
+        spread_text = "{} (opened {})".format(
+            spread_now, espn_odds.favored_line(sm["open"], home_abbr, away_abbr))
     return {
         "american": american,
         "display": "{:+d}".format(int(american)),
@@ -939,6 +954,22 @@ def _price_block(ent):
         "move_display": (move or {}).get("delta_display"),
         "move_direction": (move or {}).get("direction"),
         "opened": "{:+d}".format(move["open"]) if move else None,
+        # THE SAME MOVE IN PLAIN WORDS, which is what the card now prints. The
+        # "+17.8pp" above is exact but read as jargon on the 2026-09-25 BUF
+        # card; the prices at both ends plus a direction named for the picked
+        # team say the same thing to anyone who knows what -325 means. The pp
+        # figure stays in the payload (and the ledger) for measurement.
+        #
+        # "Opened" is the BOOK's opening number, and ESPN does not publish WHEN
+        # the book opened. Our first capture of the LAC @ BUF line (09-24 05:30Z)
+        # was already -345, two days after the model first named BUF (09-22),
+        # so this is the market's move over the whole week -- not a claim that
+        # the model got there first. The card says so in its tooltip.
+        "market_display": "{:+d} → {:+d}".format(move["open"], move["close"]) if move else None,
+        "move_text": ({"toward": "moved toward " + side,
+                       "away": "moved away from " + side}.get(move["direction"], "no move")
+                      if move and side else None),
+        "spread_text": spread_text,
     }
 
 

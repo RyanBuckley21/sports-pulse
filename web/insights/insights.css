@@ -664,20 +664,36 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 /* What the pick costs, under the Best Angle score. Deliberately quiet: it is
    context for the score above it, not a competing headline. The break-even
    figure is the part that matters -- it is the only number on the card the
-   Signal Score cannot see. */
+   Signal Score cannot see.
+
+   A LABELLED GRID since 2026-09-25: one fact per row, a small caps label on the
+   left. The one-line version ("-325 needs 76% from -142 +17.8pp Draft Kings")
+   fit more on screen and was unreadable without knowing the code. The rows are
+   `display: contents` so every label and value shares one two-column grid and
+   the values line up without a fixed label width. */
 .ba-price {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.3rem;
   align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding-top: 0.55rem;
   border-top: 1px solid color-mix(in srgb, var(--ba-color) 22%, transparent);
   font-size: 0.78rem;
 }
-.ba-price-ml { font-variant-numeric: tabular-nums; font-weight: 600; }
-.ba-price-be { opacity: 0.78; }
-.ba-price-src { margin-left: auto; opacity: 0.55; font-size: 0.72rem; }
+.ba-price-row { display: contents; }
+.ba-price dt {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.55;
+}
+.ba-price dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ba-price-ml { font-weight: 600; }
+.ba-price-be { opacity: 0.85; }
+.ba-price-src { opacity: 0.55; font-size: 0.72rem; margin-left: 0.25rem; }
 
 /* Why there is no pick, in the slot the Best Angle would have taken. Muted
    rather than alarming: this is not an error, it is the board declining to
@@ -707,15 +723,10 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 
 /* Direction of the market's move since the book opened. Green toward, amber
    away -- muted, because it is context on the price rather than a verdict. */
-.ba-price-move { font-variant-numeric: tabular-nums; opacity: 0.85; }
+.ba-price-move { opacity: 0.9; white-space: nowrap; }
 .ba-price-move.is-toward { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
 .ba-price-move.is-away { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
 
-/* The game's shape: spread, line movement, total. Display only -- nothing in
+/* The game's shape: spread, where it opened, total. Display only -- nothing in
    this repo predicts margin or total, so it must not read as a second pick. */
-.ba-shape {
-  margin-top: 0.3rem;
-  font-size: 0.72rem;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
-}
+.ba-shape dd { opacity: 0.7; }

@@ -579,3 +579,21 @@ def spread_move(odds):
         return None
     return {"open": op, "close": cl, "move": round(cl - op, 2),
             "display": "{:+g} → {:+g}".format(op, cl)}
+
+
+def favored_line(line, home_abbr, away_abbr):
+    """A home-relative spread said the way a reader says it: "TB -1.5".
+
+    ESPN's pointSpread cells are home-relative (negative = home lays points),
+    which is why the card used to print "line -1.5 → +1.5" for MIN @ TB on
+    2026-09-25 -- a line where the FAVOURITE CHANGED SIDES, readable only if
+    you already knew the sign convention. Naming the favoured team removes the
+    convention from the reader's side of the screen. 0 is a pick'em; None
+    stays None."""
+    if line is None:
+        return None
+    if line < 0:
+        return "{} {:g}".format(home_abbr, line)
+    if line > 0:
+        return "{} {:g}".format(away_abbr, -line)
+    return "pick'em"
