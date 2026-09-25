@@ -21,6 +21,9 @@
  *                              state, and the single-document guarantee.
  *   standalone                 The home-screen/PWA declarations whose absence
  *                              was the original bug.
+ *   bets                       The Bets tab: the -200 split, the record shown
+ *                              beside every price, and the parlay tray's sums,
+ *                              on a board bet_board.py built from real games.
  *
  * Groups run INDEPENDENTLY (see GROUPS near the bottom). A group that throws --
  * a page.click timing out on a selector the app no longer renders is the real
@@ -146,7 +149,7 @@ function collectProblems(page, base) {
   return problems;
 }
 
-const ROUTES = ["#/", "#/games", "#/players", "#/teams"];
+const ROUTES = ["#/", "#/games", "#/bets", "#/players", "#/teams"];
 
 // Navigate the way a user would, through the router, so container visibility and
 // the scope class are applied. Calling a view's mount() directly exercises the
@@ -345,8 +348,13 @@ async function reEntryChecks(browser, base) {
   const prices = await p.$$eval("#insightsRoot .ba-price", (n) => n.map((x) => x.textContent.trim()));
   ok("the price reaches the Best Angle card", prices.length === 1, prices.join(" | ") || "none");
   ok("  showing the moneyline", /-180/.test(prices[0] || ""), prices[0] || "none");
-  ok("  and the break-even the score cannot see", /needs\s*64%/.test(prices[0] || ""),
+  ok("  and the break-even the score cannot see", /must win\s*64%/.test(prices[0] || ""),
      prices[0] || "none");
+  // LABELLED ROWS (2026-09-25): the one-line version was unreadable without
+  // knowing the code, so every fact now carries its label on the card.
+  const labels = await p.$$eval("#insightsRoot .ba-price dt", (n) => n.map((x) => x.textContent.trim()));
+  ok("  each fact is labelled: Price, Break-even, Market, Game",
+     labels.join(",") === "Price,Break-even,Market,Game", labels.join(","));
   ok("  naming the book rather than an anonymous consensus",
      /DraftKings/.test(prices[0] || ""), prices[0] || "none");
   // Two Best Angles, not three: the fixture's third game is suppressed for
@@ -365,8 +373,11 @@ async function reEntryChecks(browser, base) {
   // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on the
   // card that is the market's opinion rather than the model's, and the one
   // that answers "does anyone else agree" without waiting a season for an ROI.
-  ok("  the card shows the market's move", /\+3\.5pp/.test(prices[0] || ""), prices[0] || "none");
-  ok("  and where it opened", /from -150/.test(prices[0] || ""), prices[0] || "none");
+  ok("  the card shows where the market opened and where it is now",
+     /opened -150 → -180/.test(prices[0] || ""), prices[0] || "none");
+  ok("  and which way that is, named for the picked side",
+     /moved toward \w+/.test(prices[0] || ""), prices[0] || "none");
+  ok("  in words, not probability-point jargon", !/pp\b/.test(prices[0] || ""), prices[0] || "none");
   const dir = await p.$$eval("#insightsRoot .ba-price-move.is-toward", (n) => n.length);
   ok("  tinted by direction", dir === 1, dir);
 
@@ -376,11 +387,14 @@ async function reEntryChecks(browser, base) {
   const shape = await p.$$eval("#insightsRoot .ba-shape", (n) => n.map((x) => x.textContent.trim()));
   ok("the card carries the game's shape", shape.length === 1, shape.join(" | ") || "none");
   ok("  the spread", /BOS -1\.5/.test(shape[0] || ""), shape[0] || "none");
-  ok("  how far it travelled", /line -1 → -1\.5/.test(shape[0] || ""), shape[0] || "none");
-  ok("  and the total", /O\/U 8\.5/.test(shape[0] || ""), shape[0] || "none");
-  const raggedShape = await p.$$eval("#insightsRoot .ba-shape",
-     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1).length);
-  ok("  the shape row does not overflow at 430px", raggedShape === 0, raggedShape);
+  ok("  where it opened, naming the favoured team", /\(opened BOS -1\)/.test(shape[0] || ""),
+     shape[0] || "none");
+  ok("  and the total", /total 8\.5/.test(shape[0] || ""), shape[0] || "none");
+  // Measured on the VALUE cells: each row is `display: contents`, which has no
+  // box of its own, so measuring the row would pass vacuously.
+  const raggedShape = await p.$$eval("#insightsRoot .ba-price dd",
+     (n) => n.filter((x) => x.scrollWidth > x.clientWidth + 1 || x.clientWidth === 0).length);
+  ok("  no price value overflows (or collapses) at 430px", raggedShape === 0, raggedShape);
 
   // A PICK SUPPRESSED FOR PRICE must say so. The board's most confident games
   // are systematically its least bettable -- -4000, -8000, -50000 sat at the
@@ -850,6 +864,69 @@ async function aiNoteChecks(browser, base) {
   await p.close();
 }
 
+// ---------------------------------------------------------------------- bets
+// The Bets tab, on the board make_fixture builds with the REAL bet_board.build
+// from real 2026-09-25 games: 5 parlay pieces (-200 or shorter) and 3 straight
+// bets, one of them (BAY) in a price band with a proven record. What this pins
+// is the part a reader acts on -- which list a leg lands in, that every row
+// says what its price needs and what the record at that price is, and that the
+// tray's combined price is right -- because each can go wrong silently.
+async function betsChecks(browser, base) {
+  const p = await newPage(browser);
+  const problems = collectProblems(p, base);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(500);
+  await goRoute(p, "#/bets");
+  const heads = await p.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
+  ok("bets: parlay pieces and straight bets, in that order",
+     /^Parlay pieces 5$/.test(heads[0] || "") && /^Straight bets 3$/.test(heads[1] || ""), heads.join(" | "));
+  const rows = await p.$$eval("#insightsRoot .bet", (n) => n.map((x) => x.textContent.replace(/\s+/g, " ").trim()));
+  const keyed = await p.$$eval("#insightsRoot .bet", (n) => n.map((x) =>
+    [x.getAttribute("data-key"), x.textContent.replace(/\s+/g, " ").trim()]));
+  const find = (side) => (keyed.find((k) => k[0].endsWith(":" + side)) || [null, ""])[1];
+  ok("  a proven price band ranks first among parlay pieces (BAY)", /BAY/.test(rows[0] || ""), rows[0]);
+  ok("  and only a proven band shows a gap against its price",
+     (await p.$$eval("#insightsRoot .bet-gap", (n) => n.length)) === 1);
+  ok("  every row says what its price needs", rows.every((r) => /needs \d+%/.test(r)), rows.length + " rows");
+  ok("  an underdog with no priced history says so, rather than borrowing a favourite's record",
+     /no graded picks at this price yet/.test(find("APP")), find("APP"));
+  ok("  a tiny record is shown as unproven", /0–1 .*unproven/.test(find("BUF")), find("BUF"));
+  ok("  a price past the -1000 cap is flagged", /past −1000 cap/.test(find("TULN")), find("TULN"));
+  ok("  the lean the book pulled is counted, not hidden",
+     /1 more lean has no price/.test(await p.$eval("#insightsRoot .bets", (x) => x.textContent)));
+  ok("  nothing leaks undefined/null/NaN",
+     !/undefined|null|NaN/.test(await p.$eval("#insightsRoot .bets", (x) => x.textContent)));
+  ok("  the tray starts empty", /Tap \+/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+
+  // BUF -340 and KC -575: decimal 1.2941 x 1.1739 = 1.5192, which is -193 and
+  // needs 66%. Neither leg is proven, so the tray must not print a probability.
+  await p.click('.bet[data-key*=":BUF"] .bet-add'); await p.waitForTimeout(100);
+  await p.click('.bet[data-key*=":KC"] .bet-add'); await p.waitForTimeout(100);
+  const tray = await p.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
+  ok("tray: two legs priced as one parlay", /2 legs/.test(tray) && /−193/.test(tray), tray);
+  ok("  with the win rate that price needs", /needs 66%/.test(tray), tray);
+  ok("  and no made-up chance while a leg is unproven", /no proven record for every leg/.test(tray), tray);
+  ok("  the picked rows show as pressed",
+     (await p.$$eval('.bet-add[aria-pressed="true"]', (n) => n.length)) === 2);
+  const league = await p.evaluate(() => SP.sport && SP.sport.get && SP.sport.get());
+  await p.click('.bet-filter[data-bet-sport="nfl"]'); await p.waitForTimeout(100);
+  const sports = await p.$$eval("#insightsRoot .bet-sport", (n) => n.map((x) => x.textContent));
+  ok("filter: NFL shows only NFL rows", sports.length > 0 && sports.every((s) => s === "NFL"), sports.join(","));
+  ok("  and keeps the parlay", /2 legs/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+  ok("  without moving the app-wide league selection",
+     (await p.evaluate(() => SP.sport && SP.sport.get && SP.sport.get())) === league, league);
+  await p.click(".bet-clear"); await p.waitForTimeout(100);
+  ok("clear empties the tray", /Tap \+/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+  const wide = await p.evaluate(() => ({
+    doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    rows: [].filter.call(document.querySelectorAll(".bet"), (r) => r.scrollWidth > r.clientWidth + 1).length,
+  }));
+  ok("no row overflows, and the page does not scroll sideways at 430px",
+     wide.doc <= 0 && wide.rows === 0, JSON.stringify(wide));
+  ok("bets: no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
+  await p.close();
+}
+
 // -------------------------------------------------------------------- router
 async function routerChecks(browser, base) {
 
@@ -904,7 +981,7 @@ async function routerChecks(browser, base) {
   await p.evaluate(() => { window.__sessionMarker = "alive-" + Date.now(); });
   const marker = await p.evaluate(() => window.__sessionMarker);
 
-  ok("tab bar has four tabs", (await p.$$eval(".tab", (e) => e.length)) === 4);
+  ok("tab bar has five tabs", (await p.$$eval(".tab", (e) => e.length)) === 5);
 
   for (const hash of ROUTES) {
     await p.click('.tab[href="' + hash + '"]');
@@ -1328,6 +1405,7 @@ const GROUPS = [
   ["ai-note", aiNoteChecks],
   ["game-only-league", gameOnlyLeagueChecks],
   ["router", routerChecks],
+  ["bets", betsChecks],
   ["safe-area", safeAreaChecks],
   ["standalone", standaloneChecks],
 ];

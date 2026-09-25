@@ -664,20 +664,36 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 /* What the pick costs, under the Best Angle score. Deliberately quiet: it is
    context for the score above it, not a competing headline. The break-even
    figure is the part that matters -- it is the only number on the card the
-   Signal Score cannot see. */
+   Signal Score cannot see.
+
+   A LABELLED GRID since 2026-09-25: one fact per row, a small caps label on the
+   left. The one-line version ("-325 needs 76% from -142 +17.8pp Draft Kings")
+   fit more on screen and was unreadable without knowing the code. The rows are
+   `display: contents` so every label and value shares one two-column grid and
+   the values line up without a fixed label width. */
 .ba-price {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.3rem;
   align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding-top: 0.55rem;
   border-top: 1px solid color-mix(in srgb, var(--ba-color) 22%, transparent);
   font-size: 0.78rem;
 }
-.ba-price-ml { font-variant-numeric: tabular-nums; font-weight: 600; }
-.ba-price-be { opacity: 0.78; }
-.ba-price-src { margin-left: auto; opacity: 0.55; font-size: 0.72rem; }
+.ba-price-row { display: contents; }
+.ba-price dt {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.55;
+}
+.ba-price dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ba-price-ml { font-weight: 600; }
+.ba-price-be { opacity: 0.85; }
+.ba-price-src { opacity: 0.55; font-size: 0.72rem; margin-left: 0.25rem; }
 
 /* Why there is no pick, in the slot the Best Angle would have taken. Muted
    rather than alarming: this is not an error, it is the board declining to
@@ -707,15 +723,86 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 
 /* Direction of the market's move since the book opened. Green toward, amber
    away -- muted, because it is context on the price rather than a verdict. */
-.ba-price-move { font-variant-numeric: tabular-nums; opacity: 0.85; }
+.ba-price-move { opacity: 0.9; white-space: nowrap; }
 .ba-price-move.is-toward { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
 .ba-price-move.is-away { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
 
-/* The game's shape: spread, line movement, total. Display only -- nothing in
+/* The game's shape: spread, where it opened, total. Display only -- nothing in
    this repo predicts margin or total, so it must not read as a second pick. */
-.ba-shape {
-  margin-top: 0.3rem;
-  font-size: 0.72rem;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
+.ba-shape dd { opacity: 0.7; }
+
+/* ---------------- Bets tab (web/insights/bets.js) ----------------
+   One list across sports: each row is a lean, its price, what the price needs,
+   and the model's record at that price. Deliberately uncoloured by "value":
+   nothing is proven yet, and a green row would claim what the data cannot.
+   The only tints are the gap chip, which appears only once a price band has
+   enough graded picks to mean something. */
+.bet-intro { font: 400 12px/1.5 var(--font-body); color: var(--text-secondary); margin: 0 2px 12px; }
+.bet-intro b { color: var(--text); font-weight: 600; }
+.bet-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.bet-filter {
+  font: 600 12px var(--font-body); color: var(--text-secondary);
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
 }
+.bet-filter[aria-pressed="true"] { color: var(--text); border-color: var(--gold); }
+
+/* The tray sticks to the top of the view while scrolling, so the running
+   parlay stays in sight next to the rows it is built from. */
+.bet-tray {
+  position: sticky; top: 0; z-index: 2; margin: 0 0 14px;
+  padding: 10px 14px; border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  backdrop-filter: blur(var(--glass-blur-soft));
+  -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+  border: 1px solid var(--gold);
+}
+.bet-tray.is-empty {
+  position: static; border-color: var(--glass-border);
+  font: 500 12px var(--font-body); color: var(--text-tertiary);
+}
+.bet-tray-main { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.bet-tray-legs { font: 600 12px var(--font-body); color: var(--text-secondary); }
+.bet-tray-price { font: 800 20px var(--font-head); color: var(--text); font-variant-numeric: tabular-nums; }
+.bet-tray-needs { font: 600 13px var(--font-body); color: var(--text); }
+.bet-clear {
+  margin-left: auto; font: 600 12px var(--font-body); color: var(--text-secondary);
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+}
+.bet-tray-sub { margin-top: 4px; font: 400 11px/1.4 var(--font-body); color: var(--text-tertiary); overflow-wrap: anywhere; }
+
+.bet-section { margin: 0 0 18px; }
+.bet-h { font: 700 15px var(--font-head); color: var(--text); margin: 0 2px 2px; }
+.bet-count { font: 600 12px var(--font-body); color: var(--text-tertiary); margin-left: 4px; }
+.bet-note { font: 400 11px var(--font-body); color: var(--text-tertiary); margin: 0 2px 8px; }
+.bet-list { list-style: none; margin: 0; padding: 0; }
+.bet {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px; padding: 10px 12px 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--glass-fill-soft);
+  border: 1px solid var(--glass-border);
+}
+.bet.is-picked { border-color: var(--gold); }
+.bet-main { flex: 1; min-width: 0; }
+.bet-line { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.bet-sport {
+  flex: none; font: 700 10px var(--font-body); letter-spacing: 0.06em;
+  color: var(--text-tertiary); text-transform: uppercase;
+}
+.bet-side { font: 700 15px var(--font-body); color: var(--text); }
+.bet-opp { font: 500 12px var(--font-body); color: var(--text-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bet-price { margin-left: auto; font: 700 15px var(--font-body); color: var(--text); font-variant-numeric: tabular-nums; }
+.bet-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 3px; font: 500 11px var(--font-body); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.bet-cap { color: var(--gold); }
+.bet-record { margin-top: 3px; font: 400 11px/1.35 var(--font-body); color: var(--text-tertiary); }
+.bet-gap { margin-left: 6px; font-weight: 600; }
+.bet-gap.is-pos { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
+.bet-gap.is-neg { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
+.bet-add {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  font: 700 18px var(--font-body); color: var(--text);
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
+}
+.bet-add[aria-pressed="true"] { background: var(--gold); color: #111; border-color: var(--gold); }
+.bet-filter:focus-visible, .bet-add:focus-visible, .bet-clear:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

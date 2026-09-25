@@ -300,34 +300,42 @@
     // for some smaller games -- so it draws nothing rather than an empty row.
     price: function (p) {
       if (!p || !p.display) return "";
-      var be = p.break_even_display
-        ? '<span class="ba-price-be">needs ' + esc(p.break_even_display) + "</span>"
-        : "";
-      // WHICH WAY THE MARKET MOVED since the book opened -- the only figure on
-      // the card that is the market's opinion rather than the model's. Tinted
-      // by direction because that is the whole content: "toward" means the
-      // price shortened after this pick existed.
-      var mv = p.move_display
-        ? '<span class="ba-price-move is-' + esc(p.move_direction || "flat") + '">' +
-          (p.opened ? "from " + esc(p.opened) + " " : "") +
-          esc(p.move_display) + "</span>"
-        : "";
+      // LABELLED ROWS, one fact each. The 2026-09-25 card packed price,
+      // break-even, "from -142 +17.8pp" and the book onto one line and the
+      // spread's home-relative travel onto a second, and the owner had to ask
+      // what it said. A label per row answers that on the card itself.
+      var row = function (label, value, cls) {
+        return '<div class="ba-price-row' + (cls ? " " + cls : "") + '">' +
+          "<dt>" + label + "</dt><dd>" + value + "</dd></div>";
+      };
+      var rows = [
+        row("Price",
+          '<span class="ba-price-ml">' + esc(p.display) + "</span>" +
+          (p.provider ? ' <span class="ba-price-src">' + esc(p.provider) + "</span>" : "")),
+      ];
+      if (p.break_even_display) {
+        rows.push(row("Break-even",
+          '<span class="ba-price-be">must win ' + esc(p.break_even_display) + "</span>"));
+      }
+      // WHICH WAY THE MARKET MOVED -- the only figure on the card that is the
+      // market's opinion rather than the model's. Tinted by direction because
+      // that is the whole content. The tooltip carries the caveat: ESPN does
+      // not say WHEN the book opened, so this can include moves made before
+      // the model named the pick.
+      if (p.market_display && p.move_text) {
+        rows.push(row("Market",
+          '<span title="The book\'s opening price, then its latest. ESPN does not publish when the book opened, so this can include moves from before the pick.">' +
+          "opened " + esc(p.market_display) + "</span> " +
+          '<span class="ba-price-move is-' + esc(p.move_direction || "flat") + '">' +
+          esc(p.move_text) + "</span>"));
+      }
       // The game's shape, not a second pick: nothing here predicts margin or
-      // total. Second row so it never competes with the price above it.
+      // total. Last and muted so it never competes with the price above it.
       var shape = [];
-      if (p.spread) shape.push(esc(p.spread));
-      if (p.spread_move) shape.push("line " + esc(p.spread_move));
-      if (p.total) shape.push("O/U " + esc(String(p.total)));
-      return (
-        '<div class="ba-price">' +
-        '<span class="ba-price-ml">' + esc(p.display) + "</span>" +
-        be + mv +
-        (p.provider ? '<span class="ba-price-src">' + esc(p.provider) + "</span>" : "") +
-        "</div>" +
-        (shape.length
-          ? '<div class="ba-shape">' + shape.join(" &middot; ") + "</div>"
-          : "")
-      );
+      if (p.spread_text) shape.push(esc(p.spread_text));
+      if (p.total != null) shape.push("total " + esc(String(p.total)));
+      if (shape.length) rows.push(row("Game", shape.join(" &middot; "), "ba-shape"));
+      return '<dl class="ba-price">' + rows.join("") + "</dl>";
     },
 
     // WHY THERE IS NO PICK, when the price is the reason. Takes the slot the
@@ -913,12 +921,12 @@
   // without the shell having to sit at the root.
   var SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
 
-  // Players, games and teams all render from the live pipeline output
-  // (data.json -> insights.players / insights.games / insights.teams). Only the
+  // Players, games, teams and bets all render from the live pipeline output
+  // (data.json -> insights.players / .games / .teams / .bets). Only the
   // components gallery is still the deferred mock -- it is a card showcase with
   // no live equivalent, and it is not in the tab bar (direct URL only).
   function sourceFor(view) {
-    var live = view === "players" || view === "games" || view === "teams";
+    var live = view === "players" || view === "games" || view === "teams" || view === "bets";
     return new URL(live ? "../data.json" : "mock-insights.json", SCRIPT_URL).href;
   }
 
@@ -1007,6 +1015,8 @@
     if (view === "players") renderPlayers(data, root);
     else if (view === "games") renderGames(data, root);
     else if (view === "teams") renderTeams(data, root);
+    // Cross-sport, so it takes no league context -- see web/insights/bets.js.
+    else if (view === "bets" && SP.bets) SP.bets.render(data, root);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
   }

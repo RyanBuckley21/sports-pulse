@@ -114,8 +114,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      # Standard library only: writes the gitignored web/data.json the suite
-      # serves, so the run is offline and deterministic.
+      # Writes the gitignored web/data.json the suite serves, so the run is
+      # offline and deterministic. NOT standard-library only any more: since
+      # 2026-09-25 the Bets tab's board is built by the real bet_board.build,
+      # which reads config.yaml, so the fixture needs PyYAML. The first PR run
+      # without this install died on `No module named 'yaml'` (run 36186073744).
+      - run: pip install -r requirements.txt
       - run: python3 -m tools.verify.make_fixture
 
       # PINNED to the version the suite was verified on (186 passed, 0 failed,

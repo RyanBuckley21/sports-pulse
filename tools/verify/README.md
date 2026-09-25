@@ -433,6 +433,27 @@ by start time fails 1. `mlb_odds_fixture.json` is the real 2026-09-25 ESPN MLB
 scoreboard and StatsAPI schedule, chosen because that slate had both
 doubleheaders and both abbreviation mismatches.
 
+```
+python3 -m tools.verify.test_bet_board        # from the repo root
+```
+
+**`test_bet_board`** covers the Bets tab's board (`bet_board.py`), added
+2026-09-25. Four silent failures are pinned:
+- **The record is matched on price, not score.** Matching on score set App
+  State (+440, needs 19%) beside CFB's 44-14 record for 40+ picks, which
+  favourites had earned, and read it as a 65-point edge.
+- **An unproven record doesn't rank.** Under 30 graded picks the gap is `None`
+  and the list falls back to score order.
+- **The split.** −200 exactly is a parlay piece; −199 is a straight bet.
+- **The build survives the board.** An exception in it costs the tab, not the
+  run.
+
+Sabotage counts: score-matching fails 6 of 28, dropping the 30-pick gate fails
+2, moving −200 to the straight side fails 1, counting postseason rows fails 1,
+and re-raising from the board's `except` fails 1. `bets_fixture.json` is 14
+real games from the store at `f99baf7` plus real ledger rows. Its two edits are
+listed in its `_edits` field.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

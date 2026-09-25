@@ -210,6 +210,9 @@ def _with_signals(game, i):
             # display only -- nothing here predicts margin or total.
             "opened": "-150", "move_display": "+3.5pp", "move_direction": "toward",
             "spread_move": "-1 → -1.5", "total": 8.5,
+            # The plain-words fields the card prints (2026-09-25 redesign).
+            "market_display": "-150 → -180", "move_text": "moved toward " + away,
+            "spread_text": "BOS -1.5 (opened BOS -1)",
         }
     # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
     # That combination is the whole point of the bettability filter: the model
@@ -255,6 +258,23 @@ def _as_team_profile(team):
     }
 
 
+def _bets():
+    """The Bets tab's board, built by the REAL bet_board.build from real games
+    (tools/verify/bets_fixture.json) rather than shaped by hand, so the page is
+    tested against exactly what the pipeline emits. The ledger is the fixture's
+    one real priced NFL row plus its 30 real CFB rows with the documented
+    break_even edit, so both the unproven and the proven state render."""
+    import yaml
+    import bet_board
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, "bets_fixture.json")) as fh:
+        fx = json.load(fh)
+    with open(os.path.join(REPO, "config.yaml")) as fh:
+        config = yaml.safe_load(fh)
+    ledger = fx["ledger_real_priced"] + [dict(r, break_even=0.75) for r in fx["cfb_rows"]]
+    return bet_board.build(fx["entities"], config, ledger)
+
+
 def build():
     with open(MOCK) as fh:
         mock = json.load(fh)
@@ -277,6 +297,7 @@ def build():
             # here so the games view under test matches what actually ships.
             "games": [_with_signals(g, i) for i, g in enumerate(mock["games"])],
             "teams": [_as_team_profile(t) for t in mock["teams"]],
+            "bets": _bets(),
             "ui": {},
         },
     }
