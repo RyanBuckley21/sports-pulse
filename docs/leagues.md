@@ -4,14 +4,16 @@ The site is multi-sport. Which sports actually build and appear is controlled
 by two lists in `config.yaml`, one per pipeline:
 
 ```yaml
-active_sports: [mlb]        # leaderboards ("Who's Hot")
-# active_game_sports: [mlb] # scored per-game picks (absent -> falls back to active_sports)
+active_sports: [mlb, epl, nfl]            # leaderboards ("Who's Hot")
+active_game_sports: [mlb, epl, cfb, nfl]  # scored per-game picks (absent -> falls back to active_sports)
 ```
 
-Only keys listed in `active_sports` are fetched and written to `data.json`.
-The frontend is data-driven: the MLB/World Cup–style sport toggle renders one
-button per sport in `data.json`, and hides itself entirely when only one sport
-is present.
+Only keys listed in `active_sports` are fetched into `data.json`'s leaderboard
+`sports` block. The frontend is data-driven: the header league picker
+(`web/sport-state.js`) offers every league that has leaderboards **or** games
+and teams -- it unions `data.json`'s `sports` keys with
+`insights.ui.sport_labels`, which is what lets a games-only league like CFB be
+selected at all -- and hides itself when only one league is present.
 
 ### Two gates, not one
 
@@ -34,17 +36,24 @@ as a kill switch (no scored picks at all) rather than falling back.
 
 ## Currently active
 
-- **mlb** — MLB via the public StatsAPI (`fetchers/mlb.py`).
+| sport | leaderboards | games / teams / picks | graded | fetcher |
+| --- | --- | --- | --- | --- |
+| **mlb** | yes | yes | yes (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
+| **nfl** | yes | yes (moneyline) | yes | `fetchers/nfl.py` -- nflverse CSVs + ESPN scoreboard |
+| **epl** | yes | yes (double chance, match result) | yes | `fetchers/epl.py` -- ESPN soccer API |
+| **cfb** | no, by design | yes (moneyline) | yes | `fetchers/cfb.py` -- cfbfastR CSVs + CFBD + ESPN |
 
-**Registered but not activated:**
-
-- **nfl** — nflverse (`fetchers/nfl.py`). Registered in both `SPORT_FETCHERS`
-  and `GAME_BUILDERS`; in neither active list.
-- **epl** — Premier League via ESPN's soccer API (`fetchers/epl.py`).
-  Registered in `SPORT_FETCHERS` only — leaderboards, no scored picks.
+CFB has no `SPORT_FETCHERS` entry and no `cfb.stat_categories`, so it never
+publishes player leaderboards; it is in `active_game_sports` only. Grading for
+every sport runs through `signal_report.SPORT_ADAPTERS`
+(`--sport mlb|nfl|cfb|epl`); only MLB's step in `daily-stats-and-grade.yml` is
+strict, the other three are `continue-on-error` for the offseason and bye-day
+reasons recorded in that workflow's header.
 
 A registered-but-inactive sport costs nothing per run: `main()` only calls
 fetchers for keys in the relevant active list, so its `fetch` is never invoked.
+None is in that state today; the archived World Cup below is *unregistered*,
+which is a different thing.
 
 ## Archived — World Cup (pending the 2030 cycle)
 
@@ -98,17 +107,23 @@ own** — `main()` skips any sport with no `SPORT_FETCHERS` entry and logs
 Most of this repo is season-agnostic, but a promotion/relegation league is not:
 its membership changes every summer, and nothing in the pipeline notices.
 
-### EPL club table — refresh every August
+### EPL club table — add in May, prune in August
 
-`team_meta.EPL_TEAMS` is a **union of two seasons' fields (23 clubs), not a
-20-club snapshot**, and that is deliberate. ESPN's `/teams` endpoint flips to
-the *upcoming* season's field as soon as promotion/relegation is confirmed,
+`team_meta.EPL_TEAMS` is a **20-club table for most of the year and a 23-club
+union over the summer**, and that is deliberate. ESPN's `/teams` endpoint flips
+to the *upcoming* season's field as soon as promotion/relegation is confirmed,
 while matches inside `epl.lookback_days` (75) can still belong to the season
-just finished. A strict 20-club table therefore drops branding for exactly the
-clubs a summer window is still reading — relegated clubs go colourless and
-crestless mid-window.
+just finished. A strict 20-club table in June therefore drops branding for
+exactly the clubs a summer window is still reading — relegated clubs go
+colourless and crestless mid-window.
 
-Once the 2026-27 field is final (late May, after the play-off final):
+**Current state (2026-09-24): the 20 clubs of 2026-27.** The 2025-26 relegated
+three (Burnley, West Ham United, Wolverhampton Wanderers) were pruned once
+their last match (2026-05-24) was 123 days back, having checked that ESPN's
+eng.1 team list matched the table exactly.
+
+Each year, once the next season's field is final (late May, after the play-off
+final):
 
 1. **Add the three promoted clubs** to `EPL_TEAMS` — name, abbreviation, primary
    kit hex. The name **must match ESPN's `displayName` byte-for-byte**: it is
@@ -126,9 +141,10 @@ Once the 2026-27 field is final (late May, after the play-off final):
    season starts. Pruning earlier breaks live boards; leaving them indefinitely
    just carries dead entries.
 
-The inline `# promoted for 2026-27` / `# relegated after 2025-26` comments in
-`EPL_TEAMS` mark which rows each step applies to. Keep them current — they are
-the only record of which of the 23 are transitional.
+Mark rows with inline `# promoted for <season>` / `# relegated after <season>`
+comments while the table carries 23: they are the only record of which clubs
+are transitional. The `# promoted for 2026-27` markers still on Coventry, Hull
+and Ipswich are historical and can go at the next refresh.
 
 Nothing here is automated, and nothing fails loudly if it is skipped: a missing
 club produces a board row with no chip, no colour and no crest. Worth a calendar

@@ -1,0 +1,1173 @@
+{
+ "_provenance": "REAL responses captured 2026-09-24 from statsapi.mlb.com/api/v1/schedule (hydrate=linescore) and site.api.espn.com scoreboards, one or two completed games per (sport, date), trimmed to the fields signal_report and the grading adapters read. Dates chosen to cover every season phase: MLB R/F/D/W/S, NFL preseason/regular/post-season, CFB regular/bowl/championship, EPL. Nothing hand-written.",
+ "cfb": {
+  "20251220": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "51",
+        "team": {
+         "abbreviation": "ORE",
+         "displayName": "Oregon Ducks",
+         "location": "Oregon"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "34",
+        "team": {
+         "abbreviation": "JMU",
+         "displayName": "James Madison Dukes",
+         "location": "James Madison"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2025-12-21T00:30Z",
+    "id": "401779843",
+    "season": {
+     "slug": "post-season",
+     "type": 3,
+     "year": 2025
+    }
+   }
+  ],
+  "20260119": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "27",
+        "team": {
+         "abbreviation": "IU",
+         "displayName": "Indiana Hoosiers",
+         "location": "Indiana"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "21",
+        "team": {
+         "abbreviation": "MIA",
+         "displayName": "Miami Hurricanes",
+         "location": "Miami"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-01-20T00:30Z",
+    "id": "401769076",
+    "season": {
+     "slug": "post-season",
+     "type": 3,
+     "year": 2025
+    }
+   }
+  ],
+  "20260919": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "30",
+        "team": {
+         "abbreviation": "TEX",
+         "displayName": "Texas Longhorns",
+         "location": "Texas"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "6",
+        "team": {
+         "abbreviation": "UTSA",
+         "displayName": "UTSA Roadrunners",
+         "location": "UTSA"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-09-20T00:00Z",
+    "id": "401856693",
+    "season": {
+     "slug": "regular-season",
+     "type": 2,
+     "year": 2026
+    }
+   }
+  ]
+ },
+ "epl": {
+  "20260920": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "0",
+        "team": {
+         "abbreviation": "BOU",
+         "displayName": "AFC Bournemouth",
+         "location": "AFC Bournemouth"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "1",
+        "team": {
+         "abbreviation": "LIV",
+         "displayName": "Liverpool",
+         "location": "Liverpool"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "FT",
+        "name": "STATUS_FULL_TIME",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-09-20T13:00Z",
+    "id": "401879276",
+    "season": {
+     "slug": "2026-27-english-premier-league",
+     "type": 14308,
+     "year": 2026
+    }
+   }
+  ]
+ },
+ "mlb": {
+  "2025-10-01": [
+   {
+    "gameDate": "2025-10-01T17:08:00Z",
+    "gameNumber": 1,
+    "gamePk": 813071,
+    "gameType": "F",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 1
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 5
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": null
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 1,
+      "team": {
+       "name": "Detroit Tigers"
+      }
+     },
+     "home": {
+      "score": 6,
+      "team": {
+       "name": "Cleveland Guardians"
+      }
+     }
+    }
+   },
+   {
+    "gameDate": "2025-10-01T19:08:00Z",
+    "gameNumber": 1,
+    "gamePk": 813064,
+    "gameType": "F",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 1
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 2
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 3,
+      "team": {
+       "name": "San Diego Padres"
+      }
+     },
+     "home": {
+      "score": 0,
+      "team": {
+       "name": "Chicago Cubs"
+      }
+     }
+    }
+   }
+  ],
+  "2025-10-05": [
+   {
+    "gameDate": "2025-10-05T20:08:00Z",
+    "gameNumber": 1,
+    "gamePk": 813062,
+    "gameType": "D",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 2
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 3
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 6
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 2
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 5
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": null
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 7,
+      "team": {
+       "name": "New York Yankees"
+      }
+     },
+     "home": {
+      "score": 13,
+      "team": {
+       "name": "Toronto Blue Jays"
+      }
+     }
+    }
+   }
+  ],
+  "2025-10-27": [
+   {
+    "gameDate": "2025-10-28T00:00:00Z",
+    "gameNumber": 1,
+    "gamePk": 813032,
+    "gameType": "W",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 4
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 2
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 1
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 9
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 10
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 11
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 12
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 13
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 14
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 15
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 16
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 17
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 18
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 5,
+      "team": {
+       "name": "Toronto Blue Jays"
+      }
+     },
+     "home": {
+      "score": 6,
+      "team": {
+       "name": "Los Angeles Dodgers"
+      }
+     }
+    }
+   }
+  ],
+  "2026-03-01": [
+   {
+    "gameDate": "2026-03-01T18:05:00Z",
+    "gameNumber": 1,
+    "gamePk": 831638,
+    "gameType": "S",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 1
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 5
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 4
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 3
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 8,
+      "team": {
+       "name": "Baltimore Orioles"
+      }
+     },
+     "home": {
+      "score": 7,
+      "team": {
+       "name": "Boston Red Sox"
+      }
+     }
+    }
+   }
+  ],
+  "2026-09-23": [
+   {
+    "gameDate": "2026-09-23T17:10:00Z",
+    "gameNumber": 1,
+    "gamePk": 824223,
+    "gameType": "R",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 3
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 1
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 1
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 4,
+      "team": {
+       "name": "Washington Nationals"
+      }
+     },
+     "home": {
+      "score": 2,
+      "team": {
+       "name": "Detroit Tigers"
+      }
+     }
+    }
+   },
+   {
+    "gameDate": "2026-09-23T17:35:00Z",
+    "gameNumber": 1,
+    "gamePk": 824785,
+    "gameType": "R",
+    "linescore": {
+     "innings": [
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 1
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 2
+       },
+       "num": 2
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 3
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 4
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 2
+       },
+       "num": 5
+      },
+      {
+       "away": {
+        "runs": 2
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 6
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 7
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": 0
+       },
+       "num": 8
+      },
+      {
+       "away": {
+        "runs": 0
+       },
+       "home": {
+        "runs": null
+       },
+       "num": 9
+      }
+     ]
+    },
+    "status": {
+     "abstractGameState": "Final",
+     "codedGameState": "F",
+     "detailedState": "Final"
+    },
+    "teams": {
+     "away": {
+      "score": 2,
+      "team": {
+       "name": "Toronto Blue Jays"
+      }
+     },
+     "home": {
+      "score": 4,
+      "team": {
+       "name": "Baltimore Orioles"
+      }
+     }
+    }
+   }
+  ]
+ },
+ "nfl": {
+  "20260110": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "31",
+        "team": {
+         "abbreviation": "CAR",
+         "displayName": "Carolina Panthers",
+         "location": "Carolina"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "34",
+        "team": {
+         "abbreviation": "LAR",
+         "displayName": "Los Angeles Rams",
+         "location": "Los Angeles"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-01-10T21:30Z",
+    "id": "401772979",
+    "season": {
+     "slug": "post-season",
+     "type": 3,
+     "year": 2025
+    }
+   }
+  ],
+  "20260815": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "29",
+        "team": {
+         "abbreviation": "BUF",
+         "displayName": "Buffalo Bills",
+         "location": "Buffalo"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "14",
+        "team": {
+         "abbreviation": "CAR",
+         "displayName": "Carolina Panthers",
+         "location": "Carolina"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-08-15T17:00Z",
+    "id": "401873282",
+    "season": {
+     "slug": "preseason",
+     "type": 1,
+     "year": 2026
+    }
+   }
+  ],
+  "20260920": [
+   {
+    "competitions": [
+     {
+      "competitors": [
+       {
+        "homeAway": "home",
+        "score": "3",
+        "team": {
+         "abbreviation": "ATL",
+         "displayName": "Atlanta Falcons",
+         "location": "Atlanta"
+        }
+       },
+       {
+        "homeAway": "away",
+        "score": "34",
+        "team": {
+         "abbreviation": "CAR",
+         "displayName": "Carolina Panthers",
+         "location": "Carolina"
+        }
+       }
+      ],
+      "status": {
+       "type": {
+        "completed": true,
+        "detail": "Final",
+        "name": "STATUS_FINAL",
+        "state": "post"
+       }
+      }
+     }
+    ],
+    "date": "2026-09-20T17:00Z",
+    "id": "401872933",
+    "season": {
+     "slug": "regular-season",
+     "type": 2,
+     "year": 2026
+    }
+   }
+  ]
+ }
+}

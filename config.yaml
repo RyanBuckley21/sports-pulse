@@ -15,16 +15,13 @@ top_n: 10
 # picks (Signal Scores, weights, thresholds, graded outcomes, the ledger) are
 # gated separately by `active_game_sports` below.
 #
-# epl added 2026-08-21. LEADERBOARDS ONLY, and that is not a promise this key
-# makes on its own -- it is a fact about EPL specifically. There is now a
-# calibrated `betting_signals.epl` block further down, but a config block is
-# not an activation: EPL has no entry in generate_insights.GAME_BUILDERS, and
-# _active_game_sports filters its resolved list down to sports registered
-# there, so EPL still cannot reach the scored-picks pipeline through this
-# key's fallback. What switches it on is registering a builder AND naming it
-# in `active_game_sports` -- two deliberate steps, neither of which this key
-# performs. Adding a sport that IS registered (nfl, cfb) would be a different
-# matter and needs `active_game_sports` set explicitly first.
+# epl added 2026-08-21 (leaderboards), nfl 2026-08-31. Being listed here
+# publishes a sport's boards and NOTHING ELSE -- its scored picks come from
+# `active_game_sports` below, a separate decision. (This comment used to argue
+# that EPL could not reach the scored-picks pipeline because it had no
+# GAME_BUILDERS entry. It has one now and is named explicitly below, so that
+# argument no longer applies; the separation it was protecting still does.)
+# cfb is absent on purpose: it has no leaderboard fetcher at all.
 active_sports: [mlb, epl, nfl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
@@ -38,8 +35,9 @@ active_sports: [mlb, epl, nfl]
 # to `active_sports` happened to give the right answer; it no longer does, since
 # epl is registered in GAME_BUILDERS and the fallback would switch it on as a
 # side effect of publishing its leaderboards -- precisely the accident the split
-# exists to prevent. Naming both sports here makes the decision explicit and
-# leaves nfl and cfb off, registered but inactive.
+# exists to prevent. Naming the sports here makes each decision explicit. (At
+# the time that meant mlb and epl, with nfl and cfb registered but off; cfb
+# joined 2026-08-27 and nfl 2026-08-31, so every registered builder now runs.)
 #
 # An explicitly EMPTY list (`active_game_sports: []`) is honoured as a real
 # kill switch -- no scored picks for any sport -- rather than falling back.
@@ -56,16 +54,18 @@ active_sports: [mlb, epl, nfl]
 # prior form exists to fetch), and the ESPN fallback schedule costs nothing ever
 # (its game ids cannot join CFBD rows, so the fetch would buy an empty join).
 #
-# WHAT EPL DOES AND DOES NOT GET FROM THIS. It gets scored markets, a Team
-# Pulse, and a per-sport partition in data/insights.games.json with the same
-# pre-game freeze rules MLB's has. It does NOT get graded: signal_report.py
-# runs with --sport defaulting to mlb and reads only that partition, so EPL
-# picks are published and stored but never scored against their outcome and
-# never reach data/signal_report_history.jsonl. That gap is the module's own
-# documented one ("a real gap for whenever a second sport's grading actually
-# ships"), not something this change introduces -- but it does make it live, so
-# EPL has no accuracy ledger until a grader learns the sport. The backtest is
-# the only accuracy evidence EPL has.
+# WHAT A SPORT GETS FROM THIS: scored markets, a Team Pulse, and its own
+# partition of data/insights.games.json with the same pre-game freeze rules
+# MLB's has. GRADING IS A SEPARATE STEP, not a consequence of this key:
+# signal_report.py grades one sport per invocation (`--sport`, default mlb)
+# through its SPORT_ADAPTERS, and daily-stats-and-grade.yml runs it once per
+# sport. All four listed here are graded into data/signal_report_history.jsonl
+# -- this comment used to say EPL was not, which was true until epl_grading.py
+# landed (2026-08-27) and misleading after.
+#
+# A NEW sport added here without a grading adapter AND a workflow step would
+# publish picks that are stored but never settled. That is the gap EPL briefly
+# had; check both before adding a fifth.
 active_game_sports: [mlb, epl, cfb, nfl]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
@@ -366,10 +366,12 @@ nfl:
 # fetch(), via generate_stats.SPORT_FETCHERS). Structurally parallel to the
 # mlb and nfl blocks above.
 #
-# LEADERBOARD ONLY. There is deliberately NO `betting_signals.epl` block
-# anywhere in this file, and no EPL entry in generate_insights.GAME_BUILDERS.
-# Nothing here is a weight, a conviction threshold, or graded against an
-# outcome. Its absence is the clearest available statement of that boundary.
+# THIS BLOCK IS STILL LEADERBOARDS ONLY: nothing under `epl.stat_categories`
+# is a weight, a conviction threshold, or graded against an outcome. EPL's
+# SCORED picks live elsewhere and are separate on purpose -- weights and
+# thresholds in `betting_signals.epl` below, the builder registered in
+# generate_insights.GAME_BUILDERS, grading in epl_grading.py. (This comment
+# used to say neither of those existed; both landed 2026-08-25..27.)
 #
 # Not fetched or shown while `epl` is absent from active_sports.
 # CFB fetcher/grader endpoints. Small next to the `epl` block below because

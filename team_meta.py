@@ -1,6 +1,6 @@
 """Static team/nation branding lookup: official abbreviation + primary brand
-color for every team we track (30 MLB clubs, 32 NFL clubs, 23 Premier League
-clubs across the 2025-26/2026-27 transition, archived World Cup field).
+color for every team we track (30 MLB clubs, 32 NFL clubs, the 20 Premier League
+clubs of 2026-27, 136 FBS programs, archived World Cup field).
 
 Colors are each team's real, publicly documented brand color (jersey/cap/kit
 primary) -- not tuned or invented for legibility. Several official colors
@@ -115,18 +115,22 @@ NFL_TEAMS = {
 # in the data; a newly promoted one that is missing here degrades to no
 # abbr/colour rather than erroring (see get_team_meta).
 #
-# This holds the UNION of the 2025-26 and 2026-27 fields (23 clubs, not 20) --
-# deliberately, because the two disagree and both are live concerns right now.
-# ESPN's team list already reports the 2026-27 division (Coventry, Hull and
-# Ipswich up; Burnley, West Ham and Wolves down) while every completed match
-# available to read is still 2025-26. A 20-club table for either season alone
-# would be wrong for the other: pick 2025-26 and the promoted clubs render with
-# no branding the moment the new season kicks off; pick 2026-27 and every
-# historical board loses three clubs. Carrying both costs three unused entries
-# and nothing else, since a club not in the division simply never appears.
+# THE 2026-27 DIVISION, 20 clubs, pruned 2026-09-24. Over the summer this held
+# the UNION of the 2025-26 and 2026-27 fields (23 clubs), deliberately: ESPN's
+# team list flips to the new division as soon as promotion is settled, while
+# every completed match still readable was 2025-26, so a 20-club table for
+# either season alone was wrong for the other. That stopped being true once no
+# window could still reach a relegated club's match. Checked against the live
+# feed before pruning: ESPN's eng.1 team list was exactly these 20, and the
+# last match involving Burnley, West Ham United or Wolverhampton Wanderers was
+# 2026-05-24 -- 123 days back, against a 75-day `epl.lookback_days`.
 #
-# Prune the relegated three at the next refresh, once no window can still
-# reach a match they played in.
+# NEXT MAY (after the play-off final), the same cycle again: add the three
+# promoted clubs with a `# promoted for 2027-28` marker, re-run the "Fetch team
+# logos" workflow, mark the three relegated ones, and prune them only once
+# `lookback_days` has cleared their last match (early-to-mid August). See
+# docs/leagues.md. A club missing here degrades silently to no colour and a
+# three-letter fallback abbr (fetchers/epl._team_ref), never to an error.
 #
 # COLOUR CANNOT IDENTIFY AN EPL CLUB, and this table does not pretend
 # otherwise -- crests are the primary identifier (see scripts/fetch_logos.py's
@@ -139,22 +143,22 @@ NFL_TEAMS = {
 #
 #   AFC Bournemouth   the darker official red, to break the exact tie with
 #                     Manchester United
-#   Aston Villa       their sky blue rather than claret, which would otherwise
-#                     be a third indistinguishable claret alongside Burnley
-#                     and West Ham
+#   Aston Villa       their sky blue rather than claret, which was a third
+#                     indistinguishable claret alongside Burnley and West Ham
+#                     when chosen. Both have since been relegated; kept anyway,
+#                     because a promoted claret club would bring the clash back
 #   Fulham            their red trim; the white/black primary lifts to a grey
 #                     that identifies nothing
 #   Leeds United      their yellow; same reason, the primary is white
 #
 # Newcastle keeps black (lifting to grey) because it is then the ONLY grey, so
-# it stays distinguishable. All 23 resolve to 23 distinct colours.
+# it stays distinguishable. All 20 resolve to 20 distinct colours.
 EPL_TEAMS = {
     "AFC Bournemouth": ("BOU", "#B50E12"),
     "Arsenal": ("ARS", "#EF0107"),
     "Aston Villa": ("AVL", "#95BFE5"),
     "Brentford": ("BRE", "#D20000"),
     "Brighton & Hove Albion": ("BHA", "#0057B8"),
-    "Burnley": ("BUR", "#6C1D45"),               # relegated after 2025-26
     "Chelsea": ("CHE", "#034694"),
     "Coventry City": ("COV", "#78D0F3"),         # promoted for 2026-27
     "Crystal Palace": ("CRY", "#1B458F"),
@@ -170,15 +174,13 @@ EPL_TEAMS = {
     "Nottingham Forest": ("NFO", "#DD0000"),
     "Sunderland": ("SUN", "#EB172B"),
     "Tottenham Hotspur": ("TOT", "#132257"),
-    "West Ham United": ("WHU", "#7A263A"),        # relegated after 2025-26
-    "Wolverhampton Wanderers": ("WOL", "#FDB913"),  # relegated after 2025-26
 }
 
 
 # GENERATED, NOT HAND-WRITTEN -- regenerate with:
 #     python3 scripts/gen_cfb_teams.py --season <season>
 # and paste the result here. This is the only branding table in this file that
-# is machine-produced, and the reason is scale: 30 MLB clubs, 32 NFL and 23
+# is machine-produced, and the reason is scale: 30 MLB clubs, 32 NFL and 20
 # Premier League are all reviewable by eye in a diff; 136 FBS programs are not.
 # The committed literal below is what gets imported -- the script never runs at
 # runtime.

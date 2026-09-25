@@ -115,8 +115,25 @@ name: Regenerate stats and grade picks
 # `workflow_dispatch`, same as the rest of this project's rare-failure
 # handling.
 #
-# Daylight saving: shift every entry by +1h in the fall to hold the wall-clock
-# times, same caveat as the other scheduled workflows here.
+# DAYLIGHT SAVING: DO NOT SHIFT THESE WHEN US DST ENDS. This line used to say
+# "shift every entry +1h in the fall to hold the wall-clock times". Measured
+# against the fall calendar on 2026-09-25, that advice would have made things
+# worse:
+#
+#   * Grading first is safe unshifted. The latest late-night kickoff in
+#     November 2025 was 03:30 UTC (CFB, five FBS Saturdays checked; NFL's
+#     latest was 01:20), finishing around 07:00 UTC, three hours before the
+#     10:00 entry. In EST, 10:00 UTC is 05:00 ET rather than the 06:00 the
+#     paragraph above names, and that is still after every game is final,
+#     because what bounds it is kickoff time in UTC, not the ET clock.
+#   * The pre-kickoff snapshot is what a shift would cost. The earliest daytime
+#     kickoffs are EPL's at 12:00 UTC once the UK is on GMT and NFL London at
+#     14:30 UTC. Shifting would move the first entry to 11:00 and leave EPL
+#     one hour of margin instead of two, on a scheduler measured running hours
+#     late.
+#   * MLB, whose first pitch is the invariant above, is out of season from
+#     October, and US DST restarts on 2027-03-14, before Opening Day. By
+#     March the UTC/ET relationship these entries were tuned against is back.
 
 on:
   schedule:

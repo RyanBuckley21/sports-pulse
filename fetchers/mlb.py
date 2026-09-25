@@ -16,6 +16,7 @@ import os
 
 import requests
 
+import espn_odds
 import pulse
 
 REQUEST_TIMEOUT = 15
@@ -1190,7 +1191,7 @@ def _team_pulse(ops, bullpen_era, cfg):
     if wsum <= 0:
         return None
     combined = sum(d * w for d, w in terms) / wsum
-    # Round half UP, matching betting_signals._round -- banker's rounding would
+    # Round half UP, matching signal_core.round_half_up -- banker's rounding would
     # make a hand-checked score off by one at exact .5 boundaries.
     score = int(math.floor(50 + 50 * combined + 0.5))
     return pulse.pulse(max(0, min(100, score)))
@@ -1745,6 +1746,28 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
             print("insights(teams): builder failed ({}); teams section skipped"
                   .format(str(e)[:160]))
 
+    # THE PRICE, for display and closing-line value only -- the same capture NFL
+    # and CFB have had since PR #61, now for the sport with the longest graded
+    # record and, until now, no way to say what any of its picks cost. One
+    # ESPN request for the slate date. Joined on full team names because
+    # StatsAPI's abbreviations and ESPN's disagree (see
+    # espn_odds.match_by_teams), and gated to MONEYLINE picks only at every
+    # reader (espn_odds.PRICED_MARKETS): a run line, team total or first-five
+    # pick has no price here rather than the wrong one.
+    #
+    # NO BETTABILITY FILTER, unlike NFL and CFB. Their cap (-1000) is each
+    # model's own best measured band; MLB has no such measurement, and an MLB
+    # moneyline is almost never priced anywhere near it. A cap here would be a
+    # guessed number, which config.yaml does not carry.
+    #
+    # Never raises (see espn_odds.fetch_moneylines): a book outage costs the
+    # slate its prices and nothing else.
+    espn_odds.attach_by_teams(
+        session, "mlb", entities, [game_date],
+        {str(g.get("gamePk")): (((g.get("teams") or {}).get("away") or {}).get("team", {}).get("name"),
+                                ((g.get("teams") or {}).get("home") or {}).get("team", {}).get("name"),
+                                g.get("gameNumber"), g.get("gameDate"))
+         for g in scheduled if str(g.get("gamePk")) in entities})
     pruned_cache = {pk: boxscore_cache[pk] for pk in touched if pk in boxscore_cache}
     return entities, pruned_cache, training_rows
 

@@ -1,11 +1,23 @@
-"""Fetcher for Premier League "Who's Hot" leaderboards via ESPN's public
-(undocumented but stable) site API.
+"""Fetcher for Premier League data via ESPN's public (undocumented but stable)
+site API -- "Who's Hot" leaderboards AND the scored Games/Teams slate.
 
-LEADERBOARD ONLY. This module registers into generate_stats.SPORT_FETCHERS and
-nothing else. There is no EPL entry in generate_insights.GAME_BUILDERS, no
-`betting_signals.epl` config block, no weights, no thresholds-as-conviction,
-nothing graded, and no ledger rows. These are descriptive boards: players
-ranked by raw production over a trailing window, full stop.
+TWO REGISTRATIONS, and they share nothing but this file and the feed:
+
+  * `fetch` is EPL's entry in generate_stats.SPORT_FETCHERS -- descriptive
+    boards, players ranked by raw production over a trailing window. No
+    weights, nothing graded.
+  * `build_game_entities` is its entry in generate_insights.GAME_BUILDERS --
+    per-match Signal Scores (double_chance and match_result, scored by
+    epl_signals.py against config's `betting_signals.epl` block), Team Pulse
+    profiles, and a per-sport partition of data/insights.games.json. Those
+    picks ARE graded: `signal_report.py --sport epl` settles them through
+    epl_grading.py into the same ledger as every other sport.
+
+This docstring used to say "LEADERBOARD ONLY" and list everything EPL lacked.
+That was true when the module was written (PR #41) and stopped being true when
+the Games tab, grading and cold-start tier landed; it is kept correct here
+because the first paragraph of a module is where a reader decides what the
+module is for.
 
 Relationship to fetchers/worldcup.py (now archived -- see docs/leagues.md):
 EPL is served by the same ESPN endpoints at a different competition path
@@ -1155,10 +1167,15 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     """EPL's entry in generate_insights.GAME_BUILDERS -- same calling convention
     and return shape as fetchers/mlb, nfl and cfb.
 
-    CALL BUDGET: exactly TWO network requests per run, regardless of slate size.
-    One scoreboard call for the season's completed matches (which builds every
-    club's form in memory) and one for the fixture window. It does not scale
-    with the number of matches, which is why there is nothing to cache.
+    CALL BUDGET: independent of slate size, and bounded by the calendar rather
+    than by matches. It was exactly two requests (one season range, one fixture
+    range) until ESPN stopped serving `dates=START-END` on 2026-09-15; every
+    window is now walked a MONTH at a time through espn_dates. The season's
+    completed matches cost one request per month back to the season boundary
+    (two in September, about ten by May -- see _season_events), and the fixture
+    window one, or two across a month end. A cold start adds the prior-season
+    walk. None of it scales with the number of matches, which is still why
+    there is nothing to cache.
 
     `boxscore_cache` IS RETURNED UNCHANGED, and that is deliberate rather than
     an omission. MLB's cache exists because a boxscore costs a call per game and

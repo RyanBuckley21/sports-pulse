@@ -145,6 +145,25 @@ def fetch_replay_dates(session, config, pks):
     return out
 
 
+# ESPN's event-level `season.type`. Verified live on 2026-09-24 against real
+# dates: NFL 2026-09-20 and CFB 2026-09-19 (FBS) are all type 2
+# "regular-season"; NFL 2026-01-10 (wild card) and 2026-02-08 (Super Bowl), CFB
+# 2025-12-20 (bowls) and 2026-01-19 (the championship) are all type 3
+# "post-season". Type 1 is the preseason. Anything else maps to None, so an
+# unfamiliar value is never promoted into the regular-season record.
+_ESPN_PHASES = {1: "preseason", 2: "regular", 3: "postseason"}
+
+
+def season_phase(event):
+    """This sport's season phase for a slate event -- "regular", "postseason",
+    "preseason", or None. See signal_report.season_phase for why picks carry
+    it: NFL the playoffs are graded like any other slate, and must not be
+    folded into the regular-season record."""
+    if not event:
+        return None
+    return _ESPN_PHASES.get((event.get("season") or {}).get("type"))
+
+
 def is_final(event):
     """A game that actually finished, with both scores readable.
 

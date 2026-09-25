@@ -164,6 +164,13 @@ Sabotage-checked in both directions when written: swapping the draw rules fails
 exactly the double-chance assertions, making `match_result` push on a draw fails
 exactly the match-result ones.
 
+Also pins that `collect_picks` called with **no adapter** ranks through the one
+its `sport_key` names. `backtest_season.py` calls it that way, and from the EPL
+grading change until 2026-09-24 the default was `None`: every backtest date
+raised, was logged and skipped, and the script exited 0 having graded nothing.
+Sabotage-checked by removing the default, which fails exactly the two
+`collect_picks` assertions.
+
 Offline and deterministic. `epl_matches_fixture.json` is REAL ESPN data captured
 from live responses over four 2025/26 matchdays — 21 completed matches, 7 home
 wins, 8 draws, 6 away wins — trimmed to the fields the adapter reads. Real
@@ -360,6 +367,72 @@ exactly the exclusion ones.
 
 No network — every input is a number handed straight to `score_game`.
 
+```
+python3 -m tools.verify.test_season_phase     # from the repo root
+```
+
+**`test_season_phase`** — every ledger pick row names its season phase, and
+the all-time record keeps each phase apart. Nothing in the pipeline filters by
+game type, so MLB's playoffs and spring training, CFB's bowls and NFL's playoffs
+are scored and graded like any other slate. Without the tag they would fold
+silently into the regular-season headline and change what it means. Pinned:
+each adapter reads its own feed (MLB `gameType`, ESPN `season.type`; EPL is
+always regular), and an unknown code maps to None rather than "regular"; every
+pick row is stamped; an untagged row, meaning every row written before the
+field existed, reads as regular and reports byte-identically; and once a
+postseason pick exists, the headline is regular season only, with the
+postseason on its own line and its own date count.
+
+Sabotage-checked in three directions: mapping MLB's wild-card `F` to regular
+fails 8 of 53, dropping the phase filter from `ledger_totals` fails 3, and
+defaulting an untagged row to None fails 3. The second also caught a real bug
+before commit: a 19-character label left no space before the record.
+
+`season_phase_fixture.json` is REAL StatsAPI and ESPN data captured 2026-09-24
+across dates that cover every phase: MLB R/F/D/W/S, NFL preseason, regular
+season and postseason, CFB regular season, a bowl and the championship, and
+EPL.
+
+```
+python3 -m tools.verify.test_backtest_season  # from the repo root
+```
+
+**`test_backtest_season`** pins `backtest_season.py`'s exit code. From
+2026-08-27 to 2026-09-24 every date raised, was logged and skipped, and the
+script still exited 0 ("0 dates graded, 7 skipped"). The suite drives the real
+`main()` with only `backtest_date` stubbed:
+- every date skipped exits 1, for both a TypeError and a network error;
+- an all-off-days range (an offseason) exits 0;
+- a partial skip exits 0 with a WARNING naming how many dates are missing;
+- a clean run is quiet.
+
+Sabotage-checked: removing the all-skipped branch fails 4 of 10 checks, and
+counting off days as skips fails 2.
+
+```
+python3 -m tools.verify.test_mlb_odds         # from the repo root
+```
+
+**`test_mlb_odds`** covers MLB price capture, added 2026-09-25, and the
+market gate it needed. Three silent failures are pinned:
+- **The join.** MLB is keyed by StatsAPI `gamePk`, and the feeds' abbreviations
+  disagree for two clubs (StatsAPI AZ/CWS, ESPN ARI/CHW). So the join uses full
+  team names, and all 30 match.
+- **Doubleheaders.** Our side is ordered by game number, because StatsAPI
+  listed BAL@NYY game 2 at a placeholder 20:10Z when the real start was
+  23:05Z. A pair whose game count differs between the feeds is left unpriced
+  rather than guessed.
+- **The market gate** (`espn_odds.PRICED_MARKETS`). A price is matched to a
+  pick by the leading team token of its side, so without the gate an MLB
+  `team_total`, `run_line` or `first_five_moneyline` pick would carry the
+  full-game moneyline. This is checked at the helpers, the ledger and the card.
+
+Sabotage counts: removing the gate fails 9 of 29, reading ESPN's abbreviation
+instead of its name fails 10, dropping the count check fails 2, and ordering
+by start time fails 1. `mlb_odds_fixture.json` is the real 2026-09-25 ESPN MLB
+scoreboard and StatsAPI schedule, chosen because that slate had both
+doubleheaders and both abbreviation mismatches.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
@@ -372,6 +445,15 @@ data after a deploy.
 ## Dependencies
 
 Playwright is resolved from `./node_modules` if present, otherwise from the
-global install. This repo intentionally has no `package.json` and CI runs Python
-only — making the suite runnable is deliberately separate from wiring it into
-CI, which is a decision to take alongside the deploy workflow.
+global install. This repo intentionally has no `package.json`. CI
+(`.github/workflows/tests.yml`, added 2026-09-24) installs a pinned
+`playwright@1.56.1` with `npm install --no-save` into the gitignored
+`node_modules/`, then `npx playwright install --with-deps chromium`, and runs the
+suite on every pull request. 1.56.1 is the version the 186 checks were verified
+on; bump it deliberately and re-verify.
+
+The same workflow runs every Python suite, found by glob, under
+`PYTHONPATH=tools/verify/offline`. That directory's `sitecustomize.py` refuses
+any non-loopback connection, so the "offline and deterministic" claim above is
+enforced, not just stated. It then runs `git diff --exit-code`, so a suite that
+writes to a committed file fails CI.

@@ -111,6 +111,15 @@ def fetch_replay_dates(session, config, pks):
     return out
 
 
+def season_phase(event):
+    """Always "regular" for a real event. The Premier League has no postseason
+    -- promotion play-offs belong to the Championship, a different competition
+    this adapter never reads -- and ESPN's `season.type` here is a season ID
+    (14308 for 2026-27, verified live 2026-09-24), not a phase, so there is
+    nothing to map. None only when there is no event at all, matching the other
+    adapters. See signal_report.season_phase for why picks carry this."""
+    return "regular" if event else None
+
 def is_final(event):
     """A match that actually finished, with both scores readable.
 

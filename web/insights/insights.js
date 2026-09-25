@@ -1015,13 +1015,13 @@
   // collapsed by design: the slate turns over daily, so a remembered open row
   // would not be resuming anything -- you are re-scanning fresh games.
   //
-  // Scoped to the selected league like the other two views. Today that scoping
-  // can only ever empty this tab rather than re-fill it: _active_game_sports
-  // resolves to [mlb], because `active_game_sports` falls back to
-  // `active_sports` and is then filtered to GAME_BUILDERS, which epl is not in.
-  // So a league with leaderboards but no game builder gets the named empty
-  // state -- which is the honest answer, and a better one than handing it
-  // another league's slate.
+  // Scoped to the selected league like the other two views. Every league the
+  // picker offers has a game builder now (active_game_sports is
+  // [mlb, epl, cfb, nfl]), so scoping re-fills this tab rather than only
+  // emptying it, which is all it could do while epl had no builder. A league
+  // with nothing on today -- an international break, an offseason, a builder
+  // that failed this run -- still gets the named empty state, which is the
+  // honest answer and a better one than handing it another league's slate.
   function renderGames(data, root) {
     var ctx = leagueContext(data);
     var games = scoped(data.insights && data.insights.games, ctx.active);

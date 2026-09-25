@@ -38,14 +38,29 @@ import datetime
 
 REQUEST_TIMEOUT = 20
 
-# ESPN's league path segment. The scoreboard's shape is identical across both,
-# which is why one module serves them; a third league is a line in this dict.
-LEAGUE_PATHS = {"cfb": "college-football", "nfl": "nfl"}
+# ESPN's sport/league path. The scoreboard's odds block is identical across all
+# three -- verified for MLB on 2026-09-25: the same DraftKings moneyline
+# home/away open/close shape, 12 of 17 events priced -- which is why one module
+# serves them; another league is a line in this dict.
+LEAGUE_PATHS = {"cfb": "football/college-football", "nfl": "football/nfl",
+                "mlb": "baseball/mlb"}
 # CFB only: ESPN's FBS group. Without it the scoreboard returns all divisions.
 # Same value fetchers/cfb.py and cfb_grading.py use.
 FBS_GROUPS = 80
 
-_SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/football/{}/scoreboard"
+_SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/{}/scoreboard"
+
+# THE ONLY MARKET A MONEYLINE CAN PRICE IS THE MONEYLINE. for_side and clv match
+# a pick to a price by the leading token of its side, which is the team abbr --
+# and that token is the same for every market that names a team. NFL and CFB
+# score moneyline alone, so market-blindness was harmless there; MLB scores
+# six, and without this gate an MLB `team_total` pick ("NYM Under") would be
+# stamped with NYM's full-game moneyline, a `run_line` pick with the moneyline
+# instead of the -1.5 price, and a `first_five_moneyline` pick with the
+# full-game line. Each is a confident wrong price in an append-only ledger,
+# with nothing thrown. A market not listed here gets None: unpriced, which
+# every reader already treats as "no price", never as a wrong one.
+PRICED_MARKETS = ("moneyline",)
 
 
 def american_to_decimal(value):
@@ -198,11 +213,23 @@ def fetch_moneylines(session, sport, dates):
     caller rather than swallowed in silence -- the one thing worse than no
     odds is no odds and no mention of it.
     """
+    out = {}
+    for event in _fetch_events(session, sport, dates):
+        priced = parse_event(event)
+        if priced:
+            out[str(event.get("id"))] = priced
+    return out
+
+
+def _fetch_events(session, sport, dates):
+    """Every scoreboard event across `dates`, one SINGLE-DAY request per date
+    (ESPN answers 400 to a date range -- see espn_dates). Never raises: a day
+    that fails contributes nothing, exactly as fetch_moneylines always did."""
     league = LEAGUE_PATHS.get(sport)
     if not league:
-        return {}
+        return []
     url = _SCOREBOARD.format(league)
-    out = {}
+    events = []
     for day in sorted({str(d)[:10] for d in dates if d}):
         params = {"dates": day.replace("-", ""), "limit": 400}
         if sport == "cfb":
@@ -210,23 +237,26 @@ def fetch_moneylines(session, sport, dates):
         try:
             resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
             resp.raise_for_status()
-            events = resp.json().get("events") or []
-        except Exception:  # noqa: BLE001 -- see the docstring; never fatal
+            events.extend(resp.json().get("events") or [])
+        except Exception:  # noqa: BLE001 -- see fetch_moneylines; never fatal
             continue
-        for event in events:
-            priced = parse_event(event)
-            if priced:
-                out[str(event.get("id"))] = priced
-    return out
+    return events
 
 
-def for_side(odds, side_abbr, home_abbr, away_abbr):
+def for_side(odds, side_abbr, home_abbr, away_abbr, bet_type=None):
     """The American price for the side a pick actually took, or None.
 
     Matches on the LEADING TOKEN of `side`, the same rule web/insights' team
     tinting uses: EPL's double_chance sides read 'ARS or Draw', so an equality
-    test against the abbr would silently price nothing on that market."""
+    test against the abbr would silently price nothing on that market.
+
+    `bet_type`, when given, must be a PRICED_MARKETS entry or the answer is
+    None -- see PRICED_MARKETS for the MLB markets that would otherwise be
+    priced from the wrong line. Every caller in this repo passes it; the
+    default exists only so a market-less call keeps its old meaning."""
     if not odds or not side_abbr:
+        return None
+    if bet_type is not None and bet_type not in PRICED_MARKETS:
         return None
     lead = str(side_abbr).split()[0]
     if lead == home_abbr:
@@ -274,6 +304,83 @@ def attach(session, sport, entities, dates, espn_ids=None):
 # ------------------------------------------------------------------------- #
 # The bettability filter.
 # ------------------------------------------------------------------------- #
+
+def _event_teams(event):
+    """(away displayName, home displayName, start ISO) for one ESPN event, or
+    None when the event does not name both sides."""
+    try:
+        comp = (event.get("competitions") or [{}])[0]
+        names = {c.get("homeAway"): (c.get("team") or {}).get("displayName")
+                 for c in comp.get("competitors") or []}
+    except (AttributeError, IndexError, TypeError):
+        return None
+    if not names.get("away") or not names.get("home"):
+        return None
+    return names["away"], names["home"], event.get("date") or ""
+
+
+def match_by_teams(events, games):
+    """{entity_key: espn_event_id}, joining on FULL TEAM NAMES.
+
+    `games` is {entity_key: (away_name, home_name, game_number, start_iso)}.
+
+    NAMES, NOT ABBREVIATIONS, because the two feeds' abbreviations disagree:
+    on the 2026-09-25 MLB slate StatsAPI says AZ and CWS where ESPN says ARI
+    and CHW, while all 30 full names matched exactly. An abbreviation join
+    would have priced every game but those two teams' -- and never said so.
+    It is the same failure CFB's AF/AFA and BUF/BUFF join had.
+
+    DOUBLEHEADERS put one name pair on the slate twice (two did on
+    2026-09-25), so within a pair both sides are ordered -- ours by game number
+    then start, ESPN's by start -- and zipped. If the two feeds disagree on how
+    many games a pair has (a postponement one has caught and the other has
+    not), that pair is LEFT UNMATCHED rather than guessed: an unpriced game is
+    honest, a game priced from its sibling's line is not."""
+    theirs = {}
+    for ev in events or []:
+        t = _event_teams(ev)
+        if t and ev.get("id") is not None:
+            theirs.setdefault((t[0], t[1]), []).append((t[2], str(ev.get("id"))))
+    ours = {}
+    for key, (away, home, number, start) in (games or {}).items():
+        ours.setdefault((away, home), []).append((number or 1, start or "", str(key)))
+    out = {}
+    for pair, mine in ours.items():
+        found = sorted(theirs.get(pair, []))
+        if len(found) != len(mine):
+            continue
+        for (_, _, key), (_, eid) in zip(sorted(mine), found):
+            out[key] = eid
+    return out
+
+
+def attach_by_teams(session, sport, entities, dates, games):
+    """attach(), for a sport whose store keys share no id with ESPN and whose
+    abbreviations do not match ESPN's either -- MLB, keyed by StatsAPI gamePk.
+    The join is match_by_teams; everything after it is attach()'s own
+    contract: the same one request per date, the same "never raises", the same
+    count said out loud, and the same absent `odds` key for anything unpriced.
+    Returns the number priced."""
+    if not entities:
+        return 0
+    events = _fetch_events(session, sport, dates)
+    ids = match_by_teams(events, games)
+    priced = {}
+    for ev in events:
+        block = parse_event(ev)
+        if block:
+            priced[str(ev.get("id"))] = block
+    hit = 0
+    for key, ent in entities.items():
+        block = priced.get(ids.get(str(key)))
+        if block:
+            ent["odds"] = block
+            hit += 1
+    print("insights(games): {} odds -- {} of {} games priced ({} joined to an ESPN event by "
+          "team names). Display and CLV only; nothing here reaches a Signal Score."
+          .format(sport, hit, len(entities), len(ids)))
+    return hit
+
 
 def unbettable(price_american, cap):
     """Whether a price is past the point where this model could ever clear it.
@@ -328,7 +435,8 @@ def apply_bettability(entities, cap, sport=""):
         odds = ent.get("odds") or {}
         american = for_side(odds, standout.get("side"),
                             (ent.get("home") or {}).get("abbr"),
-                            (ent.get("away") or {}).get("abbr"))
+                            (ent.get("away") or {}).get("abbr"),
+                            bet_type=standout.get("bet_type"))
         bad, be = unbettable(american, cap)
         if odds.get("moneyline_off"):
             # THE MOST EMPHATIC UNBETTABLE THERE IS. The book has pulled the
@@ -404,7 +512,7 @@ def apply_bettability(entities, cap, sport=""):
 # measures one thing only: between the book's own opening number and its last
 # published one, did the market move toward the side this model picked.
 
-def clv(odds, side_abbr, home_abbr, away_abbr):
+def clv(odds, side_abbr, home_abbr, away_abbr, bet_type=None):
     """Line movement toward a pick, or None when it cannot be measured.
 
     Returns {open, close, open_break_even, close_break_even, delta,
@@ -420,8 +528,13 @@ def clv(odds, side_abbr, home_abbr, away_abbr):
     None whenever either end is missing -- an unpriced game, a market the book
     pulled, or a side the book does not quote. An unmeasurable pick is
     excluded from the aggregate rather than counted as zero movement, which
-    would quietly drag every average toward nothing."""
+    would quietly drag every average toward nothing.
+
+    `bet_type` gates exactly as in for_side: a moneyline's movement says nothing
+    about a run line or a team total."""
     if not odds or not side_abbr:
+        return None
+    if bet_type is not None and bet_type not in PRICED_MARKETS:
         return None
     lead = str(side_abbr).split()[0]
     if lead == home_abbr:
