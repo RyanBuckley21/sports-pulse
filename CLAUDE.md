@@ -37,6 +37,7 @@ python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
+python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
@@ -181,6 +182,13 @@ days later in an append-only file. Most have a test. Don't weaken them.
   and exit codes. A non-zero exit stays unresolved until it's explained. Kill
   background servers **by PID** (`srv & SRV=$!; kill $SRV`), never
   `pkill -f <pattern>`, which killed its own shell once (exit 144).
+- **Sabotage checks can be fooled by stale bytecode.** Python trusts a cached
+  `.pyc` whose source has the same **size** and the same **mtime second**. A
+  same-length sabotage (`>= 2` → `>= 1`) restored with `cp` inside one second
+  leaves the sabotaged bytecode running against the restored source, so the
+  restored code "fails". It happened on 2026-09-25. Run sabotage loops with
+  `PYTHONDONTWRITEBYTECODE=1`, or clear `__pycache__` before trusting a
+  post-restore run.
 - **"Nothing threw" is the common failure mode here.** Past bugs (UTC slate
   date, `OFF` odds read as missing, EPL's nine-day outage, unreachable CFB tab,
   rest_diff suppressing NFL week-1 fallbacks) all ran green. When touching

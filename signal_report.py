@@ -1094,7 +1094,8 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 "odds": entry.get("odds"),
                 "price": espn_odds.for_side(entry.get("odds"), m["side"],
                                             (entry.get("home") or {}).get("abbr"),
-                                            (entry.get("away") or {}).get("abbr")),
+                                            (entry.get("away") or {}).get("abbr"),
+                                            bet_type=m["bet_type"]),
                 # DID THE MARKET MOVE TOWARD THIS PICK. Read from the same
                 # stored block, which carries the book's own opening number
                 # alongside its last published one. This converges far faster
@@ -1102,7 +1103,8 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 # whole reason it is recorded. See espn_odds.clv.
                 "clv": espn_odds.clv(entry.get("odds"), m["side"],
                                      (entry.get("home") or {}).get("abbr"),
-                                     (entry.get("away") or {}).get("abbr")),
+                                     (entry.get("away") or {}).get("abbr"),
+                                     bet_type=m["bet_type"]),
             }
             # Resolved here rather than in grade(), which sees one pick at a time
             # and has no access to the game's other markets. `scored` is the full

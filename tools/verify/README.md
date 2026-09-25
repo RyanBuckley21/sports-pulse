@@ -409,6 +409,30 @@ script still exited 0 ("0 dates graded, 7 skipped"). The suite drives the real
 Sabotage-checked: removing the all-skipped branch fails 4 of 10 checks, and
 counting off days as skips fails 2.
 
+```
+python3 -m tools.verify.test_mlb_odds         # from the repo root
+```
+
+**`test_mlb_odds`** covers MLB price capture, added 2026-09-25, and the
+market gate it needed. Three silent failures are pinned:
+- **The join.** MLB is keyed by StatsAPI `gamePk`, and the feeds' abbreviations
+  disagree for two clubs (StatsAPI AZ/CWS, ESPN ARI/CHW). So the join uses full
+  team names, and all 30 match.
+- **Doubleheaders.** Our side is ordered by game number, because StatsAPI
+  listed BAL@NYY game 2 at a placeholder 20:10Z when the real start was
+  23:05Z. A pair whose game count differs between the feeds is left unpriced
+  rather than guessed.
+- **The market gate** (`espn_odds.PRICED_MARKETS`). A price is matched to a
+  pick by the leading team token of its side, so without the gate an MLB
+  `team_total`, `run_line` or `first_five_moneyline` pick would carry the
+  full-game moneyline. This is checked at the helpers, the ledger and the card.
+
+Sabotage counts: removing the gate fails 9 of 29, reading ESPN's abbreviation
+instead of its name fails 10, dropping the count check fails 2, and ordering
+by start time fails 1. `mlb_odds_fixture.json` is the real 2026-09-25 ESPN MLB
+scoreboard and StatsAPI schedule, chosen because that slate had both
+doubleheaders and both abbreviation mismatches.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

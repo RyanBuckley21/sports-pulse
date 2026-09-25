@@ -908,13 +908,15 @@ def _price_block(ent):
         return None
     american = espn_odds.for_side(odds, standout.get("side"),
                                   (ent.get("home") or {}).get("abbr"),
-                                  (ent.get("away") or {}).get("abbr"))
+                                  (ent.get("away") or {}).get("abbr"),
+                                  bet_type=standout.get("bet_type"))
     if american is None:
         return None
     be = espn_odds.break_even(american)
     move = espn_odds.clv(odds, standout.get("side"),
                          (ent.get("home") or {}).get("abbr"),
-                         (ent.get("away") or {}).get("abbr"))
+                         (ent.get("away") or {}).get("abbr"),
+                         bet_type=standout.get("bet_type"))
     sm = espn_odds.spread_move(odds)
     return {
         "american": american,

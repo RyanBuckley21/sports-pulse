@@ -61,7 +61,7 @@ config.yaml ───▶ │ SPORT_FETCHERS[sport].fetch()  → normalizer.norma
                  │   ├─ GAME_BUILDERS[sport](config, date, cache) (isolated per sport)                │
                  │   │     fetchers/<sport>.build_game_entities → <sport>_signals.score_game          │
                  │   │     → signal_core (shared tanh-lean math) → standout + Team Pulse              │
-                 │   │     → espn_odds.attach / apply_bettability (NFL, CFB)                          │
+                 │   │     → espn_odds price capture (NFL, CFB, MLB) + bettability (NFL, CFB)          │
                  │   ├─ training_capture.capture_features()      (append-only MLB pre-game rows)      │
                  │   └─ merge committed stores → data["insights"] {players, games, teams, ui}         │
                  └──────────────────────────────────────┬──────────────────────────────────────────────┘
@@ -88,9 +88,12 @@ config.yaml ───▶ │ SPORT_FETCHERS[sport].fetch()  → normalizer.norma
   week 1 or the start of a new EPL season. A fallback is never mixed into a
   calibrated lean.
 - **Prices are for display only.** `espn_odds.py` captures the pre-kickoff line
-  and keeps it ("sticky price", since ESPN drops odds at kickoff). It filters out
-  picks too short to bet (worse than −1000, or `OFF`) and records closing-line
-  value. **No price ever feeds back into a Signal Score.**
+  for NFL, CFB and MLB and keeps it ("sticky price", since ESPN drops odds at
+  kickoff). It records closing-line value, and prices **moneyline picks only**:
+  an MLB run line, team total or first-five pick has no price rather than the
+  wrong one. For NFL and CFB it also filters out picks too short to bet (worse
+  than −1000, or `OFF`); MLB has no measured cap, so it gets none. **No price
+  ever feeds back into a Signal Score.**
 - **The games store is a pre-game snapshot.** Once a slate has started, a late
   run can't overwrite the committed snapshot the grader reads. A failed builder
   freezes its own sport's partition, and an off day clears it.
