@@ -1,0 +1,65 @@
+{
+ "_captured": "2026-09-25 12:43Z nflverse injuries_2026.csv (github.com/nflverse/nflverse-data releases), trimmed to the fields fetchers.nfl reads. No edits.",
+ "rows": [
+  {
+   "season": "2026",
+   "week": "2",
+   "team": "CIN",
+   "full_name": "Joe Burrow",
+   "gsis_id": "00-0036442",
+   "position": "QB",
+   "report_status": "Questionable",
+   "report_primary_injury": "Back",
+   "practice_status": "Full Participation in Practice",
+   "practice_primary_injury": "Back"
+  },
+  {
+   "season": "2026",
+   "week": "2",
+   "team": "MIN",
+   "full_name": "Kyler Murray",
+   "gsis_id": "00-0035228",
+   "position": "QB",
+   "report_status": "Out",
+   "report_primary_injury": "Concussion",
+   "practice_status": "Limited Participation in Practice",
+   "practice_primary_injury": "Concussion"
+  },
+  {
+   "season": "2026",
+   "week": "3",
+   "team": "CHI",
+   "full_name": "Caleb Williams",
+   "gsis_id": "00-0039918",
+   "position": "QB",
+   "report_status": "",
+   "report_primary_injury": "",
+   "practice_status": "Did Not Participate In Practice",
+   "practice_primary_injury": "Hamstring"
+  },
+  {
+   "season": "2026",
+   "week": "3",
+   "team": "KC",
+   "full_name": "Patrick Mahomes",
+   "gsis_id": "00-0033873",
+   "position": "QB",
+   "report_status": "",
+   "report_primary_injury": "",
+   "practice_status": "Full Participation in Practice",
+   "practice_primary_injury": "Knee"
+  },
+  {
+   "season": "2026",
+   "week": "3",
+   "team": "LV",
+   "full_name": "Aidan O'Connell",
+   "gsis_id": "00-0038579",
+   "position": "QB",
+   "report_status": "",
+   "report_primary_injury": "",
+   "practice_status": "Did Not Participate In Practice",
+   "practice_primary_injury": "Not injury related - personal matter"
+  }
+ ]
+}

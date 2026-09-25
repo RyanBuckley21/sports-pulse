@@ -454,6 +454,24 @@ and re-raising from the board's `except` fails 1. `bets_fixture.json` is 14
 real games from the store at `f99baf7` plus real ledger rows. Its two edits are
 listed in its `_edits` field.
 
+```
+python3 -m tools.verify.test_availability_notes   # from the repo root
+```
+
+**`test_availability_notes`** covers the starting-QB warning, added
+2026-09-25, on the card and the Bets row. The model's QB override acts only on
+an official Out or Doubtful, so a starter who missed every practice before
+Saturday's final report looked healthy. Caleb Williams was that case on
+2026-09-25, with CHI as the model's pick at 62. Pinned:
+- A starter who did not practice, with no status yet, gets a note.
+- A clean bill (Full practice, no status) gets none.
+- The note reaches the card and the Bets row, and nothing in scoring reads it.
+
+Sabotage counts: noting only rows with a game status fails 3 of 12, noting
+Full practice fails 2, and dropping the field from the games section or the
+Bets row fails 1 each. `nfl_injuries_fixture.json` is five real rows from
+nflverse's `injuries_2026.csv` as published 2026-09-25, unedited.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

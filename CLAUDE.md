@@ -39,6 +39,7 @@ python3 -m tools.verify.test_season_phase        # postseason/preseason picks ke
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
+python3 -m tools.verify.test_availability_notes  # NFL starting-QB injury-report warning (display only)
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)

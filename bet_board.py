@@ -131,6 +131,10 @@ def _leg(ent, threshold, table, max_break_even):
         # start is not a +33-point edge.
         "gap": round(rec["rate"] - be, 4) if rec["proven"] else None,
         "past_cap": bool(max_break_even is not None and be > max_break_even),
+        # The builder's availability warnings (NFL's starting QB on the injury
+        # report), shown on the row because a leg is exactly where a missed
+        # practice matters -- see fetchers.nfl.qb_availability_note.
+        "notes": list(ent.get("availability_notes") or []),
     }
 
 

@@ -1031,6 +1031,10 @@ def _build_games_section(entities, text_map):
             # builder emits and this misses is silently dropped, which is
             # exactly what happened to this one first time round.
             "outcome_split": ent.get("outcome_split"),
+            # WHO MIGHT NOT PLAY, when a builder knows and the score does not
+            # act on it -- today NFL's starting QB on the injury report short of
+            # an official Out (fetchers.nfl.qb_availability_note). Display only.
+            "availability_notes": ent.get("availability_notes"),
             # WHAT THE PICK COSTS. Resolved here rather than in the browser so
             # the American-odds conversion lives in exactly one place (see
             # espn_odds) -- a second copy in JS would be free to drift, and the
