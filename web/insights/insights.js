@@ -921,12 +921,12 @@
   // without the shell having to sit at the root.
   var SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
 
-  // Players, games and teams all render from the live pipeline output
-  // (data.json -> insights.players / insights.games / insights.teams). Only the
+  // Players, games, teams and bets all render from the live pipeline output
+  // (data.json -> insights.players / .games / .teams / .bets). Only the
   // components gallery is still the deferred mock -- it is a card showcase with
   // no live equivalent, and it is not in the tab bar (direct URL only).
   function sourceFor(view) {
-    var live = view === "players" || view === "games" || view === "teams";
+    var live = view === "players" || view === "games" || view === "teams" || view === "bets";
     return new URL(live ? "../data.json" : "mock-insights.json", SCRIPT_URL).href;
   }
 
@@ -1015,6 +1015,8 @@
     if (view === "players") renderPlayers(data, root);
     else if (view === "games") renderGames(data, root);
     else if (view === "teams") renderTeams(data, root);
+    // Cross-sport, so it takes no league context -- see web/insights/bets.js.
+    else if (view === "bets" && SP.bets) SP.bets.render(data, root);
     else if (view === "components") root.innerHTML = renderGallery(data);
     else root.innerHTML = "";
   }

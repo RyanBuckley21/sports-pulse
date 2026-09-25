@@ -384,16 +384,16 @@ jobs:
              web/sport-state.js site/
           cp output/data.json site/data.json
           cp -r assets site/assets
-          # insights.css and insights.js are loaded by the shell from here, and
-          # the hidden #/components gallery fetches mock-insights.json from here
-          # too (games, players and teams all read the live data.json).
+          # insights.css, insights.js and bets.js are loaded by the shell from
+          # here, and the hidden #/components gallery fetches mock-insights.json
+          # from here too (games, bets, players and teams read the live data.json).
           cp -r web/insights site/insights
           # Cache-bust every local stylesheet and script on each deploy: without
           # this, Safari (especially in "Add to Home Screen" standalone mode) can
           # keep serving a stale cached copy indefinitely even after a hard
           # refresh or app relaunch, since nothing about the URL ever changes
           # from one deploy to the next.
-          for ref in app.css shell.css insights.css app.js shell.js insights.js sport-state.js; do
+          for ref in app.css shell.css insights.css app.js shell.js insights.js bets.js sport-state.js; do
             sed -i "s|${ref}\"|${ref}?v=${GITHUB_SHA}\"|" site/index.html
           done
           # Fail the build rather than publish an app that cannot be busted. The

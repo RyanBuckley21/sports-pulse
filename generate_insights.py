@@ -28,7 +28,9 @@ import os
 import shutil
 import traceback
 
+import bet_board
 import espn_odds
+import signal_report  # read-only: the ledger reader bet_board judges picks by
 import slate_clock
 
 import pulse
@@ -674,6 +676,20 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
     if game_entities:
         data["insights"]["games"] = _build_games_section(game_entities, game_text)
+        # THE BETS TAB, built from the same entities the Games tab renders.
+        # Isolated like a sport builder: it is a reader of finished scores and
+        # prices, so a bug in it must cost the tab, never the build. A missing
+        # section renders as the tab's own empty state.
+        try:
+            data["insights"]["bets"] = bet_board.build(
+                game_entities, config, signal_report.load_ledger())
+        except Exception as exc:  # noqa: BLE001 -- display-only section
+            detail = "{}: {}".format(type(exc).__name__, str(exc)[:200])
+            print("insights(bets): board FAILED ({}); the Bets tab shows its empty "
+                  "state this run, everything else is unaffected".format(detail))
+            if os.environ.get("GITHUB_ACTIONS"):
+                print("::warning title=Bets board skipped::{}".format(detail))
+            traceback.print_exc()
     # Teams: already ranked and card-ready out of the builder, and carrying no AI
     # text at all, so there is no text_map to merge and no _build_*_section pass
     # to run -- it is assigned straight across, alongside players and games.

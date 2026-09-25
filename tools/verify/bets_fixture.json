@@ -1,0 +1,700 @@
+{
+ "_captured": "2026-09-25: entities from data/insights.games.json at f99baf7 (trimmed to the fields bet_board reads); ledger rows from data/signal_report_history.jsonl at the same commit, latest run per (date, sport).",
+ "_edits": [
+  "cfb_priced_band: 30 real graded CFB moneyline rows. They predate price capture (break_even null), so break_even is SET to 0.75 -- the one field record_table reads -- to exercise a proven 70-80% band. Verdicts and scores are untouched.",
+  "one of those rows is copied once more with season_phase set to 'postseason' and a later run_id on a new date, to prove non-regular rows are excluded."
+ ],
+ "entities": {
+  "2026_03_LAC_BUF": {
+   "sport": "nfl",
+   "gamePk": "2026_03_LAC_BUF",
+   "start": "Sun Sep 27 \u00b7 1:00 PM ET",
+   "home": {
+    "abbr": "BUF"
+   },
+   "away": {
+    "abbr": "LAC"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 89,
+     "side": "BUF"
+    }
+   },
+   "odds": {
+    "home_ml": -340,
+    "away_ml": 270,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "2026_03_CAR_CLE": {
+   "sport": "nfl",
+   "gamePk": "2026_03_CAR_CLE",
+   "start": "Sun Sep 27 \u00b7 1:00 PM ET",
+   "home": {
+    "abbr": "CLE"
+   },
+   "away": {
+    "abbr": "CAR"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 88,
+     "side": "CAR"
+    }
+   },
+   "odds": {
+    "home_ml": 124,
+    "away_ml": -148,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "2026_03_KC_MIA": {
+   "sport": "nfl",
+   "gamePk": "2026_03_KC_MIA",
+   "start": "Sun Sep 27 \u00b7 1:00 PM ET",
+   "home": {
+    "abbr": "MIA"
+   },
+   "away": {
+    "abbr": "KC"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 90,
+     "side": "KC"
+    }
+   },
+   "odds": {
+    "home_ml": 425,
+    "away_ml": -575,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "2026_03_BAL_DAL": {
+   "sport": "nfl",
+   "gamePk": "2026_03_BAL_DAL",
+   "start": "Sun Sep 27 \u00b7 4:25 PM ET",
+   "home": {
+    "abbr": "DAL"
+   },
+   "away": {
+    "abbr": "BAL"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 12,
+     "side": "No clear lean"
+    }
+   },
+   "odds": {
+    "home_ml": 145,
+    "away_ml": -175,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "401864572": {
+   "sport": "cfb",
+   "gamePk": "401864572",
+   "start": "Sat Sep 26 \u00b7 7:30 PM ET",
+   "home": {
+    "abbr": "NCSU"
+   },
+   "away": {
+    "abbr": "APP"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 85,
+     "side": "APP"
+    }
+   },
+   "odds": {
+    "home_ml": -600,
+    "away_ml": 440,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "401862784": {
+   "sport": "cfb",
+   "gamePk": "401862784",
+   "start": "Sat Sep 26 \u00b7 7:00 PM ET",
+   "home": {
+    "abbr": "TULN"
+   },
+   "away": {
+    "abbr": "USM"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 73,
+     "side": "TULN"
+    }
+   },
+   "odds": {
+    "home_ml": -1050,
+    "away_ml": 675,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "401858238": {
+   "sport": "cfb",
+   "gamePk": "401858238",
+   "start": "Sat Sep 26 \u00b7 6:30 PM ET",
+   "home": {
+    "abbr": "MIA"
+   },
+   "away": {
+    "abbr": "CMU"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 62,
+     "side": "MIA"
+    }
+   },
+   "odds": {
+    "home_ml": null,
+    "away_ml": null,
+    "moneyline_off": true,
+    "provider": "DraftKings"
+   }
+  },
+  "401858241": {
+   "sport": "cfb",
+   "gamePk": "401858241",
+   "start": "Sat Sep 26 \u00b7 9:00 PM ET",
+   "home": {
+    "abbr": "SMU"
+   },
+   "away": {
+    "abbr": "MOST"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 24,
+     "side": "No clear lean"
+    }
+   },
+   "odds": {
+    "home_ml": -9000,
+    "away_ml": 2500,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "822760": {
+   "sport": "mlb",
+   "gamePk": "822760",
+   "start": "7:07 PM ET",
+   "home": {
+    "abbr": "TOR"
+   },
+   "away": {
+    "abbr": "CIN"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 18,
+     "side": "TOR"
+    }
+   },
+   "odds": {
+    "home_ml": -136,
+    "away_ml": 113,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "823735": {
+   "sport": "mlb",
+   "gamePk": "823735",
+   "start": "7:40 PM ET",
+   "home": {
+    "abbr": "MIL"
+   },
+   "away": {
+    "abbr": "STL"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 15,
+     "side": "MIL"
+    }
+   },
+   "odds": {
+    "home_ml": -192,
+    "away_ml": 157,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "824544": {
+   "sport": "mlb",
+   "gamePk": "824544",
+   "start": "7:40 PM ET",
+   "home": {
+    "abbr": "CWS"
+   },
+   "away": {
+    "abbr": "COL"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 35,
+     "side": "CWS"
+    }
+   },
+   "odds": {
+    "home_ml": -240,
+    "away_ml": 195,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "822681": {
+   "sport": "mlb",
+   "gamePk": "822681",
+   "start": "6:45 PM ET",
+   "home": {
+    "abbr": "WSH"
+   },
+   "away": {
+    "abbr": "NYM"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 14,
+     "side": "No clear lean"
+    }
+   },
+   "odds": {
+    "home_ml": -110,
+    "away_ml": -109,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  },
+  "401856813": {
+   "sport": "cfb",
+   "gamePk": "401856813",
+   "start": "Sat Sep 26 \u00b7 12:00 PM ET",
+   "home": {
+    "abbr": "BAY"
+   },
+   "away": {
+    "abbr": "COLO"
+   },
+   "betting_signals": {
+    "moneyline": {
+     "flags": [],
+     "score": 74,
+     "side": "BAY"
+    }
+   },
+   "odds": {
+    "home_ml": -380,
+    "away_ml": 300,
+    "moneyline_off": false,
+    "provider": "DraftKings"
+   }
+  }
+ },
+ "ledger_real_priced": [
+  {
+   "date": "2026-09-24",
+   "sport": "nfl",
+   "run_id": "2026-09-25T15:03:38Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 83,
+   "break_even": 0.7101,
+   "price": -245,
+   "season_phase": "regular",
+   "side": "GB",
+   "gamePk": "2026_03_ATL_GB"
+  }
+ ],
+ "cfb_rows": [
+  {
+   "date": "2026-08-29",
+   "sport": "cfb",
+   "run_id": "2026-08-30T17:45:31Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 93,
+   "side": "USC",
+   "gamePk": "401864494"
+  },
+  {
+   "date": "2026-08-29",
+   "sport": "cfb",
+   "run_id": "2026-08-30T17:45:31Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 71,
+   "side": "HAW",
+   "gamePk": "401858201"
+  },
+  {
+   "date": "2026-08-29",
+   "sport": "cfb",
+   "run_id": "2026-08-30T17:45:31Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 69,
+   "side": "FSU",
+   "gamePk": "401864570"
+  },
+  {
+   "date": "2026-08-29",
+   "sport": "cfb",
+   "run_id": "2026-08-30T17:45:31Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 68,
+   "side": "TCU",
+   "gamePk": "401856766"
+  },
+  {
+   "date": "2026-08-29",
+   "sport": "cfb",
+   "run_id": "2026-08-30T17:45:31Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 65,
+   "side": "UVA",
+   "gamePk": "401858202"
+  },
+  {
+   "date": "2026-09-03",
+   "sport": "cfb",
+   "run_id": "2026-09-04T14:04:58Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 88,
+   "side": "RUTG",
+   "gamePk": "401858423"
+  },
+  {
+   "date": "2026-09-03",
+   "sport": "cfb",
+   "run_id": "2026-09-04T14:04:58Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 77,
+   "side": "ILL",
+   "gamePk": "401858424"
+  },
+  {
+   "date": "2026-09-03",
+   "sport": "cfb",
+   "run_id": "2026-09-04T14:04:58Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 72,
+   "side": "GT",
+   "gamePk": "401856776"
+  },
+  {
+   "date": "2026-09-03",
+   "sport": "cfb",
+   "run_id": "2026-09-04T14:04:58Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 66,
+   "side": "WAKE",
+   "gamePk": "401858204"
+  },
+  {
+   "date": "2026-09-04",
+   "sport": "cfb",
+   "run_id": "2026-09-05T13:19:08Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 95,
+   "side": "MIA",
+   "gamePk": "401858206"
+  },
+  {
+   "date": "2026-09-04",
+   "sport": "cfb",
+   "run_id": "2026-09-05T13:19:08Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 90,
+   "side": "TOL",
+   "gamePk": "401858429"
+  },
+  {
+   "date": "2026-09-04",
+   "sport": "cfb",
+   "run_id": "2026-09-05T13:19:08Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 87,
+   "side": "OU",
+   "gamePk": "401856664"
+  },
+  {
+   "date": "2026-09-04",
+   "sport": "cfb",
+   "run_id": "2026-09-05T13:19:08Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 63,
+   "side": "USC",
+   "gamePk": "401858436"
+  },
+  {
+   "date": "2026-09-04",
+   "sport": "cfb",
+   "run_id": "2026-09-05T13:19:08Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "MISS",
+   "score": 40,
+   "side": "EMU",
+   "gamePk": "401864495"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 99,
+   "side": "OSU",
+   "gamePk": "401858432"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 90,
+   "side": "JMU",
+   "gamePk": "401869960"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 87,
+   "side": "IOWA",
+   "gamePk": "401858426"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 85,
+   "side": "HOU",
+   "gamePk": "401856778"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 81,
+   "side": "TA&M",
+   "gamePk": "401856668"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 75,
+   "side": "ORE",
+   "gamePk": "401858433"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 64,
+   "side": "SC",
+   "gamePk": "401856665"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 58,
+   "side": "IU",
+   "gamePk": "401858425"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 54,
+   "side": "PSU",
+   "gamePk": "401858434"
+  },
+  {
+   "date": "2026-09-05",
+   "sport": "cfb",
+   "run_id": "2026-09-06T13:28:02Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 41,
+   "side": "TEX",
+   "gamePk": "401856667"
+  },
+  {
+   "date": "2026-09-06",
+   "sport": "cfb",
+   "run_id": "2026-09-07T15:36:39Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 97,
+   "side": "ND",
+   "gamePk": "401858438"
+  },
+  {
+   "date": "2026-09-06",
+   "sport": "cfb",
+   "run_id": "2026-09-07T15:36:39Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 51,
+   "side": "WASH",
+   "gamePk": "401858437"
+  },
+  {
+   "date": "2026-09-06",
+   "sport": "cfb",
+   "run_id": "2026-09-07T15:36:39Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 44,
+   "side": "MISS",
+   "gamePk": "401856661"
+  },
+  {
+   "date": "2026-09-12",
+   "sport": "cfb",
+   "run_id": "2026-09-13T14:10:24Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 100,
+   "side": "MISS",
+   "gamePk": "401856676"
+  },
+  {
+   "date": "2026-09-12",
+   "sport": "cfb",
+   "run_id": "2026-09-13T14:10:24Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 100,
+   "side": "ND",
+   "gamePk": "401859184"
+  },
+  {
+   "date": "2026-09-12",
+   "sport": "cfb",
+   "run_id": "2026-09-13T14:10:24Z",
+   "status": "recorded",
+   "bet_type": "moneyline",
+   "basis": "outcome",
+   "verdict": "HIT",
+   "score": 98,
+   "side": "TTU",
+   "gamePk": "401856783"
+  }
+ ]
+}
