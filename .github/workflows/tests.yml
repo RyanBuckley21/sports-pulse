@@ -57,9 +57,18 @@ jobs:
       # makes a suite that starts calling a live API fail here, loudly, rather
       # than turn CI flaky on some future bad-API morning. Set only on the
       # suite step -- pip above needs the network.
+      #
+      # GITHUB_ACTIONS is CLEARED for this step. The pipeline prints ::error::
+      # annotations when it sees that variable (generate_insights, on a failed
+      # sport builder), and test_game_isolation forces builder outages on
+      # purpose, so every GREEN run used to carry six red "forced mlb outage"
+      # annotations on its summary (runs 1 and 2, 2026-09-24/25). A green run
+      # that looks red trains people to ignore red. No suite asserts on
+      # annotations; they all pass locally, where the variable is never set.
       - name: Run the Python suites (network blocked)
         env:
           PYTHONPATH: tools/verify/offline
+          GITHUB_ACTIONS: ""
         run: |
           set -u
           suites=(tools/verify/test_*.py tools/tokens/test_*.py)
