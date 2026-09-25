@@ -172,8 +172,8 @@ change touches locally first anyway.
 GitHub's scheduler is routinely hours late and sometimes drops runs. That's why
 there are several redundant cron entries and cross-workflow alarms, and why
 several invariants are enforced in code. The workflow headers record the measured
-reasons. Cron times are fixed in UTC, so they need a manual **+1h shift when US
-DST ends**.
+reasons. Cron times are fixed in UTC and are deliberately **not** shifted when US
+DST ends. The measured reasons are in `daily-stats-and-grade.yml`.
 
 Secrets: `CFBD_API_KEY` (optional; CFB runs keyless on committed cache or the ESPN fallback).
 

@@ -109,10 +109,13 @@ on:
     # time is already inside the danger band, and one that slips at all is past
     # it. It was contributing retries, not coverage.
     #
-    # Daylight saving: same caveat as deploy-pages.yml -- shift all six by +1h
-    # in the fall to hold the wall-clock times. Capture timing only affects how
-    # much margin there is; it can never cause a post-start capture, which the
-    # gates block regardless.
+    # Daylight saving: NO SHIFT NEEDED. This captures MLB only, and MLB is out
+    # of season from October to March; US DST restarts 2027-03-14, before
+    # Opening Day, so every entry below meets next season in the same UTC/ET
+    # relationship it was tuned against this summer. (It used to say "shift all
+    # six +1h in the fall", which would have changed nothing that matters.)
+    # Capture timing only affects margin in any case; it can never cause a
+    # post-start capture, which the gates block regardless.
     - cron: "20 1 * * *"
     - cron: "20 3 * * *"
     - cron: "20 5 * * *"

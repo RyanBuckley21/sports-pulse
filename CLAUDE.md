@@ -223,9 +223,11 @@ a quiet week.
 
 Operational items to keep in mind:
 
-- **US DST ends 2026-11-01.** Every workflow cron is UTC and its comments say to
-  shift it +1h in the fall to hold wall-clock times. Check the MLB first-pitch
-  invariant in `daily-stats-and-grade.yml` before moving anything.
+- **US DST ends 2026-11-01, and the crons deliberately do NOT shift.** They are
+  UTC. Shifting them +1h would cut the pre-kickoff margin for EPL (12:00 UTC
+  kickoffs in winter) and gain nothing for grading: the latest late kickoff
+  measured in November 2025 was 03:30 UTC, well before the 10:00 UTC run. The
+  reasoning is in `daily-stats-and-grade.yml`. Don't "fix" this in the fall.
 - **The EPL club table** (`team_meta.EPL_TEAMS`) was pruned to the 20 clubs
   of 2026-27 on 2026-09-24. Next due **late May 2027**: add the promoted three,
   re-run the "Fetch team logos" workflow, prune the relegated three in August.
