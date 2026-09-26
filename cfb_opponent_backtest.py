@@ -40,6 +40,13 @@ WHAT IT DOES NOT DO: change production. The winner, if any, needs its own PR
 that switches fetchers/cfb.py to it and re-derives config.yaml's CFB
 weights/scales/threshold with cfb_backtest.py under the new form.
 
+OUTCOME (2026-09-26, run 36212369418): adj_k4 won under the rule above, and
+that PR followed -- production now scores on build_team_form_adjusted at
+fetchers.cfb.FORM_SHRINK_GAMES with weights re-fit on it. So from then on
+--production-weights scores every variant, raw included, with weights fit on
+the ADJUSTED form: read it as "how much does the live model rely on the
+adjustment", not the pre-switch question.
+
 CFBD COST: about 17 calls a season (one bulk /ppa/games plus one /games/teams
 per regular week), so about 51 for 2023-2025, capped by --cfbd-budget (default
 60). With --cache-dir every final week is kept, so a rerun costs 0. These calls

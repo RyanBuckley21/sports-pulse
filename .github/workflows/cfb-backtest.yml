@@ -97,7 +97,7 @@ jobs:
             # adjusted numbers beside it are not comparable. Both read the same
             # cache, so the second costs 0 calls.
             for form in raw adjusted; do
-              python3 cfb_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" --form "$form" --shrink 4 \
+              python3 cfb_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" --form "$form" \
                 --exclude scoring_margin --cache-dir .cache/cfb_backtest \
                 --out "out/cfb_backtest_$form.jsonl" | tee "out/refit_$form.txt"
               { echo "## cfb_backtest.py --form $form"; echo '```'; cat "out/refit_$form.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

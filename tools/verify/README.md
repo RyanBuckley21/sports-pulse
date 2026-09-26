@@ -508,10 +508,10 @@ ignoring the missing row fails 1.
 python3 -m tools.verify.test_opponent_adjust  # from the repo root
 ```
 
-**`test_opponent_adjust`** covers the CFB opponent-adjustment experiment, added
-2026-09-26: `fetchers.cfb.build_team_form_adjusted` and the
-`cfb_opponent_backtest.py` harness whose verdict decides whether production's
-CFB form changes. Pinned:
+**`test_opponent_adjust`** covers the CFB opponent adjustment, added
+2026-09-26: `fetchers.cfb.build_team_form_adjusted`, which production scores
+on since that day, and the `cfb_opponent_backtest.py` harness whose verdict
+switched it. Pinned:
 - The adjustment moves the right way on real data. App State, after East
   Carolina and Charlotte, is rated as allowing more; NC State, after Virginia
   and Vanderbilt, as scoring more.
@@ -519,10 +519,16 @@ CFB form changes. Pinned:
 - The harness is walk-forward (training strictly before testing) and paired.
 - The AUC handles ties (a no-lean game scores 0).
 - A backtest's own CFBD cap holds.
+- Production scores on the form the weights were fit on: the real
+  `build_game_entities` on the fixture's week-3 slate carries
+  `build_team_form_adjusted`'s values at `FORM_SHRINK_GAMES`, the card labels
+  say "opp-adj", and `cfb_backtest.py` defaults to that same form.
 
-Sabotage counts (21 checks): flipping the opponent correction's sign, leaking
+Sabotage counts (26 checks): flipping the opponent correction's sign, leaking
 week W, training on the test season, ignoring tied ranks and resampling the
-two variants separately each fail 1. The unpaired sabotage first passed
+two variants separately each fail 1. Production back on raw form fails 2;
+production at a different shrink, the label without "opp-adj" and the
+backtest defaulting to raw each fail 1. The unpaired sabotage first passed
 undetected, because a perfectly separating lean scores AUC 1.0 on every
 resample; the check now uses noisy leans. `cfb_form_fixture.json` is the real
 2026 schedule for weeks 1-3 and the CFBD rows for those weeks as

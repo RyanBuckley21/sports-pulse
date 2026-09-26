@@ -14,8 +14,9 @@ home-win outcome, 95% bootstrap CI, reliability-proportional (r^2) weights
 renormalized over survivors, and a threshold picked off a sensitivity table.
 
 NO REIMPLEMENTED SIGNAL LOGIC. Every record's inputs come from the SAME
-fetchers/cfb.py functions the live path calls (build_team_form,
-build_scoring_margins, fbs_matchup_index), and grading scores them through
+fetchers/cfb.py functions the live path calls (build_team_form_adjusted at
+FORM_SHRINK_GAMES since 2026-09-26 -- the default --form -- or build_team_form
+with --form raw; build_scoring_margins, fbs_matchup_index), and grading scores them through
 cfb_signals.score_game verbatim. If production and this script ever disagree
 about what a signal means, that is a bug in one of them, not a modelling
 choice made here.
@@ -593,15 +594,15 @@ def parse_args(argv=None):
     p.add_argument("--cache-dir", default=None,
                    help="optional dir memoizing raw API responses across runs")
     p.add_argument("--out", default=OUTPUT_PATH)
-    # WHICH FORM THE CALIBRATION IS FIT ON. "raw" is fetchers.cfb.build_team_form
-    # (season averages, what #46 fit on); "adjusted" is
-    # build_team_form_adjusted at --shrink, the opponent-adjusted form
-    # cfb_opponent_backtest.py selected (k=4, 2026-09-26). Same games, same
-    # cutoffs, same fetch -- only the form table differs -- so the procedure
-    # below is byte-for-byte the one that produced the shipped weights.
-    p.add_argument("--form", choices=("raw", "adjusted"), default="raw")
-    p.add_argument("--shrink", type=float, default=4.0,
-                   help="shrink_games for --form adjusted (default 4, the backtest's pick)")
+    # WHICH FORM THE CALIBRATION IS FIT ON. "adjusted" (the default, and what
+    # production scores on since 2026-09-26) is build_team_form_adjusted at
+    # --shrink; "raw" is build_team_form's season averages, what #46 fit on.
+    # Same games, same cutoffs, same fetch -- only the form table differs --
+    # so the procedure below is the one that produced the #46 weights.
+    p.add_argument("--form", choices=("raw", "adjusted"), default="adjusted")
+    p.add_argument("--shrink", type=float, default=cfb.FORM_SHRINK_GAMES,
+                   help="shrink_games for --form adjusted (default: production's "
+                        "fetchers.cfb.FORM_SHRINK_GAMES)")
     # A season needs about 17 CFBD calls, over the live pipeline's per-run
     # ceiling of 12, so without a named cap this script stopped part-way
     # through its first season. Counted against the 300-call reserve (see
