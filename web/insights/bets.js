@@ -67,6 +67,11 @@
       (l.past_cap ? '<span class="bet-cap">past −1000 cap</span>' : "") +
       "</div>" +
       '<div class="bet-record">' + esc(recordText(l.record, min)) + gap + "</div>" +
+      (l.notes && l.notes.length
+        ? '<div class="bet-notes">' + l.notes.map(function (n) {
+            return '<div class="bet-warn">' + esc(n) + "</div>";
+          }).join("") + "</div>"
+        : "") +
       "</div>" +
       '<button type="button" class="bet-add" aria-pressed="' + on + '" aria-label="' +
       (on ? "Remove " : "Add ") + esc(l.side) + ' to parlay">' + (on ? "✓" : "+") + "</button>" +

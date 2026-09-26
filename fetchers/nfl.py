@@ -583,6 +583,54 @@ def qb_out(injury_rows, qb_id, week):
     return False
 
 
+# THE WARNING BELOW THE OVERRIDE. qb_out only fires on an official Out or
+# Doubtful, which for a Monday game arrives on Saturday's final report. Until
+# then a starter who has missed every practice looks healthy to the model:
+# on 2026-09-25 Caleb Williams was "Did Not Participate In Practice" with no
+# game status yet, CHI was the model's moneyline side at a score of 62, and
+# the market had already moved CHI from -118 to +185. That case is why this
+# note exists, and why it is DISPLAY ONLY: whether a missed practice should
+# move the score is a model question for a backtest, not a display fix.
+# The spellings are nflverse's own (injuries_2026.csv, weeks 1-3).
+_PRACTICE_SHORT = {
+    "Did Not Participate In Practice": "did not practice",
+    "Limited Participation in Practice": "limited in practice",
+}
+
+
+def qb_availability_note(injury_rows, qb_id, qb_name, team, week):
+    """One line for the card when this team's last starting QB is on this
+    week's injury report with anything short of a clean bill, else None.
+
+    Reads the same row qb_out reads. Names the game status when there is one
+    (Out/Doubtful/Questionable) and the practice status when it is not Full,
+    so "Did Not Participate" with no status yet reads as exactly that rather
+    than as silence. Full participation with no status is no note at all."""
+    if not qb_id:
+        return None
+    for row in injury_rows:
+        if row.get("gsis_id") != qb_id:
+            continue
+        try:
+            if int(row.get("week", -1)) != week:
+                continue
+        except (TypeError, ValueError):
+            continue
+        parts = []
+        status = (row.get("report_status") or "").strip()
+        if status:
+            parts.append(status)
+        practice = _PRACTICE_SHORT.get((row.get("practice_status") or "").strip())
+        if practice:
+            injury = (row.get("practice_primary_injury") or row.get("report_primary_injury") or "").strip()
+            parts.append(practice + (" ({})".format(injury.lower()) if injury else ""))
+        if not parts:
+            return None
+        return "{} QB {}: {} (week {} injury report)".format(
+            team, qb_name or row.get("full_name") or "starter", ", ".join(parts), week)
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Game insight entities -- fetchers.mlb.build_game_entities' NFL counterpart,
 # registered into generate_insights.GAME_BUILDERS.
@@ -721,6 +769,10 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         neutral_site=(g.get("location") or "Home") != "Home",
     )
     betting = nfl_signals.score_game(config, "nfl", inputs, availability=availability)
+    # Display only -- see qb_availability_note. Never reaches score_game.
+    availability_notes = [n for n in (
+        qb_availability_note(injuries, away_qb_id, away_qb_name, away, week),
+        qb_availability_note(injuries, home_qb_id, home_qb_name, home, week)) if n]
     standout_threshold = ((config.get("betting_signals") or {}).get("nfl") or {}).get("standout_threshold", 50)
     standout = nfl_signals.top_market(betting, standout_threshold)
 
@@ -769,6 +821,7 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         "betting_signals": betting,
         "standout": standout,
         "best_angle": standout,
+        "availability_notes": availability_notes or None,
         "signal_scores": signal_scores,
         "compare": None,   # no insights_ui.nfl.compare_sets config -- degrades to no table, same as a missing sport block does today
         "est_total": None,  # no NFL total market yet (moneyline only, v1)

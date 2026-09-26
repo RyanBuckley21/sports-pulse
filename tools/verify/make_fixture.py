@@ -214,6 +214,10 @@ def _with_signals(game, i):
             "market_display": "-150 → -180", "move_text": "moved toward " + away,
             "spread_text": "BOS -1.5 (opened BOS -1)",
         }
+        # A real availability note, verbatim from fetchers.nfl.qb_availability_note
+        # on nflverse's 2026-09-25 injury report (see test_availability_notes).
+        game["availability_notes"] = [
+            "CHI QB Caleb Williams: did not practice (hamstring) (week 3 injury report)"]
     # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
     # That combination is the whole point of the bettability filter: the model
     # still has an opinion, it just is not backable at -8000, and a card that

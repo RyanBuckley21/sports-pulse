@@ -408,6 +408,16 @@ async function reEntryChecks(browser, base) {
   ok("  and what it would have needed", /99%/.test(nb[0] || ""), nb[0] || "none");
   ok("  and the model's own ceiling it passed", /91%/.test(nb[0] || ""), nb[0] || "none");
   ok("  while still showing the score the model gave it", /91/.test(nb[0] || ""), nb[0] || "none");
+  // WHO MIGHT NOT PLAY, above the pick it could undo (2026-09-25: CHI's QB
+  // missed every practice while CHI was the model's side).
+  const avail = await p.$$eval("#insightsRoot .avail-note", (n) => n.map((x) => x.textContent));
+  ok("an availability note renders on its game's card", avail.length === 1 &&
+     /Caleb Williams: did not practice/.test(avail[0]), avail.join(" | ") || "none");
+  ok("  above that card's Best Angle, so it is read first",
+     await p.$eval("#insightsRoot .avail-notes", (x) => {
+       const ba = x.parentElement.querySelector(".best-angle");
+       return !!ba && !!(x.compareDocumentPosition(ba) & Node.DOCUMENT_POSITION_FOLLOWING);
+     }));
   // THE OPINION SURVIVES: the suppressed game keeps its Signal Scores table.
   // Removing those too would be hiding the analysis, not declining the bet.
   const ss = await p.$$eval("#insightsRoot .signal-scores", (n) => n.length);
@@ -923,6 +933,21 @@ async function betsChecks(browser, base) {
   }));
   ok("no row overflows, and the page does not scroll sideways at 430px",
      wide.doc <= 0 && wide.rows === 0, JSON.stringify(wide));
+  // The row renders the builder's availability notes. Injected into the live
+  // page's own board rather than the fixture, whose games had no QB on the
+  // report: this pins the renderer, test_availability_notes pins the data.
+  const warn = await p.evaluate(() => {
+    const root = document.getElementById("insightsRoot");
+    return fetch("data.json").then((r) => r.json()).then((d) => {
+      // An NFL leg: the NFL filter chip is still selected from above.
+      d.insights.bets.parlay.filter((l) => l.sport === "nfl")[0].notes =
+        ["CHI QB Caleb Williams: did not practice (hamstring) (week 3 injury report)"];
+      SP.bets.render(d, root);
+      return [].map.call(root.querySelectorAll(".bet-warn"), (x) => x.textContent);
+    });
+  });
+  ok("a Bets row shows its availability note", warn.length === 1 && /did not practice/.test(warn[0]),
+     warn.join(" | ") || "none");
   ok("bets: no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
   await p.close();
 }

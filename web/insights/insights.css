@@ -806,3 +806,17 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 }
 .bet-add[aria-pressed="true"] { background: var(--gold); color: #111; border-color: var(--gold); }
 .bet-filter:focus-visible, .bet-add:focus-visible, .bet-clear:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Availability warnings (fetchers.nfl.qb_availability_note): a starter on
+   the injury report short of an official Out, which the Signal Score cannot
+   act on yet. Amber, not red -- it is a caution, not a verdict. */
+.avail-notes {
+  margin: 0.75rem 0 0.25rem; padding: 0.55rem 0.7rem;
+  border-radius: var(--r-md); border: 1px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.avail-note { font: 600 12px/1.4 var(--font-body); color: var(--gold); }
+.avail-note::before { content: "⚠ "; }
+.bet-notes { margin-top: 4px; }
+.bet-warn { font: 600 11px/1.35 var(--font-body); color: var(--gold); }
+.bet-warn::before { content: "⚠ "; }

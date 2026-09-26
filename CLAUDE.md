@@ -39,10 +39,11 @@ python3 -m tools.verify.test_season_phase        # postseason/preseason picks ke
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
+python3 -m tools.verify.test_availability_notes  # NFL starting-QB injury-report warning (display only)
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "186 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "218 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -176,6 +177,14 @@ days later in an append-only file. Most have a test. Don't weaken them.
 - PR bodies in this repo are long-form: the problem with its measured evidence,
   what changed, what was deliberately *not* done, and test results with check
   counts. Follow that pattern.
+- **Every PR updates `CLAUDE.md` and `README.md` before it merges** (owner's
+  standing request, 2026-09-26). Put the docs change in the PR itself, not in a
+  follow-up, so `main` is never ahead of its docs:
+  - README: new tabs, files, commands and behaviour a user or reader sees;
+  - CLAUDE.md: new suites in Commands, new invariants or conventions, and the
+    "Known drift and open items" section (add what the PR left open, strike
+    what it closed).
+  If a PR changes neither, say so in its body.
 
 ## Lessons from previous sessions
 
@@ -204,7 +213,7 @@ days later in an append-only file. Most have a test. Don't weaken them.
   record was inflated by −3000 favourites, hence the bettability cap of −1000
   (break-even 0.9091). Don't present accuracy as profitability.
 
-## Known drift and open items (as of 2026-09-24)
+## Known drift and open items (as of 2026-09-26)
 
 The stale docs found in the 2026-09-24 review (leagues.md, the EPL fetcher and
 `GAME_BUILDERS` docstrings, config.yaml's gate comments, `signal_core.py`,
@@ -221,6 +230,29 @@ before changing it. The MLB season backtest (`backtest_season.py`) had been
 silently grading nothing since 2026-08-27, which the same change fixed; if it
 ever reports "0 dates graded" with every date skipped, treat that as a bug, not
 a quiet week.
+
+**Prices and the Bets tab (#63, #64).** Moneyline prices are captured for MLB,
+NFL and CFB (not EPL: its match price is three-way). The Bets tab
+(`bet_board.py`, `web/insights/bets.js`) judges each lean by the model's graded
+record **at similar prices, never at similar scores**; a score-matched record
+was measured to mislead (a +440 underdog read as a 65-point edge). Price
+capture began 2026-09-24, so every price band starts unproven (under 30 graded
+picks) and the lists sort by score until one fills. NFL cards and Bets rows
+warn when a starting QB is on the injury report short of Out
+(`fetchers.nfl.qb_availability_note`); that warning is **display only**.
+
+Open, in rough priority:
+- **CLV measures from the book's opening price, not from when the pick was
+  made.** ESPN gives no timestamp for the open, and on LAC @ BUF (2026-09-22)
+  the move from -142 had largely happened before our first capture. Measuring
+  from our first captured price needs a stored first-seen price per game.
+- **A QB who misses every practice doesn't move the score.** Only an official
+  Out/Doubtful does (`qb_out`). Changing that is a model change: backtest it
+  against nflverse's injury history first.
+- **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
+  nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
+- **EPL has no captured prices**, so no Bets rows.
+- The one-off CLV review routine fires 2026-10-22.
 
 Operational items to keep in mind:
 
