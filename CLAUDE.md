@@ -41,6 +41,7 @@ python3 -m tools.verify.test_mlb_odds            # MLB price join (names, double
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
+python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form + the walk-forward, paired backtest harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
@@ -110,9 +111,11 @@ days later in an append-only file. Most have a test. Don't weaken them.
    target (see `signal_report.py`).
 9. **CFBD quota safety.** `CFB_ALLOW_CFBD=1` is set **only** in
    `daily-stats-and-grade.yml`, because only that workflow commits
-   `data/boxscores.json` (the per-(season, week) cache). Setting it anywhere else,
-   especially in `deploy-pages.yml`, burns roughly 1,400 of the 1,000 monthly
-   free calls. Since 2026-09-26 the pipeline also counts its calls per UTC month
+   `data/boxscores.json` (the per-(season, week) cache), and in the manual
+   `cfb-backtest.yml`, which is hard-capped per run (`--cfbd-budget`, default 60)
+   and keeps what it buys with `actions/cache`, so a rerun costs 0. Setting it
+   anywhere else, especially in `deploy-pages.yml`, burns roughly 1,400 of the
+   1,000 monthly free calls. Since 2026-09-26 the pipeline also counts its calls per UTC month
    (`cfbd_usage` in `data/boxscores.json`) and stops at `CFBD_MONTHLY_BUDGET`
    (700), leaving 300 for the backtest and logo scripts, which it can't see.
    Every run logs `CFBD calls -- this run N, YYYY-MM so far M of a 700 budget`.
@@ -261,14 +264,23 @@ Open, in rough priority:
 - **CFB stats are not adjusted for opponent strength**, and early in the season
   that inflates leans (App State +440 at NC State scored 85 on two games each;
   weeks 2-4 hit 66% vs 78% from week 8 in the 2023-25 backtest). Cards say so
-  ("Early read", `fetchers.cfb.early_form_note`). An adjusted model needs a
-  walk-forward backtest, run with `--cache-dir` so reruns are free: about 18
-  CFBD calls a season, so about 55 for 2023-25, well inside the 300 reserve.
-  The CFBD key is a GitHub secret, not available in a session container.
-- **Finished CFB weeks reach the cache 5-6 days late**, so each is re-fetched
-  (2 calls) on every run until then: about 40 calls a week instead of 2. It's
-  affordable (about 170-200 a month) but it's waste; why the week isn't
-  "final" sooner hasn't been diagnosed.
+  ("Early read", `fetchers.cfb.early_form_note`). The candidate fix,
+  `fetchers.cfb.build_team_form_adjusted` (a ridge-regularised offense/defense
+  fit; production does not use it), is measured by `cfb_opponent_backtest.py`:
+  walk-forward (train on earlier seasons, test on the next), paired bootstrap
+  on AUC, decision rule fixed in its docstring. **Run it from the Actions tab**
+  ("CFB opponent-adjustment backtest", manual): the CFBD key is a GitHub
+  secret, not available in a session container. About 51 CFBD calls for
+  2023-25 the first time, 0 after (the cache is kept). Only if it names a
+  winner does production switch, in its own PR that also re-derives CFB's
+  weights with `cfb_backtest.py`.
+- **Finished CFB weeks used to reach the cache 5-6 days late** because
+  cfbfastR's `completed` flag lags the games by days; every run in between
+  re-fetched the week (about 40 CFBD calls a week instead of 2). Since
+  2026-09-26 a week is also cached as soon as its CFBD data covers every game
+  (`fetchers.cfb._week_complete`). Check the per-run "CFBD calls" log line
+  after the next Saturday to confirm the drop; how quickly CFBD itself
+  publishes a week hasn't been measured.
 - The one-off CLV review routine fires 2026-10-22.
 
 Operational items to keep in mind:

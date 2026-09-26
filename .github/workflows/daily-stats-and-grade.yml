@@ -294,8 +294,11 @@ jobs:
       # shaped -- so widening the secret to the job would expose it to a step
       # that has no use for it.
       #
-      # CFB_ALLOW_CFBD IS SET HERE AND NOWHERE ELSE, and that is the whole
-      # quota-safety mechanism -- see fetchers/cfb.py's CFBD_ALLOW_ENV.
+      # CFB_ALLOW_CFBD IS SET HERE for the live pipeline, and elsewhere only in
+      # the manual cfb-backtest.yml (hard-capped per run, cache kept by
+      # actions/cache, counted against the 300-call reserve). That is the whole
+      # quota-safety mechanism -- see fetchers/cfb.py's CFBD_ALLOW_ENV and
+      # CFBD_MONTHLY_BUDGET.
       #
       # The free CFBD tier is 1,000 calls a month. This fetcher's cost is meant
       # to be zero in steady state: each week is fetched once and cached per

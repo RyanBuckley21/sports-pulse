@@ -130,8 +130,10 @@ MAX_CFBD_CALLS_PER_RUN = 12
 # /ppa/games + 1 /games/teams = 2 calls a run. Runs in those windows (counted
 # from "Regenerate stats" commits): 9 + 15 + 19 = 43, so about 86 calls by
 # 09-25. That is the seed below. The healthy-path figure in the comment above
-# (2 calls per week) assumed a week is cached the day it ends; in practice the
-# lag makes it about 40 calls per week, roughly 170-200 a month in October.
+# (2 calls per week) assumed a week is cached the day it ends; the lag made it
+# about 40 calls a week. Since 2026-09-26 a week is also cached as soon as its
+# CFBD data covers every game (_week_complete), which should bring it back
+# toward 2 -- the per-run log line is where that shows up.
 #
 # 700 leaves 300 of the 1,000 tier for work outside this pipeline -- the CFB
 # backtest (about 18 calls a season, cached after one run) and the logo
@@ -167,7 +169,8 @@ CFBD_USAGE_KEY = "cfbd_usage"
 # goes stale rather than the quota going to zero. That is the right way round.
 CFBD_ALLOW_ENV = "CFB_ALLOW_CFBD"
 
-_cfbd_calls = {"count": 0, "capped": False, "limit": MAX_CFBD_CALLS_PER_RUN, "month_used": 0}
+_cfbd_calls = {"count": 0, "capped": False, "limit": MAX_CFBD_CALLS_PER_RUN, "month_used": 0,
+               "named": False}
 
 
 # Values of CFBD_ALLOW_ENV that mean "no", beyond empty/unset. Without these,
@@ -196,6 +199,7 @@ def reset_cfbd_budget():
     _cfbd_calls["capped"] = False
     _cfbd_calls["limit"] = MAX_CFBD_CALLS_PER_RUN
     _cfbd_calls["month_used"] = 0
+    _cfbd_calls["named"] = False
 
 
 def _usage_month(now=None):
@@ -220,6 +224,17 @@ def apply_monthly_budget(cache, month=None):
     _cfbd_calls["month_used"] = used
     _cfbd_calls["limit"] = max(0, min(MAX_CFBD_CALLS_PER_RUN, CFBD_MONTHLY_BUDGET - used))
     return used
+
+
+def allow_cfbd_calls(n):
+    """Set this process's CFBD call cap to exactly `n`, for tools outside the
+    live pipeline (cfb_opponent_backtest.py). A backtest needs about 17 calls
+    a season, over the per-run ceiling of 12 that exists to protect the live
+    pipeline, so it names its own cap -- counted against the 300-call reserve
+    CFBD_MONTHLY_BUDGET leaves, which the pipeline's counter cannot see."""
+    reset_cfbd_budget()
+    _cfbd_calls["limit"] = max(0, int(n))
+    _cfbd_calls["named"] = True
 
 
 def record_cfbd_usage(cache, month=None):
@@ -345,7 +360,11 @@ def _cfbd_get(session, path, params):
     if _cfbd_calls["count"] >= _cfbd_calls["limit"]:
         if not _cfbd_calls["capped"]:
             _cfbd_calls["capped"] = True
-            if _cfbd_calls["limit"] < MAX_CFBD_CALLS_PER_RUN:
+            if _cfbd_calls["named"]:
+                msg = ("CFBD call cap for this run reached ({} calls, set by the caller) -- "
+                       "refusing further requests; weeks not already cached will have no form."
+                       .format(_cfbd_calls["limit"]))
+            elif _cfbd_calls["limit"] < MAX_CFBD_CALLS_PER_RUN:
                 msg = ("CFBD monthly budget reached ({} of {} used this month) -- refusing "
                        "further requests. Team form for uncached weeks will be absent until "
                        "the month turns; affected games score on the margin fallback tiers."
@@ -782,6 +801,30 @@ def _stats_rows_to_cache(games):
     return out
 
 
+def _week_complete(entry, games):
+    """Whether a fetched week's cache entry covers every FBS-vs-FBS game
+    scheduled in it, with a value for both teams.
+
+    WHY, measured 2026-09-26. final_regular_weeks trusts cfbfastR's
+    `completed` flag, and that file updates days behind the games: weeks
+    1/2/3 of 2026 reached the cache on 09-12/09-19/09-25, 5-6 days after
+    their last games, and week 4's Thursday game (Liberty @ Coastal Carolina,
+    09-24) still read completed=FALSE a day and a half later. Every run in
+    between re-fetched the week (2 CFBD calls), about 86 calls in September.
+    The flag was only ever a proxy for "the data is all in"; this asks the
+    data directly. It can only cache a week EARLIER than before, never with
+    a game missing, because it requires every game."""
+    if not games or not entry:
+        return False
+    for gid, (home, away) in games.items():
+        teams = entry.get(gid) or {}
+        for name in (home, away):
+            v = teams.get(name)
+            if v is None or (isinstance(v, list) and any(x is None for x in v)):
+                return False
+    return True
+
+
 def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     """(ppa_rows, team_stat_rows, updated_cache) for `weeks`, serving whatever
     the cache already holds and fetching only what it does not.
@@ -807,7 +850,11 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     if not weeks:
         return [], [], cache
     final = final_regular_weeks(schedule_rows)
-    week_of = {gid: entry["week"] for gid, entry in fbs_matchup_index(schedule_rows).items()}
+    fbs_index = fbs_matchup_index(schedule_rows)
+    week_of = {gid: entry["week"] for gid, entry in fbs_index.items()}
+    games_by_week = {}
+    for gid, entry in fbs_index.items():
+        games_by_week.setdefault(entry["week"], {})[str(gid)] = (entry.get("home"), entry.get("away"))
 
     ppa_cached = dict(_cache_bucket(cache, "ppa", season))
     stats_cached = dict(_cache_bucket(cache, "games_teams", season))
@@ -831,7 +878,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
         for w in missing_ppa:
             entry = split.get(w) or {}
             ppa_rows.extend(_ppa_rows_from_cache(entry))
-            if w in final and entry:
+            if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
                 ppa_cached[str(w)] = entry
 
     for w in missing_stats:
@@ -839,7 +886,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
                           {"year": season, "week": w, "seasonType": "regular"}) or []
         entry = _stats_rows_to_cache(fresh)
         stat_rows.extend(_stats_rows_from_cache(entry))
-        if w in final and entry:
+        if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
             stats_cached[str(w)] = entry
 
     # Single-season retention: a stale season's weeks can never be needed
@@ -963,6 +1010,104 @@ def build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week):
             "turnover_diff": round(sum(tos) / len(tos), 4) if tos else None,
             "games": max(len(ppa["off"]), len(tos)),
         }
+    return out
+
+
+# OPPONENT ADJUSTMENT -- an EXPERIMENT, not used by production. build_team_form
+# averages each team's raw PPA against whoever it happened to play, so a team
+# that has faced two weak defenses looks like a strong offense. On 2026-09-25
+# that made App State an 85 at NC State on two games each (App State's against
+# East Carolina and Charlotte, NC State's against Virginia and Vanderbilt).
+# This is the standard fix: each game's offense is credited for the defense it
+# faced, and each game's defense for the offense it faced, solved jointly.
+# Whether it beats the raw numbers is what cfb_opponent_backtest.py measures;
+# production switches to it only if that backtest says so.
+OPP_ADJ_MAX_SWEEPS = 1000
+OPP_ADJ_TOLERANCE = 1e-9
+
+
+def build_team_form_adjusted(ppa_rows, team_stat_rows, fbs_index, upto_week, shrink_games=2.0):
+    """build_team_form's output, with off_ppa and def_ppa_allowed replaced by
+    opponent-adjusted values. Same point-in-time window, same FBS-only games,
+    same return shape; `games` and `turnover_diff` are left exactly as the raw
+    build computes them.
+
+    THE MODEL. Every qualifying (team, game) offense row is one observation:
+        ppa(T's offense vs O) = mu + off[T] + defq[O]
+    where mu is the mean over all observations, off[T] is T's offensive
+    strength and defq[O] is how much O's defense lets up. It is solved by
+    ridge least squares (Gauss-Seidel sweeps to convergence), and reported
+    back in the raw units:
+        off_ppa[T]         = mu + off[T]   -- expected PPA vs an average defense
+        def_ppa_allowed[T] = mu + defq[T]  -- expected PPA allowed to an average offense
+    CFBD publishes both sides of each game, so only OFFENSE rows are used as
+    observations (a defense row is the other team's offense row seen from the
+    other side); a game whose opponent row is missing falls back to this
+    team's defense row for the opponent's offense.
+
+    WHY RIDGE, measured on 2026 weeks 1-3: the unregularised iteration
+    (off[T] = mean(off - (def[opp] - league)), and the mirror) does not
+    converge on early-season data -- going from 25 to 50 iterations still
+    moved ratings by 0.13 PPA -- because a two-game schedule graph is too
+    sparse to pin every rating. `shrink_games` is the ridge penalty in units
+    of games: each rating is pulled toward zero (league average) as if the
+    team had that many extra average games. It must be > 0; the backtest
+    measures which value works."""
+    if shrink_games <= 0:
+        raise ValueError("shrink_games must be > 0 (see the docstring: the unpenalised fit is not identified early in the season)")
+    raw = build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week)
+    offense, defense = {}, {}
+    for row in ppa_rows or []:
+        entry = fbs_index.get(str(row.get("gameId")))
+        if entry is None or entry["week"] >= upto_week:
+            continue
+        team = row.get("team")
+        if team == entry.get("home"):
+            opp = entry.get("away")
+        elif team == entry.get("away"):
+            opp = entry.get("home")
+        else:
+            continue
+        gid = str(row.get("gameId"))
+        off = _num((row.get("offense") or {}).get("overall"))
+        dfn = _num((row.get("defense") or {}).get("overall"))
+        if off is not None:
+            offense[(gid, team)] = (team, opp, off)
+        if dfn is not None:
+            defense[(gid, opp)] = (opp, team, dfn)
+    obs = dict(defense)
+    obs.update(offense)            # a team's own offense row wins over the mirror
+    obs = list(obs.values())
+    if not obs:
+        return raw
+
+    mu = sum(y for _, _, y in obs) / len(obs)
+    as_off, as_def = {}, {}
+    for i, (t, o, _) in enumerate(obs):
+        as_off.setdefault(t, []).append(i)
+        as_def.setdefault(o, []).append(i)
+    off_r = {t: 0.0 for t in as_off}
+    def_r = {t: 0.0 for t in as_def}
+    lam = float(shrink_games)
+    for _ in range(OPP_ADJ_MAX_SWEEPS):
+        change = 0.0
+        for t, idx in as_off.items():
+            v = sum(obs[i][2] - mu - def_r[obs[i][1]] for i in idx) / (len(idx) + lam)
+            change = max(change, abs(v - off_r[t]))
+            off_r[t] = v
+        for t, idx in as_def.items():
+            v = sum(obs[i][2] - mu - off_r[obs[i][0]] for i in idx) / (len(idx) + lam)
+            change = max(change, abs(v - def_r[t]))
+            def_r[t] = v
+        if change < OPP_ADJ_TOLERANCE:
+            break
+
+    out = {t: dict(v) for t, v in raw.items()}
+    for t in out:
+        if t in off_r and out[t].get("off_ppa") is not None:
+            out[t]["off_ppa"] = round(mu + off_r[t], 4)
+        if t in def_r and out[t].get("def_ppa_allowed") is not None:
+            out[t]["def_ppa_allowed"] = round(mu + def_r[t], 4)
     return out
 
 

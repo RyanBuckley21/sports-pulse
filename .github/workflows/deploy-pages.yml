@@ -46,9 +46,10 @@ on:
   # == 'push'`, so these runs regenerate unconditionally, the same as a
   # scheduled run.
   #
-  # No CFBD cost: CFB_ALLOW_CFBD is set in daily-stats-and-grade.yml and nowhere
-  # else, so the extra runs this adds spend nothing against the monthly quota --
-  # see fetchers/cfb.py's CFBD_ALLOW_ENV.
+  # No CFBD cost: CFB_ALLOW_CFBD is set only in daily-stats-and-grade.yml (the
+  # live pipeline) and the manual, capped cfb-backtest.yml, never here, so the
+  # extra runs this adds spend nothing against the monthly quota -- see
+  # fetchers/cfb.py's CFBD_ALLOW_ENV.
   workflow_run:
     workflows: ["Regenerate stats and grade picks"]
     types: [completed]

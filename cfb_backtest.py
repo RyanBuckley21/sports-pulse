@@ -114,7 +114,7 @@ def _cache_get(cache_dir, key, produce):
     return value
 
 
-def collect_season(session, season, cache_dir=None):
+def collect_season(session, season, cache_dir=None, form_variants=None):
     """Every gradeable FBS-vs-FBS game in one season, with point-in-time
     inputs built by fetchers/cfb.py.
 
@@ -122,7 +122,14 @@ def collect_season(session, season, cache_dir=None):
     postseason) + one /games/teams per regular week + one for postseason.
     Unlike production -- which only ever needs weeks before the slate it is
     building -- a backtest needs the whole season, so the week fan-out runs
-    to completion here."""
+    to completion here.
+
+    `form_variants`, when given, is {name: fn(ppa, team_stats, fbs_index,
+    cutoff)} with build_team_form's return shape. Each record then carries
+    `variant_inputs`: {name: build_inputs(...)} built from that variant's form
+    on the same games, cutoffs and fetch -- so comparing variants costs no
+    extra CFBD calls. The record's own `inputs` are always build_team_form's,
+    exactly as before (cfb_opponent_backtest.py uses this)."""
     schedule = _cache_get(cache_dir, "sched_{}".format(season),
                           lambda: cfb.get_schedule(session, season))
     if not schedule:
@@ -153,6 +160,13 @@ def collect_season(session, season, cache_dir=None):
     # Form is memoized per cutoff: every game in week W shares one form
     # table, and all postseason games share the end-of-regular-season one.
     form_cache, margin_cache = {}, {}
+    variant_cache = {}
+
+    def variant_form_at(name, cutoff):
+        key = (name, cutoff)
+        if key not in variant_cache:
+            variant_cache[key] = form_variants[name](ppa, team_stats, fbs_index, cutoff)
+        return variant_cache[key]
 
     def form_at(cutoff):
         if cutoff not in form_cache:
@@ -195,20 +209,23 @@ def collect_season(session, season, cache_dir=None):
         away_abbr = cfb._team_ref(away)["abbr"]
         home_abbr = cfb._team_ref(home)["abbr"]
 
-        inputs = cfb_signals.build_inputs(
-            away_abbr=away_abbr, home_abbr=home_abbr,
-            away_off_ppa=away_form.get("off_ppa"), home_off_ppa=home_form.get("off_ppa"),
-            away_def_ppa_allowed=away_form.get("def_ppa_allowed"),
-            home_def_ppa_allowed=home_form.get("def_ppa_allowed"),
-            away_turnover_diff=away_form.get("turnover_diff"),
-            home_turnover_diff=home_form.get("turnover_diff"),
-            # Read off the schedule rather than left defaulted. None of the
-            # three signals this script measures carries a home_field term
-            # today, so this changes no current number -- it is here so that
-            # the moment one does, the calibration is measured under the same
-            # venue rule production scores under.
-            neutral_site=str(g.get("neutral_site", "")).upper() == "TRUE",
-        )
+        def inputs_from(af, hf):
+            return cfb_signals.build_inputs(
+                away_abbr=away_abbr, home_abbr=home_abbr,
+                away_off_ppa=af.get("off_ppa"), home_off_ppa=hf.get("off_ppa"),
+                away_def_ppa_allowed=af.get("def_ppa_allowed"),
+                home_def_ppa_allowed=hf.get("def_ppa_allowed"),
+                away_turnover_diff=af.get("turnover_diff"),
+                home_turnover_diff=hf.get("turnover_diff"),
+                # Read off the schedule rather than left defaulted. None of the
+                # three signals this script measures carries a home_field term
+                # today, so this changes no current number -- it is here so that
+                # the moment one does, the calibration is measured under the same
+                # venue rule production scores under.
+                neutral_site=str(g.get("neutral_site", "")).upper() == "TRUE",
+            )
+
+        inputs = inputs_from(away_form, home_form)
         # Measured-only candidate, kept OUT of `inputs` so score_game's
         # contract is exactly what production passes it.
         extra = {"away_scoring_margin": margins.get(away), "home_scoring_margin": margins.get(home)}
@@ -222,16 +239,20 @@ def collect_season(session, season, cache_dir=None):
             "home_win": None if h_pts == a_pts else (h_pts > a_pts),
             "inputs": inputs,
             "measure_inputs": {**inputs, **extra},
+            **({"variant_inputs": {
+                name: inputs_from(variant_form_at(name, cutoff).get(away, {}),
+                                  variant_form_at(name, cutoff).get(home, {}))
+                for name in form_variants}} if form_variants else {}),
         })
     if skipped:
         print("cfb_backtest: {} -- {} rows skipped (unparseable week)".format(season, skipped))
     return records
 
 
-def collect_game_records(session, seasons, cache_dir=None):
+def collect_game_records(session, seasons, cache_dir=None, form_variants=None):
     records = []
     for season in seasons:
-        records.extend(collect_season(session, season, cache_dir))
+        records.extend(collect_season(session, season, cache_dir, form_variants))
     return records
 
 
@@ -538,6 +559,12 @@ def parse_args(argv=None):
     p.add_argument("--cache-dir", default=None,
                    help="optional dir memoizing raw API responses across runs")
     p.add_argument("--out", default=OUTPUT_PATH)
+    # A season needs about 17 CFBD calls, over the live pipeline's per-run
+    # ceiling of 12, so without a named cap this script stopped part-way
+    # through its first season. Counted against the 300-call reserve (see
+    # fetchers.cfb.CFBD_MONTHLY_BUDGET); with --cache-dir a rerun costs 0.
+    p.add_argument("--cfbd-budget", type=int, default=60,
+                   help="hard cap on CFBD calls this run (default 60)")
     return p.parse_args(argv)
 
 
@@ -545,6 +572,7 @@ def main(argv=None):
     args = parse_args(argv)
     session = requests.Session()
     t0 = time.time()
+    cfb.allow_cfbd_calls(args.cfbd_budget)
 
     print("cfb_backtest: collecting {} ...".format(args.seasons))
     records = collect_game_records(session, args.seasons, args.cache_dir)
