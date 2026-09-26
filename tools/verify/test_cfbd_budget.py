@@ -17,6 +17,12 @@ What fails quietly, and is pinned here:
     an exception that takes the slate down;
   * a month with no stored count must start from the measured seed, not zero.
 
+Since 2026-09-26 it also pins that a week is cached as soon as CFBD's data
+covers every game in it, not only when cfbfastR's lagging `completed` flag
+says so (that lag cost about 86 calls in September), and never with a game
+missing. Removing the completeness rule fails 1 of 18; ignoring a missing
+team's row fails 1.
+
 Sabotage-checked when written (PYTHONDONTWRITEBYTECODE=1): capping at the
 per-run ceiling only (ignoring the month) fails 4 of 15; dropping the count
 from the no-schedule return fails 1; ignoring the seed fails 1; rebuilding the
@@ -143,8 +149,72 @@ def test_the_week_cache_fetch_keeps_the_count():
           out.get("cfbd_usage") == {"2026-09": 91}, out.get("cfbd_usage"))
 
 
+class _CFBDStub:
+    """Answers /ppa/games and /games/teams from the real cached 2026 rows in
+    cfb_form_fixture.json, in CFBD's own row shapes, and counts the calls."""
+
+    def __init__(self, fx, drop=None):
+        self.fx, self.drop, self.calls = fx, drop, 0
+
+    def get(self, url, params=None, headers=None, timeout=None):
+        self.calls += 1
+        fx, drop = self.fx, self.drop
+        if url.endswith("/ppa/games"):
+            body = [r for w in fx["ppa"] for r in cfb._ppa_rows_from_cache(fx["ppa"][w])
+                    if not (drop and str(r["gameId"]) == drop[0] and r["team"] == drop[1])]
+        else:
+            body = cfb._stats_rows_from_cache(fx["games_teams"].get(str(params["week"]), {}))
+
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return body
+        return R()
+
+
+def test_a_week_is_cached_when_its_data_is_complete():
+    # THE LAG: cfbfastR's `completed` flag runs days behind, so a week whose
+    # CFBD data is already complete was re-fetched on every run until the flag
+    # caught up (weeks 1-3 of 2026 each cached 5-6 days late). EDIT (one
+    # field, in one row): one week-3 game's `completed` is set to FALSE --
+    # exactly what the live flag read for days after the game -- so week 3 is
+    # NOT final by the flag. Its start date is left real, and the staleness
+    # fallback is 14 days, so the flag rule alone cannot cache it.
+    import json as _json
+    fx = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cfb_form_fixture.json")))
+    sched = [dict(r) for r in fx["schedule"]]
+    lagging = next(r for r in sched if int(r["week"]) == 3)
+    lagging["completed"] = "FALSE"
+    today = "2026-09-26"
+
+    def run(drop=None):
+        cfb.allow_cfbd_calls(10)
+        stub = _CFBDStub(fx, drop)
+        saved_final = cfb.final_regular_weeks
+        cfb.final_regular_weeks = lambda rows, today_=None: saved_final(rows, today)
+        try:
+            _, _, cache = _with_env(lambda: cfb.fetch_team_form_data(stub, 2026, [1, 2, 3], sched, {}))
+        finally:
+            cfb.final_regular_weeks = saved_final
+            cfb.reset_cfbd_budget()
+        return cache
+
+    check("the edit really makes week 3 non-final by the flag",
+          3 not in cfb.final_regular_weeks(sched, today), sorted(cfb.final_regular_weeks(sched, today)))
+    cache = run()
+    check("a week whose CFBD data covers every game is cached despite the lagging flag",
+          "3" in cache["ppa"]["2026"] and "3" in cache["games_teams"]["2026"], sorted(cache["ppa"]["2026"]))
+    gid = str(lagging["game_id"])
+    cache = run(drop=(gid, lagging["home_team"]))
+    check("but one team's missing PPA row keeps the week out of the cache (never cached with a game missing)",
+          "3" not in cache["ppa"]["2026"], sorted(cache["ppa"]["2026"]))
+
+
 def main():
-    for fn in (test_the_week_cache_fetch_keeps_the_count,
+    for fn in (test_a_week_is_cached_when_its_data_is_complete,
+               test_the_week_cache_fetch_keeps_the_count,
                test_the_month_starts_from_the_measured_seed,
                test_the_run_is_capped_by_what_the_month_has_left,
                test_the_count_is_recorded_and_bounded,

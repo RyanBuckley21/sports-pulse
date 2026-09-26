@@ -274,10 +274,13 @@ Open, in rough priority:
   2023-25 the first time, 0 after (the cache is kept). Only if it names a
   winner does production switch, in its own PR that also re-derives CFB's
   weights with `cfb_backtest.py`.
-- **Finished CFB weeks reach the cache 5-6 days late**, so each is re-fetched
-  (2 calls) on every run until then: about 40 calls a week instead of 2. It's
-  affordable (about 170-200 a month) but it's waste; why the week isn't
-  "final" sooner hasn't been diagnosed.
+- **Finished CFB weeks used to reach the cache 5-6 days late** because
+  cfbfastR's `completed` flag lags the games by days; every run in between
+  re-fetched the week (about 40 CFBD calls a week instead of 2). Since
+  2026-09-26 a week is also cached as soon as its CFBD data covers every game
+  (`fetchers.cfb._week_complete`). Check the per-run "CFBD calls" log line
+  after the next Saturday to confirm the drop; how quickly CFBD itself
+  publishes a week hasn't been measured.
 - The one-off CLV review routine fires 2026-10-22.
 
 Operational items to keep in mind:

@@ -130,8 +130,10 @@ MAX_CFBD_CALLS_PER_RUN = 12
 # /ppa/games + 1 /games/teams = 2 calls a run. Runs in those windows (counted
 # from "Regenerate stats" commits): 9 + 15 + 19 = 43, so about 86 calls by
 # 09-25. That is the seed below. The healthy-path figure in the comment above
-# (2 calls per week) assumed a week is cached the day it ends; in practice the
-# lag makes it about 40 calls per week, roughly 170-200 a month in October.
+# (2 calls per week) assumed a week is cached the day it ends; the lag made it
+# about 40 calls a week. Since 2026-09-26 a week is also cached as soon as its
+# CFBD data covers every game (_week_complete), which should bring it back
+# toward 2 -- the per-run log line is where that shows up.
 #
 # 700 leaves 300 of the 1,000 tier for work outside this pipeline -- the CFB
 # backtest (about 18 calls a season, cached after one run) and the logo
@@ -799,6 +801,30 @@ def _stats_rows_to_cache(games):
     return out
 
 
+def _week_complete(entry, games):
+    """Whether a fetched week's cache entry covers every FBS-vs-FBS game
+    scheduled in it, with a value for both teams.
+
+    WHY, measured 2026-09-26. final_regular_weeks trusts cfbfastR's
+    `completed` flag, and that file updates days behind the games: weeks
+    1/2/3 of 2026 reached the cache on 09-12/09-19/09-25, 5-6 days after
+    their last games, and week 4's Thursday game (Liberty @ Coastal Carolina,
+    09-24) still read completed=FALSE a day and a half later. Every run in
+    between re-fetched the week (2 CFBD calls), about 86 calls in September.
+    The flag was only ever a proxy for "the data is all in"; this asks the
+    data directly. It can only cache a week EARLIER than before, never with
+    a game missing, because it requires every game."""
+    if not games or not entry:
+        return False
+    for gid, (home, away) in games.items():
+        teams = entry.get(gid) or {}
+        for name in (home, away):
+            v = teams.get(name)
+            if v is None or (isinstance(v, list) and any(x is None for x in v)):
+                return False
+    return True
+
+
 def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     """(ppa_rows, team_stat_rows, updated_cache) for `weeks`, serving whatever
     the cache already holds and fetching only what it does not.
@@ -824,7 +850,11 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     if not weeks:
         return [], [], cache
     final = final_regular_weeks(schedule_rows)
-    week_of = {gid: entry["week"] for gid, entry in fbs_matchup_index(schedule_rows).items()}
+    fbs_index = fbs_matchup_index(schedule_rows)
+    week_of = {gid: entry["week"] for gid, entry in fbs_index.items()}
+    games_by_week = {}
+    for gid, entry in fbs_index.items():
+        games_by_week.setdefault(entry["week"], {})[str(gid)] = (entry.get("home"), entry.get("away"))
 
     ppa_cached = dict(_cache_bucket(cache, "ppa", season))
     stats_cached = dict(_cache_bucket(cache, "games_teams", season))
@@ -848,7 +878,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
         for w in missing_ppa:
             entry = split.get(w) or {}
             ppa_rows.extend(_ppa_rows_from_cache(entry))
-            if w in final and entry:
+            if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
                 ppa_cached[str(w)] = entry
 
     for w in missing_stats:
@@ -856,7 +886,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
                           {"year": season, "week": w, "seasonType": "regular"}) or []
         entry = _stats_rows_to_cache(fresh)
         stat_rows.extend(_stats_rows_from_cache(entry))
-        if w in final and entry:
+        if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
             stats_cached[str(w)] = entry
 
     # Single-season retention: a stale season's weeks can never be needed

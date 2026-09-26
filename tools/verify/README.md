@@ -496,6 +496,14 @@ the count from the no-schedule return fails 1, ignoring the seed fails 1, and
 rebuilding the cache from scratch in `fetch_team_form_data` fails 1.
 No network: a stub session stands in, and the env flags are set inside the test.
 
+Since 2026-09-26 it also covers **caching a week when its data is complete**
+(`fetchers.cfb._week_complete`). cfbfastR's `completed` flag runs days behind,
+so weeks 1-3 of 2026 each reached the cache 5-6 days late, and every run in
+between re-fetched them. A real week 3 whose flag is edited to read incomplete
+(the one documented edit) must be cached from its complete CFBD data. With one
+team's row dropped, it must not be. Removing the rule fails 1 of 18, and
+ignoring the missing row fails 1.
+
 ```
 python3 -m tools.verify.test_opponent_adjust  # from the repo root
 ```
