@@ -118,6 +118,31 @@ CFBD_KEY_ENV = "CFBD_API_KEY"
 # prints an Actions error annotation.
 MAX_CFBD_CALLS_PER_RUN = 12
 
+# A MONTHLY BUDGET, because the per-run ceiling above cannot stop a month from
+# running dry: at 12 calls x 4 daily runs it allows 1,440 a month. Counted
+# calls are kept in the committed cache (data/boxscores.json, cfb partition,
+# `cfbd_usage`: {"YYYY-MM": n}) by the only workflow that spends them.
+#
+# MEASURED SPEND, 2026-09-26. No run logged its CFBD calls before this, so
+# September was reconstructed from the cache's own commit history. Each
+# finished week reached the cache 5-6 days after its last game (weeks 1/2/3
+# cached 09-12/09-19/09-25), and every run in between re-fetched it: 1 bulk
+# /ppa/games + 1 /games/teams = 2 calls a run. Runs in those windows (counted
+# from "Regenerate stats" commits): 9 + 15 + 19 = 43, so about 86 calls by
+# 09-25. That is the seed below. The healthy-path figure in the comment above
+# (2 calls per week) assumed a week is cached the day it ends; in practice the
+# lag makes it about 40 calls per week, roughly 170-200 a month in October.
+#
+# 700 leaves 300 of the 1,000 tier for work outside this pipeline -- the CFB
+# backtest (about 18 calls a season, cached after one run) and the logo
+# scripts -- which this counter cannot see. At the budget the fetcher degrades
+# exactly as at the per-run ceiling: no new form, the slate still builds, and
+# the run says so. The month key is UTC; CFBD's reset date is not documented
+# here, so a calendar month is assumed.
+CFBD_MONTHLY_BUDGET = 700
+CFBD_USAGE_SEED = {"2026-09": 86}
+CFBD_USAGE_KEY = "cfbd_usage"
+
 # ONLY A RUN THAT PERSISTS THE CACHE MAY SPEND CALLS.
 #
 # This is the rule that actually keeps the monthly quota safe, and the ceiling
@@ -142,7 +167,7 @@ MAX_CFBD_CALLS_PER_RUN = 12
 # goes stale rather than the quota going to zero. That is the right way round.
 CFBD_ALLOW_ENV = "CFB_ALLOW_CFBD"
 
-_cfbd_calls = {"count": 0, "capped": False}
+_cfbd_calls = {"count": 0, "capped": False, "limit": MAX_CFBD_CALLS_PER_RUN, "month_used": 0}
 
 
 # Values of CFBD_ALLOW_ENV that mean "no", beyond empty/unset. Without these,
@@ -169,6 +194,52 @@ def reset_cfbd_budget():
     fresh allowance per slate rather than tripping on the previous one."""
     _cfbd_calls["count"] = 0
     _cfbd_calls["capped"] = False
+    _cfbd_calls["limit"] = MAX_CFBD_CALLS_PER_RUN
+    _cfbd_calls["month_used"] = 0
+
+
+def _usage_month(now=None):
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return now.strftime("%Y-%m")
+
+
+def cfbd_month_used(cache, month=None):
+    """Calls this pipeline has spent in `month` (default: this UTC month),
+    from the committed cache, falling back to the measured seed."""
+    month = month or _usage_month()
+    usage = (cache or {}).get(CFBD_USAGE_KEY) or {}
+    if month in usage:
+        return int(usage[month])
+    return int(CFBD_USAGE_SEED.get(month, 0))
+
+
+def apply_monthly_budget(cache, month=None):
+    """Cap this run's calls at what the month has left. Called right after
+    reset_cfbd_budget in build_game_entities."""
+    used = cfbd_month_used(cache, month)
+    _cfbd_calls["month_used"] = used
+    _cfbd_calls["limit"] = max(0, min(MAX_CFBD_CALLS_PER_RUN, CFBD_MONTHLY_BUDGET - used))
+    return used
+
+
+def record_cfbd_usage(cache, month=None):
+    """The cache with this run's calls added to the month's count, plus a log
+    line -- the first CFBD accounting any run has printed. Keeps only the
+    current and previous month so the committed file cannot grow."""
+    month = month or _usage_month()
+    cache = dict(cache or {})
+    usage = dict(cache.get(CFBD_USAGE_KEY) or {})
+    total = _cfbd_calls["month_used"] + _cfbd_calls["count"]
+    usage[month] = total
+    keep = sorted(usage)[-2:]
+    cache[CFBD_USAGE_KEY] = {k: usage[k] for k in keep}
+    print("insights(games): cfb CFBD calls -- this run {}, {} so far {} of a {} budget "
+          "(tier 1,000)".format(_cfbd_calls["count"], month, total, CFBD_MONTHLY_BUDGET))
+    if total >= 0.8 * CFBD_MONTHLY_BUDGET and os.environ.get("GITHUB_ACTIONS"):
+        print("::warning title=CFBD monthly budget::{} CFBD calls used in {} of a {} "
+              "budget. At the budget, CFB form stops updating until the month turns."
+              .format(total, month, CFBD_MONTHLY_BUDGET))
+    return cache
 
 
 def cfbd_calls_used():
@@ -271,15 +342,22 @@ def _cfbd_get(session, path, params):
                   "holds; form for uncached weeks is absent."
                   .format(CFBD_ALLOW_ENV))
         return []
-    if _cfbd_calls["count"] >= MAX_CFBD_CALLS_PER_RUN:
+    if _cfbd_calls["count"] >= _cfbd_calls["limit"]:
         if not _cfbd_calls["capped"]:
             _cfbd_calls["capped"] = True
-            msg = ("CFBD call ceiling reached ({} calls) -- refusing further requests this "
-                   "run. Team form for the remaining weeks will be absent, so affected "
-                   "signals drop out and those games score with less (or no) lean. This "
-                   "means the per-week cache in data/boxscores.json is not being committed; "
-                   "check that daily-stats-and-grade.yml is still running."
-                   .format(MAX_CFBD_CALLS_PER_RUN))
+            if _cfbd_calls["limit"] < MAX_CFBD_CALLS_PER_RUN:
+                msg = ("CFBD monthly budget reached ({} of {} used this month) -- refusing "
+                       "further requests. Team form for uncached weeks will be absent until "
+                       "the month turns; affected games score on the margin fallback tiers."
+                       .format(_cfbd_calls["month_used"] + _cfbd_calls["count"],
+                               CFBD_MONTHLY_BUDGET))
+            else:
+                msg = ("CFBD call ceiling reached ({} calls) -- refusing further requests this "
+                       "run. Team form for the remaining weeks will be absent, so affected "
+                       "signals drop out and those games score with less (or no) lean. This "
+                       "means the per-week cache in data/boxscores.json is not being committed; "
+                       "check that daily-stats-and-grade.yml is still running."
+                       .format(MAX_CFBD_CALLS_PER_RUN))
             print("insights(games): cfb " + msg)
             if os.environ.get("GITHUB_ACTIONS"):
                 print("::error title=CFB CFBD call ceiling hit::" + msg)
@@ -1103,6 +1181,35 @@ def _team_ref(school):
             "name": school, "color": meta.get("color")}
 
 
+# EARLY-SEASON WARNING, display only. Every CFB signal is a raw season-to-date
+# average -- NOT adjusted for opponent strength -- and early on it rests on a
+# game or two. On 2026-09-25 that made App State (+440 at NC State) an 85: two
+# games each, App State's against East Carolina and Charlotte, NC State's
+# against Virginia and Vanderbilt. The measured cost of that early read, from
+# data/cfb_backtest_2023_2025.jsonl (regular season, scores 40-79): weeks 2-4
+# hit 66.2% (86/130, +/-8.1), weeks 8+ hit 78.0% (326/418, +/-4.0). By week 4
+# most teams have three or fewer FBS games, hence the bar. Whether to ADJUST
+# for opponents is a model question for a backtest; this only says so.
+EARLY_FORM_MAX_GAMES = 3
+
+
+def early_form_note(away_abbr, home_abbr, away_form, home_form, lean_side):
+    """One line when the lean rests on EARLY_FORM_MAX_GAMES or fewer FBS games
+    for either team, else None. Only when the calibrated PPA tier actually
+    produced the lean (both teams have form) and there IS a lean -- a
+    fallback-tier game is scored off margins, and a no-lean game has nothing
+    to warn about."""
+    if lean_side not in (away_abbr, home_abbr):
+        return None
+    ag, hg = (away_form or {}).get("games"), (home_form or {}).get("games")
+    if not ag or not hg:
+        return None
+    if min(ag, hg) > EARLY_FORM_MAX_GAMES:
+        return None
+    return ("Early read: {} {} FBS game{}, {} {} -- stats are not adjusted for "
+            "opponent strength".format(away_abbr, ag, "" if ag == 1 else "s", home_abbr, hg))
+
+
 def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=None):
     import cfb_signals
 
@@ -1147,6 +1254,8 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
                       "side": m["side"], "score": m["score"]} for m in raw_markets]
     if standout:
         standout = {**standout, "market": market_labels.get(standout.get("bet_type"), standout.get("bet_type"))}
+    early = early_form_note(away_ref["abbr"], home_ref["abbr"], away_form, home_form,
+                            (betting.get("moneyline") or {}).get("side"))
 
     return {
         "gamePk": str(g["game_id"]),  # generic "id" field, reused across sports -- see generate_insights._build_games_section
@@ -1177,6 +1286,8 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
         "betting_signals": betting,
         "standout": standout,
         "best_angle": standout,
+        # Display only -- see early_form_note. Rendered like NFL's QB warning.
+        "caution_notes": [early] if early else None,
         "signal_scores": signal_scores,
         "compare": None,     # no insights_ui.cfb.compare_sets config
         "est_total": None,   # moneyline only, v1
@@ -1405,11 +1516,12 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     NFL's: one bad game is logged and skipped, the rest of the slate builds.
     """
     reset_cfbd_budget()
+    apply_monthly_budget(boxscore_cache)
     session = requests.Session()
     season = season_for_date(game_date)
     schedule = get_schedule(session, season)
     if not schedule:
-        return {}, {}, []
+        return {}, record_cfbd_usage({}), []
 
     # A WINDOW, NOT ONE DATE, for the same reason fetchers/epl uses one: college
     # football is a Saturday sport. A single-date slate leaves the Games tab
@@ -1452,7 +1564,10 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
               "serving the first ({} games, {} dropped to the following week)"
               .format(start, window_end, len(games), len(spanned) - len(games)))
     if not games:
-        return {}, {}, []
+        # No CFBD call has been made yet, but the month's count is kept anyway:
+        # this return replaces the committed cfb cache, and dropping the count
+        # here would hand the next run a fresh budget it has not got.
+        return {}, record_cfbd_usage({}), []
 
     fbs_index = fbs_matchup_index(schedule)
     max_reg_week = max_regular_week(fbs_index)
@@ -1580,4 +1695,4 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
         team_entities.extend(build_cfb_team_entities(
             config, schedule_form, schools, prior_form, season - 1))
 
-    return entities, form_cache, []
+    return entities, record_cfbd_usage(form_cache), []

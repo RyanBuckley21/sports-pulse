@@ -935,7 +935,7 @@ async function betsChecks(browser, base) {
      wide.doc <= 0 && wide.rows === 0, JSON.stringify(wide));
   // The row renders the builder's availability notes. Injected into the live
   // page's own board rather than the fixture, whose games had no QB on the
-  // report: this pins the renderer, test_availability_notes pins the data.
+  // report: this pins the renderer, test_caution_notes pins the data.
   const warn = await p.evaluate(() => {
     const root = document.getElementById("insightsRoot");
     return fetch("data.json").then((r) => r.json()).then((d) => {

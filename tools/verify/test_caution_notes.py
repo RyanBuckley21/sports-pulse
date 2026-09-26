@@ -1,6 +1,7 @@
-"""Regression tests for the starting-QB availability note (display only).
+"""Regression tests for the card's caution notes (display only): the NFL
+starting-QB injury note and, since 2026-09-26, the CFB early-read note.
 
-Run: python3 -m tools.verify.test_availability_notes   (from the repo root)
+Run: python3 -m tools.verify.test_caution_notes   (from the repo root)
 
 WHY THIS IS PINNED. The NFL model's QB override (fetchers.nfl.qb_out) acts only
 on an official Out or Doubtful. On 2026-09-25 Caleb Williams had missed every
@@ -21,6 +22,12 @@ with a game status (the qb_out bar) fails 3 of 12; noting Full participation
 fails 2; dropping the field from generate_insights' games allowlist fails 1;
 dropping it from the bets row fails 1.
 
+THE CFB EARLY-READ NOTE (fetchers.cfb.early_form_note) says a lean rests on
+three or fewer FBS games per team, unadjusted for opponent -- App State +440 at
+NC State, 2026-09-25, two games each. Measured cost of that early read in the
+2023-25 CFB backtest: weeks 2-4 hit 66.2% vs 78.0% from week 8 (scores 40-79).
+Sabotage: moving the bar from "three or fewer" to "two or fewer" fails 1 of 17.
+
 The fixture (nfl_injuries_fixture.json) is REAL: nflverse's injuries_2026.csv
 as published 2026-09-25 12:43Z, five rows trimmed to the fields read, no edits.
 """
@@ -31,7 +38,7 @@ import sys
 
 import bet_board
 import generate_insights
-from fetchers import nfl
+from fetchers import cfb, nfl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROWS = json.load(open(os.path.join(HERE, "nfl_injuries_fixture.json")))["rows"]
@@ -83,27 +90,43 @@ def test_it_reaches_the_card_and_the_bets_row_only():
            "betting_signals": {"moneyline": {"side": "CHI", "score": 62, "flags": []}},
            "standout": {"bet_type": "moneyline", "side": "CHI", "score": 62},
            "odds": {"home_ml": 185, "away_ml": -225, "provider": "DraftKings"},
-           "availability_notes": notes}
+           "caution_notes": notes}
     games = generate_insights._build_games_section({"g": ent}, {})
-    check("the Games card receives the notes", games[0].get("availability_notes") == notes, games[0].get("availability_notes"))
+    check("the Games card receives the notes", games[0].get("caution_notes") == notes, games[0].get("caution_notes"))
     board = bet_board.build({"g": ent}, {"betting_signals": {"nfl": {"standout_threshold": 50}}}, [])
     legs = board["straight"] + board["parlay"]
     check("the Bets row carries them beside the price", legs and legs[0]["notes"] == notes, legs)
     # Display only: the scoring module never names the field.
     import nfl_signals
     src = open(nfl_signals.__file__).read()
-    check("nothing in nfl_signals reads the notes", "availability_notes" not in src)
+    check("nothing in nfl_signals reads the notes", "caution_notes" not in src)
+
+
+def test_the_cfb_early_read_note():
+    # The inputs are build_team_form's output shape; the game counts are the
+    # real ones for App State @ NC State on 2026-09-25 (two FBS games each).
+    two, four = {"games": 2}, {"games": 4}
+    n = cfb.early_form_note("APP", "NCSU", two, two, "APP")
+    check("CFB: a lean on two games each gets the early-read note",
+          n == "Early read: APP 2 FBS games, NCSU 2 -- stats are not adjusted for opponent strength", n)
+    check("  three games is still early (the bar is three or fewer)",
+          cfb.early_form_note("APP", "NCSU", {"games": 3}, four, "APP") is not None)
+    check("  four games each is not", cfb.early_form_note("APP", "NCSU", four, four, "APP") is None)
+    check("  no lean, no note", cfb.early_form_note("APP", "NCSU", two, two, "No clear lean") is None)
+    check("  a team with no form (a fallback-tier game) gets no PPA note",
+          cfb.early_form_note("APP", "NCSU", {}, two, "APP") is None)
 
 
 def main():
-    for fn in (test_the_notes, test_it_reaches_the_card_and_the_bets_row_only):
+    for fn in (test_the_notes, test_it_reaches_the_card_and_the_bets_row_only,
+               test_the_cfb_early_read_note):
         fn()
     if failures:
         print("FAILED (%d of %d checks)" % (len(failures), checks))
         for f in failures:
             print("  " + f)
         return 1
-    print("availability notes: all %d checks pass" % checks)
+    print("caution notes: all %d checks pass" % checks)
     return 0
 
 

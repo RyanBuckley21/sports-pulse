@@ -343,11 +343,12 @@
     // confident games -- a reader has to be able to tell "the model saw nothing"
     // from "the model saw plenty and it costs -8000". The Signal Scores below
     // still render: the opinion is intact, it is only the bet that is gone.
-    // WHO MIGHT NOT PLAY, above the pick it could undo. The Signal Score acts
-    // on an official Out/Doubtful only; this shows what it cannot yet act on
-    // -- on 2026-09-25, CHI's Caleb Williams missing every practice while CHI
-    // was the model's side. Sits ABOVE the Best Angle so it is read first.
-    availability: function (notes) {
+    // CAUTIONS THE SCORE CANNOT ACT ON, above the pick they could undo: an NFL
+    // starter who missed practice before any official Out (CHI's Caleb
+    // Williams, 2026-09-25), or a CFB lean built on a game or two with no
+    // opponent adjustment (App State +440, same day). Sits ABOVE the Best
+    // Angle so it is read first.
+    cautions: function (notes) {
       if (!notes || !notes.length) return "";
       return '<div class="avail-notes" role="note">' + notes.map(function (n) {
         return '<div class="avail-note">' + esc(n) + "</div>";
@@ -618,7 +619,7 @@
         Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
-        Cards.availability(g.availability_notes) +
+        Cards.cautions(g.caution_notes) +
         Cards.bestAngle(g.best_angle, away, home, g.price) +
         Cards.noBet(g.no_bet) +
         section("How This Result Splits",
