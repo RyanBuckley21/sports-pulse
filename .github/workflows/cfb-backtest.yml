@@ -1,9 +1,13 @@
 name: CFB opponent-adjustment backtest
 
-# Runs cfb_opponent_backtest.py: does adjusting CFB team form for opponent
-# strength pick winners better than the raw averages production uses? See that
+# mode=compare runs cfb_opponent_backtest.py: does adjusting CFB team form for
+# opponent strength pick winners better than raw season averages? See that
 # script's docstring for the method and the decision rule, fixed before any
-# result was seen.
+# result was seen. (Run 36212369418, 2026-09-26: k=4 won; production switched.)
+#
+# mode=refit runs cfb_backtest.py --form adjusted: the #46 calibration
+# procedure on the adjusted form, which is where config.yaml's CFB weights
+# come from. A raw-form run goes beside it as the parity check.
 #
 # MANUAL ONLY (workflow_dispatch). It needs the CFBD key, which exists only as
 # a repository secret, so it cannot run from a session container.
@@ -27,6 +31,11 @@ on:
       seasons:
         description: "Seasons, space-separated, oldest first (walk-forward: each tested after training on the earlier ones)"
         default: "2023 2024 2025"
+      mode:
+        description: "compare = raw vs opponent-adjusted form (walk-forward); refit = re-derive the weights on adjusted form (cfb_backtest.py --form adjusted), with a raw run beside it as the parity check"
+        type: choice
+        options: [compare, refit]
+        default: compare
       cfbd_budget:
         description: "Hard cap on CFBD calls this run (about 17 per uncached season)"
         default: "60"
@@ -76,15 +85,30 @@ jobs:
           CFB_ALLOW_CFBD: "1"
           SEASONS: ${{ inputs.seasons }}
           BUDGET: ${{ inputs.cfbd_budget }}
+          MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
           mkdir -p .cache/cfb_backtest out
           # Word-splitting SEASONS is intended (validated above).
-          python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" \
-            --cache-dir .cache/cfb_backtest --report out/report.md
-          python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget 0 \
-            --cache-dir .cache/cfb_backtest --production-weights --report out/report_production_weights.md
-          cat out/report.md out/report_production_weights.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "$MODE" = refit ]; then
+            # The #46 procedure exactly (scoring_margin excluded for
+            # collinearity, threshold picked automatically), once per form. The
+            # raw run must reproduce the shipped weights; if it does not, the
+            # adjusted numbers beside it are not comparable. Both read the same
+            # cache, so the second costs 0 calls.
+            for form in raw adjusted; do
+              python3 cfb_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" --form "$form" \
+                --exclude scoring_margin --cache-dir .cache/cfb_backtest \
+                --out "out/cfb_backtest_$form.jsonl" | tee "out/refit_$form.txt"
+              { echo "## cfb_backtest.py --form $form"; echo '```'; cat "out/refit_$form.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            done
+          else
+            python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" \
+              --cache-dir .cache/cfb_backtest --report out/report.md
+            python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget 0 \
+              --cache-dir .cache/cfb_backtest --production-weights --report out/report_production_weights.md
+            cat out/report.md out/report_production_weights.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       # Saved only after a successful run, so a failed or partial collection
       # never becomes the cached copy.

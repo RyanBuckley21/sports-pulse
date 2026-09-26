@@ -1013,17 +1013,29 @@ def build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week):
     return out
 
 
-# OPPONENT ADJUSTMENT -- an EXPERIMENT, not used by production. build_team_form
-# averages each team's raw PPA against whoever it happened to play, so a team
-# that has faced two weak defenses looks like a strong offense. On 2026-09-25
-# that made App State an 85 at NC State on two games each (App State's against
-# East Carolina and Charlotte, NC State's against Virginia and Vanderbilt).
-# This is the standard fix: each game's offense is credited for the defense it
-# faced, and each game's defense for the offense it faced, solved jointly.
-# Whether it beats the raw numbers is what cfb_opponent_backtest.py measures;
-# production switches to it only if that backtest says so.
+# OPPONENT ADJUSTMENT -- PRODUCTION'S CFB FORM since 2026-09-26.
+# build_team_form averages each team's raw PPA against whoever it happened to
+# play, so a team that has faced two weak defenses looks like a strong offense.
+# On 2026-09-25 that made App State an 85 at NC State on two games each (App
+# State's against East Carolina and Charlotte, NC State's against Virginia and
+# Vanderbilt). This is the standard fix: each game's offense is credited for
+# the defense it faced, and each game's defense for the offense it faced,
+# solved jointly.
+#
+# WHY IT SHIPPED. cfb_opponent_backtest.py (run 36212369418) tested raw
+# against k=1/2/4 walk-forward on 2023-25 (1,606 test games), under a decision
+# rule fixed before any result was seen: raw pooled AUC 0.7071; k=4 +0.0084,
+# paired 95% CI [+0.0003, +0.0161], the variant with the highest training AUC
+# among those whose CI clears zero. In weeks 2-5 alone (492 games) no variant's
+# interval cleared zero, which is why the "Early read" note stays. The weights
+# were then re-derived on this form (config.yaml's cfb block).
 OPP_ADJ_MAX_SWEEPS = 1000
 OPP_ADJ_TOLERANCE = 1e-9
+# The ridge penalty production uses, in games. The backtest's pick (see
+# above); cfb_backtest.py's --shrink defaults to it, so the weights and the
+# live form are fit at the same value. Changing it means re-running both
+# backtests and re-deriving the weights, not editing this number.
+FORM_SHRINK_GAMES = 4.0
 
 
 def build_team_form_adjusted(ppa_rows, team_stat_rows, fbs_index, upto_week, shrink_games=2.0):
@@ -1263,22 +1275,27 @@ def _display_signals(away, home, away_form, home_form,
     The two margin rows are FALLBACKS IN THE SAME ORDER cfb_signals scores in,
     and only one of the three tiers is ever shown. A card listing "last season"
     beside live PPA would suggest the lean used both; it never does, and the
-    card has to say which one it did use."""
+    card has to say which one it did use.
+
+    The PPA rows say "opp-adj" because since 2026-09-26 they are opponent-
+    adjusted ratings (build_team_form_adjusted), not raw averages: a reader
+    checking one against a published raw PPA table would otherwise see a
+    number that does not match and no reason why."""
     signals = []
     ao, ho = away_form.get("off_ppa"), home_form.get("off_ppa")
     if ao is not None or ho is not None:
         if (ao if ao is not None else float("-inf")) > (ho if ho is not None else float("-inf")):
-            signals.append({"label": "{} Off PPA/play".format(away), "value": _fmt_ppa(ao), "tone": "pos"})
+            signals.append({"label": "{} Off PPA/play, opp-adj".format(away), "value": _fmt_ppa(ao), "tone": "pos"})
         else:
-            signals.append({"label": "{} Off PPA/play".format(home), "value": _fmt_ppa(ho), "tone": "pos"})
+            signals.append({"label": "{} Off PPA/play, opp-adj".format(home), "value": _fmt_ppa(ho), "tone": "pos"})
     ad, hd = away_form.get("def_ppa_allowed"), home_form.get("def_ppa_allowed")
     if ad is not None or hd is not None:
         # Lower allowed is better, so the HIGHER (worse) one is the side
         # worth flagging -- same framing rule NFL's def EPA chip uses.
         if (hd if hd is not None else float("-inf")) > (ad if ad is not None else float("-inf")):
-            signals.append({"label": "{} Def PPA/play allowed".format(home), "value": _fmt_ppa(hd), "tone": "neg"})
+            signals.append({"label": "{} Def PPA/play allowed, opp-adj".format(home), "value": _fmt_ppa(hd), "tone": "neg"})
         else:
-            signals.append({"label": "{} Def PPA/play allowed".format(away), "value": _fmt_ppa(ad), "tone": "neg"})
+            signals.append({"label": "{} Def PPA/play allowed, opp-adj".format(away), "value": _fmt_ppa(ad), "tone": "neg"})
     if not signals:
         # Both sides on one row, LABELLED WITH THE WINDOW IT CAME FROM -- the
         # whole point of these rows is that the reader can tell at a glance
@@ -1326,15 +1343,20 @@ def _team_ref(school):
             "name": school, "color": meta.get("color")}
 
 
-# EARLY-SEASON WARNING, display only. Every CFB signal is a raw season-to-date
-# average -- NOT adjusted for opponent strength -- and early on it rests on a
+# EARLY-SEASON WARNING, display only. Early on every CFB signal rests on a
 # game or two. On 2026-09-25 that made App State (+440 at NC State) an 85: two
 # games each, App State's against East Carolina and Charlotte, NC State's
 # against Virginia and Vanderbilt. The measured cost of that early read, from
-# data/cfb_backtest_2023_2025.jsonl (regular season, scores 40-79): weeks 2-4
-# hit 66.2% (86/130, +/-8.1), weeks 8+ hit 78.0% (326/418, +/-4.0). By week 4
-# most teams have three or fewer FBS games, hence the bar. Whether to ADJUST
-# for opponents is a model question for a backtest; this only says so.
+# data/cfb_backtest_2023_2025.jsonl (regular season, raw form, scores 40-79):
+# weeks 2-4 hit 66.2% (86/130, +/-8.1), weeks 8+ hit 78.0% (326/418, +/-4.0).
+# By week 4 most teams have three or fewer FBS games, hence the bar.
+#
+# STILL SHOWN NOW THAT FORM IS OPPONENT-ADJUSTED (2026-09-26). The adjustment
+# helps over a whole season, but in weeks 2-5 cfb_opponent_backtest.py
+# measured no gain it could tell from zero (492 games; every variant's paired
+# AUC interval spanned zero, run 36212369418): two games against two
+# opponents is too little to rate either side, adjusted or not. The note says
+# the sample is thin, which is still true.
 EARLY_FORM_MAX_GAMES = 3
 
 
@@ -1351,8 +1373,8 @@ def early_form_note(away_abbr, home_abbr, away_form, home_form, lean_side):
         return None
     if min(ag, hg) > EARLY_FORM_MAX_GAMES:
         return None
-    return ("Early read: {} {} FBS game{}, {} {} -- stats are not adjusted for "
-            "opponent strength".format(away_abbr, ag, "" if ag == 1 else "s", home_abbr, hg))
+    return ("Early read: {} {} FBS game{}, {} {} -- too few games to rate either "
+            "side reliably, even adjusted for opponents".format(away_abbr, ag, "" if ag == 1 else "s", home_abbr, hg))
 
 
 def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=None):
@@ -1756,7 +1778,11 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # game would redo the same full-season pass dozens of times.
     form_by_cutoff, margins_by_cutoff, season_margin_by_cutoff = {}, {}, {}
     for cutoff in sorted(cutoffs):
-        form_by_cutoff[cutoff] = build_team_form(ppa_rows, team_stats, fbs_index, cutoff)
+        # Opponent-adjusted since 2026-09-26 (FORM_SHRINK_GAMES); config.yaml's
+        # cfb weights and scales were fit on exactly this form, and would be
+        # mis-sized for the raw one (adjusted gaps are about half as wide).
+        form_by_cutoff[cutoff] = build_team_form_adjusted(
+            ppa_rows, team_stats, fbs_index, cutoff, shrink_games=FORM_SHRINK_GAMES)
         margins_by_cutoff[cutoff] = build_scoring_margins(schedule, fbs_index, cutoff)
         # The SIGNAL version of the same number, floored at three games. Free:
         # it reads the schedule already in memory, so the fallback tier costs

@@ -992,19 +992,42 @@ betting_signals:
   # a flat prior is the honest starting point and makes the calibration
   # delta interpretable.
   cfb:
-    # BACKTEST-DERIVED, replacing the flat placeholders this block shipped
-    # with. Measured by cfb_backtest.py over 2023-2025, FBS-vs-FBS only,
-    # 2,398 games (2,264 regular season + 134 postseason). Same procedure
-    # NFL's calibration used: point-biserial r of each signal's
-    # direction-corrected raw gap against the real home-win outcome, 95%
-    # bootstrap CI, reliability-proportional (r^2) weights renormalized over
-    # survivors, thresholds read off a sensitivity table.
+    # RE-DERIVED 2026-09-26 ON OPPONENT-ADJUSTED FORM (PRODUCTION'S SINCE THAT
+    # DAY: fetchers.cfb.build_team_form_adjusted, k = FORM_SHRINK_GAMES = 4).
+    # Measured by `cfb_backtest.py --form adjusted --exclude scoring_margin`
+    # over 2023-2025, FBS-vs-FBS only, 2,398 games (2,264 regular season + 134
+    # postseason), from the CFB backtest workflow's saved cache (run
+    # 36217082158, mode=refit, 0 CFBD calls). Same procedure as #46 and NFL's
+    # calibration: point-biserial r of each signal's direction-corrected raw
+    # gap against the real home-win outcome, 95% bootstrap CI (2,000),
+    # reliability-proportional (r^2) weights renormalized over survivors,
+    # threshold read off a sensitivity table.
     #
-    # Measured performance at these values: 76.9% combined / 77.4% regular
-    # season, outcome-graded against real final scores, versus a 58.6% naive
-    # always-pick-home baseline over the same games. Per-season spread was
-    # 77.5 / 76.1 / 77.2, which is the main reason to believe this is not
-    # fitted noise.
+    # Measured at these values: 78.3% combined (752/961) / 78.8% regular season
+    # (732/929), outcome-graded against real final scores, versus a 58.6% naive
+    # always-pick-home baseline over the same games. Per season 80.4 / 76.4 /
+    # 78.1. Postseason 62.5% on 32 picks, too few to read.
+    #
+    # WHY NOT THE #46 NUMBERS, AND THE PARITY CHECK THAT SAYS SO. The same run
+    # re-fit RAW form beside the adjusted one, to reproduce #46 (0.5193 /
+    # 0.3154 / 0.1654, scales 0.1686 / 0.1568, 76.9% on 901). It did not:
+    # 0.5031 / 0.3396 / 0.1573, scales 0.1950 / 0.1839, 76.0% on 959. The code
+    # is not why -- build_team_form is byte-identical to #46's, the /ppa/games
+    # call is the same one bulk request, and turnover_diff (a different
+    # endpoint) reproduced exactly, r 0.1891 and scale 1.3292. What differs is
+    # the PPA CFBD now serves for 2023-25 against what it served on
+    # 2026-08-16; #46 kept no copy, so that is inferred, not diffed. Production
+    # reads today's values, so the #46 scales were already mis-sized for them.
+    # On today's data, same procedure, same threshold:
+    #
+    #                  raw re-fit        adjusted re-fit
+    #   combined       76.0% (729/959)   78.3% (752/961)
+    #   2023/24/25     77.1/75.1/75.9    80.4/76.4/78.1
+    #
+    # That table is IN-SAMPLE (weights fit on the games they grade). The
+    # out-of-sample case for the switch is cfb_opponent_backtest.py's
+    # walk-forward (see FORM_SHRINK_GAMES in fetchers/cfb.py): a small, real
+    # gain over a season, none measurable in weeks 2-5.
     #
     # THIS IS A MONEYLINE HIT RATE, NOT A PROFITABILITY CLAIM. No odds, line
     # or price data enters this repo anywhere. CFB moneyline picks concentrate
@@ -1016,16 +1039,15 @@ betting_signals:
     # evidence as months of graded live picks; MLB's constants took several
     # rounds of real production measurement to settle, and these have had
     # none. Known gaps, all flagged rather than assumed away: no ceiling
-    # correction (weights are raw r^2), pairwise rather than multivariate
-    # collinearity testing, and no shrinkage (a week-2 team's one-game form
-    # is weighted like a week-12 team's).
+    # correction (weights are raw r^2) and pairwise rather than multivariate
+    # collinearity testing. (The third, "no shrinkage", is closed: the
+    # adjusted form pulls every rating toward the league mean by k=4 games.)
     #
-    # 40, up from the deliberately near-zero placeholder of 1. Picked as the
-    # most selective candidate still leaving at least a third of games
-    # gradeable: coverage falls monotonically as the threshold rises (t>=0
-    # 68.3% on 1,788 picks; t>=40 76.9% on 901; t>=70 85.4% on 280), so this
-    # trades volume for precision at the point the curve is still cheap. A
-    # judgment call, not a measurement.
+    # 40, unchanged by the 2026-09-26 re-fit, which picked it again by the same
+    # rule: the most selective candidate still leaving at least a third of
+    # games gradeable. On the adjusted form: t>=0 68.0% on 1,824 picks; t>=40
+    # 78.3% on 961 (40.1% of games); t>=50 81.4% on 724 (30.2%, under the
+    # floor); t>=70 84.8% on 315. A judgment call, not a measurement.
     min_threshold: 40
     standout_threshold: 40
     # THE BETTABILITY CAP -- the most a price may need before its pick stops
@@ -1057,14 +1079,16 @@ betting_signals:
     # only. It will read lower than the 77.3% that preceded it and mean more --
     # 48% of those 44 picks were games decided by 21+ points.
     max_break_even: 0.9091
-    # MEASURED dispersion -- the stdev of each signal's own raw home-away gap
-    # across all 2,398 games, replacing the round-number guesses. turnover_gap
-    # moved most (0.50 -> 1.3292, 2.7x): college turnover margins swing far
-    # wider than the placeholder assumed, so the old scale was saturating the
-    # tanh on ordinary games.
+    # MEASURED dispersion -- the stdev of each signal's own home-away gap
+    # across all 2,398 games. The two PPA scales roughly HALVED in the
+    # 2026-09-26 re-fit (0.1686 -> 0.0915, 0.1568 -> 0.0850) because
+    # opponent-adjusted ratings are shrunk toward the league mean, so their
+    # gaps are narrower. That is why weights and form must change together:
+    # adjusted gaps under the old scales would read as half-strength leans.
+    # turnover_gap is untouched by the adjustment (and reproduced exactly).
     scales:
-      off_ppa_gap: 0.1686
-      def_ppa_gap: 0.1568
+      off_ppa_gap: 0.0915
+      def_ppa_gap: 0.0850
       turnover_gap: 1.3292
       # Cold start only. Stdev of the prior-season margin gap over the 733
       # week-1/2 games across 2016-2025 that have a prior season on both sides
@@ -1118,16 +1142,20 @@ betting_signals:
       prior_margin: 8.568
     bet_types:
       # Moneyline only in v1. Weights are reliability-proportional over the
-      # three signals that survived measurement: r = 0.3351 / 0.2612 / 0.1891
-      # respectively, all with 95% CIs clearing zero comfortably, so nothing
-      # was auto-dropped (unlike NFL, which lost rest_diff that way).
+      # three signals that survived measurement, on the adjusted form: r =
+      # 0.3532 [0.3182, 0.3873] / 0.3068 [0.2692, 0.3431] / 0.1891 [0.1500,
+      # 0.2284], all clearing zero comfortably, so nothing was auto-dropped
+      # (unlike NFL, which lost rest_diff that way). Adjustment raised both
+      # PPA signals' r (raw re-fit: 0.3381 / 0.2778) and moved weight toward
+      # defense; the three are also less entangled (off x def 0.22 -> 0.20).
       #
       # scoring_margin is STILL ABSENT, but for a reason now measured for CFB
       # rather than inherited from NFL. It has the HIGHEST individual r of any
       # candidate (0.4155) and on reliability alone would take the largest
-      # weight -- but it is collinear with all three others (r = +0.70 off_ppa,
-      # +0.69 def_ppa_allowed, +0.54 turnover_diff), where those three are only
-      # mildly correlated with each other (0.18-0.34). A points differential is
+      # weight -- but it is collinear with all three others (r = +0.65 off_ppa,
+      # +0.64 def_ppa_allowed, +0.54 turnover_diff on the adjusted form; +0.70
+      # / +0.69 / +0.54 in #46), where those three are only mildly correlated
+      # with each other (0.20-0.38). A points differential is
       # definitionally a summary of what the other three measure, and
       # reliability-proportional weighting assumes independent evidence.
       # Grading both variants settles it: including it changes the outcome by
@@ -1135,9 +1163,9 @@ betting_signals:
       # unweighted in each game's `context` (fetchers/cfb.build_scoring_margins)
       # so a future backtest can re-test it cheaply.
       moneyline:
-        off_ppa: 0.5193
-        def_ppa_allowed: 0.3154
-        turnover_diff: 0.1654
+        off_ppa: 0.4899
+        def_ppa_allowed: 0.3696
+        turnover_diff: 0.1405
         # FALLBACK TIERS, never co-present with the three above OR with each
         # other -- cfb_signals.score_game picks the first tier that has
         # anything and blanks the rest, so each of these is always the only

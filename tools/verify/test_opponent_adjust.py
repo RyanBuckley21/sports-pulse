@@ -17,6 +17,7 @@ form changes, and every way it can be wrong is quiet:
   * THE AUC MUST BE RIGHT, ties included (a no-lean game scores 0).
   * THE CFBD CAP MUST HOLD: the backtest names its own cap and no call goes
     past it.
+  * PRODUCTION MUST SCORE ON THE FORM THE WEIGHTS WERE FIT ON.
 
 Sabotage-checked when written (PYTHONDONTWRITEBYTECODE=1), 21 checks: flipping
 the sign of the opponent correction fails 1 (App State's defense); letting week
@@ -24,6 +25,14 @@ W into a week-W form fails 1; training on the test season fails 1; ignoring
 tied ranks in the AUC fails 1; resampling the two variants separately fails 1.
 That last one first passed undetected, because a perfectly separating lean
 scores AUC 1.0 on every resample; the check now uses noisy leans.
+
+SINCE 2026-09-26 PRODUCTION SCORES ON THE ADJUSTED FORM, and config.yaml's
+weights and scales were fit on it, so the suite also runs the real
+build_game_entities on the fixture's week-3 slate and pins that the live PPA
+values are build_team_form_adjusted's at FORM_SHRINK_GAMES (26 checks).
+Sabotage-checked the same way: production back on build_team_form fails 2;
+production at shrink 2.0 instead of the constant fails 1; dropping "opp-adj"
+from the card label fails 1; cfb_backtest.py defaulting to --form raw fails 1.
 
 The fixture (cfb_form_fixture.json) is REAL: the cfbfastR 2026 schedule for
 weeks 1-3 (FBS-vs-FBS regular season) and the CFBD rows for those weeks
@@ -168,9 +177,45 @@ def test_collection_carries_every_variant():
           all(set(r["variant_inputs"]) == set(cob.VARIANTS) for r in recs))
 
 
+def test_production_scores_on_the_adjusted_form():
+    # THE SWITCH (2026-09-26). config.yaml's cfb weights and scales were fit on
+    # build_team_form_adjusted at FORM_SHRINK_GAMES; production scoring on raw
+    # form under them would run green and read every PPA gap about twice as
+    # wide as it was calibrated for. So the real builder is run on a real
+    # week-3 slate (2026-09-19) and its values compared with each form. The
+    # schedule is stubbed to the fixture's; weeks 1-2 come from the fixture as
+    # the committed cache, so no CFBD request is made (CFB_ALLOW_CFBD unset).
+    import yaml
+    saved = cfb.get_schedule
+    cfb.get_schedule = lambda session, season: [dict(r) for r in FX["schedule"]]
+    try:
+        cache = {"ppa": {"2026": FX["ppa"]}, "games_teams": {"2026": FX["games_teams"]}}
+        ents, _, _ = cfb.build_game_entities(yaml.safe_load(open("config.yaml")), "2026-09-19", cache)
+    finally:
+        cfb.get_schedule = saved
+    adj = cfb.build_team_form_adjusted(PPA, STATS, INDEX, 3, shrink_games=cfb.FORM_SHRINK_GAMES)
+    raw = cfb.build_team_form(PPA, STATS, INDEX, 3)
+    rows = [(e["context"], side) for e in ents.values() for side in ("away", "home")
+            if e["context"].get(side + "_off_ppa") is not None]
+    check("the week-3 slate builds with PPA form", len(rows) >= 50, len(rows))
+    check("every team's live off/def PPA is the ADJUSTED form's, at FORM_SHRINK_GAMES",
+          all(c[side + "_off_ppa"] == adj[c[side + "_team"]]["off_ppa"]
+              and c[side + "_def_ppa_allowed"] == adj[c[side + "_team"]]["def_ppa_allowed"]
+              for c, side in rows))
+    check("  and not the raw averages (they differ for most teams)",
+          sum(c[side + "_off_ppa"] != raw[c[side + "_team"]]["off_ppa"] for c, side in rows) > len(rows) // 2)
+    labels = [s["label"] for e in ents.values() for s in (e.get("signals") or []) if "PPA" in s["label"]]
+    check("the card says the PPA numbers are opponent-adjusted",
+          labels and all(l.endswith("opp-adj") for l in labels), labels[:2])
+    args = cfb_backtest.parse_args([])
+    check("cfb_backtest.py fits on production's form by default (the weights' parity)",
+          (args.form, args.shrink) == ("adjusted", cfb.FORM_SHRINK_GAMES), (args.form, args.shrink))
+
+
 def main():
     for fn in (test_the_adjustment, test_it_stays_point_in_time, test_the_harness,
-               test_the_cfbd_cap, test_collection_carries_every_variant):
+               test_the_cfbd_cap, test_collection_carries_every_variant,
+               test_production_scores_on_the_adjusted_form):
         fn()
     if failures:
         print("FAILED (%d of %d checks)" % (len(failures), checks))

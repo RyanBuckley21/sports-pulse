@@ -108,7 +108,7 @@ def test_the_cfb_early_read_note():
     two, four = {"games": 2}, {"games": 4}
     n = cfb.early_form_note("APP", "NCSU", two, two, "APP")
     check("CFB: a lean on two games each gets the early-read note",
-          n == "Early read: APP 2 FBS games, NCSU 2 -- stats are not adjusted for opponent strength", n)
+          n == "Early read: APP 2 FBS games, NCSU 2 -- too few games to rate either side reliably, even adjusted for opponents", n)
     check("  three games is still early (the bar is three or fewer)",
           cfb.early_form_note("APP", "NCSU", {"games": 3}, four, "APP") is not None)
     check("  four games each is not", cfb.early_form_note("APP", "NCSU", four, four, "APP") is None)

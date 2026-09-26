@@ -19,7 +19,7 @@ commits its own state back to the repo.
 | Tab | What it is | Source in `data.json` |
 | --- | --- | --- |
 | **Who's Hot** (`#/`) | Player leaderboards ranked by raw production over a rolling window (last 10 G, last 20 G, active streaks, …). Descriptive only: no weights and nothing graded. | `sports.<sport>.categories` |
-| **Games** (`#/games`) | Today's slate per league: a 0–100 **Pulse** ("how notable"), key signals, and **Signal Scores**, which give a 0–100 conviction toward a named side for each market. The strongest market that clears the bar is the game's **standout** (the pick). Where a price exists it shows the price, break-even, spread and line movement as labelled rows. Cards warn in amber about things the score can't act on: an NFL starting QB on the injury report short of an official Out ("did not practice", "Questionable"), and a CFB lean resting on three or fewer games per team with no opponent adjustment ("Early read"). Both are display only and never move the score. | `insights.games` |
+| **Games** (`#/games`) | Today's slate per league: a 0–100 **Pulse** ("how notable"), key signals, and **Signal Scores**, which give a 0–100 conviction toward a named side for each market. The strongest market that clears the bar is the game's **standout** (the pick). Where a price exists it shows the price, break-even, spread and line movement as labelled rows. Cards warn in amber about things the score can't act on: an NFL starting QB on the injury report short of an official Out ("did not practice", "Questionable"), and a CFB lean resting on three or fewer games per team ("Early read": opponent adjustment doesn't measurably help that early). Both are display only and never move the score. | `insights.games` |
 | **Bets** (`#/bets`) | Every priced moneyline lean today across sports, split into **parlay pieces** (−200 or shorter) and **straight bets**. Each row shows what its price needs and the model's graded record at similar prices, marked unproven under 30 picks. A tray prices the legs you tap into a parlay. Rows carry the same caution notes as the cards. Built by `bet_board.py`. | `insights.bets` |
 | **Players** (`#/players`) | Top players by Pulse, with signals and matchup angles. | `insights.players` |
 | **Teams** (`#/teams`) | Team Pulse profiles built from the same slate. | `insights.teams` |
@@ -84,6 +84,12 @@ config.yaml ───▶ │ SPORT_FETCHERS[sport].fetch()  → normalizer.norma
   `min_threshold` a market reports "No clear lean". The shared math lives in
   `signal_core.py`; each sport keeps its own wiring in `<sport>_signals.py`
   (MLB's is `betting_signals.py`).
+- **CFB form is opponent-adjusted** (since 2026-09-26). A team's offense and
+  defense PPA are rated against the defenses and offenses it actually faced
+  (a ridge fit, `fetchers.cfb.build_team_form_adjusted`, k=4), not raw season
+  averages, and CFB's weights were re-derived on that form. Card chips say
+  "opp-adj". It beat raw form in a walk-forward backtest over 2023-25, by a
+  small margin and not measurably in weeks 2-5.
 - **Cold-start tiers.** NFL, CFB and EPL fall back to schedule-derived margins
   (this season, then last season) when calibrated form doesn't exist yet, as in
   week 1 or the start of a new EPL season. A fallback is never mixed into a
@@ -169,7 +175,7 @@ change touches locally first anyway.
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
 | `tests.yml` | pull requests, push to `main` | Every Python suite (network blocked), a clean-tree check, then the browser suite | nothing (`contents: read`) |
-| `cfb-backtest.yml` | manual only | `cfb_opponent_backtest.py`: does opponent-adjusted CFB form beat raw? Walk-forward, paired; CFBD capped per run, cache kept so reruns are free | nothing (`contents: read`); report in the job summary and an artifact |
+| `cfb-backtest.yml` | manual only | `mode=compare`: `cfb_opponent_backtest.py`, opponent-adjusted CFB form vs raw, walk-forward and paired. `mode=refit`: `cfb_backtest.py` re-derives CFB's weights on the adjusted form, with a raw run beside it as a parity check. CFBD capped per run; cache kept so reruns are free | nothing (`contents: read`); report in the job summary and an artifact |
 
 GitHub's scheduler is routinely hours late and sometimes drops runs. That's why
 there are several redundant cron entries and cross-workflow alarms, and why

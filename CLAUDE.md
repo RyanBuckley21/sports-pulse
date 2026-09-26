@@ -41,7 +41,7 @@ python3 -m tools.verify.test_mlb_odds            # MLB price join (names, double
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
-python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form + the walk-forward, paired backtest harness
+python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
@@ -261,19 +261,30 @@ Open, in rough priority:
 - **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
   nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
 - **EPL has no captured prices**, so no Bets rows.
-- **CFB stats are not adjusted for opponent strength**, and early in the season
-  that inflates leans (App State +440 at NC State scored 85 on two games each;
-  weeks 2-4 hit 66% vs 78% from week 8 in the 2023-25 backtest). Cards say so
-  ("Early read", `fetchers.cfb.early_form_note`). The candidate fix,
-  `fetchers.cfb.build_team_form_adjusted` (a ridge-regularised offense/defense
-  fit; production does not use it), is measured by `cfb_opponent_backtest.py`:
-  walk-forward (train on earlier seasons, test on the next), paired bootstrap
-  on AUC, decision rule fixed in its docstring. **Run it from the Actions tab**
-  ("CFB opponent-adjustment backtest", manual): the CFBD key is a GitHub
-  secret, not available in a session container. About 51 CFBD calls for
-  2023-25 the first time, 0 after (the cache is kept). Only if it names a
-  winner does production switch, in its own PR that also re-derives CFB's
-  weights with `cfb_backtest.py`.
+- ~~CFB stats are not adjusted for opponent strength~~ **Closed 2026-09-26:**
+  production CFB form is `fetchers.cfb.build_team_form_adjusted` at
+  `FORM_SHRINK_GAMES` (4), picked by `cfb_opponent_backtest.py`'s pre-set rule
+  (walk-forward 2023-25, k=4 AUC +0.0084, CI [+0.0003, +0.0161]), and CFB's
+  weights and scales were re-derived on it (`cfb_backtest.py --form adjusted`,
+  78.3% on 961 at t>=40 in-sample; the derivation is in config.yaml). The gain
+  is small and **not measurable in weeks 2-5**, so the "Early read" note
+  (`fetchers.cfb.early_form_note`) stays. Form and weights move together:
+  adjusted PPA gaps are about half as wide as raw, so a change to one without
+  re-fitting the other halves or doubles every CFB score. `test_opponent_adjust`
+  pins that production and `cfb_backtest.py` use the same form.
+- **CFBD revises historical PPA, silently.** The 2026-09-26 re-fit's parity run
+  (raw form, #46's exact procedure) did not reproduce #46's weights: same code,
+  same games, turnovers identical to four decimals, but PPA r and scales moved
+  (off_ppa scale 0.1686 -> 0.1950). The only input left is the PPA CFBD serves
+  for 2023-25, which appears to have changed since 2026-08-16. So any CFB
+  calibration drifts under a fixed config. Re-run the refit
+  (`cfb-backtest.yml`, `mode=refit`) before trusting old CFB numbers, and
+  compare its raw run against the last one. Note that the workflow's cache
+  pins the data it first fetched, so it will not see a later revision unless
+  its cache key changes.
+- `cfb_backtest.py` could not reach its weights from #59 (fallback tiers in
+  `SIGNAL_SPECS`, no scale) until 2026-09-26. Fixed; the fallback tiers are
+  now left out of its measurement and scored with config.yaml's own scales.
 - **Finished CFB weeks used to reach the cache 5-6 days late** because
   cfbfastR's `completed` flag lags the games by days; every run in between
   re-fetched the week (about 40 CFBD calls a week instead of 2). Since
