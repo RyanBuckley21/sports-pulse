@@ -42,6 +42,7 @@ MEASURED_SPECS.
 """
 
 import argparse
+import functools
 import json
 import os
 import random
@@ -73,7 +74,16 @@ DEFAULT_EXCLUDED = set()
 # a direction -- it reads raw gaps, never the tanh/scale path -- so a
 # candidate outside SIGNAL_SPECS can be measured without being scoreable.
 # Grading with it weighted is a different matter; see _register_candidate.
-MEASURED_SPECS = dict(cfb_signals.SIGNAL_SPECS)
+#
+# THE FALLBACK TIERS ARE NOT MEASURED HERE. season_margin and prior_margin
+# joined SIGNAL_SPECS in #59, after this script's pass: their inputs come from
+# the schedule alone and were calibrated over ten seasons by their own
+# schedule-derived measurement (see config.yaml's scales block), and this
+# script never builds them into a record. Left in, they measured n=0 and
+# derive_calibration raised KeyError looking for a placeholder scale -- this
+# script could not reach its weights at all from #59 until 2026-09-26.
+MEASURED_SPECS = {k: v for k, v in cfb_signals.SIGNAL_SPECS.items()
+                  if k not in cfb_signals._FALLBACK_SIGNALS}
 MEASURED_SPECS["scoring_margin"] = {
     "home_key": "home_scoring_margin", "away_key": "away_scoring_margin",
     "scale_key": "margin_gap", "favors": "higher",
@@ -88,6 +98,17 @@ _PLACEHOLDER_SCALES = {
     "off_ppa_gap": 0.10, "def_ppa_gap": 0.10, "turnover_gap": 0.50,
     "margin_gap": 10.1113,
 }
+
+# The fallback tiers' own measured scales, read from config.yaml rather than
+# copied, so grading here scores them exactly as production does. They carry
+# no weight in a calibrated record (score_game never mixes a tier into the PPA
+# lean), so they cannot move a number this script reports; build_candidate_config
+# needs them only because it writes a scale for every SIGNAL_SPECS entry.
+def _fallback_scales():
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yaml")) as f:
+        shipped = yaml.safe_load(f)["betting_signals"][SPORT_KEY]["scales"]
+    return {name: shipped[cfb_signals.SIGNAL_SPECS[name]["scale_key"]]
+            for name in cfb_signals._FALLBACK_SIGNALS}
 
 
 # --------------------------------------------------------------------------- #
@@ -254,6 +275,18 @@ def collect_game_records(session, seasons, cache_dir=None, form_variants=None):
     for season in seasons:
         records.extend(collect_season(session, season, cache_dir, form_variants))
     return records
+
+
+def use_variant(records, name):
+    """Make a form variant THE form: each record's `inputs` (what is scored)
+    and the scored half of `measure_inputs` (what is measured) become the
+    variant's. The measured-only scoring_margin keys are kept as they were --
+    they come from the schedule, not the form table."""
+    out = []
+    for rec in records:
+        v = rec["variant_inputs"][name]
+        out.append({**rec, "inputs": v, "measure_inputs": {**rec["measure_inputs"], **v}})
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -424,6 +457,7 @@ def _register_candidate(name):
 def build_candidate_config(weights, scales, min_threshold, standout_threshold):
     for name in weights:
         _register_candidate(name)
+    scales = {**_fallback_scales(), **scales}
     return {
         "betting_signals": {
             SPORT_KEY: {
@@ -559,6 +593,15 @@ def parse_args(argv=None):
     p.add_argument("--cache-dir", default=None,
                    help="optional dir memoizing raw API responses across runs")
     p.add_argument("--out", default=OUTPUT_PATH)
+    # WHICH FORM THE CALIBRATION IS FIT ON. "raw" is fetchers.cfb.build_team_form
+    # (season averages, what #46 fit on); "adjusted" is
+    # build_team_form_adjusted at --shrink, the opponent-adjusted form
+    # cfb_opponent_backtest.py selected (k=4, 2026-09-26). Same games, same
+    # cutoffs, same fetch -- only the form table differs -- so the procedure
+    # below is byte-for-byte the one that produced the shipped weights.
+    p.add_argument("--form", choices=("raw", "adjusted"), default="raw")
+    p.add_argument("--shrink", type=float, default=4.0,
+                   help="shrink_games for --form adjusted (default 4, the backtest's pick)")
     # A season needs about 17 CFBD calls, over the live pipeline's per-run
     # ceiling of 12, so without a named cap this script stopped part-way
     # through its first season. Counted against the 300-call reserve (see
@@ -574,8 +617,15 @@ def main(argv=None):
     t0 = time.time()
     cfb.allow_cfbd_calls(args.cfbd_budget)
 
-    print("cfb_backtest: collecting {} ...".format(args.seasons))
-    records = collect_game_records(session, args.seasons, args.cache_dir)
+    print("cfb_backtest: collecting {} (form: {}) ...".format(
+        args.seasons, args.form if args.form == "raw" else "adjusted, k={}".format(args.shrink)))
+    if args.form == "adjusted":
+        variants = {"adjusted": functools.partial(cfb.build_team_form_adjusted,
+                                                  shrink_games=args.shrink)}
+        records = use_variant(collect_game_records(session, args.seasons, args.cache_dir, variants),
+                              "adjusted")
+    else:
+        records = collect_game_records(session, args.seasons, args.cache_dir)
     n_reg = sum(1 for r in records if not r["postseason"])
     n_post = sum(1 for r in records if r["postseason"])
     print("cfb_backtest: {} games collected ({} regular season, {} postseason) in {:.0f}s\n"
