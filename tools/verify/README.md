@@ -455,10 +455,10 @@ real games from the store at `f99baf7` plus real ledger rows. Its two edits are
 listed in its `_edits` field.
 
 ```
-python3 -m tools.verify.test_availability_notes   # from the repo root
+python3 -m tools.verify.test_caution_notes   # from the repo root
 ```
 
-**`test_availability_notes`** covers the starting-QB warning, added
+**`test_caution_notes`** covers the starting-QB warning, added
 2026-09-25, on the card and the Bets row. The model's QB override acts only on
 an official Out or Doubtful, so a starter who missed every practice before
 Saturday's final report looked healthy. Caleb Williams was that case on
@@ -471,6 +471,30 @@ Sabotage counts: noting only rows with a game status fails 3 of 12, noting
 Full practice fails 2, and dropping the field from the games section or the
 Bets row fails 1 each. `nfl_injuries_fixture.json` is five real rows from
 nflverse's `injuries_2026.csv` as published 2026-09-25, unedited.
+
+Since 2026-09-26 it also covers the **CFB early-read note**
+(`fetchers.cfb.early_form_note`): a lean resting on three or fewer FBS games per
+team, unadjusted for opponent, says so. App State +440 at NC State (two games
+each) was the case. The 2023-25 backtest puts the cost at 66% in weeks 2-4 vs
+78% from week 8. Moving the bar to "two or fewer" fails 1 of the suite's 17.
+
+```
+python3 -m tools.verify.test_cfbd_budget      # from the repo root
+```
+
+**`test_cfbd_budget`** covers the CFBD monthly budget, added 2026-09-26. The
+only guard before it was 12 calls per run, which allows 1,440 a month. Pinned:
+- A month with no stored count starts from the measured seed (86 for
+  September 2026), not zero.
+- At the budget, no further request goes out, and the refused calls return
+  empty rather than raising.
+- The count survives every return path, including the early ones that replace
+  the committed cfb cache.
+
+Sabotage counts: capping at the per-run ceiling only fails 4 of 15, dropping
+the count from the no-schedule return fails 1, ignoring the seed fails 1, and
+rebuilding the cache from scratch in `fetch_team_form_data` fails 1.
+No network: a stub session stands in, and the env flags are set inside the test.
 
 ## What it cannot cover
 

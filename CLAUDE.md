@@ -39,7 +39,8 @@ python3 -m tools.verify.test_season_phase        # postseason/preseason picks ke
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
-python3 -m tools.verify.test_availability_notes  # NFL starting-QB injury-report warning (display only)
+python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
+python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
@@ -111,7 +112,12 @@ days later in an append-only file. Most have a test. Don't weaken them.
    `daily-stats-and-grade.yml`, because only that workflow commits
    `data/boxscores.json` (the per-(season, week) cache). Setting it anywhere else,
    especially in `deploy-pages.yml`, burns roughly 1,400 of the 1,000 monthly
-   free calls.
+   free calls. Since 2026-09-26 the pipeline also counts its calls per UTC month
+   (`cfbd_usage` in `data/boxscores.json`) and stops at `CFBD_MONTHLY_BUDGET`
+   (700), leaving 300 for the backtest and logo scripts, which it can't see.
+   Every run logs `CFBD calls -- this run N, YYYY-MM so far M of a 700 budget`.
+   Any CFBD work outside the pipeline must count its own calls against that
+   300.
 10. **`deploy-pages.yml` keeps `permissions: contents: read`.** Write access is
     scoped to the workflows that commit. The push-deploy throttle uses
     `actions/cache` precisely to avoid needing write access.
@@ -252,6 +258,17 @@ Open, in rough priority:
 - **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
   nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
 - **EPL has no captured prices**, so no Bets rows.
+- **CFB stats are not adjusted for opponent strength**, and early in the season
+  that inflates leans (App State +440 at NC State scored 85 on two games each;
+  weeks 2-4 hit 66% vs 78% from week 8 in the 2023-25 backtest). Cards say so
+  ("Early read", `fetchers.cfb.early_form_note`). An adjusted model needs a
+  walk-forward backtest, run with `--cache-dir` so reruns are free: about 18
+  CFBD calls a season, so about 55 for 2023-25, well inside the 300 reserve.
+  The CFBD key is a GitHub secret, not available in a session container.
+- **Finished CFB weeks reach the cache 5-6 days late**, so each is re-fetched
+  (2 calls) on every run until then: about 40 calls a week instead of 2. It's
+  affordable (about 170-200 a month) but it's waste; why the week isn't
+  "final" sooner hasn't been diagnosed.
 - The one-off CLV review routine fires 2026-10-22.
 
 Operational items to keep in mind:

@@ -19,8 +19,8 @@ commits its own state back to the repo.
 | Tab | What it is | Source in `data.json` |
 | --- | --- | --- |
 | **Who's Hot** (`#/`) | Player leaderboards ranked by raw production over a rolling window (last 10 G, last 20 G, active streaks, …). Descriptive only: no weights and nothing graded. | `sports.<sport>.categories` |
-| **Games** (`#/games`) | Today's slate per league: a 0–100 **Pulse** ("how notable"), key signals, and **Signal Scores**, which give a 0–100 conviction toward a named side for each market. The strongest market that clears the bar is the game's **standout** (the pick). Where a price exists it shows the price, break-even, spread and line movement as labelled rows. NFL cards warn in amber when a starting QB is on the injury report short of an official Out ("did not practice", "Questionable"); the warning is display only and does not move the score. | `insights.games` |
-| **Bets** (`#/bets`) | Every priced moneyline lean today across sports, split into **parlay pieces** (−200 or shorter) and **straight bets**. Each row shows what its price needs and the model's graded record at similar prices, marked unproven under 30 picks. A tray prices the legs you tap into a parlay. NFL rows carry the same QB injury warning as the cards. Built by `bet_board.py`. | `insights.bets` |
+| **Games** (`#/games`) | Today's slate per league: a 0–100 **Pulse** ("how notable"), key signals, and **Signal Scores**, which give a 0–100 conviction toward a named side for each market. The strongest market that clears the bar is the game's **standout** (the pick). Where a price exists it shows the price, break-even, spread and line movement as labelled rows. Cards warn in amber about things the score can't act on: an NFL starting QB on the injury report short of an official Out ("did not practice", "Questionable"), and a CFB lean resting on three or fewer games per team with no opponent adjustment ("Early read"). Both are display only and never move the score. | `insights.games` |
+| **Bets** (`#/bets`) | Every priced moneyline lean today across sports, split into **parlay pieces** (−200 or shorter) and **straight bets**. Each row shows what its price needs and the model's graded record at similar prices, marked unproven under 30 picks. A tray prices the legs you tap into a parlay. Rows carry the same caution notes as the cards. Built by `bet_board.py`. | `insights.bets` |
 | **Players** (`#/players`) | Top players by Pulse, with signals and matchup angles. | `insights.players` |
 | **Teams** (`#/teams`) | Team Pulse profiles built from the same slate. | `insights.teams` |
 
@@ -123,7 +123,7 @@ Useful environment variables:
 | Var | Effect |
 | --- | --- |
 | `SP_SKIP_INSIGHTS=1` | Belt-and-braces "no AI calls" (the AI prose path is already removed and disabled in config). |
-| `CFBD_API_KEY` | CollegeFootballData key. Free tier is **1,000 calls/month**. |
+| `CFBD_API_KEY` | CollegeFootballData key. Free tier is **1,000 calls/month**. The pipeline counts its own calls per month and stops at a 700 budget (`CFBD_MONTHLY_BUDGET` in `fetchers/cfb.py`), logging the running total on every run. |
 | `CFB_ALLOW_CFBD=1` | Allows CFBD network calls. **Only the daily workflow sets this**, because only it commits the cache. Leave it unset locally so you don't burn quota. |
 
 **Preview the site** (mirrors what `deploy-pages.yml` assembles):

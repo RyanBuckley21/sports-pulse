@@ -770,7 +770,7 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
     )
     betting = nfl_signals.score_game(config, "nfl", inputs, availability=availability)
     # Display only -- see qb_availability_note. Never reaches score_game.
-    availability_notes = [n for n in (
+    caution_notes = [n for n in (
         qb_availability_note(injuries, away_qb_id, away_qb_name, away, week),
         qb_availability_note(injuries, home_qb_id, home_qb_name, home, week)) if n]
     standout_threshold = ((config.get("betting_signals") or {}).get("nfl") or {}).get("standout_threshold", 50)
@@ -821,7 +821,7 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         "betting_signals": betting,
         "standout": standout,
         "best_angle": standout,
-        "availability_notes": availability_notes or None,
+        "caution_notes": caution_notes or None,
         "signal_scores": signal_scores,
         "compare": None,   # no insights_ui.nfl.compare_sets config -- degrades to no table, same as a missing sport block does today
         "est_total": None,  # no NFL total market yet (moneyline only, v1)
