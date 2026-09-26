@@ -124,7 +124,7 @@ Useful environment variables:
 | --- | --- |
 | `SP_SKIP_INSIGHTS=1` | Belt-and-braces "no AI calls" (the AI prose path is already removed and disabled in config). |
 | `CFBD_API_KEY` | CollegeFootballData key. Free tier is **1,000 calls/month**. The pipeline counts its own calls per month and stops at a 700 budget (`CFBD_MONTHLY_BUDGET` in `fetchers/cfb.py`), logging the running total on every run. |
-| `CFB_ALLOW_CFBD=1` | Allows CFBD network calls. **Only the daily workflow sets this**, because only it commits the cache. Leave it unset locally so you don't burn quota. |
+| `CFB_ALLOW_CFBD=1` | Allows CFBD network calls. **Only the daily workflow sets this** (it commits the cache), plus the manual, capped CFB backtest workflow. Leave it unset locally so you don't burn quota. |
 
 **Preview the site** (mirrors what `deploy-pages.yml` assembles):
 
@@ -169,6 +169,7 @@ change touches locally first anyway.
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
 | `tests.yml` | pull requests, push to `main` | Every Python suite (network blocked), a clean-tree check, then the browser suite | nothing (`contents: read`) |
+| `cfb-backtest.yml` | manual only | `cfb_opponent_backtest.py`: does opponent-adjusted CFB form beat raw? Walk-forward, paired; CFBD capped per run, cache kept so reruns are free | nothing (`contents: read`); report in the job summary and an artifact |
 
 GitHub's scheduler is routinely hours late and sometimes drops runs. That's why
 there are several redundant cron entries and cross-workflow alarms, and why
@@ -199,6 +200,7 @@ normalizer.py            common leaderboard record schema
 fetchers/                mlb, nfl, cfb, epl (+ archived worldcup)
 *_backtest.py            standalone calibration/backtests (never touch the live ledger)
 nfl_odds_backtest.py     NFL picks vs the closing line
+cfb_opponent_backtest.py CFB: opponent-adjusted form vs raw, walk-forward (run via cfb-backtest.yml)
 mlb_estimate_calibration.py  implied_total vs actual runs
 web/                     index.html shell, app.js (Who's Hot), insights/ (Games/Bets/Players/Teams)
 tools/verify/            test suites + real-data fixtures

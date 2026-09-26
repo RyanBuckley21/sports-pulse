@@ -496,6 +496,30 @@ the count from the no-schedule return fails 1, ignoring the seed fails 1, and
 rebuilding the cache from scratch in `fetch_team_form_data` fails 1.
 No network: a stub session stands in, and the env flags are set inside the test.
 
+```
+python3 -m tools.verify.test_opponent_adjust  # from the repo root
+```
+
+**`test_opponent_adjust`** covers the CFB opponent-adjustment experiment, added
+2026-09-26: `fetchers.cfb.build_team_form_adjusted` and the
+`cfb_opponent_backtest.py` harness whose verdict decides whether production's
+CFB form changes. Pinned:
+- The adjustment moves the right way on real data. App State, after East
+  Carolina and Charlotte, is rated as allowing more; NC State, after Virginia
+  and Vanderbilt, as scoring more.
+- It stays point-in-time: a week-W form never sees week W.
+- The harness is walk-forward (training strictly before testing) and paired.
+- The AUC handles ties (a no-lean game scores 0).
+- A backtest's own CFBD cap holds.
+
+Sabotage counts (21 checks): flipping the opponent correction's sign, leaking
+week W, training on the test season, ignoring tied ranks and resampling the
+two variants separately each fail 1. The unpaired sabotage first passed
+undetected, because a perfectly separating lean scores AUC 1.0 on every
+resample; the check now uses noisy leans. `cfb_form_fixture.json` is the real
+2026 schedule for weeks 1-3 and the CFBD rows for those weeks as
+`data/boxscores.json` cached them, unedited.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

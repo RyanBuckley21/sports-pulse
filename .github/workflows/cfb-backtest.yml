@@ -1,0 +1,102 @@
+name: CFB opponent-adjustment backtest
+
+# Runs cfb_opponent_backtest.py: does adjusting CFB team form for opponent
+# strength pick winners better than the raw averages production uses? See that
+# script's docstring for the method and the decision rule, fixed before any
+# result was seen.
+#
+# MANUAL ONLY (workflow_dispatch). It needs the CFBD key, which exists only as
+# a repository secret, so it cannot run from a session container.
+#
+# CFBD QUOTA. This is the one place besides daily-stats-and-grade.yml that
+# sets CFB_ALLOW_CFBD, and it is safe for three reasons:
+#   * a hard cap per run (--cfbd-budget, default 60; 2023-2025 needs about 51);
+#   * what it buys is kept: the backtest's --cache-dir is restored and saved
+#     with actions/cache, so a rerun of the same seasons costs 0 calls;
+#   * it is manual, never scheduled.
+# Its calls fall outside the live pipeline's monthly counter (which this job
+# cannot commit) and come out of the 300 that fetchers.cfb.CFBD_MONTHLY_BUDGET
+# (700 of the 1,000 tier) leaves in reserve. The report prints the count.
+#
+# PERMISSIONS: contents: read. It commits nothing; the report goes to the job
+# summary and an artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Seasons, space-separated, oldest first (walk-forward: each tested after training on the earlier ones)"
+        default: "2023 2024 2025"
+      cfbd_budget:
+        description: "Hard cap on CFBD calls this run (about 17 per uncached season)"
+        default: "60"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cfb-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # Inputs are validated before they reach a shell: digits and spaces only.
+      - name: Validate inputs
+        id: inputs
+        env:
+          SEASONS: ${{ inputs.seasons }}
+          BUDGET: ${{ inputs.cfbd_budget }}
+        run: |
+          set -euo pipefail
+          [[ "$SEASONS" =~ ^[0-9]{4}( [0-9]{4})*$ ]] || { echo "::error::seasons must be years separated by spaces"; exit 1; }
+          [[ "$BUDGET" =~ ^[0-9]{1,3}$ ]] || { echo "::error::cfbd_budget must be a number under 1000"; exit 1; }
+          echo "key=$(echo "$SEASONS" | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+
+      # One cache per season set. Completed seasons never change, so a hit is
+      # always safe to reuse.
+      - name: Restore CFBD cache
+        id: restore
+        uses: actions/cache/restore@v6
+        with:
+          path: .cache/cfb_backtest
+          key: cfb-backtest-v1-${{ steps.inputs.outputs.key }}
+
+      - name: Run the backtest
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          CFB_ALLOW_CFBD: "1"
+          SEASONS: ${{ inputs.seasons }}
+          BUDGET: ${{ inputs.cfbd_budget }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/cfb_backtest out
+          # Word-splitting SEASONS is intended (validated above).
+          python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget "$BUDGET" \
+            --cache-dir .cache/cfb_backtest --report out/report.md
+          python3 cfb_opponent_backtest.py --seasons $SEASONS --cfbd-budget 0 \
+            --cache-dir .cache/cfb_backtest --production-weights --report out/report_production_weights.md
+          cat out/report.md out/report_production_weights.md >> "$GITHUB_STEP_SUMMARY"
+
+      # Saved only after a successful run, so a failed or partial collection
+      # never becomes the cached copy.
+      - name: Save CFBD cache
+        if: ${{ success() && steps.restore.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: .cache/cfb_backtest
+          key: cfb-backtest-v1-${{ steps.inputs.outputs.key }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: cfb-opponent-backtest
+          path: out/
