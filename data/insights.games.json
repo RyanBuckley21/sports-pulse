@@ -23,7 +23,7 @@
       "odds": {
         "away_ml": 1500,
         "away_ml_open": 1400,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "UGA -24.5",
         "home_ml": -3600,
         "home_ml_open": -3200,
@@ -80,7 +80,7 @@
       "odds": {
         "away_ml": -180,
         "away_ml_open": -155,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "ALA -4.5",
         "home_ml": 150,
         "home_ml_open": 130,
@@ -137,7 +137,7 @@
       "odds": {
         "away_ml": -192,
         "away_ml_open": -130,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "FLA -4.5",
         "home_ml": 160,
         "home_ml_open": 110,
@@ -192,11 +192,11 @@
         "name": "South Carolina"
       },
       "odds": {
-        "away_ml": 160,
+        "away_ml": 154,
         "away_ml_open": 220,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "SC -3.5",
-        "home_ml": -192,
+        "home_ml": -185,
         "home_ml_open": -270,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -251,7 +251,7 @@
       "odds": {
         "away_ml": 225,
         "away_ml_open": 230,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "TENN -7.5",
         "home_ml": -278,
         "home_ml_open": -285,
@@ -444,18 +444,18 @@
         "name": "TCU"
       },
       "odds": {
-        "away_ml": -225,
+        "away_ml": -218,
         "away_ml_open": -198,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "BYU -6.5",
-        "home_ml": 185,
+        "home_ml": 180,
         "home_ml_open": 164,
         "moneyline_off": false,
         "provider": "DraftKings",
         "spread": 6.5,
         "spread_close": 6.5,
         "spread_open": 5.5,
-        "total": 52.5
+        "total": 51.5
       },
       "probables": null,
       "pulse": null,
@@ -503,7 +503,7 @@
       "odds": {
         "away_ml": 320,
         "away_ml_open": 340,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "HOU -11.5",
         "home_ml": -410,
         "home_ml_open": -440,
@@ -560,7 +560,7 @@
       "odds": {
         "away_ml": 230,
         "away_ml_open": 230,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "ARIZ -8.5",
         "home_ml": -285,
         "home_ml_open": -285,
@@ -614,7 +614,20 @@
         "color": "#CFB87C",
         "name": "Colorado"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": -800,
+        "away_ml_open": -800,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "TTU -14.5",
+        "home_ml": 550,
+        "home_ml_open": 550,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": 14.5,
+        "spread_close": 14.5,
+        "spread_open": 14.5,
+        "total": 50.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -711,7 +724,7 @@
       "odds": {
         "away_ml": 170,
         "away_ml_open": 170,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "VT -5.5",
         "home_ml": -205,
         "home_ml_open": -205,
@@ -765,7 +778,20 @@
         "color": "#EC2C2C",
         "name": "SMU"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": 1100,
+        "away_ml_open": 1100,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "SMU -21",
+        "home_ml": -2100,
+        "home_ml_open": -2100,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": -21.0,
+        "spread_close": -21.0,
+        "spread_open": -21.0,
+        "total": 56.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -856,7 +882,7 @@
       "odds": {
         "away_ml": -205,
         "away_ml_open": -310,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "LOU -5.5",
         "home_ml": 170,
         "home_ml_open": 250,
@@ -919,7 +945,7 @@
       "odds": {
         "away_ml": -1000,
         "away_ml_open": -360,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "MIA -17.5",
         "home_ml": 650,
         "home_ml_open": 285,
@@ -982,7 +1008,7 @@
       "odds": {
         "away_ml": -1800,
         "away_ml_open": -2400,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "ND -21.5",
         "home_ml": 1000,
         "home_ml_open": 1200,
@@ -1039,7 +1065,7 @@
       "odds": {
         "away_ml": 360,
         "away_ml_open": 360,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "WAKE -12.5",
         "home_ml": -470,
         "home_ml_open": -470,
@@ -1146,7 +1172,7 @@
       "odds": {
         "away_ml": -148,
         "away_ml_open": -118,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "UVA -3",
         "home_ml": 124,
         "home_ml_open": -102,
@@ -1200,7 +1226,20 @@
         "color": "#F96E1F",
         "name": "Illinois"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": 320,
+        "away_ml_open": 320,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "ILL -10",
+        "home_ml": -410,
+        "home_ml_open": -410,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": -10.0,
+        "spread_close": -10.0,
+        "spread_open": -10.0,
+        "total": 60.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -1247,7 +1286,7 @@
       "odds": {
         "away_ml": -650,
         "away_ml_open": -700,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "OSU -14",
         "home_ml": 470,
         "home_ml_open": 500,
@@ -1310,7 +1349,7 @@
       "odds": {
         "away_ml": -230,
         "away_ml_open": -340,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "MICH -6.5",
         "home_ml": 190,
         "home_ml_open": 270,
@@ -1373,7 +1412,7 @@
       "odds": {
         "away_ml": 410,
         "away_ml_open": 410,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "NEB -12.5",
         "home_ml": -550,
         "home_ml_open": -550,
@@ -1382,7 +1421,7 @@
         "spread": -12.5,
         "spread_close": -12.5,
         "spread_open": -12.5,
-        "total": 53.5
+        "total": 52.5
       },
       "probables": null,
       "pulse": null,
@@ -1434,18 +1473,18 @@
         "name": "Northwestern"
       },
       "odds": {
-        "away_ml": -185,
+        "away_ml": -162,
         "away_ml_open": -278,
-        "captured_at": "2026-09-27T15:02:29Z",
-        "details": "PSU -4.5",
-        "home_ml": 154,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "PSU -3.5",
+        "home_ml": 136,
         "home_ml_open": 225,
         "moneyline_off": false,
         "provider": "DraftKings",
-        "spread": 4.5,
-        "spread_close": 4.5,
+        "spread": 3.5,
+        "spread_close": 3.5,
         "spread_open": 7.0,
-        "total": 48.5
+        "total": 47.5
       },
       "probables": null,
       "pulse": null,
@@ -1493,7 +1532,7 @@
       "odds": {
         "away_ml": -2800,
         "away_ml_open": -2800,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "IU -23.5",
         "home_ml": 1300,
         "home_ml_open": 1300,
@@ -1548,18 +1587,18 @@
         "name": "USC"
       },
       "odds": {
-        "away_ml": 295,
+        "away_ml": 270,
         "away_ml_open": 285,
-        "captured_at": "2026-09-27T15:02:29Z",
-        "details": "USC -10",
-        "home_ml": -375,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "USC -9.5",
+        "home_ml": -340,
         "home_ml_open": -360,
         "moneyline_off": false,
         "provider": "DraftKings",
-        "spread": -10.0,
-        "spread_close": -10.0,
+        "spread": -9.5,
+        "spread_close": -9.5,
         "spread_open": -10.0,
-        "total": 57.5
+        "total": 55.5
       },
       "probables": null,
       "pulse": null,
@@ -1607,7 +1646,7 @@
       "odds": {
         "away_ml": 340,
         "away_ml_open": 285,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "WIS -10",
         "home_ml": -440,
         "home_ml_open": -360,
@@ -1858,7 +1897,7 @@
       "odds": {
         "away_ml": -108,
         "away_ml_open": -112,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "TLSA -1.5",
         "home_ml": -112,
         "home_ml_open": -108,
@@ -1959,7 +1998,7 @@
       "odds": {
         "away_ml": -470,
         "away_ml_open": -470,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "UTSA -12.5",
         "home_ml": 360,
         "home_ml_open": 360,
@@ -1968,7 +2007,7 @@
         "spread": 12.5,
         "spread_close": 12.5,
         "spread_open": 12.5,
-        "total": 52.5
+        "total": 54.5
       },
       "probables": null,
       "pulse": null,
@@ -2022,7 +2061,7 @@
       "odds": {
         "away_ml": 100,
         "away_ml_open": -105,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "AF -1.5",
         "home_ml": -120,
         "home_ml_open": -115,
@@ -2085,7 +2124,7 @@
       "odds": {
         "away_ml": 185,
         "away_ml_open": 185,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "USF -6.5",
         "home_ml": -225,
         "home_ml_open": -225,
@@ -2336,7 +2375,7 @@
       "odds": {
         "away_ml": -1350,
         "away_ml_open": -1350,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "TOL -17.5",
         "home_ml": 800,
         "home_ml_open": 800,
@@ -2487,7 +2526,7 @@
       "odds": {
         "away_ml": -198,
         "away_ml_open": -198,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "OHIO -5.5",
         "home_ml": 164,
         "home_ml_open": 164,
@@ -2726,7 +2765,7 @@
       "odds": {
         "away_ml": -115,
         "away_ml_open": -115,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "ODU -1.5",
         "home_ml": -105,
         "home_ml_open": -105,
@@ -2783,7 +2822,7 @@
       "odds": {
         "away_ml": 550,
         "away_ml_open": 500,
-        "captured_at": "2026-09-27T15:02:29Z",
+        "captured_at": "2026-09-27T16:09:18Z",
         "details": "JMU -14",
         "home_ml": -800,
         "home_ml_open": -700,
@@ -2843,7 +2882,20 @@
         "color": "#CF4A82",
         "name": "New Mexico State"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": -108,
+        "away_ml_open": -108,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "NMSU -1.5",
+        "home_ml": -112,
+        "home_ml_open": -112,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": -1.5,
+        "spread_close": -1.5,
+        "spread_open": -1.5,
+        "total": 53.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -2893,7 +2945,20 @@
         "color": "#3C90DC",
         "name": "Delaware"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": -230,
+        "away_ml_open": -230,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "LIB -7",
+        "home_ml": 190,
+        "home_ml_open": 190,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": 7.0,
+        "spread_close": 7.0,
+        "spread_open": 7.0,
+        "total": 50.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -2943,7 +3008,20 @@
         "color": "#507AC9",
         "name": "South Alabama"
       },
-      "odds": null,
+      "odds": {
+        "away_ml": 550,
+        "away_ml_open": 550,
+        "captured_at": "2026-09-27T16:09:18Z",
+        "details": "USA -14.5",
+        "home_ml": -800,
+        "home_ml_open": -800,
+        "moneyline_off": false,
+        "provider": "DraftKings",
+        "spread": -14.5,
+        "spread_close": -14.5,
+        "spread_open": -14.5,
+        "total": 55.5
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -3680,11 +3758,11 @@
         "name": "Nationals"
       },
       "odds": {
-        "away_ml": -110,
+        "away_ml": -112,
         "away_ml_open": -110,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "NYM -110",
-        "home_ml": -109,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "NYM -112",
+        "home_ml": -107,
         "home_ml_open": -110,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -3799,11 +3877,11 @@
         "name": "Blue Jays"
       },
       "odds": {
-        "away_ml": 149,
+        "away_ml": 145,
         "away_ml_open": 142,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "TOR -181",
-        "home_ml": -181,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "TOR -176",
+        "home_ml": -176,
         "home_ml_open": -172,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -3918,11 +3996,11 @@
         "name": "Mariners"
       },
       "odds": {
-        "away_ml": 139,
+        "away_ml": 135,
         "away_ml_open": 147,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "SEA -168",
-        "home_ml": -168,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "SEA -163",
+        "home_ml": -163,
         "home_ml_open": -179,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4037,11 +4115,11 @@
         "name": "Giants"
       },
       "odds": {
-        "away_ml": -251,
+        "away_ml": -250,
         "away_ml_open": -259,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "LAD -251",
-        "home_ml": 203,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "LAD -250",
+        "home_ml": 202,
         "home_ml_open": 208,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4147,11 +4225,11 @@
         "name": "Padres"
       },
       "odds": {
-        "away_ml": -148,
+        "away_ml": -144,
         "away_ml_open": -131,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "ARI -148",
-        "home_ml": 123,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "ARI -144",
+        "home_ml": 119,
         "home_ml_open": 108,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4266,11 +4344,11 @@
         "name": "Phillies"
       },
       "odds": {
-        "away_ml": 144,
+        "away_ml": 142,
         "away_ml_open": 111,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "PHI -175",
-        "home_ml": -175,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "PHI -173",
+        "home_ml": -173,
         "home_ml_open": -134,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4323,7 +4401,7 @@
         "score": 41,
         "side": "NRFI"
       },
-      "start": "3:05 PM ET",
+      "start": "2:30 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
@@ -4387,7 +4465,7 @@
       "odds": {
         "away_ml": 100,
         "away_ml_open": 117,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "NYY -120",
         "home_ml": -120,
         "home_ml_open": -141,
@@ -4500,7 +4578,7 @@
       "odds": {
         "away_ml": -114,
         "away_ml_open": -126,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "TEX -114",
         "home_ml": -105,
         "home_ml_open": 104,
@@ -4619,11 +4697,11 @@
         "name": "Brewers"
       },
       "odds": {
-        "away_ml": 169,
+        "away_ml": 167,
         "away_ml_open": 188,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "MIL -206",
-        "home_ml": -206,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "MIL -204",
+        "home_ml": -204,
         "home_ml_open": -231,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4740,7 +4818,7 @@
       "odds": {
         "away_ml": 100,
         "away_ml_open": -110,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "MIA -120",
         "home_ml": -120,
         "home_ml_open": -110,
@@ -4855,7 +4933,7 @@
       "odds": {
         "away_ml": -112,
         "away_ml_open": -149,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "CLE -112",
         "home_ml": -108,
         "home_ml_open": 123,
@@ -4974,7 +5052,7 @@
       "odds": {
         "away_ml": -117,
         "away_ml_open": -136,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "PIT -117",
         "home_ml": -103,
         "home_ml_open": 113,
@@ -4983,7 +5061,7 @@
         "spread": 1.5,
         "spread_close": 1.5,
         "spread_open": 1.5,
-        "total": 8.0
+        "total": 7.5
       },
       "probables": {
         "away": {
@@ -5087,11 +5165,11 @@
         "name": "White Sox"
       },
       "odds": {
-        "away_ml": 143,
+        "away_ml": 135,
         "away_ml_open": 180,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "CHW -174",
-        "home_ml": -174,
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "CHW -164",
+        "home_ml": -164,
         "home_ml_open": -221,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5208,7 +5286,7 @@
       "odds": {
         "away_ml": -123,
         "away_ml_open": -124,
-        "captured_at": "2026-09-27T15:02:25Z",
+        "captured_at": "2026-09-27T16:09:17Z",
         "details": "CHC -123",
         "home_ml": 102,
         "home_ml_open": 103,
@@ -5223,6 +5301,9 @@
         "away": {
           "era": "3.86",
           "name": "Shota Imanaga"
+        },
+        "home": {
+          "name": "Tanner Houck"
         }
       },
       "pulse": {
@@ -5316,10 +5397,10 @@
         "name": "Athletics"
       },
       "odds": {
-        "away_ml": -192,
+        "away_ml": -193,
         "away_ml_open": -168,
-        "captured_at": "2026-09-27T15:02:25Z",
-        "details": "HOU -192",
+        "captured_at": "2026-09-27T16:09:17Z",
+        "details": "HOU -193",
         "home_ml": 158,
         "home_ml_open": 139,
         "moneyline_off": false,
@@ -5403,11 +5484,11 @@
         "name": "SF"
       },
       "odds": {
-        "away_ml": 310,
+        "away_ml": 320,
         "away_ml_open": 470,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "SF -7.5",
-        "home_ml": -395,
+        "home_ml": -410,
         "home_ml_open": -650,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5473,11 +5554,11 @@
         "name": "DAL"
       },
       "odds": {
-        "away_ml": -162,
+        "away_ml": -166,
         "away_ml_open": -135,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "BAL -3",
-        "home_ml": 136,
+        "home_ml": 140,
         "home_ml_open": 114,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5537,11 +5618,11 @@
         "name": "CLE"
       },
       "odds": {
-        "away_ml": -148,
+        "away_ml": -135,
         "away_ml_open": -120,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "CAR -2.5",
-        "home_ml": 124,
+        "home_ml": 114,
         "home_ml_open": 100,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5607,11 +5688,11 @@
         "name": "PIT"
       },
       "odds": {
-        "away_ml": -192,
+        "away_ml": -180,
         "away_ml_open": -115,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "CIN -3.5",
-        "home_ml": 160,
+        "home_ml": 150,
         "home_ml_open": -105,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5677,11 +5758,11 @@
         "name": "IND"
       },
       "odds": {
-        "away_ml": -122,
+        "away_ml": -125,
         "away_ml_open": -130,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "HOU -1.5",
-        "home_ml": 102,
+        "home_ml": 105,
         "home_ml_open": 110,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -5743,7 +5824,7 @@
       "odds": {
         "away_ml": -600,
         "away_ml_open": -340,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "KC -10",
         "home_ml": 440,
         "home_ml_open": 270,
@@ -5813,7 +5894,7 @@
       "odds": {
         "away_ml": 260,
         "away_ml_open": 120,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "BUF -7",
         "home_ml": -325,
         "home_ml_open": -142,
@@ -5883,7 +5964,7 @@
       "odds": {
         "away_ml": -130,
         "away_ml_open": -142,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "LAR -1.5",
         "home_ml": 110,
         "home_ml_open": 120,
@@ -5892,7 +5973,7 @@
         "spread": 1.5,
         "spread_close": 1.5,
         "spread_open": 2.5,
-        "total": 43.5
+        "total": 44.5
       },
       "probables": {
         "away": {
@@ -5953,7 +6034,7 @@
       "odds": {
         "away_ml": 164,
         "away_ml_open": 140,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "NO -3.5",
         "home_ml": -198,
         "home_ml_open": -166,
@@ -6015,11 +6096,11 @@
         "name": "TB"
       },
       "odds": {
-        "away_ml": -115,
+        "away_ml": -120,
         "away_ml_open": 105,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "MIN -1.5",
-        "home_ml": -105,
+        "home_ml": 100,
         "home_ml_open": -125,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -6085,18 +6166,18 @@
         "name": "JAX"
       },
       "odds": {
-        "away_ml": 130,
+        "away_ml": 136,
         "away_ml_open": -102,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "JAX -3",
-        "home_ml": -155,
+        "home_ml": -162,
         "home_ml_open": -118,
         "moneyline_off": false,
         "provider": "DraftKings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -1.5,
-        "total": 45.5
+        "total": 46.5
       },
       "probables": {
         "away": {
@@ -6155,11 +6236,11 @@
         "name": "DET"
       },
       "odds": {
-        "away_ml": 245,
+        "away_ml": 260,
         "away_ml_open": 340,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "DET -6.5",
-        "home_ml": -305,
+        "home_ml": -325,
         "home_ml_open": -440,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -6223,7 +6304,7 @@
       "odds": {
         "away_ml": -198,
         "away_ml_open": -102,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "PHI -3.5",
         "home_ml": 164,
         "home_ml_open": -118,
@@ -6289,7 +6370,7 @@
       "odds": {
         "away_ml": -410,
         "away_ml_open": -198,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "SEA -8.5",
         "home_ml": 320,
         "home_ml_open": 164,
@@ -6361,7 +6442,7 @@
       "odds": {
         "away_ml": 110,
         "away_ml_open": 145,
-        "captured_at": "2026-09-27T15:02:30Z",
+        "captured_at": "2026-09-27T16:09:19Z",
         "details": "NYG -2.5",
         "home_ml": -130,
         "home_ml_open": -175,
