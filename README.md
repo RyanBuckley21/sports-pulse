@@ -231,3 +231,10 @@ The ledger records hit rates, and a hit rate is not an edge. `nfl_odds_backtest.
 found that the NFL picks **do not beat the closing line**, and a walk-forward
 spread model on these inputs came in below break-even. The site explains games
 and records its own accuracy. It does not claim to beat the market.
+
+The CFB record was re-graded on 2026-09-27. Until then the grader read only
+25 of each Saturday's games (an ESPN page limit that fails silently) and
+recorded roughly the most prominent quarter of the slate: 44-14 (76%) on 58
+picks. With every pick graded, the same Saturdays read 76-33 (70%) on 109.
+The corrections are new ledger rows that supersede the old ones for their
+dates; nothing was rewritten.

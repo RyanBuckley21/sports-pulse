@@ -117,7 +117,8 @@ def fetch_slate(session, config, date):
     """
     id_map = _espn_to_nflverse(session, date)
     out = {}
-    for e in _fetch_events(session, config, {"dates": date.replace("-", ""), "limit": 1000}):
+    for e in _fetch_events(session, config, {"dates": date.replace("-", ""),
+                                                   "limit": espn_dates.SCOREBOARD_LIMIT}):
         game_id = id_map.get(str(e.get("id")))
         if game_id:
             out[game_id] = e
@@ -136,7 +137,7 @@ def fetch_replay_dates(session, config, pks):
     # espn_dates. Only runs when a game was postponed.
     events = espn_dates.fetch_window(
         lambda params: {"events": _fetch_events(session, config, params)},
-        today, end, params={"limit": 1000})
+        today, end, params={"limit": espn_dates.SCOREBOARD_LIMIT})
     out = {}
     for e in events:
         game_id = id_map.get(str(e.get("id")))

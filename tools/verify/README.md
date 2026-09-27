@@ -229,6 +229,17 @@ Sabotage-checked in both directions when written: grading a tie as a result
 fails exactly the four tie assertions, and trusting ESPN's `abbreviation` field
 fails exactly the Air Force and Buffalo ones.
 
+Since 2026-09-27 (105 checks) it also pins two ways the CFB record was quietly
+wrong. THE PAGE LIMIT: above `limit=500` ESPN's college scoreboard returns 25
+events with HTTP 200, so the grader saw 25 of a Saturday's 65 games and
+deferred the rest, never graded. A stub that answers the way ESPN does must
+yield all 65; a page as long as the limit must be refused
+(`espn_dates.checked_events`); and a sweep fails any ESPN caller asking for
+more than 500. Putting `fetch_slate` back on 1000 fails 4, dropping the
+truncation check fails 1, NFL's replay lookup at 1000 fails 1. AN UNABBREVIATED
+PROGRAM: a side like "Sacramento State" must grade, not fall to UNRESOLVED
+through the leading-token rule; removing the whole-name match fails 1.
+
 Offline and deterministic. `cfb_games_fixture.json` is REAL ESPN data captured
 from live responses across four 2025 dates — thirteen games including a genuine
 overtime final (SMU 26-20 Miami) and both abbreviation mismatches — trimmed to
