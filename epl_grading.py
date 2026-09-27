@@ -72,7 +72,7 @@ def fetch_slate(session, config, date):
     if not url:
         return {}
     compact = date.replace("-", "")
-    r = session.get(url, params={"dates": compact, "limit": 1000},
+    r = session.get(url, params={"dates": compact, "limit": espn_dates.SCOREBOARD_LIMIT},
                     timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     return {str(e["id"]): e for e in r.json().get("events") or [] if e.get("id")}
@@ -104,7 +104,7 @@ def fetch_replay_dates(session, config, pks):
         return r.json()
 
     out = {}
-    for e in espn_dates.fetch_window(_get, today, end, params={"limit": 1000}):
+    for e in espn_dates.fetch_window(_get, today, end, params={"limit": espn_dates.SCOREBOARD_LIMIT}):
         pk = str(e.get("id"))
         if pk in pks and is_final(e):
             out[pk] = (e.get("date") or "")[:10]

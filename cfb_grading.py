@@ -105,7 +105,8 @@ def fetch_slate(session, config, date):
     THAT KEY IS ALSO CFBD'S. The store is written with whatever `game_id` the
     schedule carried, and the two possible schedule sources turn out to share
     an id space: on 2025-11-15 all 25 ESPN events matched a cfbfastR game_id
-    exactly. So one lookup serves picks made from either source, and a stored
+    exactly. (25 was the truncated page -- see the limit below -- so that
+    check covered 25 games, not the whole Saturday.) So one lookup serves picks made from either source, and a stored
     pick does not have to record which one built it.
 
     ONE DATE, not the builder's seven-day window -- the grader is asked about a
@@ -113,11 +114,15 @@ def fetch_slate(session, config, date):
     rest of the window are handled by store_spans_dates, not by widening this.
     """
     url, group = _scoreboard_url(config)
+    # SCOREBOARD_LIMIT, never more: this asked for 1000 until 2026-09-27, and
+    # above 500 ESPN silently returns 25 events -- 25 of 65 FBS games that
+    # Saturday, so 12 of 17 picks were deferred and never graded.
     r = session.get(url, params={"dates": date.replace("-", ""),
-                                 "groups": group, "limit": 1000},
+                                 "groups": group, "limit": espn_dates.SCOREBOARD_LIMIT},
                     timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
-    return {str(e["id"]): e for e in r.json().get("events") or [] if e.get("id")}
+    return {str(e["id"]): e for e in espn_dates.checked_events(r.json(), what="cfb slate " + date)
+            if e.get("id")}
 
 
 def fetch_replay_dates(session, config, pks):
@@ -134,14 +139,15 @@ def fetch_replay_dates(session, config, pks):
     # BY MONTH -- ESPN stopped serving date ranges on 2026-09-15. See
     # espn_dates. This path only runs when a game was postponed, so it would
     # have failed the first time it was needed, which is the worst time.
+    # A college month is 290-330 FBS events, so the limit matters most here.
     def _get(params):
         r = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
-        return r.json()
+        return {"events": espn_dates.checked_events(r.json(), what="cfb replay " + params["dates"])}
 
     out = {}
     for e in espn_dates.fetch_window(_get, today, end,
-                                     params={"groups": group, "limit": 1000}):
+                                     params={"groups": group, "limit": espn_dates.SCOREBOARD_LIMIT}):
         pk = str(e.get("id"))
         if pk in pks and is_final(e):
             out[pk] = (e.get("date") or "")[:10]
@@ -223,12 +229,21 @@ def observed_facts(event):
     }
 
 
-def _picked_abbr(side):
+def _picked_abbr(side, away=None, home=None):
     """The program a side names -- the leading token, the same rule
     insights.js's sideColor uses to tint a market chip, so the card and the
     ledger cannot disagree about whose pick it was. CFB sides are a bare abbr
-    today; this keeps working if a compound side is ever added."""
-    return str(side or "").split(" ")[0]
+    today; this keeps working if a compound side is ever added.
+
+    A SIDE THAT IS EXACTLY ONE OF THE TWO PROGRAMS IS TAKEN WHOLE. A program
+    team_meta has no abbreviation for goes by its school name, and the leading
+    token of "Sacramento State" is "Sacramento", which names neither side --
+    so every pick on such a team was recorded UNRESOLVED. Found 2026-09-27:
+    Sacramento State (2026-09-12) and North Dakota State (2026-09-19)."""
+    text = str(side or "")
+    if text and text in (away, home):
+        return text
+    return text.split(" ")[0]
 
 
 def grade(pick, event, assume_lines):
@@ -254,7 +269,7 @@ def grade(pick, event, assume_lines):
     if not is_final(event):
         return live_state(event), "PENDING", None
 
-    picked = _picked_abbr(side)
+    picked = _picked_abbr(side, away, home)
     # A pick's side must name a program in this game. If it does not, say so --
     # never fall through to a comparison that would score a malformed side as a
     # clean MISS, which is the guard MLB's and EPL's grade() both apply.

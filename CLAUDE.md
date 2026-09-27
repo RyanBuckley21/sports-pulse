@@ -31,7 +31,7 @@ python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
-python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED)
+python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED); ESPN page limit; unabbreviated sides
 python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chance, loses match_result
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
@@ -126,7 +126,11 @@ days later in an append-only file. Most have a test. Don't weaken them.
     `actions/cache` precisely to avoid needing write access.
 11. **ESPN rejects `dates=START-END` ranges** (HTTP 400 since 2026-09-15). Use
     `espn_dates.fetch_window` (month keys, filtered locally). `test_epl_fetch` sweeps
-    every ESPN caller for range-shaped requests.
+    every ESPN caller for range-shaped requests. **And never ask for more than
+    `limit=500`** (`espn_dates.SCOREBOARD_LIMIT`): above it the college-football
+    scoreboard silently returns 25 events (HTTP 200), and with no limit a month
+    stops at 300. Read events through `espn_dates.checked_events`, which raises
+    on a full page. `test_cfb_grading` sweeps every caller for a limit over 500.
 12. **Caller-contract arity.** `generate_insights._build_game_entities` returns a
     3-tuple because `implied_total.py` unpacks it. Add new outputs as
     out-parameters (the pattern `team_entities` / `failed_sports` use), not as a
@@ -292,6 +296,22 @@ Open, in rough priority:
   (`fetchers.cfb._week_complete`). Check the per-run "CFBD calls" log line
   after the next Saturday to confirm the drop; how quickly CFBD itself
   publishes a week hasn't been measured.
+- ~~The CFB graded record read 25 games a Saturday~~ **Fixed 2026-09-27.**
+  `cfb_grading.fetch_slate` asked ESPN for `limit=1000`, which returns 25
+  events, so every pick outside them was DEFERRED and never graded (12 of 17 on
+  2026-09-26), and picks on programs without a `team_meta` abbreviation
+  ("Sacramento State") fell to UNRESOLVED. 2026-09-05/12/19 were re-graded from
+  their historical stores as superseding ledger runs (91 rows): 44-14 (76%) on
+  58 became 76-33 (70%) on 109. The truncated sample was the prominent games,
+  so the old number was biased up, and the Bets tab's CFB price bands learned
+  from it. **Check** after the next CFB grading run that its row count matches
+  the store's leans for that date.
+- Card chips tint a side by its leading token (insights.js `sideColor`), so a
+  two-word school name like "Sacramento State" gets no team colour. Display
+  only; the grader's version of the same rule is fixed.
+- `epl_backtest.py` still builds a `dates=START-END` URL, which ESPN has
+  rejected since 2026-09-15. It is a manual script, so nothing runs it, but it
+  cannot re-derive EPL's weights until it walks months.
 - The one-off CLV review routine fires 2026-10-22.
 
 Operational items to keep in mind:

@@ -494,9 +494,14 @@ def _espn_rows(session, season):
     # -- the scoreboard is keyless.
     rows = []
     for event in espn_dates.fetch_window(
-            lambda params: _get_json(session, ESPN_CFB_SCOREBOARD, params),
+            # A month is ~300 FBS events: at limit=1000 ESPN returned 25 of them
+            # (espn_dates.SCOREBOARD_LIMIT), so this fallback would have built
+            # a season from a twelfth of its games. checked_events raises on a
+            # full page, which fails the builder and freezes its partition.
+            lambda params: {"events": espn_dates.checked_events(
+                _get_json(session, ESPN_CFB_SCOREBOARD, params), what="cfb fallback schedule")},
             espn_dates.from_compact(start), espn_dates.from_compact(end),
-            params={"limit": 1000, "groups": ESPN_FBS_GROUP}):
+            params={"limit": espn_dates.SCOREBOARD_LIMIT, "groups": ESPN_FBS_GROUP}):
         if (event.get("season") or {}).get("year") != season:
             continue
         comp = (event.get("competitions") or [{}])[0]

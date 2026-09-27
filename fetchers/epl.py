@@ -71,7 +71,13 @@ REQUEST_TIMEOUT = 15
 # returns 100 without it and 380 with it (measured). Every call here that
 # iterates `events` passes it. Same constant, same reason, as
 # fetchers/worldcup.SCOREBOARD_LIMIT.
-SCOREBOARD_LIMIT = 1000
+#
+# 500 since 2026-09-27, the largest limit ESPN honours on every league (see
+# espn_dates.SCOREBOARD_LIMIT: college football returns 25 events at 1000).
+# Soccer honoured 1000, and since ESPN dropped date ranges every call here is
+# one month (under 50 matches), so 500 changes nothing for EPL except that it
+# can no longer drift from the shared rule.
+SCOREBOARD_LIMIT = espn_dates.SCOREBOARD_LIMIT
 
 # ESPN reports a player's position FOR THAT MATCH, and every unused/benched
 # player comes back as "Substitute" rather than their real role. Measured over
@@ -85,9 +91,9 @@ _BENCH_POSITION = "Substitute"
 # searched for is on the far side of an offseason and its distance varies with
 # where in that offseason the run happens.
 #
-# Costs ONE scoreboard call and no summary calls, so the span is cheap to
-# overshoot -- and `limit=1000` (see SCOREBOARD_LIMIT) covers a 380-match
-# season plus the surrounding fixtures without truncating.
+# Costs one scoreboard call per month and no summary calls, so the span is cheap to
+# overshoot -- and SCOREBOARD_LIMIT covers any month's fixtures without
+# truncating (the season is walked a month per request since 2026-09-15).
 OFFSEASON_SEARCH_DAYS = 365
 
 
