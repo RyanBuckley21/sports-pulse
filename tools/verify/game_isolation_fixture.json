@@ -1,0 +1,2675 @@
+{
+ "_captured": "MLB partitions of data/insights.games.json and data/boxscores.json at 579b1e8 (Regenerate stats and signals for 2026-09-27, the last store with MLB games), unedited.",
+ "box": {
+  "822678": {
+   "120": {
+    "er": 6,
+    "ip_outs": 18
+   },
+   "121": {
+    "er": 0,
+    "ip_outs": 12
+   }
+  },
+  "822681": {
+   "120": {
+    "er": 1,
+    "ip_outs": 13
+   },
+   "121": {
+    "er": 5,
+    "ip_outs": 19
+   }
+  },
+  "822759": {
+   "113": {
+    "er": 1,
+    "ip_outs": 9
+   },
+   "141": {
+    "er": 1,
+    "ip_outs": 21
+   }
+  },
+  "822760": {
+   "113": {
+    "er": 3,
+    "ip_outs": 9
+   },
+   "141": {
+    "er": 0,
+    "ip_outs": 18
+   }
+  },
+  "822840": {
+   "121": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "140": {
+    "er": 4,
+    "ip_outs": 12
+   }
+  },
+  "822841": {
+   "121": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "140": {
+    "er": 5,
+    "ip_outs": 14
+   }
+  },
+  "822842": {
+   "121": {
+    "er": 1,
+    "ip_outs": 9
+   },
+   "140": {
+    "er": 0,
+    "ip_outs": 12
+   }
+  },
+  "822844": {
+   "140": {
+    "er": 4,
+    "ip_outs": 14
+   },
+   "141": {
+    "er": 2,
+    "ip_outs": 18
+   }
+  },
+  "822922": {
+   "111": {
+    "er": 0,
+    "ip_outs": 3
+   },
+   "139": {
+    "er": 1,
+    "ip_outs": 12
+   }
+  },
+  "823001": {
+   "120": {
+    "er": 3,
+    "ip_outs": 8
+   },
+   "138": {
+    "er": 0,
+    "ip_outs": 6
+   }
+  },
+  "823083": {
+   "108": {
+    "er": 4,
+    "ip_outs": 9
+   },
+   "136": {
+    "er": 2,
+    "ip_outs": 17
+   }
+  },
+  "823085": {
+   "108": {
+    "er": 5,
+    "ip_outs": 9
+   },
+   "136": {
+    "er": 2,
+    "ip_outs": 9
+   }
+  },
+  "823086": {
+   "117": {
+    "er": 2,
+    "ip_outs": 20
+   },
+   "136": {
+    "er": 0,
+    "ip_outs": 15
+   }
+  },
+  "823087": {
+   "108": {
+    "er": 0,
+    "ip_outs": 12
+   },
+   "136": {
+    "er": 1,
+    "ip_outs": 11
+   }
+  },
+  "823089": {
+   "117": {
+    "er": 0,
+    "ip_outs": 21
+   },
+   "136": {
+    "er": 3,
+    "ip_outs": 15
+   }
+  },
+  "823165": {
+   "119": {
+    "er": 2,
+    "ip_outs": 15
+   },
+   "137": {
+    "er": 3,
+    "ip_outs": 18
+   }
+  },
+  "823166": {
+   "137": {
+    "er": 1,
+    "ip_outs": 9
+   },
+   "142": {
+    "er": 1,
+    "ip_outs": 9
+   }
+  },
+  "823167": {
+   "119": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "137": {
+    "er": 0,
+    "ip_outs": 12
+   }
+  },
+  "823168": {
+   "137": {
+    "er": 2,
+    "ip_outs": 11
+   },
+   "142": {
+    "er": 0,
+    "ip_outs": 11
+   }
+  },
+  "823169": {
+   "137": {
+    "er": 1,
+    "ip_outs": 17
+   },
+   "142": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "823245": {
+   "109": {
+    "er": 9,
+    "ip_outs": 22
+   },
+   "135": {
+    "er": 3,
+    "ip_outs": 16
+   }
+  },
+  "823247": {
+   "135": {
+    "er": 0,
+    "ip_outs": 7
+   },
+   "146": {
+    "er": 3,
+    "ip_outs": 6
+   }
+  },
+  "823248": {
+   "109": {
+    "er": 0,
+    "ip_outs": 4
+   },
+   "135": {
+    "er": 4,
+    "ip_outs": 15
+   }
+  },
+  "823326": {
+   "134": {
+    "er": 0,
+    "ip_outs": 8
+   },
+   "138": {
+    "er": 0,
+    "ip_outs": 18
+   }
+  },
+  "823327": {
+   "134": {
+    "er": 5,
+    "ip_outs": 22
+   },
+   "138": {
+    "er": 0,
+    "ip_outs": 10
+   }
+  },
+  "823328": {
+   "134": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "138": {
+    "er": 1,
+    "ip_outs": 6
+   }
+  },
+  "823329": {
+   "118": {
+    "er": 2,
+    "ip_outs": 7
+   },
+   "134": {
+    "er": 2,
+    "ip_outs": 24
+   }
+  },
+  "823407": {
+   "139": {
+    "er": 0,
+    "ip_outs": 18
+   },
+   "143": {
+    "er": 9,
+    "ip_outs": 24
+   }
+  },
+  "823409": {
+   "139": {
+    "er": 0,
+    "ip_outs": 11
+   },
+   "143": {
+    "er": 0,
+    "ip_outs": 6
+   }
+  },
+  "823410": {
+   "143": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "158": {
+    "er": 0,
+    "ip_outs": 12
+   }
+  },
+  "823411": {
+   "143": {
+    "er": 4,
+    "ip_outs": 9
+   },
+   "158": {
+    "er": 0,
+    "ip_outs": 19
+   }
+  },
+  "823412": {
+   "143": {
+    "er": 1,
+    "ip_outs": 10
+   },
+   "158": {
+    "er": 3,
+    "ip_outs": 18
+   }
+  },
+  "823489": {
+   "110": {
+    "er": 4,
+    "ip_outs": 9
+   },
+   "147": {
+    "er": 3,
+    "ip_outs": 20
+   }
+  },
+  "823491": {
+   "110": {
+    "er": 1,
+    "ip_outs": 15
+   },
+   "147": {
+    "er": 3,
+    "ip_outs": 12
+   }
+  },
+  "823492": {
+   "139": {
+    "er": 1,
+    "ip_outs": 13
+   },
+   "147": {
+    "er": 0,
+    "ip_outs": 10
+   }
+  },
+  "823493": {
+   "139": {
+    "er": 6,
+    "ip_outs": 9
+   },
+   "147": {
+    "er": 1,
+    "ip_outs": 18
+   }
+  },
+  "823494": {
+   "139": {
+    "er": 0,
+    "ip_outs": 7
+   },
+   "147": {
+    "er": 2,
+    "ip_outs": 7
+   }
+  },
+  "823543": {
+   "139": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "147": {
+    "er": 0,
+    "ip_outs": 3
+   }
+  },
+  "823570": {
+   "121": {
+    "er": 3,
+    "ip_outs": 13
+   },
+   "143": {
+    "er": 0,
+    "ip_outs": 8
+   }
+  },
+  "823652": {
+   "140": {
+    "er": 2,
+    "ip_outs": 12
+   },
+   "142": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "823653": {
+   "140": {
+    "er": 1,
+    "ip_outs": 14
+   },
+   "142": {
+    "er": 0,
+    "ip_outs": 12
+   }
+  },
+  "823733": {
+   "138": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "158": {
+    "er": 0,
+    "ip_outs": 18
+   }
+  },
+  "823735": {
+   "138": {
+    "er": 2,
+    "ip_outs": 10
+   },
+   "158": {
+    "er": 3,
+    "ip_outs": 9
+   }
+  },
+  "823813": {
+   "144": {
+    "er": 3,
+    "ip_outs": 18
+   },
+   "146": {
+    "er": 4,
+    "ip_outs": 23
+   }
+  },
+  "823816": {
+   "144": {
+    "er": 3,
+    "ip_outs": 15
+   },
+   "146": {
+    "er": 0,
+    "ip_outs": 0
+   }
+  },
+  "823894": {
+   "119": {
+    "er": 1,
+    "ip_outs": 9
+   },
+   "135": {
+    "er": 0,
+    "ip_outs": 17
+   }
+  },
+  "823895": {
+   "119": {
+    "er": 1,
+    "ip_outs": 8
+   },
+   "135": {
+    "er": 2,
+    "ip_outs": 13
+   }
+  },
+  "823896": {
+   "119": {
+    "er": 0,
+    "ip_outs": 24
+   },
+   "137": {
+    "er": 3,
+    "ip_outs": 9
+   }
+  },
+  "823897": {
+   "119": {
+    "er": 0,
+    "ip_outs": 24
+   },
+   "135": {
+    "er": 2,
+    "ip_outs": 12
+   }
+  },
+  "823975": {
+   "108": {
+    "er": 4,
+    "ip_outs": 13
+   },
+   "142": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "824057": {
+   "114": {
+    "er": 2,
+    "ip_outs": 9
+   },
+   "118": {
+    "er": 5,
+    "ip_outs": 8
+   }
+  },
+  "824058": {
+   "114": {
+    "er": 5,
+    "ip_outs": 17
+   },
+   "118": {
+    "er": 5,
+    "ip_outs": 12
+   }
+  },
+  "824059": {
+   "118": {
+    "er": 3,
+    "ip_outs": 23
+   },
+   "145": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "824060": {
+   "118": {
+    "er": 0,
+    "ip_outs": 17
+   },
+   "145": {
+    "er": 1,
+    "ip_outs": 23
+   }
+  },
+  "824061": {
+   "118": {
+    "er": 5,
+    "ip_outs": 15
+   },
+   "145": {
+    "er": 7,
+    "ip_outs": 15
+   }
+  },
+  "824139": {
+   "117": {
+    "er": 4,
+    "ip_outs": 12
+   },
+   "144": {
+    "er": 1,
+    "ip_outs": 14
+   }
+  },
+  "824219": {
+   "116": {
+    "er": 1,
+    "ip_outs": 11
+   },
+   "134": {
+    "er": 4,
+    "ip_outs": 21
+   }
+  },
+  "824220": {
+   "116": {
+    "er": 5,
+    "ip_outs": 11
+   },
+   "134": {
+    "er": 1,
+    "ip_outs": 16
+   }
+  },
+  "824221": {
+   "116": {
+    "er": 2,
+    "ip_outs": 18
+   },
+   "120": {
+    "er": 5,
+    "ip_outs": 12
+   }
+  },
+  "824222": {
+   "116": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "120": {
+    "er": 1,
+    "ip_outs": 19
+   }
+  },
+  "824223": {
+   "116": {
+    "er": 2,
+    "ip_outs": 11
+   },
+   "120": {
+    "er": 2,
+    "ip_outs": 23
+   }
+  },
+  "824298": {
+   "109": {
+    "er": 6,
+    "ip_outs": 9
+   },
+   "115": {
+    "er": 2,
+    "ip_outs": 17
+   }
+  },
+  "824300": {
+   "115": {
+    "er": 1,
+    "ip_outs": 12
+   },
+   "136": {
+    "er": 1,
+    "ip_outs": 6
+   }
+  },
+  "824301": {
+   "109": {
+    "er": 1,
+    "ip_outs": 11
+   },
+   "115": {
+    "er": 1,
+    "ip_outs": 9
+   }
+  },
+  "824302": {
+   "109": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "115": {
+    "er": 2,
+    "ip_outs": 18
+   }
+  },
+  "824381": {
+   "114": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "133": {
+    "er": 0,
+    "ip_outs": 6
+   }
+  },
+  "824462": {
+   "112": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "113": {
+    "er": 4,
+    "ip_outs": 18
+   }
+  },
+  "824543": {
+   "115": {
+    "er": 3,
+    "ip_outs": 18
+   },
+   "145": {
+    "er": 6,
+    "ip_outs": 25
+   }
+  },
+  "824544": {
+   "115": {
+    "er": 2,
+    "ip_outs": 4
+   },
+   "145": {
+    "er": 0,
+    "ip_outs": 11
+   }
+  },
+  "824546": {
+   "116": {
+    "er": 4,
+    "ip_outs": 13
+   },
+   "145": {
+    "er": 1,
+    "ip_outs": 14
+   }
+  },
+  "824623": {
+   "112": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "146": {
+    "er": 2,
+    "ip_outs": 12
+   }
+  },
+  "824624": {
+   "112": {
+    "er": 6,
+    "ip_outs": 21
+   },
+   "146": {
+    "er": 1,
+    "ip_outs": 21
+   }
+  },
+  "824625": {
+   "112": {
+    "er": 1,
+    "ip_outs": 10
+   },
+   "146": {
+    "er": 0,
+    "ip_outs": 11
+   }
+  },
+  "824703": {
+   "111": {
+    "er": 0,
+    "ip_outs": 21
+   },
+   "112": {
+    "er": 1,
+    "ip_outs": 11
+   }
+  },
+  "824706": {
+   "111": {
+    "er": 0,
+    "ip_outs": 15
+   },
+   "112": {
+    "er": 2,
+    "ip_outs": 9
+   }
+  },
+  "824707": {
+   "111": {
+    "er": 0,
+    "ip_outs": 12
+   },
+   "114": {
+    "er": 0,
+    "ip_outs": 24
+   }
+  },
+  "824709": {
+   "111": {
+    "er": 1,
+    "ip_outs": 10
+   },
+   "114": {
+    "er": 1,
+    "ip_outs": 12
+   }
+  },
+  "824710": {
+   "111": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "114": {
+    "er": 0,
+    "ip_outs": 6
+   }
+  },
+  "824784": {
+   "110": {
+    "er": 2,
+    "ip_outs": 7
+   },
+   "141": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "824785": {
+   "110": {
+    "er": 0,
+    "ip_outs": 12
+   },
+   "141": {
+    "er": 0,
+    "ip_outs": 9
+   }
+  },
+  "824787": {
+   "110": {
+    "er": 0,
+    "ip_outs": 7
+   },
+   "141": {
+    "er": 3,
+    "ip_outs": 18
+   }
+  },
+  "824789": {
+   "110": {
+    "er": 1,
+    "ip_outs": 9
+   },
+   "158": {
+    "er": 0,
+    "ip_outs": 18
+   }
+  },
+  "824866": {
+   "113": {
+    "er": 1,
+    "ip_outs": 18
+   },
+   "144": {
+    "er": 2,
+    "ip_outs": 12
+   }
+  },
+  "824867": {
+   "113": {
+    "er": 0,
+    "ip_outs": 9
+   },
+   "144": {
+    "er": 3,
+    "ip_outs": 12
+   }
+  },
+  "824868": {
+   "113": {
+    "er": 0,
+    "ip_outs": 7
+   },
+   "144": {
+    "er": 1,
+    "ip_outs": 13
+   }
+  },
+  "824947": {
+   "117": {
+    "er": 4,
+    "ip_outs": 8
+   },
+   "133": {
+    "er": 4,
+    "ip_outs": 9
+   }
+  },
+  "824949": {
+   "117": {
+    "er": 0,
+    "ip_outs": 6
+   },
+   "133": {
+    "er": 7,
+    "ip_outs": 12
+   }
+  },
+  "824950": {
+   "117": {
+    "er": 1,
+    "ip_outs": 19
+   },
+   "133": {
+    "er": 3,
+    "ip_outs": 9
+   }
+  },
+  "824951": {
+   "108": {
+    "er": 2,
+    "ip_outs": 12
+   },
+   "133": {
+    "er": 0,
+    "ip_outs": 14
+   }
+  },
+  "824953": {
+   "108": {
+    "er": 7,
+    "ip_outs": 8
+   },
+   "133": {
+    "er": 2,
+    "ip_outs": 21
+   }
+  },
+  "825028": {
+   "109": {
+    "er": 0,
+    "ip_outs": 19
+   },
+   "147": {
+    "er": 4,
+    "ip_outs": 11
+   }
+  }
+ },
+ "games": {
+  "822679": {
+   "away": {
+    "abbr": "NYM",
+    "color": "#FC611C",
+    "name": "Mets"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 10,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 2,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 19,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 5,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "NYM",
+      "flags": [],
+      "score": 3,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "WSH",
+      "flags": [],
+      "score": 1,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "WSH",
+    "color": "#E0393C",
+    "name": "Nationals"
+   },
+   "odds": {
+    "away_ml": -112,
+    "away_ml_open": -110,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "NYM -112",
+    "home_ml": -107,
+    "home_ml_open": -110,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.0
+   },
+   "probables": {
+    "away": {
+     "era": "4.34",
+     "name": "Sean Manaea"
+    },
+    "home": {
+     "era": "4.14",
+     "name": "DJ Herz"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 61
+   },
+   "signals": [
+    {
+     "label": "NYM OPS (14d)",
+     "tone": "pos",
+     "value": ".716"
+    },
+    {
+     "label": "WSH bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.49"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "WSH 9-8"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.34 vs 4.14"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 19,
+    "side": "YRFI"
+   },
+   "start": "1:05 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Nationals Park"
+  },
+  "822761": {
+   "away": {
+    "abbr": "CIN",
+    "color": "#E7324D",
+    "name": "Reds"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 27,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 10,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 15,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 38,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 21,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "CIN",
+      "flags": [],
+      "score": 6,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "TOR",
+      "flags": [],
+      "score": 1,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "TOR",
+    "color": "#4F86CA",
+    "name": "Blue Jays"
+   },
+   "odds": {
+    "away_ml": 145,
+    "away_ml_open": 142,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "TOR -176",
+    "home_ml": -176,
+    "home_ml_open": -172,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 8.5
+   },
+   "probables": {
+    "away": {
+     "era": "4.23",
+     "name": "Brandon Williamson"
+    },
+    "home": {
+     "era": "4.76",
+     "name": "Max Scherzer"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 55
+   },
+   "signals": [
+    {
+     "label": "TOR OPS (14d)",
+     "tone": "pos",
+     "value": ".710"
+    },
+    {
+     "label": "CIN bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.19"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "CIN 1-1"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.23 vs 4.76"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 38,
+    "side": "YRFI"
+   },
+   "start": "3:07 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Rogers Centre"
+  },
+  "823084": {
+   "away": {
+    "abbr": "LAA",
+    "color": "#E43554",
+    "name": "Angels"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 24,
+     "side": "SEA"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 2,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 23,
+     "side": "SEA"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 25,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "LAA",
+      "flags": [],
+      "score": 10,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "SEA",
+      "flags": [],
+      "score": 11,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "SEA",
+    "color": "#4FC9C9",
+    "name": "Mariners"
+   },
+   "odds": {
+    "away_ml": 135,
+    "away_ml_open": 147,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "SEA -163",
+    "home_ml": -163,
+    "home_ml_open": -179,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 7.0
+   },
+   "probables": {
+    "away": {
+     "era": "4.27",
+     "name": "Yusei Kikuchi"
+    },
+    "home": {
+     "era": "3.89",
+     "name": "Logan Gilbert"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 65
+   },
+   "signals": [
+    {
+     "label": "SEA OPS (14d)",
+     "tone": "pos",
+     "value": ".722"
+    },
+    {
+     "label": "LAA bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.52"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "LAA 8-6"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.27 vs 3.89"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 24,
+    "side": "SEA"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "T-Mobile Park"
+  },
+  "823164": {
+   "away": {
+    "abbr": "LAD",
+    "color": "#3D98DB",
+    "name": "Dodgers"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 48,
+     "side": "LAD"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 3,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 42,
+     "side": "LAD"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 0,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 42,
+     "side": "LAD"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "LAD",
+      "flags": [],
+      "score": 16,
+      "side": "Over"
+     },
+     "home": {
+      "abbr": "SF",
+      "flags": [],
+      "score": 26,
+      "side": "Under"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "SF",
+    "color": "#FD5A1E",
+    "name": "Giants"
+   },
+   "odds": {
+    "away_ml": -250,
+    "away_ml_open": -259,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "LAD -250",
+    "home_ml": 202,
+    "home_ml_open": 208,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.5
+   },
+   "probables": {
+    "home": {
+     "era": "4.12",
+     "name": "Carson Seymour"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 63
+   },
+   "signals": [
+    {
+     "label": "LAD OPS (14d)",
+     "tone": "pos",
+     "value": ".745"
+    },
+    {
+     "label": "SF bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.01"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "LAD 9-5"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 48,
+    "side": "LAD"
+   },
+   "start": "3:05 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Oracle Park"
+  },
+  "823246": {
+   "away": {
+    "abbr": "ARI",
+    "color": "#CE4A60",
+    "name": "D-backs"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 19,
+     "side": "ARI"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 13,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 12,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 16,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "ARI",
+      "flags": [],
+      "score": 16,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "SD",
+      "flags": [],
+      "score": 6,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "SD",
+    "color": "#FFC425",
+    "name": "Padres"
+   },
+   "odds": {
+    "away_ml": -144,
+    "away_ml_open": -131,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "ARI -144",
+    "home_ml": 119,
+    "home_ml_open": 108,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.0
+   },
+   "probables": {
+    "away": {
+     "era": "3.70",
+     "name": "Michael Soroka"
+    },
+    "home": {
+     "era": "4.00",
+     "name": "Randy V\u00e1squez"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 63
+   },
+   "signals": [
+    {
+     "label": "ARI OPS (14d)",
+     "tone": "pos",
+     "value": ".754"
+    },
+    {
+     "label": "ARI bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.16"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "ARI 7-6"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.70 vs 4.00"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 19,
+    "side": "ARI"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Petco Park"
+  },
+  "823408": {
+   "away": {
+    "abbr": "TB",
+    "color": "#8FBCE6",
+    "name": "Rays"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 9,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 27,
+     "side": "Under"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 11,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 41,
+     "side": "NRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 10,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "TB",
+      "flags": [],
+      "score": 19,
+      "side": "Under"
+     },
+     "home": {
+      "abbr": "PHI",
+      "flags": [],
+      "score": 29,
+      "side": "Under"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "PHI",
+    "color": "#E43442",
+    "name": "Phillies"
+   },
+   "odds": {
+    "away_ml": 142,
+    "away_ml_open": 111,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "PHI -173",
+    "home_ml": -173,
+    "home_ml_open": -134,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 6.5
+   },
+   "probables": {
+    "away": {
+     "era": "3.41",
+     "name": "Nick Martinez"
+    },
+    "home": {
+     "era": "3.51",
+     "name": "Zack Wheeler"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 65
+   },
+   "signals": [
+    {
+     "label": "TB OPS (14d)",
+     "tone": "pos",
+     "value": ".715"
+    },
+    {
+     "label": "PHI bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.25"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "TB 4-1"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.41 vs 3.51"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 41,
+    "side": "NRFI"
+   },
+   "start": "2:30 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Citizens Bank Park"
+  },
+  "823490": {
+   "away": {
+    "abbr": "BAL",
+    "color": "#EE672B",
+    "name": "Orioles"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 11,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 3,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 8,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 11,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 9,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "BAL",
+      "flags": [],
+      "score": 4,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "NYY",
+      "flags": [],
+      "score": 2,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "NYY",
+    "color": "#4377D5",
+    "name": "Yankees"
+   },
+   "odds": {
+    "away_ml": 100,
+    "away_ml_open": 117,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "NYY -120",
+    "home_ml": -120,
+    "home_ml_open": -141,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 7.5
+   },
+   "probables": {
+    "away": {
+     "era": "4.06",
+     "name": "Shane Baz"
+    },
+    "home": {
+     "era": "4.22",
+     "name": "Elmer Rodr\u00edguez"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 63
+   },
+   "signals": [
+    {
+     "label": "BAL OPS (14d)",
+     "tone": "pos",
+     "value": ".724"
+    },
+    {
+     "label": "BAL bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "3.87"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "NYY 11-4"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.06 vs 4.22"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": null,
+   "start": "1:05 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Yankee Stadium"
+  },
+  "823650": {
+   "away": {
+    "abbr": "TEX",
+    "color": "#DB3D4A",
+    "name": "Rangers"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 11,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 10,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 32,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 9,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "TEX",
+      "flags": [],
+      "score": 7,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "MIN",
+      "flags": [],
+      "score": 3,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "MIN",
+    "color": "#E13765",
+    "name": "Twins"
+   },
+   "odds": {
+    "away_ml": -114,
+    "away_ml_open": -126,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "TEX -114",
+    "home_ml": -105,
+    "home_ml_open": 104,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.0
+   },
+   "probables": {
+    "away": {
+     "era": "4.32",
+     "name": "MacKenzie Gore"
+    },
+    "home": {
+     "era": "4.51",
+     "name": "Dean Kremer"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 65
+   },
+   "signals": [
+    {
+     "label": "TEX OPS (14d)",
+     "tone": "pos",
+     "value": ".712"
+    },
+    {
+     "label": "TEX bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.27"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "MIN 4-1"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.32 vs 4.51"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 32,
+    "side": "YRFI"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Target Field"
+  },
+  "823731": {
+   "away": {
+    "abbr": "STL",
+    "color": "#D5435C",
+    "name": "Cardinals"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 55,
+     "side": "MIL"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 37,
+     "side": "Under"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 48,
+     "side": "MIL"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 50,
+     "side": "NRFI"
+    },
+    "run_line": {
+     "flags": [
+      "run_line_hot"
+     ],
+     "score": 48,
+     "side": "MIL"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "STL",
+      "flags": [],
+      "score": 52,
+      "side": "Under"
+     },
+     "home": {
+      "abbr": "MIL",
+      "flags": [],
+      "score": 12,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "MIL",
+    "color": "#FFC52F",
+    "name": "Brewers"
+   },
+   "odds": {
+    "away_ml": 167,
+    "away_ml_open": 188,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "MIL -204",
+    "home_ml": -204,
+    "home_ml_open": -231,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 7.0
+   },
+   "probables": {
+    "away": {
+     "era": "3.79",
+     "name": "Andre Pallante"
+    },
+    "home": {
+     "era": "2.83",
+     "name": "Jacob Misiorowski"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 63
+   },
+   "signals": [
+    {
+     "label": "MIL OPS (14d)",
+     "tone": "pos",
+     "value": ".717"
+    },
+    {
+     "label": "STL bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "3.98"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "MIL 10-2"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.79 vs 2.83"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 55,
+    "side": "MIL"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "American Family Field"
+  },
+  "823814": {
+   "away": {
+    "abbr": "ATL",
+    "color": "#E03963",
+    "name": "Braves"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 6,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 3,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 16,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 4,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "ATL",
+      "flags": [],
+      "score": 3,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "MIA",
+      "flags": [],
+      "score": 4,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "MIA",
+    "color": "#2AB9EF",
+    "name": "Marlins"
+   },
+   "odds": {
+    "away_ml": 100,
+    "away_ml_open": -110,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "MIA -120",
+    "home_ml": -120,
+    "home_ml_open": -110,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.5
+   },
+   "probables": {
+    "away": {
+     "era": "4.26",
+     "name": "JR Ritchie"
+    },
+    "home": {
+     "era": "4.14",
+     "name": "Janson Junk"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 63
+   },
+   "signals": [
+    {
+     "label": "ATL OPS (14d)",
+     "tone": "pos",
+     "value": ".723"
+    },
+    {
+     "label": "MIA bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.01"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "ATL 9-3"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "4.26 vs 4.14"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": null,
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "loanDepot park"
+  },
+  "824055": {
+   "away": {
+    "abbr": "CLE",
+    "color": "#E23750",
+    "name": "Guardians"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 50,
+     "side": "CLE"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 8,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 47,
+     "side": "CLE"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 30,
+     "side": "NRFI"
+    },
+    "run_line": {
+     "flags": [
+      "run_line_hot"
+     ],
+     "score": 47,
+     "side": "CLE"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "CLE",
+      "flags": [],
+      "score": 19,
+      "side": "Over"
+     },
+     "home": {
+      "abbr": "KC",
+      "flags": [],
+      "score": 24,
+      "side": "Under"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "KC",
+    "color": "#438FD5",
+    "name": "Royals"
+   },
+   "odds": {
+    "away_ml": -112,
+    "away_ml_open": -149,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "CLE -112",
+    "home_ml": -108,
+    "home_ml_open": 123,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 8.5
+   },
+   "probables": {
+    "away": {
+     "era": "3.18",
+     "name": "Parker Messick"
+    },
+    "home": {
+     "era": "4.05",
+     "name": "Daniel Lynch IV"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 69
+   },
+   "signals": [
+    {
+     "label": "CLE OPS (14d)",
+     "tone": "pos",
+     "value": ".746"
+    },
+    {
+     "label": "KC bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.56"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "CLE 9-5"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.18 vs 4.05"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 50,
+    "side": "CLE"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Kauffman Stadium"
+  },
+  "824217": {
+   "away": {
+    "abbr": "PIT",
+    "color": "#FDB827",
+    "name": "Pirates"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 4,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 4,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 3,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 5,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 3,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "PIT",
+      "flags": [],
+      "score": 4,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "DET",
+      "flags": [],
+      "score": 8,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "DET",
+    "color": "#F84E21",
+    "name": "Tigers"
+   },
+   "odds": {
+    "away_ml": -117,
+    "away_ml_open": -136,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "PIT -117",
+    "home_ml": -103,
+    "home_ml_open": 113,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 7.5
+   },
+   "probables": {
+    "away": {
+     "era": "3.95",
+     "name": "Jared Jones"
+    },
+    "home": {
+     "era": "3.92",
+     "name": "River Ryan"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 59
+   },
+   "signals": [
+    {
+     "label": "DET OPS (14d)",
+     "tone": "pos",
+     "value": ".741"
+    },
+    {
+     "label": "DET bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.05"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "PIT 5-3"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.95 vs 3.92"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": null,
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Comerica Park"
+  },
+  "824542": {
+   "away": {
+    "abbr": "COL",
+    "color": "#7272A6",
+    "name": "Rockies"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 45,
+     "side": "CWS"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 31,
+     "side": "Over"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 37,
+     "side": "CWS"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 54,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [
+      "run_line_hot"
+     ],
+     "score": 37,
+     "side": "CWS"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "COL",
+      "flags": [],
+      "score": 11,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "CWS",
+      "flags": [],
+      "score": 35,
+      "side": "Over"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "CWS",
+    "color": "#C4CED4",
+    "name": "White Sox"
+   },
+   "odds": {
+    "away_ml": 135,
+    "away_ml_open": 180,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "CHW -164",
+    "home_ml": -164,
+    "home_ml_open": -221,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": -1.5,
+    "spread_close": -1.5,
+    "spread_open": -1.5,
+    "total": 8.5
+   },
+   "probables": {
+    "away": {
+     "era": "5.24",
+     "name": "Kyle Freeland"
+    },
+    "home": {
+     "era": "4.28",
+     "name": "Anthony Kay"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 61
+   },
+   "signals": [
+    {
+     "label": "CWS OPS (14d)",
+     "tone": "pos",
+     "value": ".731"
+    },
+    {
+     "label": "COL bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.27"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "COL 2-2"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "5.24 vs 4.28"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 54,
+    "side": "YRFI"
+   },
+   "start": "3:10 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Rate Field"
+  },
+  "824705": {
+   "away": {
+    "abbr": "CHC",
+    "color": "#4E74CB",
+    "name": "Cubs"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 21,
+     "side": "CHC"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 17,
+     "side": "Under"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 7,
+     "side": "No clear lean"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 0,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 8,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "CHC",
+      "flags": [],
+      "score": 12,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "BOS",
+      "flags": [],
+      "score": 17,
+      "side": "Under"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "BOS",
+    "color": "#C94F57",
+    "name": "Red Sox"
+   },
+   "odds": {
+    "away_ml": -123,
+    "away_ml_open": -124,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "CHC -123",
+    "home_ml": 102,
+    "home_ml_open": 103,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 7.5
+   },
+   "probables": {
+    "away": {
+     "era": "3.86",
+     "name": "Shota Imanaga"
+    },
+    "home": {
+     "name": "Tanner Houck"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 59
+   },
+   "signals": [
+    {
+     "label": "CHC OPS (14d)",
+     "tone": "pos",
+     "value": ".721"
+    },
+    {
+     "label": "CHC bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "3.98"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "BOS 2-0"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "first_five_moneyline",
+    "flags": [],
+    "market": "First Five Moneyline",
+    "score": 21,
+    "side": "CHC"
+   },
+   "start": "3:05 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Tropicana Field"
+  },
+  "824948": {
+   "away": {
+    "abbr": "HOU",
+    "color": "#E97730",
+    "name": "Astros"
+   },
+   "betting_note": null,
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 28,
+     "side": "HOU"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 13,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 29,
+     "side": "HOU"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 9,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 29,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "HOU",
+      "flags": [],
+      "score": 27,
+      "side": "Over"
+     },
+     "home": {
+      "abbr": "ATH",
+      "flags": [],
+      "score": 2,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-27T15:02:20.176001+00:00",
+   "home": {
+    "abbr": "ATH",
+    "color": "#5ABFB2",
+    "name": "Athletics"
+   },
+   "odds": {
+    "away_ml": -193,
+    "away_ml_open": -168,
+    "captured_at": "2026-09-27T16:09:17Z",
+    "details": "HOU -193",
+    "home_ml": 158,
+    "home_ml_open": 139,
+    "moneyline_off": false,
+    "provider": "DraftKings",
+    "spread": 1.5,
+    "spread_close": 1.5,
+    "spread_open": 1.5,
+    "total": 10.0
+   },
+   "probables": {
+    "away": {
+     "era": "3.93",
+     "name": "Peter Lambert"
+    },
+    "home": {
+     "era": "4.29",
+     "name": "Seth Johnson"
+    }
+   },
+   "pulse": {
+    "label": "Warm",
+    "score": 61
+   },
+   "signals": [
+    {
+     "label": "HOU OPS (14d)",
+     "tone": "pos",
+     "value": ".747"
+    },
+    {
+     "label": "ATH bullpen ERA (7d)",
+     "tone": "neg",
+     "value": "4.62"
+    },
+    {
+     "label": "Season series",
+     "tone": "neutral",
+     "value": "HOU 6-6"
+    },
+    {
+     "label": "Probables ERA",
+     "tone": "neutral",
+     "value": "3.93 vs 4.29"
+    }
+   ],
+   "slate_date": "2026-09-27",
+   "standout": {
+    "bet_type": "moneyline",
+    "flags": [],
+    "market": "Moneyline",
+    "score": 29,
+    "side": "HOU"
+   },
+   "start": "3:05 PM ET",
+   "status": "Preview",
+   "story": null,
+   "summary": null,
+   "template_version": "v3",
+   "venue": "Sutter Health Park"
+  }
+ }
+}
