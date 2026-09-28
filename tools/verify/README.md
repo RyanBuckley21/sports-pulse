@@ -80,6 +80,17 @@ characters land on a 430px row already holding two team chips and a Pulse
 without the page scrolling sideways or a row overflowing its own box. Nothing
 throws when that breaks, the row just goes ragged, so it is measured.
 
+`test_slate_dates` also covers **an empty partition** (since 2026-09-28, 81
+checks). `signal_report` used to die on "store is empty (no 'mlb' games)"
+before asking whether the league played or the date was already graded, so the
+first MLB off day after the regular season red-lined the daily run from its one
+strict step, for a date already in the record. Four checks: an empty store on a
+no-games day exits clean; on a games day with the date already graded (the real
+12 rows from 09-27) it exits clean and writes nothing; on a games day with no
+grading it records `no_store` and fails. The recordable runs happen in a scratch
+working directory with its own ledger. Restoring the early exit fails exactly
+those four, with the CI run's own message.
+
 `test_slate_dates` also covers **falling forward**: a window tuned for a
 sport's usual cadence goes blank in any gap longer than itself, and then the
 tab shows nothing while the fixtures it would show sit in the schedule already,
@@ -142,9 +153,13 @@ Both directions were sabotage-checked when written: disabling the freeze guard
 fails exactly the freeze assertion, disabling the total-failure guard fails
 exactly the two fatality assertions.
 
-No network. Succeeding builders return the real committed entities from
-`data/insights.games.json`, and every store is redirected to a temp copy, so a
-run cannot touch anything committed.
+No network. Succeeding builders return real MLB entities from
+`game_isolation_fixture.json` (MLB's partition of both stores at `579b1e8`, the
+2026-09-27 regenerate, unedited), and every store is redirected to a temp copy,
+so a run cannot touch anything committed. Until 2026-09-28 they were read from
+the live `data/insights.games.json`, which the bot rewrites daily; on MLB's first
+off day after the season that partition was empty and this suite and
+`test_bet_board` (which uses its `_scenario`) failed on an unchanged main.
 
 ```
 python3 -m tools.verify.test_epl_grading      # from the repo root

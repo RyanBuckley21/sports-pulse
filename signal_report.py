@@ -1482,9 +1482,17 @@ def main(argv=None):
         "{}@{}".format(args.store, args.rev) if args.rev else args.store)
     recordable, why_not = is_recordable(args, min_score, threshold)
 
+    # AN EMPTY PARTITION IS NOT FATAL ON ITS OWN. It used to die here, before
+    # the two checks below that can tell what it means, and on 2026-09-28 it
+    # red-lined the daily run: the MLB regular season ended 09-27, that date was
+    # graded (12 picks) by the 18:00 UTC run, whose regenerate then cleared
+    # MLB's partition for a day with no games -- so the 19:02 UTC run found
+    # nothing and exited 2 from the one strict grading step. The same would
+    # happen on every postseason off day and every day of the offseason.
+    # An empty store now goes through the same questions as a rolled-forward
+    # one: no games that day -> clean; date already graded -> clean; games were
+    # played and nothing covers them -> the recorded gap and failure below.
     store = _sport_partition(load_store(args.store, args.rev), sport_key)
-    if not store:
-        die("store {} is empty (no {!r} games)".format(args.store, sport_key))
 
     session = requests.Session()
     try:

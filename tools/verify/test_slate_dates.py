@@ -190,6 +190,65 @@ ok("  reporting the slate_date, not the generated_at day",
    "2026-08-29" in out and "covers 2026-08-27" not in out, out.strip()[-120:])
 
 
+# ------------------------------------------------------- an empty partition
+# 2026-09-28: the MLB regular season ended 09-27. The 18:00 UTC run graded it
+# (12 picks), then its regenerate cleared MLB's partition for a day with no
+# games, and the 19:02 UTC run died on "store is empty (no 'mlb' games)" -- exit
+# 2 from the one strict grading step, a red run for a date already in the
+# record. An empty partition must go through the same questions as a
+# rolled-forward store instead of dying before them.
+code, out = run_grader({}, ["--date", "2026-09-28", "--no-record"], {})
+ok("an EMPTY store on a day with no games exits clean (the offseason)", code == sr.EXIT_OK, out.strip()[:90])
+ok("  and says the league did not play", "did not play" in out, out.strip()[:90])
+code, out = run_grader({"999": {}}, ["--date", "2026-09-28", "--no-record"], {})
+ok("an empty store on a day WITH games is still fatal (a real gap)", code != sr.EXIT_OK, code)
+
+
+def run_recordable(slate, date, ledger_rows):
+    """A DEFAULT-shaped run (recordable), in a scratch working directory with
+    its own config, empty store and ledger -- the committed ledger is never
+    opened. Returns (exit_code, stdout, ledger rows after)."""
+    repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, "data"))
+    with open(os.path.join(repo, "config.yaml")) as src, open(os.path.join(d, "config.yaml"), "w") as dst:
+        dst.write(src.read())
+    json.dump({"mlb": {}}, open(os.path.join(d, "data", "insights.games.json"), "w"))
+    with open(os.path.join(d, "data", "signal_report_history.jsonl"), "w") as f:
+        for r in ledger_rows:
+            f.write(json.dumps(r) + "\n")
+    real = sr.SPORT_ADAPTERS["mlb"]["fetch_slate"]
+    sr.SPORT_ADAPTERS["mlb"]["fetch_slate"] = lambda session, config, date: slate
+    cwd, buf = os.getcwd(), io.StringIO()
+    os.chdir(d)
+    try:
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            code = sr.main(["--date", date])
+    except SystemExit as e:
+        code = e.code
+    finally:
+        os.chdir(cwd)
+        sr.SPORT_ADAPTERS["mlb"]["fetch_slate"] = real
+    after = [json.loads(l) for l in open(os.path.join(d, "data", "signal_report_history.jsonl")) if l.strip()]
+    return code, buf.getvalue(), after
+
+
+# The real 09-27 MLB rows, as the 18:00 UTC run wrote them.
+_repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_graded = [r for r in (json.loads(l) for l in open(os.path.join(_repo, "data", "signal_report_history.jsonl")))
+           if r.get("date") == "2026-09-27" and (r.get("sport") or "mlb") == "mlb"
+           and r.get("run_id") == "2026-09-28T18:00:21Z"]
+ok("the real 09-27 MLB grading is in the ledger (12 picks)", len(_graded) == 12, len(_graded))
+code, out, after = run_recordable({"999": {}}, "2026-09-27", _graded)
+ok("an empty store for a date ALREADY GRADED exits clean (the 2026-09-28 failure)",
+   code == sr.EXIT_OK, out.strip()[:120])
+ok("  and writes nothing", len(after) == len(_graded), len(after))
+code, out, after = run_recordable({"999": {}}, "2026-09-27", [])
+ok("an empty store for an UNGRADED date with games still records the gap and fails",
+   code != sr.EXIT_OK and [r.get("status") for r in after] == [sr.STATUS_NO_STORE],
+   (code, [r.get("status") for r in after]))
+
+
 # ------------------------------------------------------- falling forward
 # A window tuned for a sport's usual cadence goes blank in any gap longer than
 # itself, and then the tab shows nothing while the fixtures it would show sit

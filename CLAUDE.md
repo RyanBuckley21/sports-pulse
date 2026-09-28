@@ -27,7 +27,7 @@ pip install -r requirements.txt                  # requests, PyYAML (Python 3.11
 
 # Python suites: offline, deterministic, run from the repo root; each prints "N checks pass"
 python3 -m tools.verify.test_game_isolation      # per-sport store freeze vs. off-day clear
-python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-forward window
+python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-forward window; empty-store grading exits
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
@@ -154,7 +154,10 @@ days later in an append-only file. Most have a test. Don't weaken them.
   in each direction and confirm that exactly the expected assertions fail. Record
   this in the suite's docstring and in `tools/verify/README.md`.
 - **Fixtures are real captured API data**, trimmed to the fields read and never
-  hand-written. Where an edge case was never observed (postponed games), edit
+  hand-written. **Never read the live `data/` stores in a test**: the bot
+  rewrites them daily, so a test seeded from them passes only while a league is
+  in season (`test_game_isolation` and `test_bet_board` broke on MLB's first
+  off day, 2026-09-28). Capture a fixture from a named commit instead. Where an edge case was never observed (postponed games), edit
   only the one field that branch reads, and document the edit.
 - **No new dependencies casually.** Runtime deps are `requests` and `PyYAML`
   only. The feeds are fetched as plain CSV/JSON over `requests` on purpose
@@ -289,13 +292,10 @@ Open, in rough priority:
 - `cfb_backtest.py` could not reach its weights from #59 (fallback tiers in
   `SIGNAL_SPECS`, no scale) until 2026-09-26. Fixed; the fallback tiers are
   now left out of its measurement and scored with config.yaml's own scales.
-- **Finished CFB weeks used to reach the cache 5-6 days late** because
-  cfbfastR's `completed` flag lags the games by days; every run in between
-  re-fetched the week (about 40 CFBD calls a week instead of 2). Since
-  2026-09-26 a week is also cached as soon as its CFBD data covers every game
-  (`fetchers.cfb._week_complete`). Check the per-run "CFBD calls" log line
-  after the next Saturday to confirm the drop; how quickly CFBD itself
-  publishes a week hasn't been measured.
+- ~~Finished CFB weeks used to reach the cache 5-6 days late~~ **Confirmed
+  fixed 2026-09-27:** week 4 (played 09-26) was cached by the next morning's
+  run at a cost of 2 CFBD calls (September 86 -> 88), against 5-6 days and
+  about 40 calls before `fetchers.cfb._week_complete`.
 - ~~The CFB graded record read 25 games a Saturday~~ **Fixed 2026-09-27.**
   `cfb_grading.fetch_slate` asked ESPN for `limit=1000`, which returns 25
   events, so every pick outside them was DEFERRED and never graded (12 of 17 on
@@ -331,4 +331,9 @@ Operational items to keep in mind:
   **a new graded sport must be added there too**, or it is unwatched.
 - The MLB season ends in late September. Expect `no_picks`/empty-slate rows and
   quiet MLB alarms from then on, which is not a failure. Training capture has
-  nothing to capture in the offseason.
+  nothing to capture in the offseason. **An empty MLB partition no longer fails
+  grading** (fixed 2026-09-28): it used to exit 2 from the strict MLB step on
+  the first off day after the season (run 184, a date already graded). An empty
+  store now exits clean when no games were played or the date is graded, and
+  still records `no_store` and fails when games were played and nothing covers
+  them.
