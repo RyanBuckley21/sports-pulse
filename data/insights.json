@@ -142,17 +142,6 @@
     "team": "Arsenal",
     "template_version": "v2"
   },
-  "cam schlittler|nyy": {
-    "entity": "Cam Schlittler",
-    "generated_at": "2026-09-29T16:23:39.885048+00:00",
-    "last_game_date": "2026-09-24",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "New York Yankees",
-    "template_version": "v2"
-  },
   "ceedee lamb|dal": {
     "entity": "CeeDee Lamb",
     "generated_at": "2026-09-21T16:19:41.303237+00:00",
@@ -186,17 +175,6 @@
     "team": "NO",
     "template_version": "v2"
   },
-  "chris sale|atl": {
-    "entity": "Chris Sale",
-    "generated_at": "2026-09-29T16:23:39.885048+00:00",
-    "last_game_date": "2026-09-23",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Atlanta Braves",
-    "template_version": "v2"
-  },
   "christian walker|hou": {
     "entity": "Christian Walker",
     "generated_at": "2026-09-28T18:01:12.086363+00:00",
@@ -217,6 +195,17 @@
     "summary": null,
     "takeaways": [],
     "team": "GB",
+    "template_version": "v2"
+  },
+  "cristopher s\u00e1nchez|phi": {
+    "entity": "Cristopher S\u00e1nchez",
+    "generated_at": "2026-09-30T16:19:21.478065+00:00",
+    "last_game_date": "2026-09-25",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Philadelphia Phillies",
     "template_version": "v2"
   },
   "daichi kamada|cry": {
@@ -318,6 +307,17 @@
     "team": "San Diego Padres",
     "template_version": "v2"
   },
+  "hunter brown|hou": {
+    "entity": "Hunter Brown",
+    "generated_at": "2026-09-30T16:19:21.478065+00:00",
+    "last_game_date": "2026-09-25",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Houston Astros",
+    "template_version": "v2"
+  },
   "isaac paredes|hou": {
     "entity": "Isaac Paredes",
     "generated_at": "2026-09-29T16:23:39.885048+00:00",
@@ -406,17 +406,6 @@
     "team": "Houston Astros",
     "template_version": "v2"
   },
-  "jes\u00fas luzardo|phi": {
-    "entity": "Jes\u00fas Luzardo",
-    "generated_at": "2026-09-29T16:23:39.885048+00:00",
-    "last_game_date": "2026-09-27",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Philadelphia Phillies",
-    "template_version": "v2"
-  },
   "jonathan taylor|ind": {
     "entity": "Jonathan Taylor",
     "generated_at": "2026-09-21T16:19:41.303237+00:00",
@@ -470,6 +459,17 @@
     "summary": null,
     "takeaways": [],
     "team": "KC",
+    "template_version": "v2"
+  },
+  "kevin gausman|chc": {
+    "entity": "Kevin Gausman",
+    "generated_at": "2026-09-30T16:19:21.478065+00:00",
+    "last_game_date": "2026-09-23",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Chicago Cubs",
     "template_version": "v2"
   },
   "kiernan dewsbury-hall|eve": {
@@ -549,17 +549,6 @@
     "team": "Atlanta Braves",
     "template_version": "v2"
   },
-  "michael king|sd": {
-    "entity": "Michael King",
-    "generated_at": "2026-09-29T16:23:39.885048+00:00",
-    "last_game_date": "2026-09-22",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "San Diego Padres",
-    "template_version": "v2"
-  },
   "munetaka murakami|cws": {
     "entity": "Munetaka Murakami",
     "generated_at": "2026-09-28T18:01:12.086363+00:00",
@@ -580,17 +569,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Brighton & Hove Albion",
-    "template_version": "v2"
-  },
-  "payton tolle|bos": {
-    "entity": "Payton Tolle",
-    "generated_at": "2026-09-29T16:23:39.885048+00:00",
-    "last_game_date": "2026-09-22",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Boston Red Sox",
     "template_version": "v2"
   },
   "pete crow-armstrong|chc": {
@@ -615,6 +593,17 @@
     "team": "Chicago White Sox",
     "template_version": "v2"
   },
+  "sonny gray|bos": {
+    "entity": "Sonny Gray",
+    "generated_at": "2026-09-30T16:19:21.478065+00:00",
+    "last_game_date": "2026-09-23",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Boston Red Sox",
+    "template_version": "v2"
+  },
   "trey mcbride|ari": {
     "entity": "Trey McBride",
     "generated_at": "2026-09-21T16:19:41.303237+00:00",
@@ -624,6 +613,17 @@
     "summary": null,
     "takeaways": [],
     "team": "ARI",
+    "template_version": "v2"
+  },
+  "tyler mahle|atl": {
+    "entity": "Tyler Mahle",
+    "generated_at": "2026-09-30T16:19:21.478065+00:00",
+    "last_game_date": "2026-09-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Atlanta Braves",
     "template_version": "v2"
   },
   "tyler shough|no": {
