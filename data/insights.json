@@ -13,7 +13,7 @@
   "alexander isak|liv": {
     "entity": "Alexander Isak",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-09-20",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -24,7 +24,7 @@
   "alisson becker|liv": {
     "entity": "Alisson Becker",
     "generated_at": "2026-10-10T14:25:49.706699+00:00",
-    "last_game_date": "2026-10-11",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -123,7 +123,7 @@
   "caoimh\u00edn kelleher|bre": {
     "entity": "Caoimh\u00edn Kelleher",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -162,6 +162,17 @@
     "summary": null,
     "takeaways": [],
     "team": "GB",
+    "template_version": "v2"
+  },
+  "cody gakpo|liv": {
+    "entity": "Cody Gakpo",
+    "generated_at": "2026-10-17T16:39:02.284663+00:00",
+    "last_game_date": "2026-09-20",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Liverpool",
     "template_version": "v2"
   },
   "daichi kamada|cry": {
@@ -244,7 +255,7 @@
   "erling haaland|mci": {
     "entity": "Erling Haaland",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-11",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -266,7 +277,7 @@
   "gianluigi donnarumma|mci": {
     "entity": "Gianluigi Donnarumma",
     "generated_at": "2026-10-11T18:27:35.729665+00:00",
-    "last_game_date": "2026-10-11",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -384,17 +395,6 @@
     "team": "BUF",
     "template_version": "v2"
   },
-  "josko gvardiol|mci": {
-    "entity": "Josko Gvardiol",
-    "generated_at": "2026-10-11T18:27:35.729665+00:00",
-    "last_game_date": "2026-10-11",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Manchester City",
-    "template_version": "v2"
-  },
   "jo\u00e3o pedro|che": {
     "entity": "Jo\u00e3o Pedro",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
@@ -428,15 +428,15 @@
     "team": "KC",
     "template_version": "v2"
   },
-  "marcus tavernier|bou": {
-    "entity": "Marcus Tavernier",
-    "generated_at": "2026-10-12T21:52:03.352402+00:00",
-    "last_game_date": "2026-10-10",
+  "konstantinos tzolakis|hul": {
+    "entity": "Konstantinos Tzolakis",
+    "generated_at": "2026-10-17T16:39:02.284663+00:00",
+    "last_game_date": "2026-10-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "AFC Bournemouth",
+    "team": "Hull City",
     "template_version": "v2"
   },
   "matthew stafford|la": {
