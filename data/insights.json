@@ -35,7 +35,7 @@
   "bart verbruggen|bha": {
     "entity": "Bart Verbruggen",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -74,28 +74,6 @@
     "summary": null,
     "takeaways": [],
     "team": "SF",
-    "template_version": "v2"
-  },
-  "bruno fernandes|mun": {
-    "entity": "Bruno Fernandes",
-    "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Manchester United",
-    "template_version": "v2"
-  },
-  "bryan mbeumo|mun": {
-    "entity": "Bryan Mbeumo",
-    "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Manchester United",
     "template_version": "v2"
   },
   "bryce young|car": {
@@ -153,6 +131,17 @@
     "team": "Tampa Bay Rays",
     "template_version": "v2"
   },
+  "charalambos kostoulas|bha": {
+    "entity": "Charalambos Kostoulas",
+    "generated_at": "2026-10-18T15:10:29.220023+00:00",
+    "last_game_date": "2026-10-18",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Brighton & Hove Albion",
+    "template_version": "v2"
+  },
   "christian watson|gb": {
     "entity": "Christian Watson",
     "generated_at": "2026-09-14T16:14:17.556157+00:00",
@@ -178,7 +167,7 @@
   "daichi kamada|cry": {
     "entity": "Daichi Kamada",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-11",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -332,7 +321,7 @@
   "james trafford|lee": {
     "entity": "James Trafford",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -439,15 +428,15 @@
     "team": "KC",
     "template_version": "v2"
   },
-  "konstantinos tzolakis|hul": {
-    "entity": "Konstantinos Tzolakis",
-    "generated_at": "2026-10-17T16:39:02.284663+00:00",
-    "last_game_date": "2026-10-17",
+  "marcus tavernier|bou": {
+    "entity": "Marcus Tavernier",
+    "generated_at": "2026-10-18T15:10:29.220023+00:00",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Hull City",
+    "team": "AFC Bournemouth",
     "template_version": "v2"
   },
   "matthew stafford|la": {
@@ -459,6 +448,17 @@
     "summary": null,
     "takeaways": [],
     "team": "LA",
+    "template_version": "v2"
+  },
+  "nicolas jackson|avl": {
+    "entity": "Nicolas Jackson",
+    "generated_at": "2026-10-18T15:10:29.220023+00:00",
+    "last_game_date": "2026-10-17",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Aston Villa",
     "template_version": "v2"
   },
   "parker messick|cle": {
@@ -475,7 +475,7 @@
   "pascal gross|bha": {
     "entity": "Pascal Gross",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
