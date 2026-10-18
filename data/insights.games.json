@@ -2988,7 +2988,7 @@
           "value": "NFO 0.33 home \u00b7 ARS 2.0 away"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "match_result",
         "flags": [],
@@ -3002,152 +3002,6 @@
       "summary": null,
       "template_version": "v3",
       "venue": "The City Ground"
-    },
-    "401878770": {
-      "away": {
-        "abbr": "HUL",
-        "color": "#F5A12D",
-        "id": "306",
-        "name": "Hull City"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "double_chance": {
-          "fair_odds": 1.21,
-          "flags": [],
-          "score": 67,
-          "side": "HUL or Draw",
-          "win_prob": 0.829
-        },
-        "match_result": {
-          "fair_odds": 1.78,
-          "flags": [],
-          "score": 67,
-          "side": "No clear lean",
-          "win_prob": 0.563
-        }
-      },
-      "generated_at": "2026-10-13T17:26:08.112928+00:00",
-      "home": {
-        "abbr": "FUL",
-        "color": "#E92F2F",
-        "id": "370",
-        "name": "Fulham"
-      },
-      "odds": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Goals scored / match",
-          "tone": "neg",
-          "value": "FUL 1.0 \u00b7 HUL 1.33"
-        },
-        {
-          "label": "Goals conceded / match",
-          "tone": "neg",
-          "value": "FUL 1.67 \u00b7 HUL 1.0"
-        },
-        {
-          "label": "Points / match (last 5)",
-          "tone": "neg",
-          "value": "FUL 0.4 \u00b7 HUL 1.2"
-        },
-        {
-          "label": "Recent form",
-          "tone": "pos",
-          "value": "FUL LLDDL \u00b7 HUL WDDLD"
-        },
-        {
-          "label": "Points / match in this role",
-          "tone": "neg",
-          "value": "FUL 0.33 home \u00b7 HUL 1.33 away"
-        }
-      ],
-      "slate_date": "2026-10-17",
-      "standout": {
-        "bet_type": "double_chance",
-        "flags": [],
-        "market": "Double Chance",
-        "score": 67,
-        "side": "HUL or Draw"
-      },
-      "start": "Sat Oct 17 \u00b7 10:00 AM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Craven Cottage"
-    },
-    "401878771": {
-      "away": {
-        "abbr": "CHE",
-        "color": "#4287D7",
-        "id": "363",
-        "name": "Chelsea"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "double_chance": {
-          "fair_odds": 1.56,
-          "flags": [],
-          "score": 19,
-          "side": "No clear lean",
-          "win_prob": 0.643
-        },
-        "match_result": {
-          "fair_odds": 2.31,
-          "flags": [],
-          "score": 19,
-          "side": "No clear lean",
-          "win_prob": 0.433
-        }
-      },
-      "generated_at": "2026-10-13T17:26:08.112928+00:00",
-      "home": {
-        "abbr": "EVE",
-        "color": "#3E72DA",
-        "id": "368",
-        "name": "Everton"
-      },
-      "odds": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Goals scored / match",
-          "tone": "neg",
-          "value": "EVE 1.33 \u00b7 CHE 2.5"
-        },
-        {
-          "label": "Goals conceded / match",
-          "tone": "pos",
-          "value": "EVE 0.83 \u00b7 CHE 2.17"
-        },
-        {
-          "label": "Points / match (last 5)",
-          "tone": "pos",
-          "value": "EVE 1.4 \u00b7 CHE 1.4"
-        },
-        {
-          "label": "Recent form",
-          "tone": "pos",
-          "value": "EVE DDDWD \u00b7 CHE WLDLW"
-        },
-        {
-          "label": "Points / match in this role",
-          "tone": "pos",
-          "value": "EVE 2.33 home \u00b7 CHE 1.0 away"
-        }
-      ],
-      "slate_date": "2026-10-17",
-      "standout": null,
-      "start": "Sat Oct 17 \u00b7 7:30 AM ET",
-      "status": "Live",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Hill Dickinson Stadium"
     },
     "401879257": {
       "away": {
@@ -3210,7 +3064,7 @@
           "value": "TOT 0.33 home \u00b7 COV 1.0 away"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Mon Oct 19 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -3218,152 +3072,6 @@
       "summary": null,
       "template_version": "v3",
       "venue": "Tottenham Hotspur Stadium"
-    },
-    "401879258": {
-      "away": {
-        "abbr": "AVL",
-        "color": "#95BFE5",
-        "id": "362",
-        "name": "Aston Villa"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "double_chance": {
-          "fair_odds": 1.38,
-          "flags": [],
-          "score": 26,
-          "side": "No clear lean",
-          "win_prob": 0.727
-        },
-        "match_result": {
-          "fair_odds": 2.16,
-          "flags": [],
-          "score": 26,
-          "side": "No clear lean",
-          "win_prob": 0.464
-        }
-      },
-      "generated_at": "2026-10-13T17:26:08.112928+00:00",
-      "home": {
-        "abbr": "NEW",
-        "color": "#90888A",
-        "id": "361",
-        "name": "Newcastle United"
-      },
-      "odds": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Goals scored / match",
-          "tone": "pos",
-          "value": "NEW 1.67 \u00b7 AVL 1.0"
-        },
-        {
-          "label": "Goals conceded / match",
-          "tone": "neg",
-          "value": "NEW 2.17 \u00b7 AVL 1.83"
-        },
-        {
-          "label": "Points / match (last 5)",
-          "tone": "pos",
-          "value": "NEW 1.4 \u00b7 AVL 1.0"
-        },
-        {
-          "label": "Recent form",
-          "tone": "pos",
-          "value": "NEW WDLWL \u00b7 AVL LDLWD"
-        },
-        {
-          "label": "Points / match in this role",
-          "tone": "pos",
-          "value": "NEW 1.67 home \u00b7 AVL 1.33 away"
-        }
-      ],
-      "slate_date": "2026-10-17",
-      "standout": null,
-      "start": "Sat Oct 17 \u00b7 12:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "St. James' Park"
-    },
-    "401879259": {
-      "away": {
-        "abbr": "IPS",
-        "color": "#5E83BB",
-        "id": "373",
-        "name": "Ipswich Town"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "double_chance": {
-          "fair_odds": 1.1,
-          "flags": [],
-          "score": 95,
-          "side": "MCI or Draw",
-          "win_prob": 0.91
-        },
-        "match_result": {
-          "fair_odds": 1.29,
-          "flags": [],
-          "score": 95,
-          "side": "MCI",
-          "win_prob": 0.778
-        }
-      },
-      "generated_at": "2026-10-13T17:26:08.112928+00:00",
-      "home": {
-        "abbr": "MCI",
-        "color": "#6CABDD",
-        "id": "382",
-        "name": "Manchester City"
-      },
-      "odds": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Goals scored / match",
-          "tone": "pos",
-          "value": "MCI 2.67 \u00b7 IPS 1.5"
-        },
-        {
-          "label": "Goals conceded / match",
-          "tone": "pos",
-          "value": "MCI 0.83 \u00b7 IPS 2.0"
-        },
-        {
-          "label": "Points / match (last 5)",
-          "tone": "pos",
-          "value": "MCI 3.0 \u00b7 IPS 1.2"
-        },
-        {
-          "label": "Recent form",
-          "tone": "pos",
-          "value": "MCI WWWWW \u00b7 IPS LLWLW"
-        },
-        {
-          "label": "Points / match in this role",
-          "tone": "pos",
-          "value": "MCI 3.0 home \u00b7 IPS 1.0 away"
-        }
-      ],
-      "slate_date": "2026-10-17",
-      "standout": {
-        "bet_type": "match_result",
-        "flags": [],
-        "market": "Match Result",
-        "score": 95,
-        "side": "MCI"
-      },
-      "start": "Sat Oct 17 \u00b7 10:00 AM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Etihad Stadium"
     },
     "401879260": {
       "away": {
@@ -3426,10 +3134,10 @@
           "value": "LEE 1.67 home \u00b7 MUN 0.67 away"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 9:00 AM ET",
-      "status": "Preview",
+      "status": "Live",
       "story": null,
       "summary": null,
       "template_version": "v3",
@@ -3496,7 +3204,7 @@
           "value": "BHA 2.33 home \u00b7 CRY 1.33 away"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "match_result",
         "flags": [],
@@ -3505,81 +3213,11 @@
         "side": "BHA"
       },
       "start": "Sun Oct 18 \u00b7 9:00 AM ET",
-      "status": "Preview",
+      "status": "Live",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "American Express Stadium"
-    },
-    "401879262": {
-      "away": {
-        "abbr": "LIV",
-        "color": "#DE3A55",
-        "id": "364",
-        "name": "Liverpool"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "double_chance": {
-          "fair_odds": 1.38,
-          "flags": [],
-          "score": 28,
-          "side": "No clear lean",
-          "win_prob": 0.727
-        },
-        "match_result": {
-          "fair_odds": 2.16,
-          "flags": [],
-          "score": 28,
-          "side": "No clear lean",
-          "win_prob": 0.464
-        }
-      },
-      "generated_at": "2026-10-13T17:26:08.112928+00:00",
-      "home": {
-        "abbr": "BRE",
-        "color": "#EB2E2E",
-        "id": "337",
-        "name": "Brentford"
-      },
-      "odds": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Goals scored / match",
-          "tone": "pos",
-          "value": "BRE 2.0 \u00b7 LIV 1.17"
-        },
-        {
-          "label": "Goals conceded / match",
-          "tone": "pos",
-          "value": "BRE 1.0 \u00b7 LIV 1.17"
-        },
-        {
-          "label": "Points / match (last 5)",
-          "tone": "neg",
-          "value": "BRE 1.4 \u00b7 LIV 1.6"
-        },
-        {
-          "label": "Recent form",
-          "tone": "pos",
-          "value": "BRE DDDWD \u00b7 LIV DWDWL"
-        },
-        {
-          "label": "Points / match in this role",
-          "tone": "pos",
-          "value": "BRE 2.33 home \u00b7 LIV 2.33 away"
-        }
-      ],
-      "slate_date": "2026-10-17",
-      "standout": null,
-      "start": "Sat Oct 17 \u00b7 10:00 AM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Gtech Community Stadium"
     },
     "401879263": {
       "away": {
@@ -3642,10 +3280,10 @@
           "value": "BOU 0.67 home \u00b7 SUN 0.33 away"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 9:00 AM ET",
-      "status": "Preview",
+      "status": "Live",
       "story": null,
       "summary": null,
       "template_version": "v3",
@@ -3653,7 +3291,7 @@
     }
   },
   "mlb": {
-    "849816": {
+    "849817": {
       "away": {
         "abbr": "TB",
         "color": "#8FBCE6",
@@ -3663,57 +3301,57 @@
       "betting_signals": {
         "first_five_moneyline": {
           "flags": [],
-          "score": 48,
-          "side": "TB"
+          "score": 7,
+          "side": "No clear lean"
         },
         "game_total": {
           "flags": [],
-          "score": 14,
-          "side": "No clear lean"
+          "score": 45,
+          "side": "Under"
         },
         "moneyline": {
           "flags": [],
-          "score": 34,
+          "score": 9,
           "side": "No clear lean"
         },
         "nrfi_yrfi": {
           "flags": [],
-          "score": 15,
+          "score": 55,
           "side": "NRFI"
         },
         "run_line": {
           "flags": [],
-          "score": 39,
+          "score": 9,
           "side": "No clear lean"
         },
         "team_total": {
           "away": {
             "abbr": "TB",
             "flags": [],
-            "score": 2,
-            "side": "No clear lean"
+            "score": 48,
+            "side": "Under"
           },
           "home": {
             "abbr": "CLE",
             "flags": [],
-            "score": 29,
+            "score": 40,
             "side": "No clear lean"
           }
         }
       },
-      "generated_at": "2026-10-17T13:31:23.190595+00:00",
+      "generated_at": "2026-10-18T13:50:23.322114+00:00",
       "home": {
         "abbr": "CLE",
         "color": "#E23750",
         "name": "Guardians"
       },
       "odds": {
-        "away_ml": -112,
-        "away_ml_open": -114,
-        "captured_at": "2026-10-17T17:55:23Z",
-        "details": "TB -112",
-        "home_ml": -107,
-        "home_ml_open": -105,
+        "away_ml": -133,
+        "away_ml_open": -128,
+        "captured_at": "2026-10-18T13:50:25Z",
+        "details": "TB -133",
+        "home_ml": 110,
+        "home_ml_open": 107,
         "moneyline_off": false,
         "provider": "DraftKings",
         "spread": 1.5,
@@ -3723,44 +3361,44 @@
       },
       "probables": {
         "away": {
-          "era": "3.50",
-          "name": "Nick Martinez"
+          "era": "3.27",
+          "name": "Drew Rasmussen"
         },
         "home": {
-          "era": "4.12",
-          "name": "Shawn Armstrong"
+          "era": "3.18",
+          "name": "Parker Messick"
         }
       },
       "pulse": {
         "label": "Warm",
-        "score": 59
+        "score": 63
       },
       "signals": [
         {
           "label": "TB bullpen ERA (7d)",
           "tone": "neg",
-          "value": "4.04"
+          "value": "4.05"
         },
         {
           "label": "Season series",
           "tone": "neutral",
-          "value": "TB 6-3"
+          "value": "TB 7-3"
         },
         {
           "label": "Probables ERA",
           "tone": "neutral",
-          "value": "3.50 vs 4.12"
+          "value": "3.27 vs 3.18"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
-        "bet_type": "first_five_moneyline",
+        "bet_type": "nrfi_yrfi",
         "flags": [],
-        "market": "First Five Moneyline",
-        "score": 48,
-        "side": "TB"
+        "market": "First-Inning Runs",
+        "score": 55,
+        "side": "NRFI"
       },
-      "start": "8:08 PM ET",
+      "start": "5:08 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
@@ -3790,11 +3428,11 @@
         "name": "LA"
       },
       "odds": {
-        "away_ml": 525,
+        "away_ml": 550,
         "away_ml_open": 500,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "LAR -12.5",
-        "home_ml": -750,
+        "home_ml": -800,
         "home_ml_open": -700,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -3824,7 +3462,7 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 4:05 PM ET",
       "status": "Preview",
@@ -3854,11 +3492,11 @@
         "name": "CLE"
       },
       "odds": {
-        "away_ml": -166,
+        "away_ml": -175,
         "away_ml_open": -270,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "BAL -3",
-        "home_ml": 140,
+        "home_ml": 145,
         "home_ml_open": 220,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -3888,7 +3526,7 @@
           "value": "+0.03"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3924,11 +3562,11 @@
         "name": "LV"
       },
       "odds": {
-        "away_ml": -225,
+        "away_ml": -245,
         "away_ml_open": -285,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "BUF -5.5",
-        "home_ml": 185,
+        "home_ml": 200,
         "home_ml_open": 230,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -3958,7 +3596,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 4:25 PM ET",
       "status": "Preview",
@@ -3990,11 +3628,11 @@
         "name": "PHI"
       },
       "odds": {
-        "away_ml": -166,
+        "away_ml": -162,
         "away_ml_open": 230,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "CAR -3",
-        "home_ml": 140,
+        "home_ml": 136,
         "home_ml_open": -285,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4024,7 +3662,7 @@
           "value": "+0.05"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "moneyline",
         "flags": [
@@ -4064,7 +3702,7 @@
       "odds": {
         "away_ml": -120,
         "away_ml_open": -166,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "CHI -1.5",
         "home_ml": 100,
         "home_ml_open": 140,
@@ -4096,7 +3734,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4126,11 +3764,11 @@
         "name": "GB"
       },
       "odds": {
-        "away_ml": -102,
+        "away_ml": -105,
         "away_ml_open": 140,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "GB -1.5",
-        "home_ml": -118,
+        "home_ml": -115,
         "home_ml_open": -166,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4160,7 +3798,7 @@
           "value": "+0.20"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 8:20 PM ET",
       "status": "Preview",
@@ -4224,7 +3862,7 @@
           "value": "-0.05"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4260,11 +3898,11 @@
         "name": "KC"
       },
       "odds": {
-        "away_ml": 350,
+        "away_ml": 320,
         "away_ml_open": 114,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "KC -7.5",
-        "home_ml": -455,
+        "home_ml": -410,
         "home_ml_open": -135,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4294,7 +3932,7 @@
           "value": "-0.05"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4332,7 +3970,7 @@
       "odds": {
         "away_ml": -110,
         "away_ml_open": 124,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "NO -1.5",
         "home_ml": -110,
         "home_ml_open": -148,
@@ -4364,7 +4002,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4394,11 +4032,11 @@
         "name": "NE"
       },
       "odds": {
-        "away_ml": 275,
+        "away_ml": 285,
         "away_ml_open": 350,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "NE -7.5",
-        "home_ml": -345,
+        "home_ml": -360,
         "home_ml_open": -455,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4428,7 +4066,7 @@
           "value": "+0.02"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4458,11 +4096,11 @@
         "name": "TB"
       },
       "odds": {
-        "away_ml": -148,
+        "away_ml": -142,
         "away_ml_open": 105,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "PIT -2.5",
-        "home_ml": 124,
+        "home_ml": 120,
         "home_ml_open": -125,
         "moneyline_off": false,
         "provider": "DraftKings",
@@ -4492,7 +4130,7 @@
           "value": "+0.01"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4522,16 +4160,16 @@
         "name": "IND"
       },
       "odds": {
-        "away_ml": 270,
+        "away_ml": 245,
         "away_ml_open": 160,
-        "captured_at": "2026-10-17T17:55:25Z",
-        "details": "IND -7",
-        "home_ml": -340,
+        "captured_at": "2026-10-18T13:50:46Z",
+        "details": "IND -6.5",
+        "home_ml": -305,
         "home_ml_open": -192,
         "moneyline_off": false,
         "provider": "DraftKings",
-        "spread": -7.0,
-        "spread_close": -7.0,
+        "spread": -6.5,
+        "spread_close": -6.5,
         "spread_open": -3.5,
         "total": 44.5
       },
@@ -4556,7 +4194,7 @@
           "value": "+0.09"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": null,
       "start": "Sun Oct 18 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4588,7 +4226,7 @@
       "odds": {
         "away_ml": 350,
         "away_ml_open": 205,
-        "captured_at": "2026-10-17T17:55:25Z",
+        "captured_at": "2026-10-18T13:50:46Z",
         "details": "SF -7.5",
         "home_ml": -455,
         "home_ml_open": -250,
@@ -4620,7 +4258,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-10-17",
+      "slate_date": "2026-10-18",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
