@@ -90,7 +90,7 @@
   "bukayo saka|ars": {
     "entity": "Bukayo Saka",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -200,7 +200,7 @@
   "david raya|ars": {
     "entity": "David Raya",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -211,7 +211,7 @@
   "declan rice|ars": {
     "entity": "Declan Rice",
     "generated_at": "2026-10-10T14:25:49.706699+00:00",
-    "last_game_date": "2026-10-10",
+    "last_game_date": "2026-10-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -428,6 +428,17 @@
     "team": "KC",
     "template_version": "v2"
   },
+  "liam delap|nfo": {
+    "entity": "Liam Delap",
+    "generated_at": "2026-10-18T18:16:08.696889+00:00",
+    "last_game_date": "2026-10-18",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Nottingham Forest",
+    "template_version": "v2"
+  },
   "marcus tavernier|bou": {
     "entity": "Marcus Tavernier",
     "generated_at": "2026-10-18T15:10:29.220023+00:00",
@@ -448,17 +459,6 @@
     "summary": null,
     "takeaways": [],
     "team": "LA",
-    "template_version": "v2"
-  },
-  "nicolas jackson|avl": {
-    "entity": "Nicolas Jackson",
-    "generated_at": "2026-10-18T15:10:29.220023+00:00",
-    "last_game_date": "2026-10-17",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Aston Villa",
     "template_version": "v2"
   },
   "parker messick|cle": {
