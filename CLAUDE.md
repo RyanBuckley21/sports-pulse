@@ -262,36 +262,50 @@ unexplained (below).
 
 ### Improve the moneyline picks with data
 
-**The first real evidence of edge in this project arrived on 2026-10-22, and it
-is not yet trustworthy.** Line movement toward shipped picks, latest run per
-pick, bootstrap CIs (4,000 resamples, seed 17), null = 0.0pp:
+**Measured 2026-10-22, and the answer is no edge.** This section previously
+reported NFL line movement of +7.90pp toward shipped picks with a CI clearing
+zero, as the project's first evidence of edge. That number was an artefact of
+the baseline, and the corrected measurement kills it.
 
-| sport | n | mean move toward the pick | 95% CI |
+The stored `*_ml_open` is **ESPN's own opening number**, which can predate our
+first sighting of a game by days. The honest baseline is the price at the moment
+the pick existed. The committed games store already answers that without any new
+data: it is written several times a day, so the first commit in which a gamePk
+carried BOTH a price AND a standout is what the board actually came in at.
+Re-measured against that anchor (122 store commits since 09-20, 116 of 123 picks
+anchored; bootstrap CIs, 4,000 resamples, seed 17, null = 0.0pp):
+
+| sport | n | from the book's open | from OUR first capture |
 | --- | --- | --- | --- |
-| NFL | 28 | **+7.90pp** | [+3.78, +12.22] |
-| CFB | 87 | +1.47pp | [+0.34, +2.64] |
-| MLB | 8 | −0.14pp | [−1.92, +1.59] |
-| all | 123 | +2.83pp | [+1.51, +4.14] |
+| NFL | 28 | +7.90pp [+3.78, +12.22] | **−0.50pp [−1.69, +0.76]** |
+| CFB | 80 | +1.55pp [+0.37, +2.84] | **+0.70pp [−0.10, +1.50]** |
+| MLB | 8 | −0.14pp [−1.92, +1.60] | −0.25pp [−0.92, +0.40] |
+| all | 116 | +2.96pp [+1.56, +4.41] | **+0.35pp [−0.31, +0.99]** |
 
-NFL's median is +8.09pp, so it is a shifted distribution rather than a few
-outliers. **Do not act on this yet**, because the confound is already a known
-open item below: **CLV is measured from the book's opening price, not from when
-the pick was made.** On LAC @ BUF (2026-09-22) most of the move from −142 had
-already happened before the first capture, so the model may be taking credit
-for movement it did not anticipate.
+Every interval spans zero and NFL's point estimate turns slightly negative.
+`2026_05_PHI_JAX` is the mechanism in one line: the book opened JAX **+110**,
+our first capture already read **−285**, and it closed **−395**. From the open
+that is +32.2pp; from where the board actually came in, +5.8pp. The move was
+over before the model had an opinion.
 
-The single highest-value task for this goal is therefore **not** a model
-change: it is to **store a first-seen price per game** and re-measure CLV from
-that. If the effect survives, it is the first evidence any part of this model
-beats the market, and NFL is where to look. If it does not, that is equally
-worth knowing and costs one field.
+**This is the fourth positive result in this repo to evaporate under a corrected
+baseline** (see the opponent adjustment's +2.1pp -> −0.2%). Treat any new
+"the market agrees with us" claim as guilty until the baseline is named.
 
-Before proposing a model change, read the three negative results in
-*Lessons* and in `config.yaml`: the picks do not beat a closing line, no
-combination of current signals out-predicts a spread, and MLB's score is
-inverted by confidence (90+ band 2-5, 75-89 band 14-20, under-60 52.1%, over
-595 picks and 76 dates). That inversion is the most interesting unexplained
-thing in the repo and is a data question, not a tuning one.
+What follows from it:
+
+- **Ship `odds_first_seen`** — a price snapshot written once and never
+  overwritten, with its capture timestamp — and make the first-capture figure
+  the headline CLV. Keep the book-open figure if useful, but the report must not
+  present it as a model result. This is a correctness fix, not a discovery.
+- **The reported "Line movement" line currently overstates by about 8pp on NFL.**
+  Until the field lands, do not quote it.
+- **No model change is justified by CLV yet**, and three prior negative results
+  stand against reaching for one: the picks do not beat a closing line, no
+  combination of current signals out-predicts a spread, and MLB's score is
+  inverted by confidence (90+ band 2-5, 75-89 band 14-20, under-60 52.1%, over
+  595 picks and 76 dates). That inversion remains the most interesting
+  unexplained thing here, and it is a data question, not a tuning one.
 
 ### Add NBA
 
@@ -356,10 +370,12 @@ warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
 Open, in rough priority:
-- **CLV measures from the book's opening price, not from when the pick was
-  made.** ESPN gives no timestamp for the open, and on LAC @ BUF (2026-09-22)
-  the move from -142 had largely happened before our first capture. Measuring
-  from our first captured price needs a stored first-seen price per game.
+- ~~CLV measures from the book's opening price~~ **Measured 2026-10-22, and it
+  was the whole signal.** Re-anchored to the first committed store state where a
+  pick had both a price and a standout, NFL falls from +7.90pp to −0.50pp
+  [−1.69, +0.76] and every sport spans zero (see *Next up*). The remaining work
+  is the `odds_first_seen` field so the live report stops overstating; the
+  backfill proved the method on git history and needs no ledger rewrite.
 - **A QB who misses every practice doesn't move the score.** Only an official
   Out/Doubtful does (`qb_out`). Changing that is a model change: backtest it
   against nflverse's injury history first.
@@ -410,7 +426,7 @@ Open, in rough priority:
 - `epl_backtest.py` still builds a `dates=START-END` URL, which ESPN has
   rejected since 2026-09-15. It is a manual script, so nothing runs it, but it
   cannot re-derive EPL's weights until it walks months.
-- The one-off CLV review routine fires 2026-10-22.
+- ~~The one-off CLV review routine fires 2026-10-22~~ **Fired; result above.**
 
 Operational items to keep in mind:
 

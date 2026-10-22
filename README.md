@@ -94,6 +94,11 @@ config.yaml ───▶ │ SPORT_FETCHERS[sport].fetch()  → normalizer.norma
   (this season, then last season) when calibrated form doesn't exist yet, as in
   week 1 or the start of a new EPL season. A fallback is never mixed into a
   calibrated lean.
+- **The picks do not beat the market, and the record says so.** Measured
+  2026-10-22, line movement toward a shipped pick is +0.35pp across 116 priced
+  picks (95% CI [-0.31, +0.99]) once measured from the price the board actually
+  came in at rather than the book's opening number. Every sport's interval spans
+  zero. A high Signal Score means "wins more often", never "is mispriced".
 - **Prices are for display only.** `espn_odds.py` captures the pre-kickoff line
   for NFL, CFB and MLB and keeps it ("sticky price", since ESPN drops odds at
   kickoff). It records closing-line value, and prices **moneyline picks only**:
