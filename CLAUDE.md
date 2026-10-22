@@ -229,7 +229,105 @@ days later in an append-only file. Most have a test. Don't weaken them.
   record was inflated by −3000 favourites, hence the bettability cap of −1000
   (break-even 0.9091). Don't present accuracy as profitability.
 
-## Known drift and open items (as of 2026-09-26)
+## Next up (set 2026-10-22 by the owner)
+
+Three things, in the owner's words: **make all the MLB stuff inactive**,
+**improve the moneyline picks with data**, and **incorporate NBA**. What is
+already known about each, so a new session does not re-derive it:
+
+### Stand MLB down
+
+Flipping two config keys is the easy 10% and will leave a trail of breakage.
+MLB is not a peer sport here — it is the one the project was built around:
+
+- `betting_signals.py` and `implied_total.py` are MLB's scoring and are
+  **frozen** (invariant 1). Standing MLB down must not touch them.
+- The daily workflow's **MLB grading step is the only strict one**; every other
+  sport's is `continue-on-error`. An inactive MLB that still grades strictly
+  will red the workflow daily.
+- `deploy-pages.yml` carries a **per-sport grading-drop alarm** with its sport
+  list written out inline (it runs before `pip install`), plus an MLB-specific
+  training-capture freshness probe against `statsapi.mlb.com`. Both need to
+  stop expecting MLB.
+- `capture-training-data.yml`, `training_capture.py`, `capture_training_data.py`,
+  `backtest_season.py` and `mlb_estimate_calibration.py` are MLB-only.
+- `data/training/mlb_features.jsonl` and the MLB ledger rows are append-only
+  history and **stay** (invariant 6). Standing a sport down is not deleting it.
+
+Decide explicitly whether "inactive" means *leaderboards only*, *no picks*, or
+*nothing at all* — the two gates make all three expressible, and the answer
+changes which of the above must move. Note the record keeps MLB's 595 graded
+picks either way, and it is the sport whose confidence inversion is still
+unexplained (below).
+
+### Improve the moneyline picks with data
+
+**The first real evidence of edge in this project arrived on 2026-10-22, and it
+is not yet trustworthy.** Line movement toward shipped picks, latest run per
+pick, bootstrap CIs (4,000 resamples, seed 17), null = 0.0pp:
+
+| sport | n | mean move toward the pick | 95% CI |
+| --- | --- | --- | --- |
+| NFL | 28 | **+7.90pp** | [+3.78, +12.22] |
+| CFB | 87 | +1.47pp | [+0.34, +2.64] |
+| MLB | 8 | −0.14pp | [−1.92, +1.59] |
+| all | 123 | +2.83pp | [+1.51, +4.14] |
+
+NFL's median is +8.09pp, so it is a shifted distribution rather than a few
+outliers. **Do not act on this yet**, because the confound is already a known
+open item below: **CLV is measured from the book's opening price, not from when
+the pick was made.** On LAC @ BUF (2026-09-22) most of the move from −142 had
+already happened before the first capture, so the model may be taking credit
+for movement it did not anticipate.
+
+The single highest-value task for this goal is therefore **not** a model
+change: it is to **store a first-seen price per game** and re-measure CLV from
+that. If the effect survives, it is the first evidence any part of this model
+beats the market, and NFL is where to look. If it does not, that is equally
+worth knowing and costs one field.
+
+Before proposing a model change, read the three negative results in
+*Lessons* and in `config.yaml`: the picks do not beat a closing line, no
+combination of current signals out-predicts a spread, and MLB's score is
+inverted by confidence (90+ band 2-5, 75-89 band 14-20, under-60 52.1%, over
+595 picks and 76 dates). That inversion is the most interesting unexplained
+thing in the repo and is a data question, not a tuning one.
+
+### Add NBA
+
+Measured against the live feed on 2026-10-22, so this part is settled:
+
+- `site.api.espn.com/.../basketball/nba/scoreboard` works; **odds coverage was
+  100%** (2 of 2 games, then 12 of 12 the next day), carrying **both open and
+  close** moneylines plus spread and total. So NBA arrives price-capable from
+  day one, unlike CFB and EPL.
+- Month queries work (`dates=202610`, 155 events). **Range queries 400**, same
+  as every other league — use `espn_dates` (invariant 11).
+- `/teams` returns 30; `/teams/{id}/statistics` and the standings endpoint both
+  respond, so richer signals than margin are available.
+- **Preseason is mixed into the month feed** — October 2026 showed 81 completed
+  games, far more than a two-day-old regular season. Filter by season type
+  before computing any form, or preseason results will train the model. This is
+  the same class of trap as CFB's postseason `week=1`.
+- The season began ~2026-10-20, so NBA starts in genuine cold start. The
+  prior-season-margin fallback pattern (`fetchers/nfl.build_prior_season_margin`
+  and the `_FALLBACK_TIERS` machinery) is the precedent to copy, including the
+  measured home-field shift.
+
+Follow `docs/leagues.md`: register the sport first, activate it in a separate
+step, and ship no weight before a backtest.
+
+## Known drift and open items (as of 2026-09-26; state refreshed 2026-10-22)
+
+**Current graded record (2026-10-22, latest run per pick):** 928 graded rows;
+123 carry a price and CLV. MLB 51.4% (306-289 on 595 picks over 76 dates), and
+still inverted by confidence. CFB 72.2% (192-74 on 266), down from 78% before
+the bettability cap — expected, and the point of it.
+
+**Container note:** in a fresh cloud container `pip` on PATH is Python 3.13's
+while `python3` is 3.11, so `pip install -r requirements.txt` installs where
+nothing can import it. Use `python3 -m pip install -r requirements.txt`.
+
 
 The stale docs found in the 2026-09-24 review (leagues.md, the EPL fetcher and
 `GAME_BUILDERS` docstrings, config.yaml's gate comments, `signal_core.py`,
