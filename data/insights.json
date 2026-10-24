@@ -43,6 +43,17 @@
     "team": "Brighton & Hove Albion",
     "template_version": "v2"
   },
+  "bernd leno|ful": {
+    "entity": "Bernd Leno",
+    "generated_at": "2026-10-24T16:57:06.153705+00:00",
+    "last_game_date": "2026-10-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Fulham",
+    "template_version": "v2"
+  },
   "bijan robinson|atl": {
     "entity": "Bijan Robinson",
     "generated_at": "2026-09-25T15:04:00.620236+00:00",
@@ -164,21 +175,10 @@
     "team": "Crystal Palace",
     "template_version": "v2"
   },
-  "dan ndoye|nfo": {
-    "entity": "Dan Ndoye",
-    "generated_at": "2026-10-24T13:53:27.180582+00:00",
-    "last_game_date": "2026-10-23",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Nottingham Forest",
-    "template_version": "v2"
-  },
   "david raya|ars": {
     "entity": "David Raya",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
-    "last_game_date": "2026-10-18",
+    "last_game_date": "2026-10-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -189,7 +189,7 @@
   "declan rice|ars": {
     "entity": "Declan Rice",
     "generated_at": "2026-10-10T14:25:49.706699+00:00",
-    "last_game_date": "2026-10-18",
+    "last_game_date": "2026-10-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -508,7 +508,7 @@
   "thierno barry|eve": {
     "entity": "Thierno Barry",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
-    "last_game_date": "2026-10-17",
+    "last_game_date": "2026-10-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
