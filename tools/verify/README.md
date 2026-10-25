@@ -560,6 +560,39 @@ resample; the check now uses noisy leans. `cfb_form_fixture.json` is the real
 2026 schedule for weeks 1-3 and the CFBD rows for those weeks as
 `data/boxscores.json` cached them, unedited.
 
+```bash
+python3 -m tools.verify.test_stand_down       # from the repo root
+```
+
+**`test_stand_down`** (added 2026-10-25, 31 checks) covers standing a sport down,
+meaning leaving it out of `active_game_sports`. MLB was stood down mid-World
+Series, when its frozen partition still held a live pick. The suite pins
+behaviour on both sides of that:
+
+- A stood-down sport whose store **covers** the date grades it exactly as an
+  active sport would. Its rows match an active run's, and its verdicts match
+  the live ledger's for the same picks (both MISS).
+- An already-graded date is not graded again, and makes no fetch.
+- A store for **another** date, or an empty one, exits clean with **no row
+  and no fetch**.
+- With the same inputs and the sport **active**, the run still records
+  `no_store` and fails.
+
+It also pins `configured_game_sports` as the gate's one definition: the
+`is None` kill switch, the fallback, and `generate_insights` built on it.
+
+The fixtures are real. `stand_down_fixture.json` is commit `f3bf07f`'s MLB
+partition (2026-09-23), trimmed. The finals are the StatsAPI games already in
+`season_phase_fixture.json`. Every run uses a scratch directory, and the live
+`data/` files are never opened.
+
+Sabotage-checked in three directions, with measured counts:
+
+- Disabling the branch fails 9 of 31: the World Series false gap, reproduced,
+  and a second same-day run re-appending both rows.
+- Skipping a stood-down sport outright fails 5: the stranded pick.
+- Using `or` instead of `is None` fails the 3 kill-switch checks.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

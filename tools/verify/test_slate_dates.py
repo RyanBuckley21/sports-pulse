@@ -211,8 +211,17 @@ def run_recordable(slate, date, ledger_rows):
     repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     d = tempfile.mkdtemp()
     os.makedirs(os.path.join(d, "data"))
-    with open(os.path.join(repo, "config.yaml")) as src, open(os.path.join(d, "config.yaml"), "w") as dst:
-        dst.write(src.read())
+    # MLB IS PUT BACK IN THE PICKS GATE for this scratch run. These assertions
+    # are about an ACTIVE sport's gap logic, and production stood MLB down on
+    # 2026-10-25 -- copying config.yaml verbatim then sent the ungraded-date case
+    # down the stood-down branch (exit 0, no row), which is correct for a
+    # stood-down sport and is pinned in test_stand_down, not here.
+    import yaml
+    with open(os.path.join(repo, "config.yaml")) as src:
+        cfg = yaml.safe_load(src)
+    cfg["active_game_sports"] = ["mlb"] + [s for s in (cfg.get("active_game_sports") or []) if s != "mlb"]
+    with open(os.path.join(d, "config.yaml"), "w") as dst:
+        yaml.safe_dump(cfg, dst)
     json.dump({"mlb": {}}, open(os.path.join(d, "data", "insights.games.json"), "w"))
     with open(os.path.join(d, "data", "signal_report_history.jsonl"), "w") as f:
         for r in ledger_rows:

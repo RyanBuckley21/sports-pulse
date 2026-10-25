@@ -38,7 +38,15 @@ name: Capture MLB training data
 # (one 4.5 min outlier in 16 runs). Arrival time is everything.
 
 on:
-  schedule:
+  # SCHEDULE OFF since 2026-10-25: MLB is stood down (config.yaml, both gates).
+  # The crons below are commented out, NOT deleted, because every one of them
+  # carries a measured reason (the deadline analysis above), and re-activating
+  # MLB should restore exactly these six, together with the deploy-pages.yml
+  # "Alarm if yesterday captured nothing" step switched off in the same change.
+  # workflow_dispatch stays, so a manual capture is still possible. Nothing in
+  # data/training/ is touched: rows already captured stay, and generate_insights
+  # keeps labelling any still-pending ones (it goes quiet once none are left).
+  # schedule:
     # SIX entries. This replaces three (09:20/11:20/13:20), and the reasoning
     # that produced those three was wrong in a specific, measurable way.
     #
@@ -116,12 +124,12 @@ on:
     # six +1h in the fall", which would have changed nothing that matters.)
     # Capture timing only affects margin in any case; it can never cause a
     # post-start capture, which the gates block regardless.
-    - cron: "20 1 * * *"
-    - cron: "20 3 * * *"
-    - cron: "20 5 * * *"
-    - cron: "20 7 * * *"
-    - cron: "20 9 * * *"
-    - cron: "20 11 * * *"
+    # - cron: "20 1 * * *"
+    # - cron: "20 3 * * *"
+    # - cron: "20 5 * * *"
+    # - cron: "20 7 * * *"
+    # - cron: "20 9 * * *"
+    # - cron: "20 11 * * *"
   workflow_dispatch: {}
 
 # Scoped to this workflow only. deploy-pages.yml is unchanged and still read-only.

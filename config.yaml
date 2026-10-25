@@ -22,7 +22,15 @@ top_n: 10
 # GAME_BUILDERS entry. It has one now and is named explicitly below, so that
 # argument no longer applies; the separation it was protecting still does.)
 # cfb is absent on purpose: it has no leaderboard fetcher at all.
-active_sports: [mlb, epl, nfl]
+#
+# mlb STOOD DOWN 2026-10-25 (owner: "make all the MLB stuff inactive"), from
+# BOTH gates -- "inactive" was decided to mean nothing at all, not leaderboards
+# only. Its board is last-10-games, so all winter it would publish a frozen
+# end-of-September snapshot as if it were "who's hot"; and being first in this
+# list it was the site's DEFAULT sport, which is now epl. Standing down is not
+# deleting: the fetcher, team_meta, logos and config block below all stay, and
+# re-adding `mlb` here (first, to make it the default again) restores the boards.
+active_sports: [epl, nfl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
 # GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
@@ -66,7 +74,25 @@ active_sports: [mlb, epl, nfl]
 # A NEW sport added here without a grading adapter AND a workflow step would
 # publish picks that are stored but never settled. That is the gap EPL briefly
 # had; check both before adding a fifth.
-active_game_sports: [mlb, epl, cfb, nfl]
+#
+# mlb STOOD DOWN 2026-10-25, mid-World Series (Brewers 2-0 over the Rays; Game
+# 3 on 10-26, Game 7 if needed on 10-31). The few remaining postseason picks
+# could add nothing to the record's open question: season_phase keeps them out
+# of the regular-season line, and MLB's confidence inversion (595 picks, 76
+# dates) is answerable from the ledger and data/training/ already held. What
+# standing down does, measured against the code rather than assumed:
+#   * generate_insights neither builds nor CLEARS mlb's partition of
+#     data/insights.games.json any more -- it is left frozen as the last
+#     pre-flip run committed it;
+#   * signal_report grades that frozen partition's picks when it covers the
+#     date being graded (so a pick the site showed before the flip is settled,
+#     not stranded), and on every other day exits clean with no row and no
+#     StatsAPI call (signal_report.is_game_sport_active; test_stand_down);
+#   * betting_signals.py and implied_total.py are untouched, and the 743 mlb
+#     ledger rows and data/training/mlb_features.jsonl stay (append-only).
+# To restore: add `mlb` back. The first run rebuilds its partition normally
+# (a frozen store for an older date is not "covering" today's slate).
+active_game_sports: [epl, cfb, nfl]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --

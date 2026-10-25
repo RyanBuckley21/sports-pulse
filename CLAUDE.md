@@ -36,6 +36,7 @@ python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chanc
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
+python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
@@ -235,30 +236,37 @@ Three things, in the owner's words: **make all the MLB stuff inactive**,
 **improve the moneyline picks with data**, and **incorporate NBA**. What is
 already known about each, so a new session does not re-derive it:
 
-### Stand MLB down
+### Stand MLB down — DONE 2026-10-25 (this branch)
 
-Flipping two config keys is the easy 10% and will leave a trail of breakage.
-MLB is not a peer sport here — it is the one the project was built around:
+**Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
+last-10-games boards would show a frozen September snapshot all winter, and it
+was the site's default sport (now EPL). The few World Series picks left could
+add nothing to the record's open question. The mechanics and the re-activation
+steps are in `docs/leagues.md` ("Standing a sport down"). The parts that are
+easy to get wrong:
 
-- `betting_signals.py` and `implied_total.py` are MLB's scoring and are
-  **frozen** (invariant 1). Standing MLB down must not touch them.
-- The daily workflow's **MLB grading step is the only strict one**; every other
-  sport's is `continue-on-error`. An inactive MLB that still grades strictly
-  will red the workflow daily.
-- `deploy-pages.yml` carries a **per-sport grading-drop alarm** with its sport
-  list written out inline (it runs before `pip install`), plus an MLB-specific
-  training-capture freshness probe against `statsapi.mlb.com`. Both need to
-  stop expecting MLB.
-- `capture-training-data.yml`, `training_capture.py`, `capture_training_data.py`,
-  `backtest_season.py` and `mlb_estimate_calibration.py` are MLB-only.
-- `data/training/mlb_features.jsonl` and the MLB ledger rows are append-only
-  history and **stay** (invariant 6). Standing a sport down is not deleting it.
+- **The grader now reads the picks gate** (`signal_report.is_game_sport_active`).
+  It used to read neither key. A stood-down sport grades its frozen partition
+  when that partition covers the date, so the pick shipped by the last
+  pre-flip run is settled, not stranded: TB @ MIL NRFI, slate 2026-10-24, was
+  live on the day of the flip. On every other day it exits 0 with **no row and
+  no StatsAPI call**. `test_stand_down` pins both halves. The MLB step stays
+  strict on purpose, because its only remaining failure is a real pick going
+  unsettled.
+- **The gate has one definition**, `signal_report.configured_game_sports`.
+  `generate_insights._active_game_sports` is built on it (that module imports
+  `signal_report`, so the definition cannot live there).
+- **Switched off in place, to be restored together with MLB:**
+  `deploy-pages.yml`'s grading-alarm entry and training-capture alarm, and
+  `capture-training-data.yml`'s six crons.
+- **Untouched:** `betting_signals.py`, `implied_total.py`, the MLB-only scripts,
+  the MLB ledger rows, `data/training/`, and the `mlb:` config block.
+- **World Series dates** (checked 2026-10-25): Brewers lead the Rays 2-0. Game 3
+  is 10-26, Game 4 is 10-27, and if needed Game 5 is 10-28, Game 6 10-30 and
+  Game 7 10-31. Once this merges, the remaining games simply get no picks.
 
-Decide explicitly whether "inactive" means *leaderboards only*, *no picks*, or
-*nothing at all* — the two gates make all three expressible, and the answer
-changes which of the above must move. Note the record keeps MLB's 595 graded
-picks either way, and it is the sport whose confidence inversion is still
-unexplained (below).
+**Order agreed with the owner:** stand-down first, then `odds_first_seen`,
+then NBA registration.
 
 ### Improve the moneyline picks with data
 
@@ -443,7 +451,15 @@ Operational items to keep in mind:
   2026-09-24): each graded sport's ledger rows against its own schedule. Its
   sport list is written out in the workflow (it runs before `pip install`), so
   **a new graded sport must be added there too**, or it is unwatched.
-- The MLB season ends in late September. Expect `no_picks`/empty-slate rows and
+- **MLB is stood down (2026-10-25), so its partition of
+  `data/insights.games.json` is frozen on purpose.** It will keep holding
+  whatever the last pre-flip run wrote until MLB is re-activated. Don't "clean
+  it up": the grader settles that pick from it, and a stood-down sport whose
+  store covers no due date costs nothing. Expect **no** MLB ledger rows on
+  quiet days. That is the design (a stood-down day is not a gap), which is why
+  `mlb` is out of the grading-drop alarm. Re-activate before Opening Day 2027,
+  using the checklist in `docs/leagues.md`.
+- (Before the stand-down) The MLB season ends in late September. Expect `no_picks`/empty-slate rows and
   quiet MLB alarms from then on, which is not a failure. Training capture has
   nothing to capture in the offseason. **An empty MLB partition no longer fails
   grading** (fixed 2026-09-28): it used to exit 2 from the strict MLB step on

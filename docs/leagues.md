@@ -4,8 +4,8 @@ The site is multi-sport. Which sports actually build and appear is controlled
 by two lists in `config.yaml`, one per pipeline:
 
 ```yaml
-active_sports: [mlb, epl, nfl]            # leaderboards ("Who's Hot")
-active_game_sports: [mlb, epl, cfb, nfl]  # scored per-game picks (absent -> falls back to active_sports)
+active_sports: [epl, nfl]            # leaderboards ("Who's Hot")
+active_game_sports: [epl, cfb, nfl]  # scored per-game picks (absent -> falls back to active_sports)
 ```
 
 Only keys listed in `active_sports` are fetched into `data.json`'s leaderboard
@@ -38,10 +38,10 @@ as a kill switch (no scored picks at all) rather than falling back.
 
 | sport | leaderboards | games / teams / picks | graded | fetcher |
 | --- | --- | --- | --- | --- |
-| **mlb** | yes | yes | yes (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
 | **nfl** | yes | yes (moneyline) | yes | `fetchers/nfl.py` -- nflverse CSVs + ESPN scoreboard |
 | **epl** | yes | yes (double chance, match result) | yes | `fetchers/epl.py` -- ESPN soccer API |
 | **cfb** | no, by design | yes (moneyline) | yes | `fetchers/cfb.py` -- cfbfastR CSVs + CFBD + ESPN |
+| **mlb** | **stood down** | **stood down** | only what its frozen store still holds (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
 
 CFB has no `SPORT_FETCHERS` entry and no `cfb.stat_categories`, so it never
 publishes player leaderboards; it is in `active_game_sports` only. Grading for
@@ -52,8 +52,42 @@ reasons recorded in that workflow's header.
 
 A registered-but-inactive sport costs nothing per run: `main()` only calls
 fetchers for keys in the relevant active list, so its `fetch` is never invoked.
-None is in that state today; the archived World Cup below is *unregistered*,
-which is a different thing.
+The archived World Cup below is *unregistered*, which is a different thing.
+
+## Standing a sport down — MLB, since 2026-10-25
+
+**Standing down is leaving a registered sport out of both gates.** It is not
+deleting it, and it is not just a config flip. MLB was stood down mid-World
+Series, from both gates ("inactive" means nothing at all: no boards, no
+picks). What that does, and what had to change for it to be safe:
+
+- **Its games-store partition freezes.** `generate_insights` only builds,
+  clears or rolls forward the partitions of sports it attempts, so MLB's
+  partition stays exactly as the last pre-flip run committed it — on
+  2026-10-25 that was a live pick (TB @ MIL, NRFI, slate 2026-10-24).
+- **The grader reads the gate.** It did not before (`signal_report.py` named
+  neither key). A stood-down sport grades its frozen store when the store
+  covers the date (so a pick the site showed is settled, not stranded). On
+  every other day it exits clean, with **no ledger row and no schedule
+  fetch**, because a stood-down sport's quiet day is not a gap. See
+  `signal_report.is_game_sport_active` and `test_stand_down`. MLB's grading
+  step stays strict: its only remaining failure is a real pick left
+  unsettled.
+- **Alarms stop expecting it.** `deploy-pages.yml`'s grading-drop alarm
+  leaves `mlb` out of its inline list (commented, with the line to restore).
+  Its training-capture alarm is switched off (`if: ${{ false }}`), and
+  `capture-training-data.yml`'s six crons are commented out. All three are
+  kept in place to be restored together.
+- **History stays.** The ledger's MLB rows, `data/training/*.jsonl`,
+  `betting_signals.py`, `implied_total.py` and the MLB-only scripts are all
+  untouched. `generate_insights` keeps labelling any still-pending training
+  captures and goes quiet once none are left.
+
+**To re-activate MLB** (Opening Day 2027 is late March): put `mlb` back
+first in `active_sports` (first makes it the default sport again) and in
+`active_game_sports`; restore the alarm entry, the capture alarm's condition
+and the capture crons. The first run rebuilds the partition normally, because
+a frozen store for an older date never blocks a write (`_games_store_writable`).
 
 ## Archived — World Cup (pending the 2030 cycle)
 

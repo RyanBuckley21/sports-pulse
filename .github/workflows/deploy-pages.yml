@@ -100,8 +100,17 @@ jobs:
       # Scope: ZERO rows only. Partial-slate days are already reported by
       # capture-training-data.yml's own coverage check, and warning twice for
       # one condition would just train people to ignore both.
+      #
+      # SWITCHED OFF 2026-10-25, with MLB stood down (config.yaml). Capture's
+      # crons are gone too, so on every remaining World Series day (10-26..31)
+      # this would read "N games scheduled and NOT ONE has a feature row" -- a
+      # true statement about a stop that was chosen, i.e. a false alarm, daily.
+      # Kept in place rather than deleted because it is MLB's only defence
+      # against a silently dropped capture: when MLB is re-activated, restore
+      # this condition to `${{ !cancelled() }}` in the same change that restores
+      # capture-training-data.yml's crons.
       - name: Alarm if yesterday captured nothing
-        if: ${{ !cancelled() }}
+        if: ${{ false }}
         run: |
           python3 - <<'PY'
           import datetime, json, os, urllib.request
@@ -210,9 +219,17 @@ jobs:
           espn = "https://site.api.espn.com/apis/site/v2/sports/{}/scoreboard?dates=" + compact
           # sport -> (schedule URL, how to count its games). Mirrors the
           # --sport steps in daily-stats-and-grade.yml; see the comment above.
+          #
+          # mlb LEFT OUT since 2026-10-25: it is stood down, and a stood-down
+          # sport's grader writes NO row on a day its frozen store does not
+          # cover (signal_report.is_game_sport_active) -- by design, because
+          # that day is not a gap. Watching it here would fire on every
+          # remaining World Series date. Its grading step still runs, strictly,
+          # so the one pick it may still be holding cannot fail silently.
+          # Re-activating MLB means restoring this entry:
+          #   "mlb": ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=" + d,
+          #           lambda j: sum(len(x.get("games") or []) for x in j.get("dates", []))),
           SPORTS = {
-              "mlb": ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=" + d,
-                      lambda j: sum(len(x.get("games") or []) for x in j.get("dates", []))),
               "nfl": (espn.format("football/nfl"), lambda j: len(j.get("events") or [])),
               "cfb": (espn.format("football/college-football") + "&groups=80&limit=500",
                       lambda j: len(j.get("events") or [])),

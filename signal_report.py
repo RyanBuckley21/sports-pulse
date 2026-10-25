@@ -223,6 +223,40 @@ def load_config(path=CONFIG_PATH):
         return yaml.safe_load(f)
 
 
+def configured_game_sports(config):
+    """The sports config.yaml asks to build scored picks for, as written, or
+    None when it names none (then every registered builder is meant).
+
+    THE ONE DEFINITION OF THE PICKS GATE. generate_insights._active_game_sports
+    calls this and filters the result to its GAME_BUILDERS; it lives here,
+    rather than there, because generate_insights imports this module and the
+    grader cannot import it back. Until 2026-10-25 the grader read neither
+    gate at all (0 occurrences of either key in this file), which was harmless
+    while every graded sport was also active and stopped being harmless the
+    day MLB was stood down -- see is_game_sport_active.
+
+    Resolution, unchanged from when it lived only in generate_insights:
+    `active_game_sports` when the key is PRESENT, an empty list included (the
+    explicit kill switch -- hence `is None`, not `or`); else `active_sports`,
+    with its pre-existing `or` semantics (an empty one widens to everything).
+    """
+    cfg = config or {}
+    configured = cfg.get("active_game_sports")
+    if configured is None:
+        configured = cfg.get("active_sports") or None
+    return None if configured is None else list(configured)
+
+
+def is_game_sport_active(config, sport_key):
+    """Whether `sport_key`'s scored picks are switched on. A sport left out of
+    the gate is STOOD DOWN, not deleted: its ledger rows stay in the record
+    and its last committed partition is left frozen (generate_insights only
+    touches the partitions of sports it attempts), so a pick it shipped before
+    the flip is still on disk to be graded. See main()."""
+    configured = configured_game_sports(config)
+    return configured is None or sport_key in configured
+
+
 def load_store(path, rev=None):
     """The insights game store, from the working tree or from a git revision.
 
@@ -1493,6 +1527,62 @@ def main(argv=None):
     # one: no games that day -> clean; date already graded -> clean; games were
     # played and nothing covers them -> the recorded gap and failure below.
     store = _sport_partition(load_store(args.store, args.rev), sport_key)
+
+    # A STOOD-DOWN SPORT GRADES WHAT IT HOLDS, AND NOTHING ELSE.
+    #
+    # Taking a sport out of `active_game_sports` stops generate_insights from
+    # building, clearing or rolling its partition forward, so that partition
+    # stays exactly as the last pre-flip run committed it. Two consequences,
+    # and this branch exists for both:
+    #
+    #   * THE LAST SHIPPED PICK IS STILL ON DISK, and it is a real pick the site
+    #     showed. MLB was stood down mid-World Series (Brewers lead the Rays 2-0
+    #     on 2026-10-25, Game 3 on 10-26, Game 7 if needed on 10-31): the
+    #     partition held a live pick (TB @ MIL, NRFI, slate 2026-10-24) on the
+    #     day this was written. When the store covers the date being graded,
+    #     grading proceeds EXACTLY as for an active sport -- same overlap check,
+    #     same rows, same failure on a genuine gap -- so nothing shipped before
+    #     the flip is stranded. That path is the load-bearing one; it is
+    #     pinned in test_stand_down.
+    #
+    #   * EVERY OTHER DAY IS NOT A GAP. Before this, the strict MLB step would
+    #     have asked StatsAPI for yesterday's slate every morning, found World
+    #     Series games the frozen store does not cover, written a `no_store` row
+    #     saying the record has a hole and redded the workflow -- for a sport
+    #     nobody asked to pick. And once the Series ended it would have gone
+    #     quiet on the empty-slate path all winter, then redded on Opening Day
+    #     2027. So a stood-down sport whose store does not cover the date exits
+    #     clean, writes NO row (an absence by design is not a gap, and a
+    #     no_store row would claim one), and makes no network call at all.
+    #
+    # A date already graded is also done: the frozen store keeps covering that
+    # date for every later cron entry the same day (there are four), where an
+    # active sport's store would have rolled forward and hit the already-graded
+    # branch below. Re-grading it would append the same rows under a new
+    # run_id, four times.
+    #
+    # Only for a run that could record. A --no-record or --rev look at a
+    # stood-down sport asked a specific question and still gets its answer.
+    if recordable and not is_game_sport_active(config, sport_key):
+        stamps = store_slate_dates(store)
+        if args.date not in stamps:
+            print("signal_report: {} is stood down (not in active_game_sports) and its "
+                  "frozen store covers {}, not {} -- nothing it shipped is due. No row "
+                  "written: a stood-down sport's quiet day is not a gap.".format(
+                      sport_key, "/".join(stamps) or "nothing", args.date))
+            return EXIT_OK
+        graded = [row for row in load_ledger()
+                  if row.get("date") == args.date and _row_sport(row) == sport_key
+                  and _has_pick(row)]
+        if graded:
+            print("signal_report: {} is stood down and {} is already graded ({} pick{} "
+                  "at {}); its frozen store still covers that date, so nothing to do."
+                  .format(sport_key, args.date, len(graded), "" if len(graded) == 1 else "s",
+                          max(row.get("run_id") or "" for row in graded)))
+            return EXIT_OK
+        print("signal_report: {} is stood down, but its frozen store holds {} game{} for "
+              "{} -- grading what it shipped before the flip.".format(
+                  sport_key, len(store), "" if len(store) == 1 else "s", args.date))
 
     session = requests.Session()
     try:
