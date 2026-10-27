@@ -101,7 +101,7 @@
   "ceedee lamb|dal": {
     "entity": "CeeDee Lamb",
     "generated_at": "2026-09-21T16:19:41.303237+00:00",
-    "last_game_date": "2026-10-18",
+    "last_game_date": "2026-10-26",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -175,10 +175,10 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
-  "freddy peralta|tb": {
-    "entity": "Freddy Peralta",
-    "generated_at": "2026-10-26T16:39:49.752137+00:00",
-    "last_game_date": "2026-09-25",
+  "griffin jax|tb": {
+    "entity": "Griffin Jax",
+    "generated_at": "2026-10-27T15:47:09.696909+00:00",
+    "last_game_date": "2026-09-26",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -266,7 +266,7 @@
   "javonte williams|dal": {
     "entity": "Javonte Williams",
     "generated_at": "2026-10-19T16:51:34.511836+00:00",
-    "last_game_date": "2026-10-18",
+    "last_game_date": "2026-10-26",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -461,17 +461,6 @@
     "team": "AFC Bournemouth",
     "template_version": "v2"
   },
-  "robert gasser|mil": {
-    "entity": "Robert Gasser",
-    "generated_at": "2026-10-26T16:39:49.752137+00:00",
-    "last_game_date": "2026-09-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Milwaukee Brewers",
-    "template_version": "v2"
-  },
   "tee higgins|cin": {
     "entity": "Tee Higgins",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -494,17 +483,6 @@
     "team": "Everton",
     "template_version": "v2"
   },
-  "tre tucker|lv": {
-    "entity": "Tre Tucker",
-    "generated_at": "2026-10-26T16:39:49.752137+00:00",
-    "last_game_date": "2026-10-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "LV",
-    "template_version": "v2"
-  },
   "trevor lawrence|jax": {
     "entity": "Trevor Lawrence",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -514,6 +492,17 @@
     "summary": null,
     "takeaways": [],
     "team": "JAX",
+    "template_version": "v2"
+  },
+  "trey mcbride|ari": {
+    "entity": "Trey McBride",
+    "generated_at": "2026-10-27T15:47:09.696909+00:00",
+    "last_game_date": "2026-10-25",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "ARI",
     "template_version": "v2"
   },
   "william contreras|mil": {
