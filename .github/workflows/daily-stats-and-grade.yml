@@ -115,8 +115,25 @@ name: Regenerate stats and grade picks
 # `workflow_dispatch`, same as the rest of this project's rare-failure
 # handling.
 #
-# Daylight saving: shift every entry by +1h in the fall to hold the wall-clock
-# times, same caveat as the other scheduled workflows here.
+# DAYLIGHT SAVING: DO NOT SHIFT THESE WHEN US DST ENDS. This line used to say
+# "shift every entry +1h in the fall to hold the wall-clock times". Measured
+# against the fall calendar on 2026-09-25, that advice would have made things
+# worse:
+#
+#   * Grading first is safe unshifted. The latest late-night kickoff in
+#     November 2025 was 03:30 UTC (CFB, five FBS Saturdays checked; NFL's
+#     latest was 01:20), finishing around 07:00 UTC, three hours before the
+#     10:00 entry. In EST, 10:00 UTC is 05:00 ET rather than the 06:00 the
+#     paragraph above names, and that is still after every game is final,
+#     because what bounds it is kickoff time in UTC, not the ET clock.
+#   * The pre-kickoff snapshot is what a shift would cost. The earliest daytime
+#     kickoffs are EPL's at 12:00 UTC once the UK is on GMT and NFL London at
+#     14:30 UTC. Shifting would move the first entry to 11:00 and leave EPL
+#     one hour of margin instead of two, on a scheduler measured running hours
+#     late.
+#   * MLB, whose first pitch is the invariant above, is out of season from
+#     October, and US DST restarts on 2027-03-14, before Opening Day. By
+#     March the UTC/ET relationship these entries were tuned against is back.
 
 on:
   schedule:
@@ -164,6 +181,16 @@ jobs:
       # holds -- which, at this point in the job, is still whatever the LAST
       # run of this workflow left behind (i.e. yesterday's slate). Must run
       # before the regenerate step below; see the header comment.
+      #
+      # MLB, STOOD DOWN since 2026-10-25 and STILL STRICT, on purpose. A
+      # stood-down sport exits 0 with no row and no StatsAPI call on any day
+      # its frozen store does not cover (signal_report.is_game_sport_active),
+      # so it cannot red this workflow through the rest of the World Series,
+      # the winter, or Opening Day 2027. The one thing it still does is grade
+      # the pick the store may hold from the last pre-flip run -- and a
+      # failure THERE is a real pick the site showed going unsettled, which
+      # is exactly what a strict step is for. Making it continue-on-error
+      # would hide the only failure it can still have.
       - name: Grade yesterday's Signal Score picks
         id: grade_picks
         run: python3 signal_report.py
@@ -277,8 +304,11 @@ jobs:
       # shaped -- so widening the secret to the job would expose it to a step
       # that has no use for it.
       #
-      # CFB_ALLOW_CFBD IS SET HERE AND NOWHERE ELSE, and that is the whole
-      # quota-safety mechanism -- see fetchers/cfb.py's CFBD_ALLOW_ENV.
+      # CFB_ALLOW_CFBD IS SET HERE for the live pipeline, and elsewhere only in
+      # the manual cfb-backtest.yml (hard-capped per run, cache kept by
+      # actions/cache, counted against the 300-call reserve). That is the whole
+      # quota-safety mechanism -- see fetchers/cfb.py's CFBD_ALLOW_ENV and
+      # CFBD_MONTHLY_BUDGET.
       #
       # The free CFBD tier is 1,000 calls a month. This fetcher's cost is meant
       # to be zero in steady state: each week is fetched once and cached per

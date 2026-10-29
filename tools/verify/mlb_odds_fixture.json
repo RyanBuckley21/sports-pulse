@@ -1,0 +1,1397 @@
+{
+ "_provenance": "REAL responses captured 2026-09-25: site.api.espn.com baseball/mlb scoreboard (dates=20260925) and statsapi.mlb.com schedule (date=2026-09-25, hydrate=team), trimmed to the fields espn_odds and fetchers/mlb read. Chosen because this slate carries both hard cases for the join: two doubleheaders (CHC@BOS, BAL@NYY) and the two abbreviation mismatches (StatsAPI AZ/CWS vs ESPN ARI/CHW). Nothing hand-written.",
+ "espn_events": [
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "BOS",
+        "displayName": "Boston Red Sox"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "CHC",
+        "displayName": "Chicago Cubs"
+       }
+      }
+     ],
+     "odds": [],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T17:05Z",
+   "id": "401817104"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "NYY",
+        "displayName": "New York Yankees"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "BAL",
+        "displayName": "Baltimore Orioles"
+       }
+      }
+     ],
+     "odds": [],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T20:05Z",
+   "id": "401817088"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "BOS",
+        "displayName": "Boston Red Sox"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "CHC",
+        "displayName": "Chicago Cubs"
+       }
+      }
+     ],
+     "odds": [],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T22:00Z",
+   "id": "401817074"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "DET",
+        "displayName": "Detroit Tigers"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "PIT",
+        "displayName": "Pittsburgh Pirates"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "PIT -112",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-112"
+         },
+         "open": {
+          "odds": "-112"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-107"
+         },
+         "open": {
+          "odds": "-107"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T22:40Z",
+   "id": "401817077"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "PHI",
+        "displayName": "Philadelphia Phillies"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "TB",
+        "displayName": "Tampa Bay Rays"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "PHI -160",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+132"
+         },
+         "open": {
+          "odds": "+129"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-160"
+         },
+         "open": {
+          "odds": "-156"
+         }
+        }
+       },
+       "overUnder": 6.5,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T22:40Z",
+   "id": "401817078"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "WSH",
+        "displayName": "Washington Nationals"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "NYM",
+        "displayName": "New York Mets"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "NYM -136",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-136"
+         },
+         "open": {
+          "odds": "-136"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "+113"
+         },
+         "open": {
+          "odds": "+113"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T22:45Z",
+   "id": "401817076"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "NYY",
+        "displayName": "New York Yankees"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "BAL",
+        "displayName": "Baltimore Orioles"
+       }
+      }
+     ],
+     "odds": [],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:05Z",
+   "id": "401817073"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "TOR",
+        "displayName": "Toronto Blue Jays"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "CIN",
+        "displayName": "Cincinnati Reds"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "TOR -136",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+113"
+         },
+         "open": {
+          "odds": "+113"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-136"
+         },
+         "open": {
+          "odds": "-136"
+         }
+        }
+       },
+       "overUnder": 7.5,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:07Z",
+   "id": "401817075"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "MIA",
+        "displayName": "Miami Marlins"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "ATL",
+        "displayName": "Atlanta Braves"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "ATL -126",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-126"
+         },
+         "open": {
+          "odds": "-125"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "+104"
+         },
+         "open": {
+          "odds": "+104"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:10Z",
+   "id": "401817072"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "KC",
+        "displayName": "Kansas City Royals"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "CLE",
+        "displayName": "Cleveland Guardians"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "CLE -136",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-136"
+         },
+         "open": {
+          "odds": "-131"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "+113"
+         },
+         "open": {
+          "odds": "+108"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:40Z",
+   "id": "401817079"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "CHW",
+        "displayName": "Chicago White Sox"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "COL",
+        "displayName": "Colorado Rockies"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "CHW -225",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+183"
+         },
+         "open": {
+          "odds": "+181"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-225"
+         },
+         "open": {
+          "odds": "-222"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:40Z",
+   "id": "401817080"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "MIL",
+        "displayName": "Milwaukee Brewers"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "STL",
+        "displayName": "St. Louis Cardinals"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "MIL -180",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+148"
+         },
+         "open": {
+          "odds": "+151"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-180"
+         },
+         "open": {
+          "odds": "-184"
+         }
+        }
+       },
+       "overUnder": 8.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-25T23:40Z",
+   "id": "401817081"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "MIN",
+        "displayName": "Minnesota Twins"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "TEX",
+        "displayName": "Texas Rangers"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "MIN -110",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-110"
+         },
+         "open": {
+          "odds": "-110"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-110"
+         },
+         "open": {
+          "odds": "-110"
+         }
+        }
+       },
+       "overUnder": 7.5,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-26T00:10Z",
+   "id": "401817082"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "SD",
+        "displayName": "San Diego Padres"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "ARI",
+        "displayName": "Arizona Diamondbacks"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "SD -142",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+117"
+         },
+         "open": {
+          "odds": "+118"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-142"
+         },
+         "open": {
+          "odds": "-142"
+         }
+        }
+       },
+       "overUnder": 7.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-26T01:40Z",
+   "id": "401817084"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "ATH",
+        "displayName": "Athletics"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "HOU",
+        "displayName": "Houston Astros"
+       }
+      }
+     ],
+     "odds": [],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-26T01:40Z",
+   "id": "401817085"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "SEA",
+        "displayName": "Seattle Mariners"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "LAA",
+        "displayName": "Los Angeles Angels"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "SEA -135",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "+112"
+         },
+         "open": {
+          "odds": "+111"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "-135"
+         },
+         "open": {
+          "odds": "-134"
+         }
+        }
+       },
+       "overUnder": 7.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": -1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-26T02:10Z",
+   "id": "401817083"
+  },
+  {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "abbreviation": "SF",
+        "displayName": "San Francisco Giants"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "abbreviation": "LAD",
+        "displayName": "Los Angeles Dodgers"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "details": "LAD -398",
+       "moneyline": {
+        "away": {
+         "close": {
+          "odds": "-398"
+         },
+         "open": {
+          "odds": "-398"
+         }
+        },
+        "home": {
+         "close": {
+          "odds": "+307"
+         },
+         "open": {
+          "odds": "+307"
+         }
+        }
+       },
+       "overUnder": 7.0,
+       "pointSpread": {
+        "away": {
+         "close": {
+          "line": "-1.5"
+         },
+         "open": {
+          "line": "-1.5"
+         }
+        },
+        "home": {
+         "close": {
+          "line": "+1.5"
+         },
+         "open": {
+          "line": "+1.5"
+         }
+        }
+       },
+       "provider": {
+        "name": "DraftKings"
+       },
+       "spread": 1.5
+      }
+     ],
+     "status": {
+      "type": {
+       "name": "STATUS_SCHEDULED"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-26T02:15Z",
+   "id": "401817086"
+  }
+ ],
+ "statsapi_games": [
+  {
+   "doubleHeader": "S",
+   "gameDate": "2026-09-25T17:05:00Z",
+   "gameNumber": 1,
+   "gamePk": 824703,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "CHC",
+      "name": "Chicago Cubs"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "BOS",
+      "name": "Boston Red Sox"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "S",
+   "gameDate": "2026-09-25T22:05:00Z",
+   "gameNumber": 2,
+   "gamePk": 824706,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "CHC",
+      "name": "Chicago Cubs"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "BOS",
+      "name": "Boston Red Sox"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "Y",
+   "gameDate": "2026-09-25T20:05:00Z",
+   "gameNumber": 1,
+   "gamePk": 823489,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "BAL",
+      "name": "Baltimore Orioles"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "NYY",
+      "name": "New York Yankees"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "Y",
+   "gameDate": "2026-09-25T20:10:00Z",
+   "gameNumber": 2,
+   "gamePk": 823491,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "BAL",
+      "name": "Baltimore Orioles"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "NYY",
+      "name": "New York Yankees"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T22:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 824220,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "PIT",
+      "name": "Pittsburgh Pirates"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "DET",
+      "name": "Detroit Tigers"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T22:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 823409,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "TB",
+      "name": "Tampa Bay Rays"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "PHI",
+      "name": "Philadelphia Phillies"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T22:45:00Z",
+   "gameNumber": 1,
+   "gamePk": 822681,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "NYM",
+      "name": "New York Mets"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "WSH",
+      "name": "Washington Nationals"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T23:07:00Z",
+   "gameNumber": 1,
+   "gamePk": 822760,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "CIN",
+      "name": "Cincinnati Reds"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "TOR",
+      "name": "Toronto Blue Jays"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T23:10:00Z",
+   "gameNumber": 1,
+   "gamePk": 823816,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "ATL",
+      "name": "Atlanta Braves"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "MIA",
+      "name": "Miami Marlins"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T23:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 824058,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "CLE",
+      "name": "Cleveland Guardians"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "KC",
+      "name": "Kansas City Royals"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T23:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 824544,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "COL",
+      "name": "Colorado Rockies"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "CWS",
+      "name": "Chicago White Sox"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-25T23:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 823735,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "STL",
+      "name": "St. Louis Cardinals"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "MIL",
+      "name": "Milwaukee Brewers"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-26T00:10:00Z",
+   "gameNumber": 1,
+   "gamePk": 823652,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "TEX",
+      "name": "Texas Rangers"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "MIN",
+      "name": "Minnesota Twins"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-26T01:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 824947,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "HOU",
+      "name": "Houston Astros"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "ATH",
+      "name": "Athletics"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-26T01:40:00Z",
+   "gameNumber": 1,
+   "gamePk": 823248,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "AZ",
+      "name": "Arizona Diamondbacks"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "SD",
+      "name": "San Diego Padres"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-26T02:10:00Z",
+   "gameNumber": 1,
+   "gamePk": 823085,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "LAA",
+      "name": "Los Angeles Angels"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "SEA",
+      "name": "Seattle Mariners"
+     }
+    }
+   }
+  },
+  {
+   "doubleHeader": "N",
+   "gameDate": "2026-09-26T02:15:00Z",
+   "gameNumber": 1,
+   "gamePk": 823167,
+   "teams": {
+    "away": {
+     "team": {
+      "abbreviation": "LAD",
+      "name": "Los Angeles Dodgers"
+     }
+    },
+    "home": {
+     "team": {
+      "abbreviation": "SF",
+      "name": "San Francisco Giants"
+     }
+    }
+   }
+  }
+ ]
+}

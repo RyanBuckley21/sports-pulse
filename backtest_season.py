@@ -311,6 +311,27 @@ def main(argv=None):
     print("backtest_season: {} total picks -- {}-{}{} (outcome+estimate combined)".format(
         n_picks, totals["HIT"], totals["MISS"],
         " ({:.1f}%)".format(100.0 * totals["HIT"] / graded) if graded else ""))
+    # EVERY DATE SKIPPED IS A FAILURE, NOT A RESULT. From 92d717e (2026-08-27)
+    # until 2026-09-24 every date raised TypeError inside backtest_date, the
+    # per-date `except Exception` above logged and skipped it, and this function
+    # still returned 0 -- "0 dates graded, 7 skipped" from a script that exited
+    # clean. Nobody noticed for four weeks, and a before/after comparison run on
+    # it would have compared nothing with nothing and called them identical. A
+    # run that graded no date because it skipped every date has measured
+    # nothing, so it says so with its exit code.
+    #
+    # A PARTIAL skip stays exit 0 -- one read-timeout across a season-long
+    # replay should not throw away the other 180 dates -- but it is no longer
+    # just a number in the totals line: skipped dates are missing from the
+    # record, and a record with holes in it has to say where they are.
+    if dates and n_skipped == len(dates):
+        print("::error title=backtest_season graded nothing::all {} date(s) in {}..{} were "
+              "skipped -- see the per-date lines above for the exception".format(
+                  len(dates), args.start, end))
+        return 1
+    if n_skipped:
+        print("backtest_season: WARNING -- {} of {} date(s) skipped and absent from {}; the "
+              "record above does not cover them".format(n_skipped, len(dates), args.out))
     return 0
 
 

@@ -17,10 +17,17 @@ graded history rather than throwing anything -- nobody would notice until a
 grading run came up empty. So both directions are measured here, together,
 rather than argued.
 
-NO NETWORK AND NO SYNTHETIC ENTITIES. The succeeding builders return the real
-committed entities from data/insights.games.json, and every store is redirected
-to a temp copy of the real file, so a run of this test cannot touch anything
-committed.
+NO NETWORK AND NO SYNTHETIC ENTITIES. The succeeding builders return real MLB
+entities, and every store is redirected to a temp copy, so a run of this test
+cannot touch anything committed.
+
+THE ENTITIES COME FROM A FIXTURE, NOT THE LIVE STORE. They used to be read from
+the committed data/insights.games.json, which the bot rewrites several times a
+day -- so the suite passed only while MLB had games. On 2026-09-28, the first
+off day after the regular season, MLB's partition was empty and this suite
+(and test_bet_board, which uses _scenario) failed on an unchanged main.
+game_isolation_fixture.json is MLB's partition of both stores at 579b1e8 (the
+2026-09-27 regenerate, 15 games), unedited.
 """
 
 import copy
@@ -79,8 +86,8 @@ def _scenario(behaviours, opt_in=True, seed=("mlb", "nfl")):
     implied_total.py's contract.
     """
     config = yaml.safe_load(open(_repo_path("config.yaml")))
-    real_games = json.load(open(_repo_path("data", "insights.games.json")))
-    real_box = json.load(open(_repo_path("data", "boxscores.json")))
+    fx = json.load(open(_repo_path("tools", "verify", "game_isolation_fixture.json")))
+    real_games, real_box = {"mlb": fx["games"]}, {"mlb": fx["box"]}
     entities = {k: dict(v, gamePk=k) for k, v in real_games["mlb"].items()}
 
     tmp = tempfile.mkdtemp()

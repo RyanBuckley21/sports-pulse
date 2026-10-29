@@ -80,6 +80,17 @@ characters land on a 430px row already holding two team chips and a Pulse
 without the page scrolling sideways or a row overflowing its own box. Nothing
 throws when that breaks, the row just goes ragged, so it is measured.
 
+`test_slate_dates` also covers **an empty partition** (since 2026-09-28, 81
+checks). `signal_report` used to die on "store is empty (no 'mlb' games)"
+before asking whether the league played or the date was already graded, so the
+first MLB off day after the regular season red-lined the daily run from its one
+strict step, for a date already in the record. Four checks: an empty store on a
+no-games day exits clean; on a games day with the date already graded (the real
+12 rows from 09-27) it exits clean and writes nothing; on a games day with no
+grading it records `no_store` and fails. The recordable runs happen in a scratch
+working directory with its own ledger. Restoring the early exit fails exactly
+those four, with the CI run's own message.
+
 `test_slate_dates` also covers **falling forward**: a window tuned for a
 sport's usual cadence goes blank in any gap longer than itself, and then the
 tab shows nothing while the fixtures it would show sit in the schedule already,
@@ -142,9 +153,13 @@ Both directions were sabotage-checked when written: disabling the freeze guard
 fails exactly the freeze assertion, disabling the total-failure guard fails
 exactly the two fatality assertions.
 
-No network. Succeeding builders return the real committed entities from
-`data/insights.games.json`, and every store is redirected to a temp copy, so a
-run cannot touch anything committed.
+No network. Succeeding builders return real MLB entities from
+`game_isolation_fixture.json` (MLB's partition of both stores at `579b1e8`, the
+2026-09-27 regenerate, unedited), and every store is redirected to a temp copy,
+so a run cannot touch anything committed. Until 2026-09-28 they were read from
+the live `data/insights.games.json`, which the bot rewrites daily; on MLB's first
+off day after the season that partition was empty and this suite and
+`test_bet_board` (which uses its `_scenario`) failed on an unchanged main.
 
 ```
 python3 -m tools.verify.test_epl_grading      # from the repo root
@@ -163,6 +178,13 @@ change from reaching an MLB verdict.
 Sabotage-checked in both directions when written: swapping the draw rules fails
 exactly the double-chance assertions, making `match_result` push on a draw fails
 exactly the match-result ones.
+
+Also pins that `collect_picks` called with **no adapter** ranks through the one
+its `sport_key` names. `backtest_season.py` calls it that way, and from the EPL
+grading change until 2026-09-24 the default was `None`: every backtest date
+raised, was logged and skipped, and the script exited 0 having graded nothing.
+Sabotage-checked by removing the default, which fails exactly the two
+`collect_picks` assertions.
 
 Offline and deterministic. `epl_matches_fixture.json` is REAL ESPN data captured
 from live responses over four 2025/26 matchdays — 21 completed matches, 7 home
@@ -221,6 +243,17 @@ nothing else stops the grader reading a different endpoint from the builder.
 Sabotage-checked in both directions when written: grading a tie as a result
 fails exactly the four tie assertions, and trusting ESPN's `abbreviation` field
 fails exactly the Air Force and Buffalo ones.
+
+Since 2026-09-27 (105 checks) it also pins two ways the CFB record was quietly
+wrong. THE PAGE LIMIT: above `limit=500` ESPN's college scoreboard returns 25
+events with HTTP 200, so the grader saw 25 of a Saturday's 65 games and
+deferred the rest, never graded. A stub that answers the way ESPN does must
+yield all 65; a page as long as the limit must be refused
+(`espn_dates.checked_events`); and a sweep fails any ESPN caller asking for
+more than 500. Putting `fetch_slate` back on 1000 fails 4, dropping the
+truncation check fails 1, NFL's replay lookup at 1000 fails 1. AN UNABBREVIATED
+PROGRAM: a side like "Sacramento State" must grade, not fall to UNRESOLVED
+through the leading-token rule; removing the whole-name match fails 1.
 
 Offline and deterministic. `cfb_games_fixture.json` is REAL ESPN data captured
 from live responses across four 2025 dates — thirteen games including a genuine
@@ -360,6 +393,206 @@ exactly the exclusion ones.
 
 No network — every input is a number handed straight to `score_game`.
 
+```
+python3 -m tools.verify.test_season_phase     # from the repo root
+```
+
+**`test_season_phase`** — every ledger pick row names its season phase, and
+the all-time record keeps each phase apart. Nothing in the pipeline filters by
+game type, so MLB's playoffs and spring training, CFB's bowls and NFL's playoffs
+are scored and graded like any other slate. Without the tag they would fold
+silently into the regular-season headline and change what it means. Pinned:
+each adapter reads its own feed (MLB `gameType`, ESPN `season.type`; EPL is
+always regular), and an unknown code maps to None rather than "regular"; every
+pick row is stamped; an untagged row, meaning every row written before the
+field existed, reads as regular and reports byte-identically; and once a
+postseason pick exists, the headline is regular season only, with the
+postseason on its own line and its own date count.
+
+Sabotage-checked in three directions: mapping MLB's wild-card `F` to regular
+fails 8 of 53, dropping the phase filter from `ledger_totals` fails 3, and
+defaulting an untagged row to None fails 3. The second also caught a real bug
+before commit: a 19-character label left no space before the record.
+
+`season_phase_fixture.json` is REAL StatsAPI and ESPN data captured 2026-09-24
+across dates that cover every phase: MLB R/F/D/W/S, NFL preseason, regular
+season and postseason, CFB regular season, a bowl and the championship, and
+EPL.
+
+```
+python3 -m tools.verify.test_backtest_season  # from the repo root
+```
+
+**`test_backtest_season`** pins `backtest_season.py`'s exit code. From
+2026-08-27 to 2026-09-24 every date raised, was logged and skipped, and the
+script still exited 0 ("0 dates graded, 7 skipped"). The suite drives the real
+`main()` with only `backtest_date` stubbed:
+- every date skipped exits 1, for both a TypeError and a network error;
+- an all-off-days range (an offseason) exits 0;
+- a partial skip exits 0 with a WARNING naming how many dates are missing;
+- a clean run is quiet.
+
+Sabotage-checked: removing the all-skipped branch fails 4 of 10 checks, and
+counting off days as skips fails 2.
+
+```
+python3 -m tools.verify.test_mlb_odds         # from the repo root
+```
+
+**`test_mlb_odds`** covers MLB price capture, added 2026-09-25, and the
+market gate it needed. Three silent failures are pinned:
+- **The join.** MLB is keyed by StatsAPI `gamePk`, and the feeds' abbreviations
+  disagree for two clubs (StatsAPI AZ/CWS, ESPN ARI/CHW). So the join uses full
+  team names, and all 30 match.
+- **Doubleheaders.** Our side is ordered by game number, because StatsAPI
+  listed BAL@NYY game 2 at a placeholder 20:10Z when the real start was
+  23:05Z. A pair whose game count differs between the feeds is left unpriced
+  rather than guessed.
+- **The market gate** (`espn_odds.PRICED_MARKETS`). A price is matched to a
+  pick by the leading team token of its side, so without the gate an MLB
+  `team_total`, `run_line` or `first_five_moneyline` pick would carry the
+  full-game moneyline. This is checked at the helpers, the ledger and the card.
+
+Sabotage counts: removing the gate fails 9 of 29, reading ESPN's abbreviation
+instead of its name fails 10, dropping the count check fails 2, and ordering
+by start time fails 1. `mlb_odds_fixture.json` is the real 2026-09-25 ESPN MLB
+scoreboard and StatsAPI schedule, chosen because that slate had both
+doubleheaders and both abbreviation mismatches.
+
+```
+python3 -m tools.verify.test_bet_board        # from the repo root
+```
+
+**`test_bet_board`** covers the Bets tab's board (`bet_board.py`), added
+2026-09-25. Four silent failures are pinned:
+- **The record is matched on price, not score.** Matching on score set App
+  State (+440, needs 19%) beside CFB's 44-14 record for 40+ picks, which
+  favourites had earned, and read it as a 65-point edge.
+- **An unproven record doesn't rank.** Under 30 graded picks the gap is `None`
+  and the list falls back to score order.
+- **The split.** −200 exactly is a parlay piece; −199 is a straight bet.
+- **The build survives the board.** An exception in it costs the tab, not the
+  run.
+
+Sabotage counts: score-matching fails 6 of 28, dropping the 30-pick gate fails
+2, moving −200 to the straight side fails 1, counting postseason rows fails 1,
+and re-raising from the board's `except` fails 1. `bets_fixture.json` is 14
+real games from the store at `f99baf7` plus real ledger rows. Its two edits are
+listed in its `_edits` field.
+
+```
+python3 -m tools.verify.test_caution_notes   # from the repo root
+```
+
+**`test_caution_notes`** covers the starting-QB warning, added
+2026-09-25, on the card and the Bets row. The model's QB override acts only on
+an official Out or Doubtful, so a starter who missed every practice before
+Saturday's final report looked healthy. Caleb Williams was that case on
+2026-09-25, with CHI as the model's pick at 62. Pinned:
+- A starter who did not practice, with no status yet, gets a note.
+- A clean bill (Full practice, no status) gets none.
+- The note reaches the card and the Bets row, and nothing in scoring reads it.
+
+Sabotage counts: noting only rows with a game status fails 3 of 12, noting
+Full practice fails 2, and dropping the field from the games section or the
+Bets row fails 1 each. `nfl_injuries_fixture.json` is five real rows from
+nflverse's `injuries_2026.csv` as published 2026-09-25, unedited.
+
+Since 2026-09-26 it also covers the **CFB early-read note**
+(`fetchers.cfb.early_form_note`): a lean resting on three or fewer FBS games per
+team, unadjusted for opponent, says so. App State +440 at NC State (two games
+each) was the case. The 2023-25 backtest puts the cost at 66% in weeks 2-4 vs
+78% from week 8. Moving the bar to "two or fewer" fails 1 of the suite's 17.
+
+```
+python3 -m tools.verify.test_cfbd_budget      # from the repo root
+```
+
+**`test_cfbd_budget`** covers the CFBD monthly budget, added 2026-09-26. The
+only guard before it was 12 calls per run, which allows 1,440 a month. Pinned:
+- A month with no stored count starts from the measured seed (86 for
+  September 2026), not zero.
+- At the budget, no further request goes out, and the refused calls return
+  empty rather than raising.
+- The count survives every return path, including the early ones that replace
+  the committed cfb cache.
+
+Sabotage counts: capping at the per-run ceiling only fails 4 of 15, dropping
+the count from the no-schedule return fails 1, ignoring the seed fails 1, and
+rebuilding the cache from scratch in `fetch_team_form_data` fails 1.
+No network: a stub session stands in, and the env flags are set inside the test.
+
+Since 2026-09-26 it also covers **caching a week when its data is complete**
+(`fetchers.cfb._week_complete`). cfbfastR's `completed` flag runs days behind,
+so weeks 1-3 of 2026 each reached the cache 5-6 days late, and every run in
+between re-fetched them. A real week 3 whose flag is edited to read incomplete
+(the one documented edit) must be cached from its complete CFBD data. With one
+team's row dropped, it must not be. Removing the rule fails 1 of 18, and
+ignoring the missing row fails 1.
+
+```
+python3 -m tools.verify.test_opponent_adjust  # from the repo root
+```
+
+**`test_opponent_adjust`** covers the CFB opponent adjustment, added
+2026-09-26: `fetchers.cfb.build_team_form_adjusted`, which production scores
+on since that day, and the `cfb_opponent_backtest.py` harness whose verdict
+switched it. Pinned:
+- The adjustment moves the right way on real data. App State, after East
+  Carolina and Charlotte, is rated as allowing more; NC State, after Virginia
+  and Vanderbilt, as scoring more.
+- It stays point-in-time: a week-W form never sees week W.
+- The harness is walk-forward (training strictly before testing) and paired.
+- The AUC handles ties (a no-lean game scores 0).
+- A backtest's own CFBD cap holds.
+- Production scores on the form the weights were fit on: the real
+  `build_game_entities` on the fixture's week-3 slate carries
+  `build_team_form_adjusted`'s values at `FORM_SHRINK_GAMES`, the card labels
+  say "opp-adj", and `cfb_backtest.py` defaults to that same form.
+
+Sabotage counts (26 checks): flipping the opponent correction's sign, leaking
+week W, training on the test season, ignoring tied ranks and resampling the
+two variants separately each fail 1. Production back on raw form fails 2;
+production at a different shrink, the label without "opp-adj" and the
+backtest defaulting to raw each fail 1. The unpaired sabotage first passed
+undetected, because a perfectly separating lean scores AUC 1.0 on every
+resample; the check now uses noisy leans. `cfb_form_fixture.json` is the real
+2026 schedule for weeks 1-3 and the CFBD rows for those weeks as
+`data/boxscores.json` cached them, unedited.
+
+```bash
+python3 -m tools.verify.test_stand_down       # from the repo root
+```
+
+**`test_stand_down`** (added 2026-10-25, 31 checks) covers standing a sport down,
+meaning leaving it out of `active_game_sports`. MLB was stood down mid-World
+Series, when its frozen partition still held a live pick. The suite pins
+behaviour on both sides of that:
+
+- A stood-down sport whose store **covers** the date grades it exactly as an
+  active sport would. Its rows match an active run's, and its verdicts match
+  the live ledger's for the same picks (both MISS).
+- An already-graded date is not graded again, and makes no fetch.
+- A store for **another** date, or an empty one, exits clean with **no row
+  and no fetch**.
+- With the same inputs and the sport **active**, the run still records
+  `no_store` and fails.
+
+It also pins `configured_game_sports` as the gate's one definition: the
+`is None` kill switch, the fallback, and `generate_insights` built on it.
+
+The fixtures are real. `stand_down_fixture.json` is commit `f3bf07f`'s MLB
+partition (2026-09-23), trimmed. The finals are the StatsAPI games already in
+`season_phase_fixture.json`. Every run uses a scratch directory, and the live
+`data/` files are never opened.
+
+Sabotage-checked in three directions, with measured counts:
+
+- Disabling the branch fails 9 of 31: the World Series false gap, reproduced,
+  and a second same-day run re-appending both rows.
+- Skipping a stood-down sport outright fails 5: the stranded pick.
+- Using `or` instead of `is None` fails the 3 kill-switch checks.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
@@ -372,6 +605,15 @@ data after a deploy.
 ## Dependencies
 
 Playwright is resolved from `./node_modules` if present, otherwise from the
-global install. This repo intentionally has no `package.json` and CI runs Python
-only — making the suite runnable is deliberately separate from wiring it into
-CI, which is a decision to take alongside the deploy workflow.
+global install. This repo intentionally has no `package.json`. CI
+(`.github/workflows/tests.yml`, added 2026-09-24) installs a pinned
+`playwright@1.56.1` with `npm install --no-save` into the gitignored
+`node_modules/`, then `npx playwright install --with-deps chromium`, and runs the
+suite on every pull request. 1.56.1 is the version the 186 checks were verified
+on; bump it deliberately and re-verify.
+
+The same workflow runs every Python suite, found by glob, under
+`PYTHONPATH=tools/verify/offline`. That directory's `sitecustomize.py` refuses
+any non-loopback connection, so the "offline and deterministic" claim above is
+enforced, not just stated. It then runs `git diff --exit-code`, so a suite that
+writes to a committed file fails CI.

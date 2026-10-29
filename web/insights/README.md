@@ -17,7 +17,7 @@ routes inside it:
 | --- | --- | --- |
 | `#/games` | Today's Games | `data.json` → `insights.games` |
 | `#/players` | Players | `data.json` → `insights.players`, scoped to one league |
-| `#/teams` | Teams | `mock-insights.json` (preview, not live) |
+| `#/teams` | Teams | `data.json` → `insights.teams`, scoped to one league |
 | `#/components` | Card gallery | `mock-insights.json` |
 
 `#/components` is deliberately absent from the tab bar and reachable by direct
@@ -33,7 +33,8 @@ What remains here:
 - `insights.css` — section-only styles, scoped to `body.insights-scope` so they
   cannot reach the Who's Hot section now that both stylesheets share a document.
   See the header comment in that file for why the scope sits on `<body>`.
-- `mock-insights.json` — the deferred mock behind the teams and components views.
+- `mock-insights.json` — the fixture behind the `#/components` gallery only. Teams
+  moved to live data (`insights.teams`) on 2026-08-01.
 
 ## League scoping
 
@@ -55,15 +56,18 @@ possible, and a payload without it is single-league by construction — the
 committed mock behind the dev views is exactly that, and its games and teams
 carry no `sport` at all.
 
-Scoping Games and Teams can currently only ever EMPTY them, never re-fill them:
-`generate_insights._active_game_sports` resolves to `[mlb]`, because
-`active_game_sports` falls back to `active_sports` and is then filtered to
-`GAME_BUILDERS`, which epl is not in. So Premier League gets a named empty state
-on both tabs. That is the honest answer and a better one than handing it MLB's
-slate. It resolves itself when a league joins `active_game_sports` (nfl and cfb
-are registered and waiting); if the emptiness proves annoying before then, the
-next step is hiding those tabs per league, which is a change to the shell's tab
-bar rather than to these views.
+Every league in the picker can now fill Games and Teams: all four registered
+builders are in `active_game_sports` (`[mlb, epl, cfb, nfl]`). This paragraph
+used to say scoping could only ever EMPTY those tabs, because
+`_active_game_sports` then resolved to `[mlb]`. That stopped being true as each
+league went live.
+
+An empty Games or Teams tab is still possible, and still gets a named empty
+state rather than another league's slate: an EPL international break wider
+than the 14-day lookahead (observed 2026-09-24, PR #61), a genuine offseason,
+or a league whose builder failed this run. Hiding tabs per
+league remains an option if that emptiness ever proves annoying. That would be a
+change to the shell's tab bar, not to these views.
 
 The route notes in `../shell.js` name no league for the same reason — "Today's
 MLB slate" above an empty Premier League Games tab is the same bug one line

@@ -28,7 +28,9 @@ import os
 import shutil
 import traceback
 
+import bet_board
 import espn_odds
+import signal_report  # read-only: the ledger reader bet_board judges picks by
 import slate_clock
 
 import pulse
@@ -68,19 +70,25 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # Team Pulse, training capture) by adding its own entry here -- same
 # mechanism, deliberately, as SPORT_FETCHERS.
 #
-# nfl and cfb are REGISTERED but not ACTIVE -- _active_game_sports only
-# attempts a sport that is both registered here AND listed by the config key
-# it reads, so their builders never run in production until that key says so
-# (same staged-rollout precedent worldcup already sets in the stat-categories
-# pipeline). They are wired and calibrated, pending the decision to go live.
+# REGISTERING IS NOT ACTIVATING. _active_game_sports only attempts a sport
+# that is both registered here AND listed by the config key it reads, so a
+# builder can sit here wired and calibrated without ever running in
+# production -- the staged rollout every sport in this dict went through
+# (nfl and cfb were registered for weeks before config named them).
 #
-# epl is registered AND active. Registering it here is the second of the two
-# steps that switch a sport on; the first is `active_game_sports` naming it,
-# which config.yaml now does. Note what that means for August: EPL form never
-# crosses a season boundary, so every club starts each season below
-# epl_signals.MIN_MATCHES and the builder returns fixtures with NO markets
-# scored for the opening weeks. That is the designed output, not a fault --
-# the Games tab shows the slate and no picks until the sample exists.
+# All four are registered AND active as of 2026-08-31 (config.yaml's
+# `active_game_sports: [mlb, epl, cfb, nfl]`). This comment used to say nfl
+# and cfb were "registered but not active"; that stopped being true when they
+# went live (PRs #54, #55), and a reader trusting it would go looking for a
+# gate that no longer exists.
+#
+# EPL in August: form never crosses a season boundary, so every club starts
+# each season below epl_signals.MIN_MATCHES. That no longer means an empty
+# board -- the cold-start tier (PR #55, tools/verify/test_epl_coldstart.py)
+# scores those clubs off last season's goal difference until the in-season
+# sample takes over. The one designed exception is a PROMOTED club, which has
+# no prior Premier League season to fall back on: its fixtures still carry no
+# markets, which is the honest output rather than a fault.
 #
 # That key is `active_game_sports`, which is SEPARATE from the `active_sports`
 # key gating generate_stats.py's leaderboards -- see _active_game_sports for
@@ -317,14 +325,19 @@ def _active_game_sports(config):
          empty `active_sports` still widens to all builders exactly as it
          did before; that edge case is not this change's to redefine).
 
-    Production config sets `active_sports: [mlb]` and no `active_game_sports`,
-    so this resolves to exactly ["mlb"] -- the same list, by the same path,
-    as before this split.
+    Steps 1 and 2 live in signal_report.configured_game_sports, the one
+    definition of this gate, because the grader has to read it too (a sport
+    left out of it is stood down, and grades only what its frozen partition
+    still holds -- see signal_report.main). This module imports signal_report,
+    so the definition sits there and step 3 stays here, where GAME_BUILDERS is.
+
+    Production config (2026-10-25) sets `active_game_sports` explicitly, with
+    MLB stood down: it is absent from the list, so its partition is neither
+    built nor cleared below and stays as the last pre-flip run committed it.
     """
-    cfg = config or {}
-    configured = cfg.get("active_game_sports")
+    configured = signal_report.configured_game_sports(config)
     if configured is None:
-        configured = cfg.get("active_sports") or list(GAME_BUILDERS)
+        configured = list(GAME_BUILDERS)
     return [s for s in configured if s in GAME_BUILDERS]
 
 
@@ -668,6 +681,20 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
     data["insights"] = _build_players_section(entities, insight_map, generated_at)
     if game_entities:
         data["insights"]["games"] = _build_games_section(game_entities, game_text)
+        # THE BETS TAB, built from the same entities the Games tab renders.
+        # Isolated like a sport builder: it is a reader of finished scores and
+        # prices, so a bug in it must cost the tab, never the build. A missing
+        # section renders as the tab's own empty state.
+        try:
+            data["insights"]["bets"] = bet_board.build(
+                game_entities, config, signal_report.load_ledger())
+        except Exception as exc:  # noqa: BLE001 -- display-only section
+            detail = "{}: {}".format(type(exc).__name__, str(exc)[:200])
+            print("insights(bets): board FAILED ({}); the Bets tab shows its empty "
+                  "state this run, everything else is unaffected".format(detail))
+            if os.environ.get("GITHUB_ACTIONS"):
+                print("::warning title=Bets board skipped::{}".format(detail))
+            traceback.print_exc()
     # Teams: already ranked and card-ready out of the builder, and carrying no AI
     # text at all, so there is no text_map to merge and no _build_*_section pass
     # to run -- it is assigned straight across, alongside players and games.
@@ -902,14 +929,31 @@ def _price_block(ent):
         return None
     american = espn_odds.for_side(odds, standout.get("side"),
                                   (ent.get("home") or {}).get("abbr"),
-                                  (ent.get("away") or {}).get("abbr"))
+                                  (ent.get("away") or {}).get("abbr"),
+                                  bet_type=standout.get("bet_type"))
     if american is None:
         return None
     be = espn_odds.break_even(american)
     move = espn_odds.clv(odds, standout.get("side"),
                          (ent.get("home") or {}).get("abbr"),
-                         (ent.get("away") or {}).get("abbr"))
+                         (ent.get("away") or {}).get("abbr"),
+                         bet_type=standout.get("bet_type"))
     sm = espn_odds.spread_move(odds)
+    home_abbr = (ent.get("home") or {}).get("abbr")
+    away_abbr = (ent.get("away") or {}).get("abbr")
+    side = str(standout.get("side") or "").split()[0] or None
+    # THE SPREAD IN WORDS. ESPN's own `details` string ("BUF -7") for the
+    # current line, and the opening line put the same way -- naming the team
+    # it favoured, because on 2026-09-25's NFL board MIN @ TB opened TB -1.5 and
+    # moved to MIN -1.5, which the home-relative "-1.5 → +1.5" it replaced only
+    # said to a reader who knew ESPN's sign convention. Omitted when the line
+    # never moved.
+    spread_now = odds.get("details") or espn_odds.favored_line(
+        odds.get("spread_close"), home_abbr, away_abbr)
+    spread_text = spread_now
+    if sm and sm["open"] != sm["close"] and spread_now:
+        spread_text = "{} (opened {})".format(
+            spread_now, espn_odds.favored_line(sm["open"], home_abbr, away_abbr))
     return {
         "american": american,
         "display": "{:+d}".format(int(american)),
@@ -931,6 +975,22 @@ def _price_block(ent):
         "move_display": (move or {}).get("delta_display"),
         "move_direction": (move or {}).get("direction"),
         "opened": "{:+d}".format(move["open"]) if move else None,
+        # THE SAME MOVE IN PLAIN WORDS, which is what the card now prints. The
+        # "+17.8pp" above is exact but read as jargon on the 2026-09-25 BUF
+        # card; the prices at both ends plus a direction named for the picked
+        # team say the same thing to anyone who knows what -325 means. The pp
+        # figure stays in the payload (and the ledger) for measurement.
+        #
+        # "Opened" is the BOOK's opening number, and ESPN does not publish WHEN
+        # the book opened. Our first capture of the LAC @ BUF line (09-24 05:30Z)
+        # was already -345, two days after the model first named BUF (09-22),
+        # so this is the market's move over the whole week -- not a claim that
+        # the model got there first. The card says so in its tooltip.
+        "market_display": "{:+d} → {:+d}".format(move["open"], move["close"]) if move else None,
+        "move_text": ({"toward": "moved toward " + side,
+                       "away": "moved away from " + side}.get(move["direction"], "no move")
+                      if move and side else None),
+        "spread_text": spread_text,
     }
 
 
@@ -976,6 +1036,12 @@ def _build_games_section(entities, text_map):
             # builder emits and this misses is silently dropped, which is
             # exactly what happened to this one first time round.
             "outcome_split": ent.get("outcome_split"),
+            # CAUTIONS THE SCORE CANNOT ACT ON, one line each, display only:
+            # NFL's starting QB on the injury report short of an official Out
+            # (fetchers.nfl.qb_availability_note), and a CFB lean resting on
+            # three or fewer FBS games, unadjusted for opponent
+            # (fetchers.cfb.early_form_note).
+            "caution_notes": ent.get("caution_notes"),
             # WHAT THE PICK COSTS. Resolved here rather than in the browser so
             # the American-odds conversion lives in exactly one place (see
             # espn_odds) -- a second copy in JS would be free to drift, and the

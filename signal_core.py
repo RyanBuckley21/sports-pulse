@@ -29,9 +29,18 @@ rather than a framework:
   * Every MLB-only helper (run_line guard, team_total, probable-pitcher
     availability flags) stays in betting_signals.py.
 
-NOTHING IMPORTS THIS YET. It is added on its own so the extraction can be
-reviewed as a pure addition with no behavioural risk, before any sport
-module is migrated onto it.
+WHO IMPORTS IT: every scoring module. It landed on its own (PR #51, imported by
+nothing) so the extraction could be reviewed as a pure addition with no
+behavioural risk. nfl_signals.py and cfb_signals.py migrated onto it in PR #52,
+epl_signals.py was written against it, and betting_signals.py (MLB) migrated
+last, on 2026-09-24, because it is the live and longest-graded sport -- proved
+byte-identical on 777 real games first (see its module docstring).
+
+SO A CHANGE HERE MOVES EVERY SPORT'S SCORES AT ONCE, MLB's graded record
+included. That is the point of having one copy, and also the cost: nothing in
+this file is a local tweak. Any behavioural change needs each sport's backtest
+re-run, and its calibrated thresholds in config.yaml re-checked, before it
+ships.
 """
 
 import math

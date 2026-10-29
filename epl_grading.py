@@ -72,7 +72,7 @@ def fetch_slate(session, config, date):
     if not url:
         return {}
     compact = date.replace("-", "")
-    r = session.get(url, params={"dates": compact, "limit": 1000},
+    r = session.get(url, params={"dates": compact, "limit": espn_dates.SCOREBOARD_LIMIT},
                     timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     return {str(e["id"]): e for e in r.json().get("events") or [] if e.get("id")}
@@ -104,12 +104,21 @@ def fetch_replay_dates(session, config, pks):
         return r.json()
 
     out = {}
-    for e in espn_dates.fetch_window(_get, today, end, params={"limit": 1000}):
+    for e in espn_dates.fetch_window(_get, today, end, params={"limit": espn_dates.SCOREBOARD_LIMIT}):
         pk = str(e.get("id"))
         if pk in pks and is_final(e):
             out[pk] = (e.get("date") or "")[:10]
     return out
 
+
+def season_phase(event):
+    """Always "regular" for a real event. The Premier League has no postseason
+    -- promotion play-offs belong to the Championship, a different competition
+    this adapter never reads -- and ESPN's `season.type` here is a season ID
+    (14308 for 2026-27, verified live 2026-09-24), not a phase, so there is
+    nothing to map. None only when there is no event at all, matching the other
+    adapters. See signal_report.season_phase for why picks carry this."""
+    return "regular" if event else None
 
 def is_final(event):
     """A match that actually finished, with both scores readable.

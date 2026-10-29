@@ -65,6 +65,11 @@
       title: "Today's Games", note: "Today's slate — updated each morning.",
     },
     {
+      hash: "#/bets", id: "bets", label: "Bets", tab: true,
+      section: "insights", view: "bets",
+      title: "Bets", note: "Today's priced leans, every sport.",
+    },
+    {
       hash: "#/players", id: "players", label: "Players", tab: true,
       section: "insights", view: "players",
       title: "Players", note: "AI-assisted context, refreshed with each data update.",

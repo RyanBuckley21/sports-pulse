@@ -31,6 +31,37 @@ days it actually wanted, because a month query returns the whole month.
 
 import datetime
 
+# THE LARGEST `limit` ESPN HONOURS, and a silent cap above it. Measured
+# 2026-09-27 on football/college-football, groups=80, dates=20260926 (a
+# Saturday with 65 FBS events): limit 100, 200, 300, 400 and 500 all return
+# 65; limit 501, 999 and 1000 return exactly 25. HTTP 200 every time, no
+# pageCount, nothing to say it was cut. With NO limit the month of 202609
+# returns 300 of its 323 events -- a second, quieter default cap. soccer/eng.1
+# and football/nfl honour 1000 today, but nothing promises they will, and no
+# month in either league comes near 500, so every caller uses this one value.
+#
+# What it cost before it was found: cfb_grading asked for 1000, so it saw 25
+# of each Saturday's games and DEFERRED every pick outside them as "not on
+# this date's schedule" -- 12 of 17 on 2026-09-26, never graded, since the
+# next run grades the next date. The fallback schedule asked for 1000 per
+# month too. Nothing threw.
+SCOREBOARD_LIMIT = 500
+
+
+def checked_events(payload, limit=SCOREBOARD_LIMIT, what="ESPN scoreboard"):
+    """The payload's events, or RuntimeError when there are as many as were
+    asked for. A full page means the answer may be cut short, and a caller
+    that grades or builds from a cut list writes confident wrong rows (see
+    SCOREBOARD_LIMIT). Raising turns that into a failed step, which the
+    pipeline already knows how to survive: a grading step is re-run, a
+    builder's partition is frozen rather than overwritten."""
+    events = (payload or {}).get("events") or []
+    if len(events) >= limit:
+        raise RuntimeError("{}: {} events at limit={} -- the response may be truncated; "
+                           "refusing to use a possibly partial list".format(what, len(events), limit))
+    return events
+
+
 # Hard ceiling on any month walk, so a bad range or a feed that never reports a
 # boundary cannot spin. Fourteen: an EPL season spans ten months of fixtures,
 # and a full Aug->Jul prior-season fetch is twelve keys.

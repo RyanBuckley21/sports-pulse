@@ -118,6 +118,33 @@ CFBD_KEY_ENV = "CFBD_API_KEY"
 # prints an Actions error annotation.
 MAX_CFBD_CALLS_PER_RUN = 12
 
+# A MONTHLY BUDGET, because the per-run ceiling above cannot stop a month from
+# running dry: at 12 calls x 4 daily runs it allows 1,440 a month. Counted
+# calls are kept in the committed cache (data/boxscores.json, cfb partition,
+# `cfbd_usage`: {"YYYY-MM": n}) by the only workflow that spends them.
+#
+# MEASURED SPEND, 2026-09-26. No run logged its CFBD calls before this, so
+# September was reconstructed from the cache's own commit history. Each
+# finished week reached the cache 5-6 days after its last game (weeks 1/2/3
+# cached 09-12/09-19/09-25), and every run in between re-fetched it: 1 bulk
+# /ppa/games + 1 /games/teams = 2 calls a run. Runs in those windows (counted
+# from "Regenerate stats" commits): 9 + 15 + 19 = 43, so about 86 calls by
+# 09-25. That is the seed below. The healthy-path figure in the comment above
+# (2 calls per week) assumed a week is cached the day it ends; the lag made it
+# about 40 calls a week. Since 2026-09-26 a week is also cached as soon as its
+# CFBD data covers every game (_week_complete), which should bring it back
+# toward 2 -- the per-run log line is where that shows up.
+#
+# 700 leaves 300 of the 1,000 tier for work outside this pipeline -- the CFB
+# backtest (about 18 calls a season, cached after one run) and the logo
+# scripts -- which this counter cannot see. At the budget the fetcher degrades
+# exactly as at the per-run ceiling: no new form, the slate still builds, and
+# the run says so. The month key is UTC; CFBD's reset date is not documented
+# here, so a calendar month is assumed.
+CFBD_MONTHLY_BUDGET = 700
+CFBD_USAGE_SEED = {"2026-09": 86}
+CFBD_USAGE_KEY = "cfbd_usage"
+
 # ONLY A RUN THAT PERSISTS THE CACHE MAY SPEND CALLS.
 #
 # This is the rule that actually keeps the monthly quota safe, and the ceiling
@@ -142,7 +169,8 @@ MAX_CFBD_CALLS_PER_RUN = 12
 # goes stale rather than the quota going to zero. That is the right way round.
 CFBD_ALLOW_ENV = "CFB_ALLOW_CFBD"
 
-_cfbd_calls = {"count": 0, "capped": False}
+_cfbd_calls = {"count": 0, "capped": False, "limit": MAX_CFBD_CALLS_PER_RUN, "month_used": 0,
+               "named": False}
 
 
 # Values of CFBD_ALLOW_ENV that mean "no", beyond empty/unset. Without these,
@@ -169,6 +197,64 @@ def reset_cfbd_budget():
     fresh allowance per slate rather than tripping on the previous one."""
     _cfbd_calls["count"] = 0
     _cfbd_calls["capped"] = False
+    _cfbd_calls["limit"] = MAX_CFBD_CALLS_PER_RUN
+    _cfbd_calls["month_used"] = 0
+    _cfbd_calls["named"] = False
+
+
+def _usage_month(now=None):
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return now.strftime("%Y-%m")
+
+
+def cfbd_month_used(cache, month=None):
+    """Calls this pipeline has spent in `month` (default: this UTC month),
+    from the committed cache, falling back to the measured seed."""
+    month = month or _usage_month()
+    usage = (cache or {}).get(CFBD_USAGE_KEY) or {}
+    if month in usage:
+        return int(usage[month])
+    return int(CFBD_USAGE_SEED.get(month, 0))
+
+
+def apply_monthly_budget(cache, month=None):
+    """Cap this run's calls at what the month has left. Called right after
+    reset_cfbd_budget in build_game_entities."""
+    used = cfbd_month_used(cache, month)
+    _cfbd_calls["month_used"] = used
+    _cfbd_calls["limit"] = max(0, min(MAX_CFBD_CALLS_PER_RUN, CFBD_MONTHLY_BUDGET - used))
+    return used
+
+
+def allow_cfbd_calls(n):
+    """Set this process's CFBD call cap to exactly `n`, for tools outside the
+    live pipeline (cfb_opponent_backtest.py). A backtest needs about 17 calls
+    a season, over the per-run ceiling of 12 that exists to protect the live
+    pipeline, so it names its own cap -- counted against the 300-call reserve
+    CFBD_MONTHLY_BUDGET leaves, which the pipeline's counter cannot see."""
+    reset_cfbd_budget()
+    _cfbd_calls["limit"] = max(0, int(n))
+    _cfbd_calls["named"] = True
+
+
+def record_cfbd_usage(cache, month=None):
+    """The cache with this run's calls added to the month's count, plus a log
+    line -- the first CFBD accounting any run has printed. Keeps only the
+    current and previous month so the committed file cannot grow."""
+    month = month or _usage_month()
+    cache = dict(cache or {})
+    usage = dict(cache.get(CFBD_USAGE_KEY) or {})
+    total = _cfbd_calls["month_used"] + _cfbd_calls["count"]
+    usage[month] = total
+    keep = sorted(usage)[-2:]
+    cache[CFBD_USAGE_KEY] = {k: usage[k] for k in keep}
+    print("insights(games): cfb CFBD calls -- this run {}, {} so far {} of a {} budget "
+          "(tier 1,000)".format(_cfbd_calls["count"], month, total, CFBD_MONTHLY_BUDGET))
+    if total >= 0.8 * CFBD_MONTHLY_BUDGET and os.environ.get("GITHUB_ACTIONS"):
+        print("::warning title=CFBD monthly budget::{} CFBD calls used in {} of a {} "
+              "budget. At the budget, CFB form stops updating until the month turns."
+              .format(total, month, CFBD_MONTHLY_BUDGET))
+    return cache
 
 
 def cfbd_calls_used():
@@ -271,15 +357,26 @@ def _cfbd_get(session, path, params):
                   "holds; form for uncached weeks is absent."
                   .format(CFBD_ALLOW_ENV))
         return []
-    if _cfbd_calls["count"] >= MAX_CFBD_CALLS_PER_RUN:
+    if _cfbd_calls["count"] >= _cfbd_calls["limit"]:
         if not _cfbd_calls["capped"]:
             _cfbd_calls["capped"] = True
-            msg = ("CFBD call ceiling reached ({} calls) -- refusing further requests this "
-                   "run. Team form for the remaining weeks will be absent, so affected "
-                   "signals drop out and those games score with less (or no) lean. This "
-                   "means the per-week cache in data/boxscores.json is not being committed; "
-                   "check that daily-stats-and-grade.yml is still running."
-                   .format(MAX_CFBD_CALLS_PER_RUN))
+            if _cfbd_calls["named"]:
+                msg = ("CFBD call cap for this run reached ({} calls, set by the caller) -- "
+                       "refusing further requests; weeks not already cached will have no form."
+                       .format(_cfbd_calls["limit"]))
+            elif _cfbd_calls["limit"] < MAX_CFBD_CALLS_PER_RUN:
+                msg = ("CFBD monthly budget reached ({} of {} used this month) -- refusing "
+                       "further requests. Team form for uncached weeks will be absent until "
+                       "the month turns; affected games score on the margin fallback tiers."
+                       .format(_cfbd_calls["month_used"] + _cfbd_calls["count"],
+                               CFBD_MONTHLY_BUDGET))
+            else:
+                msg = ("CFBD call ceiling reached ({} calls) -- refusing further requests this "
+                       "run. Team form for the remaining weeks will be absent, so affected "
+                       "signals drop out and those games score with less (or no) lean. This "
+                       "means the per-week cache in data/boxscores.json is not being committed; "
+                       "check that daily-stats-and-grade.yml is still running."
+                       .format(MAX_CFBD_CALLS_PER_RUN))
             print("insights(games): cfb " + msg)
             if os.environ.get("GITHUB_ACTIONS"):
                 print("::error title=CFB CFBD call ceiling hit::" + msg)
@@ -397,9 +494,14 @@ def _espn_rows(session, season):
     # -- the scoreboard is keyless.
     rows = []
     for event in espn_dates.fetch_window(
-            lambda params: _get_json(session, ESPN_CFB_SCOREBOARD, params),
+            # A month is ~300 FBS events: at limit=1000 ESPN returned 25 of them
+            # (espn_dates.SCOREBOARD_LIMIT), so this fallback would have built
+            # a season from a twelfth of its games. checked_events raises on a
+            # full page, which fails the builder and freezes its partition.
+            lambda params: {"events": espn_dates.checked_events(
+                _get_json(session, ESPN_CFB_SCOREBOARD, params), what="cfb fallback schedule")},
             espn_dates.from_compact(start), espn_dates.from_compact(end),
-            params={"limit": 1000, "groups": ESPN_FBS_GROUP}):
+            params={"limit": espn_dates.SCOREBOARD_LIMIT, "groups": ESPN_FBS_GROUP}):
         if (event.get("season") or {}).get("year") != season:
             continue
         comp = (event.get("competitions") or [{}])[0]
@@ -704,6 +806,30 @@ def _stats_rows_to_cache(games):
     return out
 
 
+def _week_complete(entry, games):
+    """Whether a fetched week's cache entry covers every FBS-vs-FBS game
+    scheduled in it, with a value for both teams.
+
+    WHY, measured 2026-09-26. final_regular_weeks trusts cfbfastR's
+    `completed` flag, and that file updates days behind the games: weeks
+    1/2/3 of 2026 reached the cache on 09-12/09-19/09-25, 5-6 days after
+    their last games, and week 4's Thursday game (Liberty @ Coastal Carolina,
+    09-24) still read completed=FALSE a day and a half later. Every run in
+    between re-fetched the week (2 CFBD calls), about 86 calls in September.
+    The flag was only ever a proxy for "the data is all in"; this asks the
+    data directly. It can only cache a week EARLIER than before, never with
+    a game missing, because it requires every game."""
+    if not games or not entry:
+        return False
+    for gid, (home, away) in games.items():
+        teams = entry.get(gid) or {}
+        for name in (home, away):
+            v = teams.get(name)
+            if v is None or (isinstance(v, list) and any(x is None for x in v)):
+                return False
+    return True
+
+
 def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     """(ppa_rows, team_stat_rows, updated_cache) for `weeks`, serving whatever
     the cache already holds and fetching only what it does not.
@@ -729,7 +855,11 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
     if not weeks:
         return [], [], cache
     final = final_regular_weeks(schedule_rows)
-    week_of = {gid: entry["week"] for gid, entry in fbs_matchup_index(schedule_rows).items()}
+    fbs_index = fbs_matchup_index(schedule_rows)
+    week_of = {gid: entry["week"] for gid, entry in fbs_index.items()}
+    games_by_week = {}
+    for gid, entry in fbs_index.items():
+        games_by_week.setdefault(entry["week"], {})[str(gid)] = (entry.get("home"), entry.get("away"))
 
     ppa_cached = dict(_cache_bucket(cache, "ppa", season))
     stats_cached = dict(_cache_bucket(cache, "games_teams", season))
@@ -753,7 +883,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
         for w in missing_ppa:
             entry = split.get(w) or {}
             ppa_rows.extend(_ppa_rows_from_cache(entry))
-            if w in final and entry:
+            if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
                 ppa_cached[str(w)] = entry
 
     for w in missing_stats:
@@ -761,7 +891,7 @@ def fetch_team_form_data(session, season, weeks, schedule_rows, cache=None):
                           {"year": season, "week": w, "seasonType": "regular"}) or []
         entry = _stats_rows_to_cache(fresh)
         stat_rows.extend(_stats_rows_from_cache(entry))
-        if w in final and entry:
+        if entry and (w in final or _week_complete(entry, games_by_week.get(w))):
             stats_cached[str(w)] = entry
 
     # Single-season retention: a stale season's weeks can never be needed
@@ -885,6 +1015,116 @@ def build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week):
             "turnover_diff": round(sum(tos) / len(tos), 4) if tos else None,
             "games": max(len(ppa["off"]), len(tos)),
         }
+    return out
+
+
+# OPPONENT ADJUSTMENT -- PRODUCTION'S CFB FORM since 2026-09-26.
+# build_team_form averages each team's raw PPA against whoever it happened to
+# play, so a team that has faced two weak defenses looks like a strong offense.
+# On 2026-09-25 that made App State an 85 at NC State on two games each (App
+# State's against East Carolina and Charlotte, NC State's against Virginia and
+# Vanderbilt). This is the standard fix: each game's offense is credited for
+# the defense it faced, and each game's defense for the offense it faced,
+# solved jointly.
+#
+# WHY IT SHIPPED. cfb_opponent_backtest.py (run 36212369418) tested raw
+# against k=1/2/4 walk-forward on 2023-25 (1,606 test games), under a decision
+# rule fixed before any result was seen: raw pooled AUC 0.7071; k=4 +0.0084,
+# paired 95% CI [+0.0003, +0.0161], the variant with the highest training AUC
+# among those whose CI clears zero. In weeks 2-5 alone (492 games) no variant's
+# interval cleared zero, which is why the "Early read" note stays. The weights
+# were then re-derived on this form (config.yaml's cfb block).
+OPP_ADJ_MAX_SWEEPS = 1000
+OPP_ADJ_TOLERANCE = 1e-9
+# The ridge penalty production uses, in games. The backtest's pick (see
+# above); cfb_backtest.py's --shrink defaults to it, so the weights and the
+# live form are fit at the same value. Changing it means re-running both
+# backtests and re-deriving the weights, not editing this number.
+FORM_SHRINK_GAMES = 4.0
+
+
+def build_team_form_adjusted(ppa_rows, team_stat_rows, fbs_index, upto_week, shrink_games=2.0):
+    """build_team_form's output, with off_ppa and def_ppa_allowed replaced by
+    opponent-adjusted values. Same point-in-time window, same FBS-only games,
+    same return shape; `games` and `turnover_diff` are left exactly as the raw
+    build computes them.
+
+    THE MODEL. Every qualifying (team, game) offense row is one observation:
+        ppa(T's offense vs O) = mu + off[T] + defq[O]
+    where mu is the mean over all observations, off[T] is T's offensive
+    strength and defq[O] is how much O's defense lets up. It is solved by
+    ridge least squares (Gauss-Seidel sweeps to convergence), and reported
+    back in the raw units:
+        off_ppa[T]         = mu + off[T]   -- expected PPA vs an average defense
+        def_ppa_allowed[T] = mu + defq[T]  -- expected PPA allowed to an average offense
+    CFBD publishes both sides of each game, so only OFFENSE rows are used as
+    observations (a defense row is the other team's offense row seen from the
+    other side); a game whose opponent row is missing falls back to this
+    team's defense row for the opponent's offense.
+
+    WHY RIDGE, measured on 2026 weeks 1-3: the unregularised iteration
+    (off[T] = mean(off - (def[opp] - league)), and the mirror) does not
+    converge on early-season data -- going from 25 to 50 iterations still
+    moved ratings by 0.13 PPA -- because a two-game schedule graph is too
+    sparse to pin every rating. `shrink_games` is the ridge penalty in units
+    of games: each rating is pulled toward zero (league average) as if the
+    team had that many extra average games. It must be > 0; the backtest
+    measures which value works."""
+    if shrink_games <= 0:
+        raise ValueError("shrink_games must be > 0 (see the docstring: the unpenalised fit is not identified early in the season)")
+    raw = build_team_form(ppa_rows, team_stat_rows, fbs_index, upto_week)
+    offense, defense = {}, {}
+    for row in ppa_rows or []:
+        entry = fbs_index.get(str(row.get("gameId")))
+        if entry is None or entry["week"] >= upto_week:
+            continue
+        team = row.get("team")
+        if team == entry.get("home"):
+            opp = entry.get("away")
+        elif team == entry.get("away"):
+            opp = entry.get("home")
+        else:
+            continue
+        gid = str(row.get("gameId"))
+        off = _num((row.get("offense") or {}).get("overall"))
+        dfn = _num((row.get("defense") or {}).get("overall"))
+        if off is not None:
+            offense[(gid, team)] = (team, opp, off)
+        if dfn is not None:
+            defense[(gid, opp)] = (opp, team, dfn)
+    obs = dict(defense)
+    obs.update(offense)            # a team's own offense row wins over the mirror
+    obs = list(obs.values())
+    if not obs:
+        return raw
+
+    mu = sum(y for _, _, y in obs) / len(obs)
+    as_off, as_def = {}, {}
+    for i, (t, o, _) in enumerate(obs):
+        as_off.setdefault(t, []).append(i)
+        as_def.setdefault(o, []).append(i)
+    off_r = {t: 0.0 for t in as_off}
+    def_r = {t: 0.0 for t in as_def}
+    lam = float(shrink_games)
+    for _ in range(OPP_ADJ_MAX_SWEEPS):
+        change = 0.0
+        for t, idx in as_off.items():
+            v = sum(obs[i][2] - mu - def_r[obs[i][1]] for i in idx) / (len(idx) + lam)
+            change = max(change, abs(v - off_r[t]))
+            off_r[t] = v
+        for t, idx in as_def.items():
+            v = sum(obs[i][2] - mu - off_r[obs[i][0]] for i in idx) / (len(idx) + lam)
+            change = max(change, abs(v - def_r[t]))
+            def_r[t] = v
+        if change < OPP_ADJ_TOLERANCE:
+            break
+
+    out = {t: dict(v) for t, v in raw.items()}
+    for t in out:
+        if t in off_r and out[t].get("off_ppa") is not None:
+            out[t]["off_ppa"] = round(mu + off_r[t], 4)
+        if t in def_r and out[t].get("def_ppa_allowed") is not None:
+            out[t]["def_ppa_allowed"] = round(mu + def_r[t], 4)
     return out
 
 
@@ -1040,22 +1280,27 @@ def _display_signals(away, home, away_form, home_form,
     The two margin rows are FALLBACKS IN THE SAME ORDER cfb_signals scores in,
     and only one of the three tiers is ever shown. A card listing "last season"
     beside live PPA would suggest the lean used both; it never does, and the
-    card has to say which one it did use."""
+    card has to say which one it did use.
+
+    The PPA rows say "opp-adj" because since 2026-09-26 they are opponent-
+    adjusted ratings (build_team_form_adjusted), not raw averages: a reader
+    checking one against a published raw PPA table would otherwise see a
+    number that does not match and no reason why."""
     signals = []
     ao, ho = away_form.get("off_ppa"), home_form.get("off_ppa")
     if ao is not None or ho is not None:
         if (ao if ao is not None else float("-inf")) > (ho if ho is not None else float("-inf")):
-            signals.append({"label": "{} Off PPA/play".format(away), "value": _fmt_ppa(ao), "tone": "pos"})
+            signals.append({"label": "{} Off PPA/play, opp-adj".format(away), "value": _fmt_ppa(ao), "tone": "pos"})
         else:
-            signals.append({"label": "{} Off PPA/play".format(home), "value": _fmt_ppa(ho), "tone": "pos"})
+            signals.append({"label": "{} Off PPA/play, opp-adj".format(home), "value": _fmt_ppa(ho), "tone": "pos"})
     ad, hd = away_form.get("def_ppa_allowed"), home_form.get("def_ppa_allowed")
     if ad is not None or hd is not None:
         # Lower allowed is better, so the HIGHER (worse) one is the side
         # worth flagging -- same framing rule NFL's def EPA chip uses.
         if (hd if hd is not None else float("-inf")) > (ad if ad is not None else float("-inf")):
-            signals.append({"label": "{} Def PPA/play allowed".format(home), "value": _fmt_ppa(hd), "tone": "neg"})
+            signals.append({"label": "{} Def PPA/play allowed, opp-adj".format(home), "value": _fmt_ppa(hd), "tone": "neg"})
         else:
-            signals.append({"label": "{} Def PPA/play allowed".format(away), "value": _fmt_ppa(ad), "tone": "neg"})
+            signals.append({"label": "{} Def PPA/play allowed, opp-adj".format(away), "value": _fmt_ppa(ad), "tone": "neg"})
     if not signals:
         # Both sides on one row, LABELLED WITH THE WINDOW IT CAME FROM -- the
         # whole point of these rows is that the reader can tell at a glance
@@ -1103,6 +1348,40 @@ def _team_ref(school):
             "name": school, "color": meta.get("color")}
 
 
+# EARLY-SEASON WARNING, display only. Early on every CFB signal rests on a
+# game or two. On 2026-09-25 that made App State (+440 at NC State) an 85: two
+# games each, App State's against East Carolina and Charlotte, NC State's
+# against Virginia and Vanderbilt. The measured cost of that early read, from
+# data/cfb_backtest_2023_2025.jsonl (regular season, raw form, scores 40-79):
+# weeks 2-4 hit 66.2% (86/130, +/-8.1), weeks 8+ hit 78.0% (326/418, +/-4.0).
+# By week 4 most teams have three or fewer FBS games, hence the bar.
+#
+# STILL SHOWN NOW THAT FORM IS OPPONENT-ADJUSTED (2026-09-26). The adjustment
+# helps over a whole season, but in weeks 2-5 cfb_opponent_backtest.py
+# measured no gain it could tell from zero (492 games; every variant's paired
+# AUC interval spanned zero, run 36212369418): two games against two
+# opponents is too little to rate either side, adjusted or not. The note says
+# the sample is thin, which is still true.
+EARLY_FORM_MAX_GAMES = 3
+
+
+def early_form_note(away_abbr, home_abbr, away_form, home_form, lean_side):
+    """One line when the lean rests on EARLY_FORM_MAX_GAMES or fewer FBS games
+    for either team, else None. Only when the calibrated PPA tier actually
+    produced the lean (both teams have form) and there IS a lean -- a
+    fallback-tier game is scored off margins, and a no-lean game has nothing
+    to warn about."""
+    if lean_side not in (away_abbr, home_abbr):
+        return None
+    ag, hg = (away_form or {}).get("games"), (home_form or {}).get("games")
+    if not ag or not hg:
+        return None
+    if min(ag, hg) > EARLY_FORM_MAX_GAMES:
+        return None
+    return ("Early read: {} {} FBS game{}, {} {} -- too few games to rate either "
+            "side reliably, even adjusted for opponents".format(away_abbr, ag, "" if ag == 1 else "s", home_abbr, hg))
+
+
 def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=None):
     import cfb_signals
 
@@ -1147,6 +1426,8 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
                       "side": m["side"], "score": m["score"]} for m in raw_markets]
     if standout:
         standout = {**standout, "market": market_labels.get(standout.get("bet_type"), standout.get("bet_type"))}
+    early = early_form_note(away_ref["abbr"], home_ref["abbr"], away_form, home_form,
+                            (betting.get("moneyline") or {}).get("side"))
 
     return {
         "gamePk": str(g["game_id"]),  # generic "id" field, reused across sports -- see generate_insights._build_games_section
@@ -1177,6 +1458,8 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
         "betting_signals": betting,
         "standout": standout,
         "best_angle": standout,
+        # Display only -- see early_form_note. Rendered like NFL's QB warning.
+        "caution_notes": [early] if early else None,
         "signal_scores": signal_scores,
         "compare": None,     # no insights_ui.cfb.compare_sets config
         "est_total": None,   # moneyline only, v1
@@ -1405,11 +1688,12 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     NFL's: one bad game is logged and skipped, the rest of the slate builds.
     """
     reset_cfbd_budget()
+    apply_monthly_budget(boxscore_cache)
     session = requests.Session()
     season = season_for_date(game_date)
     schedule = get_schedule(session, season)
     if not schedule:
-        return {}, {}, []
+        return {}, record_cfbd_usage({}), []
 
     # A WINDOW, NOT ONE DATE, for the same reason fetchers/epl uses one: college
     # football is a Saturday sport. A single-date slate leaves the Games tab
@@ -1452,7 +1736,10 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
               "serving the first ({} games, {} dropped to the following week)"
               .format(start, window_end, len(games), len(spanned) - len(games)))
     if not games:
-        return {}, {}, []
+        # No CFBD call has been made yet, but the month's count is kept anyway:
+        # this return replaces the committed cfb cache, and dropping the count
+        # here would hand the next run a fresh budget it has not got.
+        return {}, record_cfbd_usage({}), []
 
     fbs_index = fbs_matchup_index(schedule)
     max_reg_week = max_regular_week(fbs_index)
@@ -1496,7 +1783,11 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
     # game would redo the same full-season pass dozens of times.
     form_by_cutoff, margins_by_cutoff, season_margin_by_cutoff = {}, {}, {}
     for cutoff in sorted(cutoffs):
-        form_by_cutoff[cutoff] = build_team_form(ppa_rows, team_stats, fbs_index, cutoff)
+        # Opponent-adjusted since 2026-09-26 (FORM_SHRINK_GAMES); config.yaml's
+        # cfb weights and scales were fit on exactly this form, and would be
+        # mis-sized for the raw one (adjusted gaps are about half as wide).
+        form_by_cutoff[cutoff] = build_team_form_adjusted(
+            ppa_rows, team_stats, fbs_index, cutoff, shrink_games=FORM_SHRINK_GAMES)
         margins_by_cutoff[cutoff] = build_scoring_margins(schedule, fbs_index, cutoff)
         # The SIGNAL version of the same number, floored at three games. Free:
         # it reads the schedule already in memory, so the fallback tier costs
@@ -1580,4 +1871,4 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None):
         team_entities.extend(build_cfb_team_entities(
             config, schedule_form, schools, prior_form, season - 1))
 
-    return entities, form_cache, []
+    return entities, record_cfbd_usage(form_cache), []

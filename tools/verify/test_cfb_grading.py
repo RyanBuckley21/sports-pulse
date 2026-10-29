@@ -112,6 +112,26 @@ ok("the fixture actually contains finals", sum(
     1 for e in EV.values() if cfb_grading.is_final(e)) >= 8)
 
 
+# ------------------------------------------------- an unabbreviated program
+# A program team_meta has no abbreviation for is carried by its school name,
+# which can be two words. The leading-token rule read "Sacramento State" as
+# "Sacramento" and recorded the pick UNRESOLVED ("names neither program") --
+# 2026-09-12 and 2026-09-19 each lost a pick that way. The event is a real
+# final; only the pick's away label is the store's two-word name (Sacramento
+# State's, as the store wrote it), since the grade reads labels off the pick.
+_fin = next(e for e in EV.values() if cfb_grading.is_final(e)
+            and sides_of(e)["home"]["score"] != sides_of(e)["away"]["score"])
+_s = sides_of(_fin)
+_away_won = _s["away"]["score"] > _s["home"]["score"]
+_p = {"bet_type": "moneyline", "side": "Sacramento State",
+      "away_abbr": "Sacramento State", "home_abbr": _s["home"]["abbr"]}
+_t, _v, _b = cfb_grading.grade(_p, _fin, False)
+ok("a two-word school-name side is graded, not UNRESOLVED",
+   _v == ("HIT" if _away_won else "MISS") and _b == "outcome", (_t, _v))
+_t, _v, _b = cfb_grading.grade(dict(_p, side="Sacramento"), _fin, False)
+ok("  while a side naming neither program is still UNRESOLVED", _v == "UNRESOLVED", _v)
+
+
 # ---------------------------------------------------------------- overtime
 ot = [e for e in EV.values()
       if "OT" in ((e["competitions"][0]["status"]["type"].get("detail")) or "")]
@@ -235,6 +255,73 @@ ok("  and the grader reads them", url == cfb_fetcher.ESPN_CFB_SCOREBOARD
 url, group = cfb_grading._scoreboard_url(None)
 ok("  falling back to the fetcher's when config is absent",
    url == cfb_fetcher.ESPN_CFB_SCOREBOARD and group == cfb_fetcher.ESPN_FBS_GROUP)
+
+
+# ---------------------------------------------------------------------------
+# THE PAGE LIMIT (2026-09-27). ESPN's college-football scoreboard silently
+# returns 25 events for any `limit` over 500 (measured: 500 -> 65 on
+# 2026-09-26, 501 -> 25). fetch_slate asked for 1000, so the grader saw 25 of
+# 65 games and deferred 12 of 17 picks as "not on this date" -- never graded.
+# The stub below answers like ESPN does: every event it has when the limit is
+# honoured, the first 25 when it is not. Its events are the fixture's real
+# ones, replicated with only `id` changed so there are enough to fill a
+# Saturday (the one edit; nothing else in an event is read here).
+import espn_dates  # noqa: E402
+
+_real = json.load(open(FIXTURE))
+
+
+def _saturday(n):
+    out = []
+    for i in range(n):
+        e = copy.deepcopy(_real[i % len(_real)])
+        e["id"] = str(900000 + i)
+        out.append(e)
+    return out
+
+
+class _ESPN:
+    def __init__(self, events):
+        self.events, self.params = events, []
+
+    def get(self, url, params=None, timeout=None):
+        self.params.append(dict(params or {}))
+        lim = int((params or {}).get("limit") or 300)
+        page = self.events[:25] if lim > 500 else self.events[:lim]
+        body = {"events": page}
+
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return body
+        return R()
+
+
+_cfg = yaml.safe_load(open(os.path.join(REPO, "config.yaml")))
+_s = _ESPN(_saturday(65))
+_slate = cfb_grading.fetch_slate(_s, _cfg, "2026-09-26")
+ok("a 65-game Saturday comes back whole (not ESPN's silent 25)", len(_slate) == 65, len(_slate))
+ok("  asking for no more than ESPN honours (<= 500)", int(_s.params[0]["limit"]) <= 500, _s.params[0])
+try:
+    cfb_grading.fetch_slate(_ESPN(_saturday(espn_dates.SCOREBOARD_LIMIT)), _cfg, "2026-09-26")
+    _raised = False
+except RuntimeError:
+    _raised = True
+ok("a page as long as the limit is refused as possibly truncated, not graded from", _raised)
+ok("the shared limit is ESPN's largest honoured value", espn_dates.SCOREBOARD_LIMIT == 500)
+
+# THE LIMIT, SWEPT. Every ESPN caller must ask for SCOREBOARD_LIMIT or less; a
+# literal over 500 anywhere in them is this bug again.
+import re  # noqa: E402
+for _f in ("cfb_grading.py", "epl_grading.py", "nfl_grading.py", "espn_odds.py",
+           "fetchers/cfb.py", "fetchers/epl.py", "fetchers/nfl.py"):
+    _big = [int(m) for m in re.findall(r'["\']limit["\']\s*:\s*(\d+)', open(os.path.join(REPO, _f)).read())
+            if int(m) > 500]
+    ok("{} asks ESPN for no limit over 500".format(_f), not _big, _big)
+ok("fetchers/epl's SCOREBOARD_LIMIT is the shared one",
+   __import__("fetchers.epl", fromlist=["x"]).SCOREBOARD_LIMIT == espn_dates.SCOREBOARD_LIMIT)
 
 
 print("cfb grading: {} checks pass".format(checks["pass"]) if not checks["fail"]

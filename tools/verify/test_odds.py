@@ -263,6 +263,61 @@ ok("a game with no lean has no card block",
 ok("a side the book does not quote has no card block",
    generate_insights._price_block(dict(PRICED, standout={"side": "DRAW", "score": 70})) is None)
 
+# ---------------------------------------------- the card, in plain words
+# The 2026-09-25 redesign: labelled rows instead of "-325 needs 76% from -142
+# +17.8pp". Three REAL games from that day's NFL scoreboard (DraftKings), trimmed
+# to the moneyline and pointSpread cells parse_event reads, each chosen for the
+# branch it exercises:
+#   LAC @ BUF  the card the owner asked about: moved toward the home pick
+#   MIN @ TB   the favourite CHANGED SIDES (TB -1.5 -> MIN -1.5), which the old
+#              home-relative "line -1.5 → +1.5" hid behind a sign convention
+#   LV @ NO    the spread never moved, so no "(opened ...)" is printed
+# Sabotage-checked when written: naming the away team for a negative line fails
+# the two favourite-named assertions (2 of 160); printing "(opened ...)" for an
+# unmoved line fails exactly LV @ NO (1); swapping the direction words fails the
+# BUF and TB wording (2). In the browser suite, dropping the Market row fails
+# its four assertions (184 passed, 4 failed).
+def _nfl_event(details, total, ml, ps):
+    cell = lambda o, c, k: {"open": {k: o}, "close": {k: c}}
+    return {"competitions": [{"odds": [{
+        "provider": {"name": "DraftKings"}, "details": details, "overUnder": total,
+        "moneyline": {"home": cell(ml[0], ml[1], "odds"), "away": cell(ml[2], ml[3], "odds")},
+        "pointSpread": {"home": cell(ps[0], ps[1], "line")}}]}]}
+
+
+def _card(event, away, home, side):
+    return generate_insights._price_block({
+        "away": {"abbr": away}, "home": {"abbr": home},
+        "odds": espn_odds.parse_event(event),
+        "standout": {"side": side, "bet_type": "moneyline", "score": 89}})
+
+
+buf = _card(_nfl_event("BUF -7", 50.5, ("-142", "-325", "+120", "+260"), ("-2.5", "-7")),
+            "LAC", "BUF", "BUF")
+ok("BUF card: the move is both prices, open then now",
+   (buf or {}).get("market_display") == "-142 → -325", buf)
+ok("  named for the picked team", (buf or {}).get("move_text") == "moved toward BUF", buf)
+ok("  the spread says where it opened, favourite named",
+   (buf or {}).get("spread_text") == "BUF -7 (opened BUF -2.5)", buf)
+ok("  and the measured pp figure is still in the payload for the ledger",
+   (buf or {}).get("move_display") == "+17.8pp", buf)
+
+tb = _card(_nfl_event("MIN -1.5", 42.5, ("-125", "+102", "+105", "-122"), ("-1.5", "+1.5")),
+           "MIN", "TB", "TB")
+ok("MIN @ TB: a favourite that changed sides reads as two teams, not two signs",
+   (tb or {}).get("spread_text") == "MIN -1.5 (opened TB -1.5)", tb)
+ok("  and a pick the market left is said so",
+   (tb or {}).get("move_text") == "moved away from TB", tb)
+
+no = _card(_nfl_event("NO -3", 43.5, ("-166", "-185", "+140", "+154"), ("-3", "-3")),
+           "LV", "NO", "NO")
+ok("LV @ NO: an unmoved spread prints no '(opened ...)'",
+   (no or {}).get("spread_text") == "NO -3", no)
+
+ok("favored_line: a pick'em is a pick'em", espn_odds.favored_line(0.0, "A", "B") == "pick'em")
+ok("  and no line is no text", espn_odds.favored_line(None, "A", "B") is None)
+
+
 # ------------------------------------------------- the priced standing record
 # The line that answers "did it make money", which no hit rate in this repo
 # does. Flat one-unit stakes: the only staking plan that does not smuggle a

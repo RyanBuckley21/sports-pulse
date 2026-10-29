@@ -223,6 +223,40 @@ def load_config(path=CONFIG_PATH):
         return yaml.safe_load(f)
 
 
+def configured_game_sports(config):
+    """The sports config.yaml asks to build scored picks for, as written, or
+    None when it names none (then every registered builder is meant).
+
+    THE ONE DEFINITION OF THE PICKS GATE. generate_insights._active_game_sports
+    calls this and filters the result to its GAME_BUILDERS; it lives here,
+    rather than there, because generate_insights imports this module and the
+    grader cannot import it back. Until 2026-10-25 the grader read neither
+    gate at all (0 occurrences of either key in this file), which was harmless
+    while every graded sport was also active and stopped being harmless the
+    day MLB was stood down -- see is_game_sport_active.
+
+    Resolution, unchanged from when it lived only in generate_insights:
+    `active_game_sports` when the key is PRESENT, an empty list included (the
+    explicit kill switch -- hence `is None`, not `or`); else `active_sports`,
+    with its pre-existing `or` semantics (an empty one widens to everything).
+    """
+    cfg = config or {}
+    configured = cfg.get("active_game_sports")
+    if configured is None:
+        configured = cfg.get("active_sports") or None
+    return None if configured is None else list(configured)
+
+
+def is_game_sport_active(config, sport_key):
+    """Whether `sport_key`'s scored picks are switched on. A sport left out of
+    the gate is STOOD DOWN, not deleted: its ledger rows stay in the record
+    and its last committed partition is left frozen (generate_insights only
+    touches the partitions of sports it attempts), so a pick it shipped before
+    the flip is still on disk to be graded. See main()."""
+    configured = configured_game_sports(config)
+    return configured is None or sport_key in configured
+
+
 def load_store(path, rev=None):
     """The insights game store, from the working tree or from a git revision.
 
@@ -268,7 +302,10 @@ def _sport_partition(raw_store, sport_key):
     return raw_store.get(sport_key, {})
 
 
-SCHEMA_VERSION = 2
+# 3 (2026-09-24): pick rows carry `season_phase` -- see build_pick_rows. Rows
+# without it are all regular season (read via _row_phase); nothing checks this
+# number, it labels which rows can answer the question.
+SCHEMA_VERSION = 3
 
 # Per-date outcomes the ledger distinguishes. A date with no entry at all means
 # the report was never run for it -- which is why "the store had nothing" and
@@ -429,6 +466,49 @@ def observed_facts(game):
     }
 
 
+# MLB StatsAPI `gameType` -> season phase. The authoritative list is
+# /api/v1/gameTypes (fetched 2026-09-24): S Spring Training, R Regular Season,
+# F Wild Card, D Division Series, L League Championship Series, W World Series,
+# C Championship, P Postseason, A All-Star Game, I Intrasquad, E Exhibition.
+# Verified on real slates: 2026-09-23 is all R, 2025-10-01 is all F ("AL Wild
+# Card Series"). Anything not listed maps to None -- an unknown code is not
+# silently promoted into the regular-season record.
+_MLB_PHASES = {"R": "regular", "S": "preseason",
+               "F": "postseason", "D": "postseason", "L": "postseason",
+               "W": "postseason", "C": "postseason", "P": "postseason",
+               "A": "exhibition", "I": "exhibition", "E": "exhibition"}
+
+
+def season_phase(game):
+    """MLB's season phase for a slate game: "regular", "postseason",
+    "preseason", "exhibition", or None when the game or its code is unknown.
+
+    WHY PICKS ARE TAGGED. The pipeline has no gameType filter, so the playoffs
+    (from 2026-09-30) and spring training are scored and graded like any other
+    slate. That is deliberate -- they are real games and the record should say
+    how the model does on them -- but they are a different population (short
+    series, aces on extra rest, bullpens used differently, split-squad spring
+    lineups), and folding them into the regular-season record would quietly
+    change what that number means. So every pick row names its phase and the
+    all-time report keeps each phase's record apart. Read off the GRADER's own
+    schedule fetch, not the pre-game store, so a `--rev` replay of an old store
+    is tagged too."""
+    if not game:
+        return None
+    return _MLB_PHASES.get(game.get("gameType"))
+
+
+def _row_phase(row):
+    """The season phase a ledger row belongs to. Rows written before
+    SCHEMA_VERSION 3 carry no `season_phase`, and every one of them is regular
+    season -- the ledger's first date is 2026-07-23 and its last pre-v3 date
+    2026-09-23, inside every graded league's regular season (EPL has no other
+    phase) -- so a missing tag reads as "regular", read-time only, the same
+    convention _row_sport uses. A row that HAS the field but could not be
+    tagged (no slate game, unknown code) also reads as regular: such a row is
+    UNRESOLVED or a status row and carries no HIT/MISS/PUSH to misplace."""
+    return row.get("season_phase") or "regular"
+
 def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """One ledger row per pick -- the grain that makes "how have moneyline picks
     done" and "do 90+ scores outperform 60s" answerable later. Aggregates are
@@ -451,6 +531,10 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, spo
             "gamePk": pick["gamePk"],
             "away": pick["away_abbr"], "home": pick["home_abbr"],
             "game_number": (game or {}).get("gameNumber"),
+            # Which part of the season this game belongs to, from the grader's
+            # own slate fetch -- see season_phase. Kept apart in the all-time
+            # record, never blended into the regular-season number.
+            "season_phase": sport["season_phase"](game),
             "start": pick["start"],
             "bet_type": pick["bet_type"], "market": pick["market"], "side": pick["side"],
             "score": pick["score"], "flags": pick["flags"], "point": pick.get("point"),
@@ -500,13 +584,18 @@ def append_ledger(new_rows, path=LEDGER_PATH):
         sys.stderr.write("signal_report: warning: could not write {} ({})\n".format(path, e))
 
 
-def ledger_totals(all_rows):
+def ledger_totals(all_rows, phase=None):
     """Records and date counts derived from the ledger on every read.
 
     Returns (per-basis records, {status: date count}). Nothing here is cached to
     disk: the JSONL rows are the only source of truth, so a change to how a
     verdict is counted takes effect on the next read rather than needing a
     stored aggregate to be rebuilt.
+
+    `phase`, when given, restricts the RECORDS to pick rows of that season
+    phase (see _row_phase). The date counts are deliberately left unfiltered:
+    a no_picks / no_store status row has no slate game to take a phase from,
+    and the gaps it records are gaps in the whole ledger either way.
     """
     latest = latest_run_rows(all_rows)
     records = {b: {"HIT": 0, "MISS": 0, "PUSH": 0} for b in BASES}
@@ -517,6 +606,8 @@ def ledger_totals(all_rows):
         counts[status if not has_pick else STATUS_RECORDED] = \
             counts.get(status if not has_pick else STATUS_RECORDED, 0) + 1
         for row in date_rows:
+            if phase is not None and _row_phase(row) != phase:
+                continue
             basis, verdict = row.get("basis"), row.get("verdict")
             if basis in records and verdict in records[basis]:
                 records[basis][verdict] += 1
@@ -842,6 +933,7 @@ SPORT_ADAPTERS = {
         "live_state": live_state,
         "observed_facts": observed_facts,
         "grade": grade,
+        "season_phase": season_phase,
         "list_markets": lambda scored: betting_signals.list_markets(scored),
         "top_market": lambda scored, t: betting_signals.top_market(scored, t),
         # MLB's store holds exactly one date's games, so a stored pk missing
@@ -857,6 +949,7 @@ SPORT_ADAPTERS = {
         "live_state": epl_grading.live_state,
         "observed_facts": epl_grading.observed_facts,
         "grade": epl_grading.grade,
+        "season_phase": epl_grading.season_phase,
         "list_markets": epl_grading.list_markets,
         "top_market": epl_grading.top_market,
         # EPL'S STORE SPANS SEVERAL DATES, and this flag is what stops that
@@ -884,6 +977,7 @@ SPORT_ADAPTERS = {
         "live_state": cfb_grading.live_state,
         "observed_facts": cfb_grading.observed_facts,
         "grade": cfb_grading.grade,
+        "season_phase": cfb_grading.season_phase,
         "list_markets": cfb_grading.list_markets,
         "top_market": cfb_grading.top_market,
         # SEVEN DAYS OF FIXTURES IN ONE STORE, for the same reason EPL has
@@ -904,6 +998,7 @@ SPORT_ADAPTERS = {
         "live_state": nfl_grading.live_state,
         "observed_facts": nfl_grading.observed_facts,
         "grade": nfl_grading.grade,
+        "season_phase": nfl_grading.season_phase,
         "list_markets": nfl_grading.list_markets,
         "top_market": nfl_grading.top_market,
         # Seven days of fixtures in one store, same as CFB and for the same
@@ -980,7 +1075,18 @@ def _run_line_laying(scored, side):
 def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT_KEY, sport=None):
     """The day's picks, ranked by Signal Score desc (gamePk as a deterministic
     tiebreak). Ranking comes from betting_signals so this never diverges from
-    what the site showed."""
+    what the site showed.
+
+    `sport` DEFAULTS TO THE ADAPTER FOR `sport_key`, like build_pick_rows' does.
+    It did not, from the EPL grading change (92d717e, 2026-08-27) until
+    2026-09-24: main() always passes it, so live grading never noticed, but
+    backtest_season.py calls this with no adapter, and every date died on
+    `sport["list_markets"]` with a TypeError that its per-date `except
+    Exception` logged and skipped. The script still exited 0 -- "0 dates
+    graded, 7 skipped" -- so the MLB season backtest had silently stopped
+    producing results for four weeks. Keyed on `sport_key` rather than
+    hardcoded to MLB so the two arguments cannot disagree."""
+    sport = sport or SPORT_ADAPTERS[sport_key]
     labels = dict((config.get("insights_ui") or {}).get(sport_key, {}).get("market_labels") or {})
     labels.update(SHORT_LABELS)
     picks = []
@@ -1022,7 +1128,8 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 "odds": entry.get("odds"),
                 "price": espn_odds.for_side(entry.get("odds"), m["side"],
                                             (entry.get("home") or {}).get("abbr"),
-                                            (entry.get("away") or {}).get("abbr")),
+                                            (entry.get("away") or {}).get("abbr"),
+                                            bet_type=m["bet_type"]),
                 # DID THE MARKET MOVE TOWARD THIS PICK. Read from the same
                 # stored block, which carries the book's own opening number
                 # alongside its last published one. This converges far faster
@@ -1030,7 +1137,8 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                 # whole reason it is recorded. See espn_odds.clv.
                 "clv": espn_odds.clv(entry.get("odds"), m["side"],
                                      (entry.get("home") or {}).get("abbr"),
-                                     (entry.get("away") or {}).get("abbr")),
+                                     (entry.get("away") or {}).get("abbr"),
+                                     bet_type=m["bet_type"]),
             }
             # Resolved here rather than in grade(), which sees one pick at a time
             # and has no access to the game's other markets. `scored` is the full
@@ -1240,6 +1348,47 @@ def summary_lines(date, rows):
     return lines
 
 
+# Report order for the non-regular phases, each on its own line under the
+# regular-season headline. Explicit rather than sorted so the playoffs always
+# read directly below the season they follow.
+_PHASE_ORDER = ("regular", "postseason", "preseason", "exhibition")
+
+
+def _label(text):
+    """A report label padded to the column the record starts in, with at least
+    one space after it. A plain 19-wide pad was used first and printed
+    "All-time (regular):Outcome-graded" -- that label is exactly 19 characters,
+    so the pad added nothing. "All-time:" still comes out byte-identical."""
+    return text.ljust(18) + " "
+
+
+def _phase_dates(all_rows, phase):
+    """How many slates' latest runs recorded at least one pick of `phase`."""
+    return sum(1 for rows in latest_run_rows(all_rows).values()
+               if any(r.get("status") == STATUS_RECORDED and r.get("bet_type")
+                      and _row_phase(r) == phase for r in rows))
+
+
+def _record_parts(records):
+    """The per-basis "Outcome-graded 12-8 (60%) on 20 picks [1 push]" segments,
+    shared by the all-time headline and each phase line so the two can never
+    format a record differently."""
+    parts = []
+    for basis in BASES:
+        rec = records[basis]
+        n = rec["HIT"] + rec["MISS"]
+        if not n and not rec["PUSH"]:
+            continue
+        seg = "{} {}-{}{} on {} pick{}".format(
+            BASIS_LABEL[basis], rec["HIT"], rec["MISS"],
+            " ({:.0f}%)".format(100.0 * rec["HIT"] / n) if n else "",
+            n, "" if n == 1 else "s")
+        if rec["PUSH"]:
+            seg += " [{} push]".format(rec["PUSH"])
+        parts.append(seg)
+    return parts
+
+
 def alltime_lines(all_rows, not_recorded=None):
     """The standing record across every date in the ledger, computed from the
     rows on each read. Same two-basis split as the day's summary -- an all-time
@@ -1251,23 +1400,23 @@ def alltime_lines(all_rows, not_recorded=None):
     """
     lines = []
     if all_rows:
-        records, counts = ledger_totals(all_rows)
-        parts = []
-        for basis in BASES:
-            rec = records[basis]
-            n = rec["HIT"] + rec["MISS"]
-            if not n and not rec["PUSH"]:
-                continue
-            seg = "{} {}-{}{} on {} pick{}".format(
-                BASIS_LABEL[basis], rec["HIT"], rec["MISS"],
-                " ({:.0f}%)".format(100.0 * rec["HIT"] / n) if n else "",
-                n, "" if n == 1 else "s")
-            if rec["PUSH"]:
-                seg += " [{} push]".format(rec["PUSH"])
-            parts.append(seg)
-        graded = counts.get(STATUS_RECORDED, 0)
+        # THE HEADLINE IS REGULAR SEASON ONLY once any other phase has picks.
+        # Until then every row is regular (see _row_phase) and this block prints
+        # exactly what it always did -- checked byte-for-byte against the real
+        # ledger for all four sports when the split was added. After, each other
+        # phase gets its own line below and is never summed into this one.
+        pick_phases = {_row_phase(r) for r in all_rows
+                       if r.get("status") == STATUS_RECORDED and r.get("bet_type")}
+        split = bool(pick_phases - {"regular"})
+        records, counts = ledger_totals(all_rows, phase="regular" if split else None)
+        parts = _record_parts(records)
+        # Dates counted per phase from each slate's LATEST run -- the same rows
+        # the records come from -- so a line's date count and its record always
+        # describe the same slates. Unsplit, this is exactly the old count.
+        graded = (_phase_dates(all_rows, "regular") if split
+                  else counts.get(STATUS_RECORDED, 0))
         parts.append("{} date{}".format(graded, "" if graded == 1 else "s"))
-        lines.append("All-time:          {}".format("  ·  ".join(parts)))
+        lines.append(_label("All-time (regular):" if split else "All-time:") + "  ·  ".join(parts))
         gaps = []
         if counts.get(STATUS_NO_PICKS):
             gaps.append("{} with no pick over the bar".format(counts[STATUS_NO_PICKS]))
@@ -1276,8 +1425,20 @@ def alltime_lines(all_rows, not_recorded=None):
         if gaps:
             lines.append("         gaps: {} — recorded as such, not counted as losses".format(
                 ", ".join(gaps)))
-        lines.extend(priced_record_lines(all_rows))
-        lines.extend(clv_record_lines(all_rows))
+        regular = [r for r in all_rows if _row_phase(r) == "regular"] if split else all_rows
+        lines.extend(priced_record_lines(regular))
+        lines.extend(clv_record_lines(regular))
+        for phase in _PHASE_ORDER:
+            if phase == "regular" or phase not in pick_phases:
+                continue
+            p_records, _ = ledger_totals(all_rows, phase=phase)
+            p_rows = [r for r in all_rows if _row_phase(r) == phase]
+            p_dates = _phase_dates(all_rows, phase)
+            parts = _record_parts(p_records)
+            parts.append("{} date{}".format(p_dates, "" if p_dates == 1 else "s"))
+            lines.append(_label(phase.capitalize() + ":") + "  ·  ".join(parts))
+            lines.extend("  " + line for line in priced_record_lines(p_rows))
+            lines.extend("  " + line for line in clv_record_lines(p_rows))
     if not_recorded:
         lines.append("         (this run not added to the all-time record: {})".format(not_recorded))
     return lines
@@ -1355,9 +1516,73 @@ def main(argv=None):
         "{}@{}".format(args.store, args.rev) if args.rev else args.store)
     recordable, why_not = is_recordable(args, min_score, threshold)
 
+    # AN EMPTY PARTITION IS NOT FATAL ON ITS OWN. It used to die here, before
+    # the two checks below that can tell what it means, and on 2026-09-28 it
+    # red-lined the daily run: the MLB regular season ended 09-27, that date was
+    # graded (12 picks) by the 18:00 UTC run, whose regenerate then cleared
+    # MLB's partition for a day with no games -- so the 19:02 UTC run found
+    # nothing and exited 2 from the one strict grading step. The same would
+    # happen on every postseason off day and every day of the offseason.
+    # An empty store now goes through the same questions as a rolled-forward
+    # one: no games that day -> clean; date already graded -> clean; games were
+    # played and nothing covers them -> the recorded gap and failure below.
     store = _sport_partition(load_store(args.store, args.rev), sport_key)
-    if not store:
-        die("store {} is empty (no {!r} games)".format(args.store, sport_key))
+
+    # A STOOD-DOWN SPORT GRADES WHAT IT HOLDS, AND NOTHING ELSE.
+    #
+    # Taking a sport out of `active_game_sports` stops generate_insights from
+    # building, clearing or rolling its partition forward, so that partition
+    # stays exactly as the last pre-flip run committed it. Two consequences,
+    # and this branch exists for both:
+    #
+    #   * THE LAST SHIPPED PICK IS STILL ON DISK, and it is a real pick the site
+    #     showed. MLB was stood down mid-World Series (Brewers lead the Rays 2-0
+    #     on 2026-10-25, Game 3 on 10-26, Game 7 if needed on 10-31): the
+    #     partition held a live pick (TB @ MIL, NRFI, slate 2026-10-24) on the
+    #     day this was written. When the store covers the date being graded,
+    #     grading proceeds EXACTLY as for an active sport -- same overlap check,
+    #     same rows, same failure on a genuine gap -- so nothing shipped before
+    #     the flip is stranded. That path is the load-bearing one; it is
+    #     pinned in test_stand_down.
+    #
+    #   * EVERY OTHER DAY IS NOT A GAP. Before this, the strict MLB step would
+    #     have asked StatsAPI for yesterday's slate every morning, found World
+    #     Series games the frozen store does not cover, written a `no_store` row
+    #     saying the record has a hole and redded the workflow -- for a sport
+    #     nobody asked to pick. And once the Series ended it would have gone
+    #     quiet on the empty-slate path all winter, then redded on Opening Day
+    #     2027. So a stood-down sport whose store does not cover the date exits
+    #     clean, writes NO row (an absence by design is not a gap, and a
+    #     no_store row would claim one), and makes no network call at all.
+    #
+    # A date already graded is also done: the frozen store keeps covering that
+    # date for every later cron entry the same day (there are four), where an
+    # active sport's store would have rolled forward and hit the already-graded
+    # branch below. Re-grading it would append the same rows under a new
+    # run_id, four times.
+    #
+    # Only for a run that could record. A --no-record or --rev look at a
+    # stood-down sport asked a specific question and still gets its answer.
+    if recordable and not is_game_sport_active(config, sport_key):
+        stamps = store_slate_dates(store)
+        if args.date not in stamps:
+            print("signal_report: {} is stood down (not in active_game_sports) and its "
+                  "frozen store covers {}, not {} -- nothing it shipped is due. No row "
+                  "written: a stood-down sport's quiet day is not a gap.".format(
+                      sport_key, "/".join(stamps) or "nothing", args.date))
+            return EXIT_OK
+        graded = [row for row in load_ledger()
+                  if row.get("date") == args.date and _row_sport(row) == sport_key
+                  and _has_pick(row)]
+        if graded:
+            print("signal_report: {} is stood down and {} is already graded ({} pick{} "
+                  "at {}); its frozen store still covers that date, so nothing to do."
+                  .format(sport_key, args.date, len(graded), "" if len(graded) == 1 else "s",
+                          max(row.get("run_id") or "" for row in graded)))
+            return EXIT_OK
+        print("signal_report: {} is stood down, but its frozen store holds {} game{} for "
+              "{} -- grading what it shipped before the flip.".format(
+                  sport_key, len(store), "" if len(store) == 1 else "s", args.date))
 
     session = requests.Session()
     try:

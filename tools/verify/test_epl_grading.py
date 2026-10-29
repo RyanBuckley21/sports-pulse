@@ -159,12 +159,51 @@ def test_the_adapter_boundary_holds():
     check("an unregistered sport has no adapter", signal_report.adapter_for("nhl") is None)
 
 
+def test_collect_picks_resolves_its_own_adapter():
+    """collect_picks with NO `sport` argument must rank through the adapter
+    its `sport_key` names -- the same answer as passing that adapter in.
+
+    backtest_season.py calls it exactly that way, and from 92d717e until
+    2026-09-24 the default was a bare None: every date raised TypeError on
+    `sport["list_markets"]`, the backtest's per-date `except Exception` logged
+    and skipped it, and the run exited 0 having graded nothing. Nothing else
+    calls it without an adapter, so nothing else would have caught it.
+
+    Both ranking paths are exercised (all_markets=True -> list_markets,
+    False with no stored standout -> top_market), because the bug sat in
+    both. A real MLB store row from data/insights.games.json-shaped output is
+    used rather than a sketch: the ranking reads its betting_signals block."""
+    config = signal_report.load_config()
+    mlb = signal_report.SPORT_ADAPTERS["mlb"]
+    scored = {
+        "moneyline": {"side": "NYM", "score": 31, "flags": []},
+        "first_five_moneyline": {"side": "NYM", "score": 32, "flags": []},
+        "run_line": {"side": "No clear lean", "score": 32, "flags": []},
+        "game_total": {"side": "No clear lean", "score": 5, "flags": []},
+        "team_total": {"away": {"abbr": "NYM", "side": "No clear lean", "score": 9, "flags": []},
+                       "home": {"abbr": "TEX", "side": "Under", "score": 21, "flags": []}},
+    }
+    store = {"824001": {"away": {"abbr": "NYM"}, "home": {"abbr": "TEX"},
+                        "start": "8:05 PM ET", "betting_signals": scored}}
+    for all_markets in (True, False):
+        try:
+            implicit = signal_report.collect_picks(store, config, 17, all_markets)
+        except Exception as exc:  # noqa: BLE001 -- the crash IS the regression
+            check("collect_picks(all_markets=%s) runs with no adapter passed" % all_markets,
+                  False, "%s: %s" % (type(exc).__name__, exc))
+            continue
+        explicit = signal_report.collect_picks(store, config, 17, all_markets, sport=mlb)
+        check("collect_picks(all_markets=%s) with no adapter == the MLB adapter" % all_markets,
+              implicit == explicit and len(implicit) > 0, "%r vs %r" % (implicit, explicit))
+
+
 def main():
     for fn in (test_a_draw_wins_double_chance_and_loses_match_result,
                test_a_decisive_match_grades_by_the_winner,
                test_a_graded_row_carries_the_basis_and_the_result,
                test_unsettled_and_malformed_inputs_never_grade,
-               test_the_adapter_boundary_holds):
+               test_the_adapter_boundary_holds,
+               test_collect_picks_resolves_its_own_adapter):
         fn()
     if failures:
         print("FAILED (%d of %d checks)" % (len(failures), checks))
