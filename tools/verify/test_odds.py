@@ -584,15 +584,20 @@ ok("  and the spread's travel", blk["spread_move"] == "+7 → +5.5", blk)
 # ------------------------------------------------- the CLV standing record
 ok("no measurable movement says NOTHING, rather than printing 0.0pp",
    signal_report.clv_record_lines([{"verdict": "HIT", "clv_delta": None}]) == [])
-line = signal_report.clv_record_lines(
+# Since 2026-10-29 every line names its baseline: these rows carry only the
+# book's open (`clv_delta`), so the headline reports first capture as not yet
+# measured and the figures below sit under the NOT-A-MODEL-RESULT label. The
+# baselines themselves are pinned in test_clv_first_seen.
+_lines = signal_report.clv_record_lines(
     [{"verdict": "HIT", "clv_delta": 0.03}, {"verdict": "MISS", "clv_delta": 0.01},
-     {"verdict": "MISS", "clv_delta": -0.02}, {"verdict": "PUSH", "clv_delta": 0.0}])[0]
+     {"verdict": "MISS", "clv_delta": -0.02}, {"verdict": "PUSH", "clv_delta": 0.0}])
+line = _lines[-1]
 ok("the mean movement is reported in probability points", "+0.50pp" in line, line)
 ok("  with the share the market moved toward", "2 of 4" in line, line)
 ok("  and the unmoved counted separately", "1 unmoved" in line, line)
-ok("a thin sample says so out loud, and names the null",
-   "the null is 0.0pp" in signal_report.clv_record_lines(
-       [{"verdict": "HIT", "clv_delta": 0.01}])[1])
+ok("the headline names the null",
+   "null 0.0pp" in signal_report.clv_record_lines(
+       [{"verdict": "HIT", "clv_delta": 0.01}])[0])
 # Ungraded rows are not yet evidence of anything.
 ok("a pick with no verdict is not counted",
    signal_report.clv_record_lines([{"clv_delta": 0.05}]) == [])

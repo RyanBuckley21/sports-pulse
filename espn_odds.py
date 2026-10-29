@@ -543,11 +543,36 @@ def clv(odds, side_abbr, home_abbr, away_abbr, bet_type=None):
         close_am, open_am = odds.get("away_ml"), odds.get("away_ml_open")
     else:
         return None
+    return _movement(open_am, close_am, BASELINE_BOOK_OPEN)
+
+
+# WHICH PRICE A MOVEMENT IS MEASURED FROM, stamped on every result so no reader
+# can aggregate one baseline believing it is the other.
+#
+# BOOK_OPEN is ESPN's own opening number, and it is NOT A MODEL RESULT. Measured
+# 2026-10-22 over 116 priced picks: from the book's open the market moved
+# +2.96pp [+1.56, +4.41] toward our picks; from the price on the board when the
+# pick first existed, +0.35pp [-0.31, +0.99]. NFL went from +7.90pp to -0.50pp.
+# The open can predate our first sighting of a game by days, so it credits the
+# model with movement that was over before the model had an opinion
+# (2026_05_PHI_JAX: opened JAX +110, our first capture -285, closed -395).
+#
+# FIRST_SEEN is the honest baseline: the price when the pick existed. See
+# clv_first_seen and generate_insights' `odds_first_seen`.
+BASELINE_BOOK_OPEN = "book_open"
+BASELINE_FIRST_SEEN = "first_seen"
+
+
+def _movement(open_am, close_am, baseline):
+    """The movement record both baselines share, so the two cannot drift apart
+    in sign convention or rounding: `delta` in probability points, positive
+    when the price shortened toward the picked side."""
     ob, cb = break_even(open_am), break_even(close_am)
     if ob is None or cb is None:
         return None
     delta = cb - ob
     return {
+        "baseline": baseline,
         "open": int(open_am),
         "close": int(close_am),
         "open_break_even": round(ob, 4),
@@ -556,6 +581,37 @@ def clv(odds, side_abbr, home_abbr, away_abbr, bet_type=None):
         "delta_display": "{:+.1f}pp".format(100.0 * delta),
         "direction": "toward" if delta > 0 else ("away" if delta < 0 else "flat"),
     }
+
+
+def clv_first_seen(first_seen, odds, side_abbr, home_abbr, away_abbr, bet_type=None):
+    """Line movement toward a pick measured FROM OUR FIRST CAPTURE, or None.
+
+    `first_seen` is the store's `odds_first_seen` snapshot: BOTH moneylines as
+    they read the first time the game carried a scored standout and a price for
+    that standout's side (generate_insights._first_seen_snapshot). `odds` is the
+    sticky block, whose current prices are the last ones published before
+    kickoff -- the close.
+
+    The anchor price is read for the side ACTUALLY GRADED, from the snapshot of
+    both sides. That is deliberately not the anchor tools/clv_first_seen_backfill
+    used: it kept only the standout side's price at the anchoring moment, so a
+    standout that flipped sides between that moment and grading compared one
+    side's anchor with the other side's close.
+
+    Same gates and the same return shape as clv() -- with `baseline` set to
+    first_seen and `anchored_at` naming when the anchor was captured -- and
+    None for anything unmeasurable, which is excluded from aggregates rather
+    than counted as zero movement."""
+    if not first_seen or not odds or not side_abbr:
+        return None
+    if bet_type is not None and bet_type not in PRICED_MARKETS:
+        return None
+    anchor = for_side(first_seen, side_abbr, home_abbr, away_abbr)
+    close = for_side(odds, side_abbr, home_abbr, away_abbr)
+    out = _movement(anchor, close, BASELINE_FIRST_SEEN)
+    if out is not None:
+        out["anchored_at"] = first_seen.get("captured_at")
+    return out
 
 
 def spread_move(odds):

@@ -1,0 +1,372 @@
+{
+ "_provenance": "REAL committed store states, in commit order, from data/insights.games.json's own history: each game's entry at each named commit, trimmed to the fields the store writer and the grader read (away, home, standout, odds, betting_signals, start, slate_date, status, generated_at). Nothing edited. 2026_05_PHI_JAX is the case that exposed the book-open baseline (ledger 2026-10-11: JAX HIT at -395, book-open CLV +32.2pp from +110): first anchorable at b78fe91 (-285), closing at 67049f0 (-395). cfb 401856713 first appeared UNPRICED (e4ae0a8) and was priced later (7c57440); nfl 2026_04_IND_WAS first appeared with NO SCORED STANDOUT (8a1a229) and gained one later (180295b). Found by scanning every store commit 2026-10-01..20.",
+ "states": {
+  "cfb/401856713": [
+   {
+    "commit": "e4ae0a8",
+    "entry": {
+     "away": {
+      "abbr": "TENN",
+      "color": "#F88E21",
+      "name": "Tennessee"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 66,
+       "side": "TENN"
+      }
+     },
+     "generated_at": "2026-10-04T15:11:46.612731+00:00",
+     "home": {
+      "abbr": "ARK",
+      "color": "#C85064",
+      "name": "Arkansas"
+     },
+     "odds": null,
+     "slate_date": "2026-10-04",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 66,
+      "side": "TENN"
+     },
+     "start": "Sat Oct 10 \u00b7 4:15 PM ET",
+     "status": "Preview"
+    }
+   },
+   {
+    "commit": "7c57440",
+    "entry": {
+     "away": {
+      "abbr": "TENN",
+      "color": "#F88E21",
+      "name": "Tennessee"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 66,
+       "side": "TENN"
+      }
+     },
+     "generated_at": "2026-10-04T15:11:46.612731+00:00",
+     "home": {
+      "abbr": "ARK",
+      "color": "#C85064",
+      "name": "Arkansas"
+     },
+     "odds": {
+      "away_ml": -650,
+      "away_ml_open": -650,
+      "captured_at": "2026-10-04T16:15:10Z",
+      "details": "TENN -14",
+      "home_ml": 470,
+      "home_ml_open": 470,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": 14.0,
+      "spread_close": 14.0,
+      "spread_open": 14.0,
+      "total": 49.5
+     },
+     "slate_date": "2026-10-04",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 66,
+      "side": "TENN"
+     },
+     "start": "Sat Oct 10 \u00b7 4:15 PM ET",
+     "status": "Preview"
+    }
+   }
+  ],
+  "nfl/2026_04_IND_WAS": [
+   {
+    "commit": "8a1a229",
+    "entry": {
+     "away": {
+      "abbr": "IND",
+      "color": "#4F88CA",
+      "name": "IND"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 46,
+       "side": "No clear lean"
+      }
+     },
+     "generated_at": "2026-09-29T16:23:39.885048+00:00",
+     "home": {
+      "abbr": "WAS",
+      "color": "#B66262",
+      "name": "WAS"
+     },
+     "odds": {
+      "away_ml": -192,
+      "away_ml_open": -110,
+      "captured_at": "2026-10-01T16:56:12Z",
+      "details": "IND -3.5",
+      "home_ml": 160,
+      "home_ml_open": -110,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": 3.5,
+      "spread_close": 3.5,
+      "spread_open": -1.5,
+      "total": 47.5
+     },
+     "slate_date": "2026-10-01",
+     "standout": null,
+     "start": "Sun Oct 4 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   },
+   {
+    "commit": "180295b",
+    "entry": {
+     "away": {
+      "abbr": "IND",
+      "color": "#4F88CA",
+      "name": "IND"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [
+        "home_qb_out"
+       ],
+       "score": 51,
+       "side": "WAS"
+      }
+     },
+     "generated_at": "2026-09-29T16:23:39.885048+00:00",
+     "home": {
+      "abbr": "WAS",
+      "color": "#B66262",
+      "name": "WAS"
+     },
+     "odds": {
+      "away_ml": -205,
+      "away_ml_open": -110,
+      "captured_at": "2026-10-03T14:36:33Z",
+      "details": "IND -4.5",
+      "home_ml": 170,
+      "home_ml_open": -110,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": 4.5,
+      "spread_close": 4.5,
+      "spread_open": -1.5,
+      "total": 47.5
+     },
+     "slate_date": "2026-10-03",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [
+       "home_qb_out"
+      ],
+      "market": "Moneyline",
+      "score": 51,
+      "side": "WAS"
+     },
+     "start": "Sun Oct 4 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   }
+  ],
+  "nfl/2026_05_PHI_JAX": [
+   {
+    "commit": "b78fe91",
+    "entry": {
+     "away": {
+      "abbr": "PHI",
+      "color": "#52BCC7",
+      "name": "PHI"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 93,
+       "side": "JAX"
+      }
+     },
+     "generated_at": "2026-10-06T16:34:39.315488+00:00",
+     "home": {
+      "abbr": "JAX",
+      "color": "#47BED1",
+      "name": "JAX"
+     },
+     "odds": {
+      "away_ml": 230,
+      "away_ml_open": -130,
+      "captured_at": "2026-10-06T16:34:42Z",
+      "details": "JAX -6.5",
+      "home_ml": -285,
+      "home_ml_open": 110,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": -6.5,
+      "spread_close": -6.5,
+      "spread_open": 2.5,
+      "total": 42.5
+     },
+     "slate_date": "2026-10-06",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 93,
+      "side": "JAX"
+     },
+     "start": "Sun Oct 11 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   },
+   {
+    "commit": "6bc1651",
+    "entry": {
+     "away": {
+      "abbr": "PHI",
+      "color": "#52BCC7",
+      "name": "PHI"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 93,
+       "side": "JAX"
+      }
+     },
+     "generated_at": "2026-10-06T16:34:39.315488+00:00",
+     "home": {
+      "abbr": "JAX",
+      "color": "#47BED1",
+      "name": "JAX"
+     },
+     "odds": {
+      "away_ml": 240,
+      "away_ml_open": -130,
+      "captured_at": "2026-10-06T17:41:50Z",
+      "details": "JAX -6.5",
+      "home_ml": -298,
+      "home_ml_open": 110,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": -6.5,
+      "spread_close": -6.5,
+      "spread_open": 2.5,
+      "total": 42.5
+     },
+     "slate_date": "2026-10-06",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 93,
+      "side": "JAX"
+     },
+     "start": "Sun Oct 11 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   },
+   {
+    "commit": "35d7eb7",
+    "entry": {
+     "away": {
+      "abbr": "PHI",
+      "color": "#52BCC7",
+      "name": "PHI"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 93,
+       "side": "JAX"
+      }
+     },
+     "generated_at": "2026-10-06T16:34:39.315488+00:00",
+     "home": {
+      "abbr": "JAX",
+      "color": "#47BED1",
+      "name": "JAX"
+     },
+     "odds": {
+      "away_ml": 320,
+      "away_ml_open": -130,
+      "captured_at": "2026-10-09T16:53:14Z",
+      "details": "JAX -7.5",
+      "home_ml": -410,
+      "home_ml_open": 110,
+      "moneyline_off": false,
+      "provider": "Draft Kings",
+      "spread": -7.5,
+      "spread_close": -7.5,
+      "spread_open": 2.5,
+      "total": 41.5
+     },
+     "slate_date": "2026-10-09",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 93,
+      "side": "JAX"
+     },
+     "start": "Sun Oct 11 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   },
+   {
+    "commit": "67049f0",
+    "entry": {
+     "away": {
+      "abbr": "PHI",
+      "color": "#52BCC7",
+      "name": "PHI"
+     },
+     "betting_signals": {
+      "moneyline": {
+       "flags": [],
+       "score": 93,
+       "side": "JAX"
+      }
+     },
+     "generated_at": "2026-10-06T16:34:39.315488+00:00",
+     "home": {
+      "abbr": "JAX",
+      "color": "#47BED1",
+      "name": "JAX"
+     },
+     "odds": {
+      "away_ml": 310,
+      "away_ml_open": -130,
+      "captured_at": "2026-10-10T19:29:21Z",
+      "details": "JAX -7.5",
+      "home_ml": -395,
+      "home_ml_open": 110,
+      "moneyline_off": false,
+      "provider": "DraftKings",
+      "spread": -7.5,
+      "spread_close": -7.5,
+      "spread_open": 2.5,
+      "total": 41.5
+     },
+     "slate_date": "2026-10-11",
+     "standout": {
+      "bet_type": "moneyline",
+      "flags": [],
+      "market": "Moneyline",
+      "score": 93,
+      "side": "JAX"
+     },
+     "start": "Sun Oct 11 \u00b7 9:30 AM ET",
+     "status": "Preview"
+    }
+   }
+  ]
+ }
+}
