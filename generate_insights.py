@@ -831,6 +831,49 @@ def _games_store_writable(game_entities, games_store, game_date):
                    "committed".format(len(started), len(game_entities), game_date))
 
 
+def _first_seen_snapshot(ent, prev, now_iso):
+    """Both moneylines as they read the FIRST time this game carried a scored
+    standout and a price for that standout's side, stamped with when -- or None
+    while either is missing. The caller keeps the first non-None result forever.
+
+    WHY THE BOOK'S OPEN IS NOT THE BASELINE. ESPN's `*_ml_open` is the book's
+    own opening number, which can predate our first sighting of a game by days.
+    Measured 2026-10-22 over 116 priced picks (tools/clv_first_seen_backfill,
+    anchored on exactly this condition in the committed store's history): from
+    the book's open the market moved +2.96pp [+1.56, +4.41] toward our picks;
+    from the price when the pick existed, +0.35pp [-0.31, +0.99], and NFL went
+    from +7.90pp to -0.50pp. 2026_05_PHI_JAX in one line: opened JAX +110, our
+    first capture already -285, closed -395 -- +32.2pp from the open, +5.8pp
+    from where the board actually came in. The move was over before the model
+    had an opinion, and the open-anchored report was crediting it to the model.
+
+    THE ANCHOR CONDITION IS THE BACKFILL'S, so live numbers and the 10-22
+    measurement are the same quantity: a standout with a non-zero score, and a
+    moneyline for its side (leading token, any market -- the moment a pick and a
+    price coexist). It reads the odds THIS RUN WILL STORE, sticky merge
+    included, because that is the state the backfill read from each commit.
+
+    BOTH SIDES ARE KEPT, unlike the backfill, which kept only the standout
+    side's price: a standout can flip sides between this moment and grading,
+    and the graded side must be measured from its own anchor price (see
+    espn_odds.clv_first_seen).
+
+    `captured_at` is this RUN's time, not the commit's, which lands seconds
+    later. For a game already in the store when this field shipped, the first
+    run after the deploy anchors it at that run -- later than the truth, which
+    can only shrink the movement credited to the model, never inflate it."""
+    standout = ent.get("standout") or {}
+    if not standout.get("score"):
+        return None
+    odds = ent.get("odds") or (prev or {}).get("odds")
+    home = (ent.get("home") or {}).get("abbr")
+    away = (ent.get("away") or {}).get("abbr")
+    if espn_odds.for_side(odds, standout.get("side"), home, away) is None:
+        return None
+    return {"home_ml": odds.get("home_ml"), "away_ml": odds.get("away_ml"),
+            "captured_at": now_iso, "side": standout.get("side")}
+
+
 def _carry_forward_games_store(entities, store, now_iso, game_date=None):
     """The games store this module persists, pruned to today's slate, with
     only previously-generated text carried forward. See _carry_forward_store.
@@ -871,6 +914,11 @@ def _carry_forward_games_store(entities, store, now_iso, game_date=None):
             # and should move when the model does. A price is a fact about a
             # moment, and it is kept.
             "odds": ent.get("odds") or (prev or {}).get("odds"),
+            # THE PRICE WHEN THE PICK FIRST EXISTED, written once and never
+            # overwritten -- the baseline closing-line value is measured from.
+            # See _first_seen_snapshot for why the book's own open is not it.
+            "odds_first_seen": ((prev or {}).get("odds_first_seen")
+                                or _first_seen_snapshot(ent, prev, now_iso)),
             "story": text.get("story"), "summary": text.get("summary"),
             "betting_note": text.get("betting_note"),
         }
