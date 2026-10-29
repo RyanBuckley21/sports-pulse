@@ -1,0 +1,536 @@
+{
+ "401809839": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "124",
+      "team": {
+       "abbreviation": "NY",
+       "displayName": "New York Knicks"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "113",
+      "team": {
+       "abbreviation": "SA",
+       "displayName": "San Antonio Spurs"
+      }
+     }
+    ],
+    "neutralSite": true,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Las Vegas"
+     },
+     "fullName": "T-Mobile Arena"
+    }
+   }
+  ],
+  "date": "2025-12-17T01:30Z",
+  "id": "401809839",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401838140": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "37",
+      "team": {
+       "abbreviation": "STARS",
+       "displayName": "Team Stars"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "35",
+      "team": {
+       "abbreviation": "WORLD",
+       "displayName": "World"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Inglewood"
+     },
+     "fullName": "Intuit Dome"
+    }
+   }
+  ],
+  "date": "2026-02-15T22:00Z",
+  "id": "401838140",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401838141": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "42",
+      "team": {
+       "abbreviation": "STRIPES",
+       "displayName": "Team Stripes"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "40",
+      "team": {
+       "abbreviation": "STARS",
+       "displayName": "Team Stars"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Inglewood"
+     },
+     "fullName": "Intuit Dome"
+    }
+   }
+  ],
+  "date": "2026-02-15T22:55Z",
+  "id": "401838141",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401898396": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "117",
+      "team": {
+       "abbreviation": "IND",
+       "displayName": "Indiana Pacers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "119",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Indianapolis"
+     },
+     "fullName": "Gainbridge Fieldhouse"
+    }
+   }
+  ],
+  "date": "2026-10-10T23:00Z",
+  "id": "401898396",
+  "season": {
+   "slug": "preseason",
+   "type": 1,
+   "year": 2027
+  }
+ },
+ "401902645": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "114",
+      "team": {
+       "abbreviation": "TOR",
+       "displayName": "Toronto Raptors"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "106",
+      "team": {
+       "abbreviation": "LAC",
+       "displayName": "LA Clippers"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Vancouver"
+     },
+     "fullName": "Rogers Arena"
+    }
+   }
+  ],
+  "date": "2026-10-10T22:30Z",
+  "id": "401902645",
+  "season": {
+   "slug": "preseason",
+   "type": 1,
+   "year": 2027
+  }
+ },
+ "401909277": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "WSH",
+       "displayName": "Washington Wizards"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "CHA",
+       "displayName": "Charlotte Hornets"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "odds": [
+     {
+      "details": "CHA -1.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "-115"
+        },
+        "open": {
+         "odds": "-115"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "-105"
+        },
+        "open": {
+         "odds": "-105"
+        }
+       }
+      },
+      "overUnder": 223.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": 1.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Washington"
+     },
+     "fullName": "Capital One Arena"
+    }
+   }
+  ],
+  "date": "2026-10-30T23:00Z",
+  "id": "401909277",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909278": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "BOS",
+       "displayName": "Boston Celtics"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "CHI",
+       "displayName": "Chicago Bulls"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "odds": [
+     {
+      "details": "BOS -15.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "+500"
+        },
+        "open": {
+         "odds": "+425"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "-700"
+        },
+        "open": {
+         "odds": "-575"
+        }
+       }
+      },
+      "overUnder": 230.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": -15.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Boston"
+     },
+     "fullName": "TD Garden"
+    }
+   }
+  ],
+  "date": "2026-10-30T23:30Z",
+  "id": "401909278",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909279": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "BKN",
+       "displayName": "Brooklyn Nets"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "DET",
+       "displayName": "Detroit Pistons"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "odds": [
+     {
+      "details": "DET -8.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "-355"
+        },
+        "open": {
+         "odds": "-310"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "+280"
+        },
+        "open": {
+         "odds": "+250"
+        }
+       }
+      },
+      "overUnder": 227.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": 8.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Brooklyn"
+     },
+     "fullName": "Barclays Center"
+    }
+   }
+  ],
+  "date": "2026-10-30T23:30Z",
+  "id": "401909279",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909881": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "117",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "129",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Heat"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Atlanta"
+     },
+     "fullName": "State Farm Arena"
+    }
+   }
+  ],
+  "date": "2026-10-28T23:00Z",
+  "id": "401909881",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909882": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "121",
+      "team": {
+       "abbreviation": "CLE",
+       "displayName": "Cleveland Cavaliers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "111",
+      "team": {
+       "abbreviation": "WSH",
+       "displayName": "Washington Wizards"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "venue": {
+     "address": {
+      "city": "Cleveland"
+     },
+     "fullName": "Rocket Arena"
+    }
+   }
+  ],
+  "date": "2026-10-28T23:00Z",
+  "id": "401909882",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ }
+}
