@@ -261,9 +261,15 @@ easy to get wrong:
   `capture-training-data.yml`'s six crons.
 - **Untouched:** `betting_signals.py`, `implied_total.py`, the MLB-only scripts,
   the MLB ledger rows, `data/training/`, and the `mlb:` config block.
-- **World Series dates** (checked 2026-10-25): Brewers lead the Rays 2-0. Game 3
-  is 10-26, Game 4 is 10-27, and if needed Game 5 is 10-28, Game 6 10-30 and
-  Game 7 10-31. Once this merges, the remaining games simply get no picks.
+- **World Series, as it stood when the PR opened (2026-10-29).** Most
+  reports say the Brewers won it in Game 5 on 10-28. The branch sat unmerged
+  through Games 3-5, so those picks were graded on the active path (10-26 HIT,
+  10-27 MISS). The frozen partition holds the Game 5 pick (slate 10-28, NRFI,
+  score 65): whichever grading path runs first settles it.
+- **After merge, watch the first daily run.** MLB should print `stood down ...
+  nothing it shipped is due` and exit 0. If a `no_store` MLB row appears for
+  any date after the one the frozen store covers, the gate is not being read
+  on that path.
 
 **Order agreed with the owner:** stand-down first, then `odds_first_seen`,
 then NBA registration.

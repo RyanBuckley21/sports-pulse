@@ -78,6 +78,13 @@ picks). What that does, and what had to change for it to be safe:
   Its training-capture alarm is switched off (`if: ${{ false }}`), and
   `capture-training-data.yml`'s six crons are commented out. All three are
   kept in place to be restored together.
+- **The frozen entry is grading-only, and must stay that way.** After the
+  flip, the partition keeps its last pick indefinitely (Game 5, slate
+  2026-10-28, as of this writing). Nothing on the site shows it: every display
+  path is built from this run's fresh entities. `bet_board.build`, for
+  example, takes `entities`, not the committed store. **Anything new that
+  reads `data/insights.games.json` directly for display would bring that
+  entry back onto the site**, so filter it by the gate first.
 - **History stays.** The ledger's MLB rows, `data/training/*.jsonl`,
   `betting_signals.py`, `implied_total.py` and the MLB-only scripts are all
   untouched. `generate_insights` keeps labelling any still-pending training
@@ -88,6 +95,9 @@ first in `active_sports` (first makes it the default sport again) and in
 `active_game_sports`; restore the alarm entry, the capture alarm's condition
 and the capture crons. The first run rebuilds the partition normally, because
 a frozen store for an older date never blocks a write (`_games_store_writable`).
+Until that first run, the frozen partition still holds the last 2026 pick.
+Check that nothing added since 2026-10-25 reads the store directly for display
+(see "grading-only" above).
 
 ## Archived — World Cup (pending the 2030 cycle)
 
