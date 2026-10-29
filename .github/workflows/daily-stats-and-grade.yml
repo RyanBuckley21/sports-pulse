@@ -181,6 +181,16 @@ jobs:
       # holds -- which, at this point in the job, is still whatever the LAST
       # run of this workflow left behind (i.e. yesterday's slate). Must run
       # before the regenerate step below; see the header comment.
+      #
+      # MLB, STOOD DOWN since 2026-10-25 and STILL STRICT, on purpose. A
+      # stood-down sport exits 0 with no row and no StatsAPI call on any day
+      # its frozen store does not cover (signal_report.is_game_sport_active),
+      # so it cannot red this workflow through the rest of the World Series,
+      # the winter, or Opening Day 2027. The one thing it still does is grade
+      # the pick the store may hold from the last pre-flip run -- and a
+      # failure THERE is a real pick the site showed going unsettled, which
+      # is exactly what a strict step is for. Making it continue-on-error
+      # would hide the only failure it can still have.
       - name: Grade yesterday's Signal Score picks
         id: grade_picks
         run: python3 signal_report.py

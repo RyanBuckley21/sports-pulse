@@ -1,0 +1,133 @@
+{
+ "_provenance": "REAL store entries: data/insights.games.json at commit f3bf07f (the last committed store covering the 2026-09-23 MLB slate, the one the 2026-09-24T05:29:36Z grading run read), mlb partition, gamePks 824223 and 824785 -- the two games whose 2026-09-23 StatsAPI finals are already captured in season_phase_fixture.json. Trimmed to the fields signal_report reads (away, home, betting_signals, standout, start, slate_date, generated_at, status; neither entry carried odds). Nothing edited. The ledger recorded both picks as MISS (DET moneyline 18, YRFI 37); the suite asserts that independently-recorded verdict.",
+ "mlb": {
+  "824223": {
+   "away": {
+    "abbr": "WSH",
+    "color": "#E0393C",
+    "name": "Nationals"
+   },
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 11,
+     "side": "No clear lean"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 4,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 18,
+     "side": "DET"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 0,
+     "side": "No clear lean"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 13,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "WSH",
+      "flags": [],
+      "score": 9,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "DET",
+      "flags": [],
+      "score": 17,
+      "side": "Over"
+     }
+    }
+   },
+   "generated_at": "2026-09-23T14:48:20.980462+00:00",
+   "home": {
+    "abbr": "DET",
+    "color": "#F84E21",
+    "name": "Tigers"
+   },
+   "slate_date": "2026-09-23",
+   "standout": {
+    "bet_type": "moneyline",
+    "flags": [],
+    "market": "Moneyline",
+    "score": 18,
+    "side": "DET"
+   },
+   "start": "1:10 PM ET",
+   "status": "Preview"
+  },
+  "824785": {
+   "away": {
+    "abbr": "TOR",
+    "color": "#4F86CA",
+    "name": "Blue Jays"
+   },
+   "betting_signals": {
+    "first_five_moneyline": {
+     "flags": [],
+     "score": 25,
+     "side": "BAL"
+    },
+    "game_total": {
+     "flags": [],
+     "score": 14,
+     "side": "No clear lean"
+    },
+    "moneyline": {
+     "flags": [],
+     "score": 19,
+     "side": "BAL"
+    },
+    "nrfi_yrfi": {
+     "flags": [],
+     "score": 37,
+     "side": "YRFI"
+    },
+    "run_line": {
+     "flags": [],
+     "score": 23,
+     "side": "No clear lean"
+    },
+    "team_total": {
+     "away": {
+      "abbr": "TOR",
+      "flags": [],
+      "score": 2,
+      "side": "No clear lean"
+     },
+     "home": {
+      "abbr": "BAL",
+      "flags": [],
+      "score": 15,
+      "side": "No clear lean"
+     }
+    }
+   },
+   "generated_at": "2026-09-22T14:29:56.472327+00:00",
+   "home": {
+    "abbr": "BAL",
+    "color": "#EE672B",
+    "name": "Orioles"
+   },
+   "slate_date": "2026-09-23",
+   "standout": {
+    "bet_type": "nrfi_yrfi",
+    "flags": [],
+    "market": "First-Inning Runs",
+    "score": 37,
+    "side": "YRFI"
+   },
+   "start": "1:35 PM ET",
+   "status": "Preview"
+  }
+ }
+}

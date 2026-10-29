@@ -325,14 +325,19 @@ def _active_game_sports(config):
          empty `active_sports` still widens to all builders exactly as it
          did before; that edge case is not this change's to redefine).
 
-    Production config sets `active_sports: [mlb]` and no `active_game_sports`,
-    so this resolves to exactly ["mlb"] -- the same list, by the same path,
-    as before this split.
+    Steps 1 and 2 live in signal_report.configured_game_sports, the one
+    definition of this gate, because the grader has to read it too (a sport
+    left out of it is stood down, and grades only what its frozen partition
+    still holds -- see signal_report.main). This module imports signal_report,
+    so the definition sits there and step 3 stays here, where GAME_BUILDERS is.
+
+    Production config (2026-10-25) sets `active_game_sports` explicitly, with
+    MLB stood down: it is absent from the list, so its partition is neither
+    built nor cleared below and stays as the last pre-flip run committed it.
     """
-    cfg = config or {}
-    configured = cfg.get("active_game_sports")
+    configured = signal_report.configured_game_sports(config)
     if configured is None:
-        configured = cfg.get("active_sports") or list(GAME_BUILDERS)
+        configured = list(GAME_BUILDERS)
     return [s for s in configured if s in GAME_BUILDERS]
 
 

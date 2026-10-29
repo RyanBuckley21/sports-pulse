@@ -33,16 +33,22 @@ Controlled by two independent keys in `config.yaml`:
 
 | Key | Pipeline | Current value |
 | --- | --- | --- |
-| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[mlb, epl, nfl]` |
-| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[mlb, epl, cfb, nfl]` |
+| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[epl, nfl]` |
+| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[epl, cfb, nfl]` |
 
 | Sport | Leaderboards | Games / Teams / picks | Graded | Data sources |
 | --- | --- | --- | --- | --- |
-| **MLB** | ✅ | ✅ 6 markets: moneyline, run line, game total, first-five ML, NRFI/YRFI, team total | ✅ | MLB StatsAPI (`statsapi.mlb.com`) |
+| **MLB** | ⏸ stood down | ⏸ stood down (was 6 markets: moneyline, run line, game total, first-five ML, NRFI/YRFI, team total) | its 743 ledger rows stay in the record | MLB StatsAPI (`statsapi.mlb.com`) |
 | **NFL** | ✅ | ✅ moneyline | ✅ | nflverse CSV releases, plus the ESPN scoreboard for results and odds |
 | **CFB** (FBS) | ❌ (by design) | ✅ moneyline | ✅ | cfbfastR schedule CSVs, CollegeFootballData (CFBD, keyed), and the ESPN scoreboard |
 | **EPL** | ✅ | ✅ double chance, 3-way match result | ✅ | ESPN soccer site API |
 | World Cup | archived until 2030 | none | none | ESPN (`fetchers/worldcup.py`, unregistered) |
+
+**MLB was stood down on 2026-10-25**, mid-World Series, and is out of both
+gates. Its code, config, ledger rows and training data all stay. It is off the
+site, and the grader settles only a pick its frozen store still holds. How that
+works, and the steps to re-activate it for 2027, are in
+[`docs/leagues.md`](docs/leagues.md#standing-a-sport-down--mlb-since-2026-10-25).
 
 Every Signal Score weight, scale and threshold in `config.yaml` was **calibrated
 from a backtest against real completed seasons**, and the derivation is written
@@ -120,7 +126,7 @@ Requires Python 3.11 and `pip install -r requirements.txt` (`requests`, `PyYAML`
 
 ```bash
 python3 generate_stats.py            # live fetch → output/data.json (+ updates data/*.json stores)
-python3 signal_report.py             # grade yesterday's MLB standouts (appends to the ledger)
+python3 signal_report.py             # grade yesterday's MLB standouts (stood down: only what its frozen store holds)
 python3 signal_report.py --sport cfb --date 2026-09-20 --no-record   # read-only look at any date
 python3 capture_training_data.py     # standalone MLB training capture
 ```
@@ -176,7 +182,7 @@ change touches locally first anyway.
 | Workflow | When (UTC) | What | Writes |
 | --- | --- | --- | --- |
 | `daily-stats-and-grade.yml` | 10:00, 12:00, 13:40, 15:40 | **Grades first** (MLB strict; EPL, CFB and NFL `continue-on-error`), **then** regenerates | ledger, `insights*.json`, `boxscores.json` |
-| `capture-training-data.yml` | 01:20–11:20, every 2h | MLB pre-game features and post-game outcomes | `data/training/` |
+| `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
 | `tests.yml` | pull requests, push to `main` | Every Python suite (network blocked), a clean-tree check, then the browser suite | nothing (`contents: read`) |
