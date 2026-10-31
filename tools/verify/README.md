@@ -593,6 +593,29 @@ Sabotage-checked in three directions, with measured counts:
 - Skipping a stood-down sport outright fails 5: the stranded pick.
 - Using `or` instead of `is None` fails the 3 kill-switch checks.
 
+```bash
+python3 -m tools.verify.test_nba              # from the repo root
+```
+
+**`test_nba`** (added 2026-10-31, 73 checks) pins the NBA data layer, which is
+registered but not yet built or active. Every rule it checks fails silently:
+
+- **The counted-game rule needs both halves.** `season.type == 2` alone admits
+  All-Star games and the NBA Cup final. Competition type STD alone admits
+  preseason. `neutralSite` separates nothing.
+- **Slate dates are Eastern.** Three fixture games cross UTC midnight.
+- **Form reads only decided, counted games.** ATL has a preseason game, NY the
+  Cup final and CLE an unplayed 0-0, each beside a counted game, so a leak
+  shows up as a wrong game count.
+- **A level score is UNRESOLVED,** because the NBA cannot tie.
+- **`NBA_TEAMS` equals the `/teams` capture.**
+
+The expected counted set is read from the capture's own case labels
+(`_provenance.cases`), not computed by the code under test.
+
+Sabotage-checked eight ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures. Cut S3
+(filtering on `neutralSite`) fails in both directions.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

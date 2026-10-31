@@ -220,6 +220,16 @@ mlb:
 #
 # Not fetched or shown while `nfl` is absent from active_sports (same gate the
 # worldcup block below sits behind).
+# NBA, REGISTERED 2026-10-31 AS A DATA LAYER ONLY -- in neither gate, in no
+# registry, imported by nothing in the pipeline. fetchers/nba.py and
+# nba_grading.py hold the counted-game rule (season.type 2 AND competition type
+# STD), Eastern slate dates and the grading rules; the backtest that will set
+# weights comes next, and NO WEIGHT, SCALE OR THRESHOLD belongs in this block
+# until it has run (invariant 8). See CLAUDE.md "Add NBA".
+nba:
+  # Read by nba_grading; test_nba asserts it matches fetchers/nba.SCOREBOARD_URL.
+  scoreboard_url: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+
 nfl:
   # Grading endpoint, read by nfl_grading. Present for the same reason cfb's
   # is: tools/verify/test_nfl_grading.py asserts config and the module constant

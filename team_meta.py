@@ -415,6 +415,48 @@ WORLDCUP_TEAMS = {
     "Uzbekistan": ("UZB", "#0099B5"),
 }
 
+# NBA -- keyed by ESPN's own abbreviation, because that is what its scoreboard
+# emits and what fetchers/nba stores. GENERATED from the real /teams response
+# (tools/verify/nba_teams_fixture.json, captured 2026-10-31), not written from
+# memory: ESPN's codes are not the broadcast ones -- GS, NO, NY, SA, UTAH, WSH --
+# and one wrong key would silently cost that team its chip and colour.
+# test_nba asserts this table matches the capture exactly. Colours are ESPN's
+# `color`; _ensure_legible lifts the dark ones at read time, as for every sport.
+# Next due: whenever a franchise relocates or renames.
+NBA_TEAMS = {
+    "ATL": ("ATL", "#C8102E"),   # Atlanta Hawks
+    "BKN": ("BKN", "#000000"),   # Brooklyn Nets
+    "BOS": ("BOS", "#008348"),   # Boston Celtics
+    "CHA": ("CHA", "#008CA8"),   # Charlotte Hornets
+    "CHI": ("CHI", "#CE1141"),   # Chicago Bulls
+    "CLE": ("CLE", "#860038"),   # Cleveland Cavaliers
+    "DAL": ("DAL", "#0064B1"),   # Dallas Mavericks
+    "DEN": ("DEN", "#0E2240"),   # Denver Nuggets
+    "DET": ("DET", "#1D428A"),   # Detroit Pistons
+    "GS": ("GS", "#FDB927"),   # Golden State Warriors
+    "HOU": ("HOU", "#CE0E2D"),   # Houston Rockets
+    "IND": ("IND", "#0C2340"),   # Indiana Pacers
+    "LAC": ("LAC", "#12173F"),   # LA Clippers
+    "LAL": ("LAL", "#552583"),   # Los Angeles Lakers
+    "MEM": ("MEM", "#5D76A9"),   # Memphis Grizzlies
+    "MIA": ("MIA", "#98002E"),   # Miami Heat
+    "MIL": ("MIL", "#00471B"),   # Milwaukee Bucks
+    "MIN": ("MIN", "#266092"),   # Minnesota Timberwolves
+    "NO": ("NO", "#0A2240"),   # New Orleans Pelicans
+    "NY": ("NY", "#1D428A"),   # New York Knicks
+    "OKC": ("OKC", "#007AC1"),   # Oklahoma City Thunder
+    "ORL": ("ORL", "#0150B5"),   # Orlando Magic
+    "PHI": ("PHI", "#1D428A"),   # Philadelphia 76ers
+    "PHX": ("PHX", "#29127A"),   # Phoenix Suns
+    "POR": ("POR", "#E03A3E"),   # Portland Trail Blazers
+    "SA": ("SA", "#000000"),   # San Antonio Spurs
+    "SAC": ("SAC", "#5A2D81"),   # Sacramento Kings
+    "TOR": ("TOR", "#D91244"),   # Toronto Raptors
+    "UTAH": ("UTAH", "#4E008E"),   # Utah Jazz
+    "WSH": ("WSH", "#E31837"),   # Washington Wizards
+}
+
+
 MIN_LIGHTNESS = 0.55
 # How much saturation a color sheds as it's lifted, scaled by the size of the
 # lift. A color that barely needs brightening keeps its saturation; one lifted
@@ -453,7 +495,7 @@ def _ensure_legible(hex_color):
 # an unrelated one. No live behaviour changes: mlb and worldcup were the
 # only keys ever passed, and both resolve to the same tables as before.
 _TEAM_TABLES = {"mlb": MLB_TEAMS, "nfl": NFL_TEAMS, "epl": EPL_TEAMS,
-                "cfb": CFB_TEAMS, "worldcup": WORLDCUP_TEAMS}
+                "cfb": CFB_TEAMS, "nba": NBA_TEAMS, "worldcup": WORLDCUP_TEAMS}
 
 
 def get_team_meta(sport_key, team_name):

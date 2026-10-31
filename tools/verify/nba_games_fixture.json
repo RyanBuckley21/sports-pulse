@@ -1,0 +1,802 @@
+{
+ "401809837": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "120",
+      "team": {
+       "abbreviation": "ORL",
+       "displayName": "Orlando Magic"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "132",
+      "team": {
+       "abbreviation": "NY",
+       "displayName": "New York Knicks"
+      }
+     }
+    ],
+    "neutralSite": true,
+    "notes": [
+     {
+      "headline": "NBA Cup - Semifinals",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Las Vegas"
+     },
+     "fullName": "T-Mobile Arena"
+    }
+   }
+  ],
+  "date": "2025-12-13T22:30Z",
+  "id": "401809837",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401809839": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "124",
+      "team": {
+       "abbreviation": "NY",
+       "displayName": "New York Knicks"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "113",
+      "team": {
+       "abbreviation": "SA",
+       "displayName": "San Antonio Spurs"
+      }
+     }
+    ],
+    "neutralSite": true,
+    "notes": [
+     {
+      "headline": "NBA Cup Championship",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "CC",
+     "id": "39",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Las Vegas"
+     },
+     "fullName": "T-Mobile Arena"
+    }
+   }
+  ],
+  "date": "2025-12-17T01:30Z",
+  "id": "401809839",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401810002": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "122",
+      "team": {
+       "abbreviation": "DET",
+       "displayName": "Detroit Pistons"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "110",
+      "team": {
+       "abbreviation": "DAL",
+       "displayName": "Dallas Mavericks"
+      }
+     }
+    ],
+    "neutralSite": true,
+    "notes": [
+     {
+      "headline": "NBA Mexico City Game 2025",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Mexico City"
+     },
+     "fullName": "Arena CDMX"
+    }
+   }
+  ],
+  "date": "2025-11-02T02:00Z",
+  "id": "401810002",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401838140": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "37",
+      "team": {
+       "abbreviation": "STARS",
+       "displayName": "Team Stars"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "35",
+      "team": {
+       "abbreviation": "WORLD",
+       "displayName": "World"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "NBA All-Star - Round Robin",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "ALLSTAR",
+     "id": "4",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Inglewood"
+     },
+     "fullName": "Intuit Dome"
+    }
+   }
+  ],
+  "date": "2026-02-15T22:00Z",
+  "id": "401838140",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401838141": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "42",
+      "team": {
+       "abbreviation": "STRIPES",
+       "displayName": "Team Stripes"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "40",
+      "team": {
+       "abbreviation": "STARS",
+       "displayName": "Team Stars"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "NBA All-Star - Round Robin",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "ALLSTAR",
+     "id": "4",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Inglewood"
+     },
+     "fullName": "Intuit Dome"
+    }
+   }
+  ],
+  "date": "2026-02-15T22:55Z",
+  "id": "401838141",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401898396": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "117",
+      "team": {
+       "abbreviation": "IND",
+       "displayName": "Indiana Pacers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "119",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Indianapolis"
+     },
+     "fullName": "Gainbridge Fieldhouse"
+    }
+   }
+  ],
+  "date": "2026-10-10T23:00Z",
+  "id": "401898396",
+  "season": {
+   "slug": "preseason",
+   "type": 1,
+   "year": 2027
+  }
+ },
+ "401902645": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "114",
+      "team": {
+       "abbreviation": "TOR",
+       "displayName": "Toronto Raptors"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "106",
+      "team": {
+       "abbreviation": "LAC",
+       "displayName": "LA Clippers"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "NBA Canada Games 2026",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Vancouver"
+     },
+     "fullName": "Rogers Arena"
+    }
+   }
+  ],
+  "date": "2026-10-10T22:30Z",
+  "id": "401902645",
+  "season": {
+   "slug": "preseason",
+   "type": 1,
+   "year": 2027
+  }
+ },
+ "401909881": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "117",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "129",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Heat"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Atlanta"
+     },
+     "fullName": "State Farm Arena"
+    }
+   }
+  ],
+  "date": "2026-10-28T23:00Z",
+  "id": "401909881",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909882": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "121",
+      "team": {
+       "abbreviation": "CLE",
+       "displayName": "Cleveland Cavaliers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "111",
+      "team": {
+       "abbreviation": "WSH",
+       "displayName": "Washington Wizards"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Cleveland"
+     },
+     "fullName": "Rocket Arena"
+    }
+   }
+  ],
+  "date": "2026-10-28T23:00Z",
+  "id": "401909882",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909896": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "UTAH",
+       "displayName": "Utah Jazz"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "POR",
+       "displayName": "Portland Trail Blazers"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "odds": [
+     {
+      "details": "POR -6.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "-225"
+        },
+        "open": {
+         "odds": "-225"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "+185"
+        },
+        "open": {
+         "odds": "+185"
+        }
+       }
+      },
+      "overUnder": 232.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": 6.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Salt Lake City"
+     },
+     "fullName": "Delta Center"
+    }
+   }
+  ],
+  "date": "2026-10-31T19:00Z",
+  "id": "401909896",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909897": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "CHA",
+       "displayName": "Charlotte Hornets"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "PHI",
+       "displayName": "Philadelphia 76ers"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "odds": [
+     {
+      "details": "PHI -1.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "-120"
+        },
+        "open": {
+         "odds": "-120"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "+100"
+        },
+        "open": {
+         "odds": "+100"
+        }
+       }
+      },
+      "overUnder": 216.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": 1.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Charlotte"
+     },
+     "fullName": "Spectrum Center"
+    }
+   }
+  ],
+  "date": "2026-10-31T22:00Z",
+  "id": "401909897",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909898": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "NO",
+       "displayName": "New Orleans Pelicans"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "odds": [
+     {
+      "details": "ATL -4.5",
+      "moneyline": {
+       "away": {
+        "close": {
+         "odds": "-170"
+        },
+        "open": {
+         "odds": "-155"
+        }
+       },
+       "home": {
+        "close": {
+         "odds": "+142"
+        },
+        "open": {
+         "odds": "+130"
+        }
+       }
+      },
+      "overUnder": 239.5,
+      "provider": {
+       "name": "DraftKings"
+      },
+      "spread": 4.5
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "New Orleans"
+     },
+     "fullName": "Smoothie King Center"
+    }
+   }
+  ],
+  "date": "2026-10-31T23:00Z",
+  "id": "401909898",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "401909907": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "CLE",
+       "displayName": "Cleveland Cavaliers"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "OKC",
+       "displayName": "Oklahoma City Thunder"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Scheduled",
+      "state": "pre"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Cleveland"
+     },
+     "fullName": "Rocket Arena"
+    }
+   }
+  ],
+  "date": "2026-11-03T00:00Z",
+  "id": "401909907",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2027
+  }
+ },
+ "_provenance": {
+  "captured": "2026-10-31",
+  "cases": {
+   "401809837": "STD + neutralSite -- Cup SEMIFINAL, counts toward the 82",
+   "401809839": "CC/39 -- NBA Cup FINAL, outside the 82",
+   "401810002": "STD + neutralSite -- international game, counts toward the 82",
+   "401838140": "ALLSTAR/4 -- season.type=2, teams absent from /teams",
+   "401838141": "ALLSTAR/4 -- season.type=2, teams absent from /teams",
+   "401898396": "PRESEASON season.type=1",
+   "401902645": "PRESEASON season.type=1",
+   "401909881": "STD, completed -- odds block GONE",
+   "401909882": "STD, completed -- odds block GONE",
+   "401909896": "STD, pre-game -- DK open+close both sides",
+   "401909897": "STD, pre-game -- DK open+close both sides",
+   "401909898": "STD, pre-game -- DK open+close both sides",
+   "401909907": "STD, pre-game but NO odds yet -- the window is intermittent"
+  },
+  "edits": "none -- real captured API data, no field invented or altered",
+  "endpoint": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=<YYYYMM|YYYYMMDD>&limit=500",
+  "filter_rule": "the rule is BOTH season.type==2 AND competitions[0].type.id=='1' (STD). Together they yield exactly 1,230 games, 30 teams, 82 each for 2025-26. Neither half suffices: season.type==2 admits All-Star (type.id 4) and the NBA Cup final (39), and type.id=='1' admits PRESEASON, which is also STD (see 401898396, 401902645). neutralSite separates nothing: 5 STD games sit at neutral sites -- 2 Cup semifinals and 3 international -- and all 5 count toward the 82.",
+  "odds_note": "odds are absent once a game is played -- 0 of 12 completed on 10-28, 0 of 170 across February 2026 -- and INTERMITTENT before it: on 2026-10-31, 6 of 7 same-day games carried DraftKings open+close, while 0 of 4 on 11-01 and 0 of 15 on 11-02 carried any. So there is no NBA price history on this endpoint, and a pre-game capture that is missed cannot be recovered.",
+  "trim": "the fields a game builder here reads, in the shape of epl_matches_fixture.json, plus season, competitions[0].type, notes, neutralSite, venue and odds."
+ }
+}

@@ -42,6 +42,7 @@ Controlled by two independent keys in `config.yaml`:
 | **NFL** | ✅ | ✅ moneyline | ✅ | nflverse CSV releases, plus the ESPN scoreboard for results and odds |
 | **CFB** (FBS) | ❌ (by design) | ✅ moneyline | ✅ | cfbfastR schedule CSVs, CollegeFootballData (CFBD, keyed), and the ESPN scoreboard |
 | **EPL** | ✅ | ✅ double chance, 3-way match result | ✅ | ESPN soccer site API |
+| NBA | not yet | not yet: data layer only, pending a backtest | not yet | ESPN scoreboard (`fetchers/nba.py`); see CLAUDE.md "Add NBA" |
 | World Cup | archived until 2030 | none | none | ESPN (`fetchers/worldcup.py`, unregistered) |
 
 **MLB was stood down on 2026-10-25**, mid-World Series, and is out of both
@@ -213,6 +214,7 @@ espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ra
 slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward window
 training_capture.py      MLB append-only feature/outcome stores
 team_meta.py             abbreviations + brand colours (legibility-lifted)
+nba_grading.py           NBA grading rules (written; registered with the NBA builder)
 normalizer.py            common leaderboard record schema
 fetchers/                mlb, nfl, cfb, epl (+ archived worldcup)
 *_backtest.py            standalone calibration/backtests (never touch the live ledger)
