@@ -9,8 +9,9 @@ would think to doubt:
   * THE COUNTED-GAME RULE needs BOTH season.type == 2 AND competition type STD.
     season.type alone admits All-Star games (STARS/WORLD/STRIPES) and the NBA
     Cup final; STD alone admits preseason. Measured on 2025-26 by a session
-    with ESPN access: unfiltered, 1,235 games and 33 "teams"; filtered, 1,230,
-    30 teams, 82 each. neutralSite separates nothing -- two Cup semifinals and
+    with ESPN access: unfiltered, 1,235 games and 33 "teams"; the rule gives
+    1,232-1,235 because POSTPONED shells pass it, and only the DECIDED subset
+    is 1,230, 30 teams, 82 each. neutralSite separates nothing -- two Cup semifinals and
     three international games are neutral AND count.
   * SLATE DATES ARE EASTERN. The 2025 Mexico City game is stamped
     2025-11-02T02:00Z and was played on November 1; CLE vs OKC, stamped
@@ -43,6 +44,11 @@ __pycache__ cleared, sources byte-identical after), counts measured, of 73:
   S6 neutral sites kept in home margins       1 fail
   S7 a level score graded PUSH                1 fail
   S8 slate fetch reads one UTC day's month    1 fail
+Added 2026-10-31 with the real postponed shells (now 89 checks):
+  P1 is_called_off dropped from grade         4 fail  (shells read PENDING)
+  P2 "finished" keyed on state == "post"      7 fail  (shells read as 0-0
+                                                       decided games; form
+                                                       polluted, CHI/MIA at 3)
 S3 first CRASHED (KeyError on NY, whose only counted game it dropped) rather
 than reporting failures; the margin lookups were made tolerant so a broken
 rule is named, not just a traceback.
@@ -151,6 +157,54 @@ ok("  CLE is 1 game: its UNPLAYED game vs OKC did not count as 0-0", margin.get(
 ok("  no All-Star side has a margin", not {"STARS", "WORLD", "STRIPES"} & set(margin))
 ok("home margins exclude neutral sites (ATL -12, CLE +10; not the semifinal or Mexico City)",
    sorted(nba.home_margins(rows)) == [-12, 10], nba.home_margins(rows))
+
+
+# ------------------------------------- 3b. POSTPONED shells (real, 2025-26)
+# Every postponed game of 2025-26: each passes the counted-game rule and
+# reports state "post", completed False, scores "0"/"0". That is a 0-0 "final"
+# to anything keying on state -- and a tie the NBA cannot produce.
+_PP = json.load(open(os.path.join(HERE, "nba_postponed_fixture.json")))
+PP_CASES = _PP["_provenance"]["cases"]
+SHELLS = [_PP[k] for k, label in PP_CASES.items() if label.startswith("POSTPONED")]
+ok("the capture holds 2025-26's four postponed shells", len(SHELLS) == 4, len(SHELLS))
+ok("  every one PASSES the counted-game rule (so the rule alone is not 1,230)",
+   all(nba.is_counted_game(e) for e in SHELLS))
+ok("  every one reads state 'post' with completed False and '0'/'0' -- the trap",
+   all(e["competitions"][0]["status"]["type"]["state"] == "post"
+       and e["competitions"][0]["status"]["type"]["completed"] is False
+       and {c["score"] for c in e["competitions"][0]["competitors"]} == {"0"} for e in SHELLS))
+_pp_rows = nba.counted_games(SHELLS)
+
+
+def _pp_pick(e):
+    """A moneyline pick on the shell's own home team -- the side a 0-0 read
+    as final would grade as a level score."""
+    by = {c["homeAway"]: c["team"]["abbreviation"] for c in e["competitions"][0]["competitors"]}
+    return {"side": by["home"], "away_abbr": by["away"], "home_abbr": by["home"],
+            "bet_type": "moneyline"}
+
+
+ok("  parsed with NO scores, so they are not decided",
+   all(r["home_score"] is None and r["away_score"] is None for r in _pp_rows) and len(_pp_rows) == 4)
+ok("  and contribute nothing to form or home margins",
+   nba.build_prior_season_margin(_pp_rows) == {} and nba.home_margins(_pp_rows) == [])
+for e in SHELLS:
+    ok("{} grades POSTPONED, not a 0-0 level score".format(e["id"]),
+       nba_grading.grade(_pp_pick(e), e, False)[1] == "POSTPONED")
+    ok("  {} is still regular season, with no observed facts".format(e["id"]),
+       nba_grading.season_phase(e) == "regular" and nba_grading.observed_facts(e) is None)
+_makeup, _orig = _PP["401850920"], _PP["401810384"]
+ok("the MAKEUP of 401810384 is a NEW event id, so a replay cannot be followed by id",
+   _makeup["id"] != _orig["id"] and nba.is_counted_game(_makeup)
+   and {c["team"]["abbreviation"] for c in _makeup["competitions"][0]["competitors"]}
+   == {c["team"]["abbreviation"] for c in _orig["competitions"][0]["competitors"]})
+ok("  and fetch_replay_dates answers nothing rather than a wrong date",
+   nba_grading.fetch_replay_dates(None, {}, {"401810384"}) == {})
+_all = nba.counted_games(SHELLS + [_PP["401850920"], _PP["401810547"]])
+ok("counted 6, decided 2: only decided games may be counted",
+   len(_all) == 6 and len(nba.build_prior_season_margin(_all)) == 2
+   and all(v["games"] == 2 for v in nba.build_prior_season_margin(_all).values()),
+   nba.build_prior_season_margin(_all))
 
 
 # ----------------------------------------------------------------- 4. grading

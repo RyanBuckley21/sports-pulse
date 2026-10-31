@@ -597,7 +597,7 @@ Sabotage-checked in three directions, with measured counts:
 python3 -m tools.verify.test_nba              # from the repo root
 ```
 
-**`test_nba`** (added 2026-10-31, 73 checks) pins the NBA data layer, which is
+**`test_nba`** (added 2026-10-31, 89 checks) pins the NBA data layer, which is
 registered but not yet built or active. Every rule it checks fails silently:
 
 - **The counted-game rule needs both halves.** `season.type == 2` alone admits
@@ -608,12 +608,16 @@ registered but not yet built or active. Every rule it checks fails silently:
   Cup final and CLE an unplayed 0-0, each beside a counted game, so a leak
   shows up as a wrong game count.
 - **A level score is UNRESOLVED,** because the NBA cannot tie.
+- **Postponed shells are not games.** These are real: all four of 2025-26's.
+  Each passes the counted-game rule and reads state `post` with "0"/"0", yet
+  must grade POSTPONED and count toward nothing. The makeup gets a new id.
 - **`NBA_TEAMS` equals the `/teams` capture.**
 
 The expected counted set is read from the capture's own case labels
 (`_provenance.cases`), not computed by the code under test.
 
-Sabotage-checked eight ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures. Cut S3
+Sabotage-checked ten ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures, plus 4
+and 7 for the two postponed-shell cuts. Cut S3
 (filtering on `neutralSite`) fails in both directions.
 
 ## What it cannot cover

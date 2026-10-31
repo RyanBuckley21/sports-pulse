@@ -25,7 +25,15 @@ WHAT COUNTS AS A GAME, measured on 2025-26 and pinned in test_nba:
   (type ALLSTAR, id 4: teams STARS / WORLD / STRIPES) and the NBA Cup final
   (type CC, id 39: NY vs SA, 2025-12-16, outside the 82). type STD also
   admits PRESEASON (season.type 1: 67 of October 2026's 155 events).
-  Together they give exactly 1,230 games, 30 teams, 82 each. Unfiltered a
+  The rule alone gives 1,232-1,235 a season, NOT 1,230: a POSTPONED game
+  passes it, because ESPN keeps the called-off shell beside the makeup (2, 5
+  and 4 shells in 2023-24..2025-26; eight teams read 83 counted games in
+  2025-26). The shell reports state "post" with completed False and scores
+  "0"/"0" (tools/verify/nba_postponed_fixture.json, all four of 2025-26's).
+  Only the DECIDED subset is exactly 1,230 games, 30 teams, 82 each, in every
+  one of the three seasons -- so anything that counts games, rates or form
+  must filter decided first (_decided, used by home_margins and
+  build_prior_season_margin). Unfiltered a
   2025-26 walk gives 1,235 games and 33 "teams" -- and an All-Star blowout
   folded into a team's form is a confident wrong number nobody would see.
 
@@ -198,12 +206,13 @@ def home_margins(games):
 
     Neutral sites are excluded here, and only here: they are real games and
     count toward a team's form, but neither team is at home. On 2025-26 the
-    exclusion moves nothing measurable -- 1,225 true-home games give
-    +1.727 pts [+0.807, +2.626], all 1,230 give +1.737 [+0.799, +2.620], home
-    win rate 0.5543 vs 0.5545 (4,000 resamples, seed 17; a separate session's
-    measurement, not re-run here). That is about half the ~3 points NBA home
-    court is commonly quoted at, which is why the shift will be fitted by the
-    backtest and never assumed."""
+    exclusion moves nothing measurable (2025-26: +1.727 true-home vs +1.737
+    all). Pooled over 2023-24..2025-26, 3,678 true-home decided games: +1.854
+    pts [+1.316, +2.370], home win rate 0.5473 (4,000 resamples, seed 17;
+    re-derived 2026-10-31 from tools/verify/nba_seasons_2024_2026.json, which
+    this function's own module built). Every season sits well under the ~3
+    points NBA home court is commonly quoted at, which is why the shift is
+    fitted by the backtest and never assumed."""
     return [r["home_score"] - r["away_score"] for r in games
             if _decided(r) and not r["neutral_site"]]
 

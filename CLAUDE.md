@@ -36,7 +36,7 @@ python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chanc
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
-python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, Eastern dates, grading, team_meta
+python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
@@ -346,8 +346,12 @@ Measured, and pinned in `test_nba` where a test can pin it:
   "1"` (STD).** Neither half is enough. Season type 2 also admits All-Star
   games (ALLSTAR, id 4: STARS/WORLD/STRIPES) and the NBA Cup final (CC, id 39).
   STD also admits preseason (67 of October 2026's 155 events). For 2025-26
-  that gives 1,230 games, 30 teams, 82 each; unfiltered it gives 1,235 games
-  and 33 "teams".
+  the rule gives 1,232-1,235 games a season, because **postponed shells pass
+  it**: ESPN keeps the called-off event beside its makeup, with state `post`,
+  `completed` false and scores "0"/"0". Only the **decided** subset is 1,230
+  games, 30 teams and 82 each, in all three seasons 2023-26. Count nothing
+  before filtering decided. Unfiltered (no rule at all), 2025-26 gives 1,235
+  games and 33 "teams".
 - **`neutralSite` is not a filter.** Five games that count are at neutral sites
   (2 Cup semifinals, Mexico City, Berlin, London), while All-Star games report
   `False`.
@@ -367,17 +371,20 @@ Measured, and pinned in `test_nba` where a test can pin it:
   - a missed pre-game snapshot is gone for good;
   - `odds_first_seen` is the only CLV baseline NBA will ever have;
   - the Bets tab's NBA bands can only fill going forward.
-- **Home court is about half the usual quote.** Over 1,225 true-home 2025-26
-  games: +1.727 pts [+0.807, +2.626], home win rate **0.5543** (4,000
-  resamples, seed 17). Including all 1,230 games gives +1.737, so dropping the
+- **Home court is well under the usual ~3-point quote, every season.** Pooled
+  over 2023-26 on 3,678 true-home decided games: **+1.854 pts [+1.316,
+  +2.370]**, home win rate **0.5473**. Per season: 2023-24 +2.143, 2024-25
+  +1.692, 2025-26 +1.727 (4,000 resamples, seed 17; re-derived from
+  `tools/verify/nba_seasons_2024_2026.json`). In 2025-26 alone, including all
+  1,230 games gives +1.737, so dropping the
   Cup final changes nothing. The shift gets fitted by the backtest, never
   assumed at 3.
 
 **Baselines, named before any NBA number exists:**
 - **Hit rate** is judged against the break-even of the graded price.
 - **CLV** is measured from `odds_first_seen` only.
-- **Backtest accuracy** must beat **always-home, 0.5543** on the 1,225
-  true-home games. "Always the favourite" is not available historically,
+- **Backtest accuracy** must beat **always-home, 0.5473** (pooled 2023-26,
+  3,678 true-home decided games; 0.5543 was one season). "Always the favourite" is not available historically,
   because there are no historical prices; it can only be measured going
   forward.
 - **Cold start** uses prior-season margin (`build_prior_season_margin`, which
