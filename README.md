@@ -215,6 +215,7 @@ slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward wi
 training_capture.py      MLB append-only feature/outcome stores
 team_meta.py             abbreviations + brand colours (legibility-lifted)
 nba_grading.py           NBA grading rules (written; registered with the NBA builder)
+nba_backtest.py          NBA signal measurement, offline on a captured 2023-26 dataset; writes nothing
 normalizer.py            common leaderboard record schema
 fetchers/                mlb, nfl, cfb, epl (+ archived worldcup)
 *_backtest.py            standalone calibration/backtests (never touch the live ledger)

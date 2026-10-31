@@ -49,6 +49,10 @@ Added 2026-10-31 with the real postponed shells (now 89 checks):
   P2 "finished" keyed on state == "post"      7 fail  (shells read as 0-0
                                                        decided games; form
                                                        polluted, CHI/MIA at 3)
+Added with nba_backtest.py (now 92 checks):
+  L2 a game's form includes its own result    3 fail  (the no-look-ahead checks)
+  L1 history appended game-by-game within a night: PASSED, correctly -- no
+     team plays twice in a night, so that ordering cannot leak by itself.
 S3 first CRASHED (KeyError on NY, whose only counted game it dropped) rather
 than reporting failures; the margin lookups were made tolerant so a broken
 rule is named, not just a traceback.
@@ -322,6 +326,28 @@ ok("NBA is in neither gate", "nba" not in (cfg.get("active_sports") or [])
 ok("  and in no registry: no builder, fetcher or grading adapter until the backtest",
    "nba" not in generate_insights.GAME_BUILDERS and "nba" not in generate_stats.SPORT_FETCHERS
    and "nba" not in signal_report.SPORT_ADAPTERS)
+
+
+# ------------------------------------------- 8. backtest: no look-ahead
+# The silent failure that would inflate every figure nba_backtest reports: a
+# game's form seeing its own date. Checked on the first 400 real games of
+# 2025-26 from the captured dataset, against counts recomputed here directly.
+import nba_backtest  # noqa: E402
+_season = nba_backtest.load(os.path.join(HERE, "nba_seasons_2024_2026.json"), [2026])[2026][:400]
+_recs = nba_backtest.point_in_time(_season)
+_ok_n = all(r[side + "_n"] == sum(1 for g in _season if g["date"] < r["date"]
+                                  and r[side] in (g["home"], g["away"]))
+            for r in _recs for side in ("home", "away"))
+ok("backtest form counts ONLY strictly earlier dates (no same-night, no future game)", _ok_n)
+ok("  opening night: every team has no form at all",
+   all(r["home_n"] == 0 and r["away_n"] == 0 and r["home_season"] is None
+       for r in _recs if r["date"] == _season[0]["date"]))
+_first = next((r for r in _recs if r["home_n"] == 1), None)
+_prev = _first and next((g for g in _season if g["date"] < _first["date"]
+                         and _first["home"] in (g["home"], g["away"])), None)
+ok("  a team's one-game form is exactly that EARLIER game's margin, from its own side",
+   bool(_prev) and _first["home_season"] == (_prev["home_score"] - _prev["away_score"]) *
+   (1 if _prev["home"] == _first["home"] else -1), (_first, _prev))
 
 
 print("nba: {} checks pass".format(checks["pass"]) if not checks["fail"]

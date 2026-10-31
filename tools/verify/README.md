@@ -597,7 +597,7 @@ Sabotage-checked in three directions, with measured counts:
 python3 -m tools.verify.test_nba              # from the repo root
 ```
 
-**`test_nba`** (added 2026-10-31, 89 checks) pins the NBA data layer, which is
+**`test_nba`** (added 2026-10-31, 92 checks) pins the NBA data layer, which is
 registered but not yet built or active. Every rule it checks fails silently:
 
 - **The counted-game rule needs both halves.** `season.type == 2` alone admits
@@ -616,8 +616,11 @@ registered but not yet built or active. Every rule it checks fails silently:
 The expected counted set is read from the capture's own case labels
 (`_provenance.cases`), not computed by the code under test.
 
-Sabotage-checked ten ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures, plus 4
-and 7 for the two postponed-shell cuts. Cut S3
+It also pins that `nba_backtest.point_in_time` never lets a game see its
+own result or a later one, checked on 400 real 2025-26 games.
+
+Sabotage-checked eleven ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures, 4 and
+7 for the two postponed-shell cuts, and 3 for a game seeing its own result. Cut S3
 (filtering on `neutralSite`) fails in both directions.
 
 ## What it cannot cover

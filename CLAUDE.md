@@ -380,6 +380,30 @@ Measured, and pinned in `test_nba` where a test can pin it:
   Cup final changes nothing. The shift gets fitted by the backtest, never
   assumed at 3.
 
+**Step 2, part 1 (2026-10-31): the signals measured** (`nba_backtest.py`,
+offline on `tools/verify/nba_seasons_2024_2026.json`, 3,690 decided games
+2023-26, no look-ahead, pinned in `test_nba`). Every signal is compared with
+always-home on the same true-home games, with a paired 95% bootstrap interval:
+
+| signal | n | r [95%] | accuracy | minus always-home |
+| --- | --- | --- | --- | --- |
+| season margin, 5-game floor | 3,452 | +0.391 [+0.365, +0.418] | 0.657 | **+10.9pp [+8.6, +13.3]** |
+| last-10 margin | 3,224 | +0.353 [+0.323, +0.381] | 0.653 | +11.0pp [+8.6, +13.5] |
+| rest difference | 3,643 | +0.057 [+0.025, +0.089] | 0.545 | −0.1pp [−3.3, +3.2] |
+| prior-season margin | 2,460 | +0.251 [+0.214, +0.287] | 0.590 | +3.9pp [+1.2, +6.8] |
+
+- **Season margin is the signal.** Its accuracy is flat from a 5- to a
+  20-game floor (0.657-0.658), so the floor trades coverage only.
+- **Last-10 margin adds little.** It correlates with season margin at
+  r = +0.81, the same collinearity that excluded NFL's `scoring_margin`.
+- **Rest difference does not beat always-home.** Its r clears zero, but only
+  barely.
+- **Prior-season margin is a real but weak cold-start tier.** Its coverage is
+  67%, because 2022-23 is not in the dataset.
+- **These are single signals, and none includes the home shift.** Part 2
+  combines season margin with the fitted shift (+1.854), tests on a later
+  season than it fits, and only then writes weights.
+
 **Baselines, named before any NBA number exists:**
 - **Hit rate** is judged against the break-even of the graded price.
 - **CLV** is measured from `odds_first_seen` only.
