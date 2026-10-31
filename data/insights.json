@@ -35,7 +35,7 @@
   "bart verbruggen|bha": {
     "entity": "Bart Verbruggen",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-25",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -43,15 +43,15 @@
     "team": "Brighton & Hove Albion",
     "template_version": "v2"
   },
-  "bernd leno|ful": {
-    "entity": "Bernd Leno",
-    "generated_at": "2026-10-24T16:57:06.153705+00:00",
+  "ben white|ars": {
+    "entity": "Ben White",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
     "last_game_date": "2026-10-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Fulham",
+    "team": "Arsenal",
     "template_version": "v2"
   },
   "bryan mbeumo|mun": {
@@ -98,6 +98,17 @@
     "team": "DAL",
     "template_version": "v2"
   },
+  "cody gakpo|liv": {
+    "entity": "Cody Gakpo",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
+    "last_game_date": "2026-10-25",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Liverpool",
+    "template_version": "v2"
+  },
   "david raya|ars": {
     "entity": "David Raya",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
@@ -118,6 +129,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Arsenal",
+    "template_version": "v2"
+  },
+  "djordje petrovic|bou": {
+    "entity": "Djordje Petrovic",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "AFC Bournemouth",
     "template_version": "v2"
   },
   "drake maye|ne": {
@@ -145,7 +167,7 @@
   "erling haaland|mci": {
     "entity": "Erling Haaland",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-24",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -153,15 +175,15 @@
     "team": "Manchester City",
     "template_version": "v2"
   },
-  "jack hinshelwood|bha": {
-    "entity": "Jack Hinshelwood",
-    "generated_at": "2026-10-25T17:13:24.869465+00:00",
-    "last_game_date": "2026-10-25",
+  "evanilson|bou": {
+    "entity": "Evanilson",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Brighton & Hove Albion",
+    "team": "AFC Bournemouth",
     "template_version": "v2"
   },
   "jahmyr gibbs|det": {
@@ -296,17 +318,6 @@
     "team": "LV",
     "template_version": "v2"
   },
-  "konstantinos tzolakis|hul": {
-    "entity": "Konstantinos Tzolakis",
-    "generated_at": "2026-10-25T17:13:24.869465+00:00",
-    "last_game_date": "2026-10-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Hull City",
-    "template_version": "v2"
-  },
   "kyle pitts|atl": {
     "entity": "Kyle Pitts",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -316,17 +327,6 @@
     "summary": null,
     "takeaways": [],
     "team": "ATL",
-    "template_version": "v2"
-  },
-  "liam delap|nfo": {
-    "entity": "Liam Delap",
-    "generated_at": "2026-10-18T18:16:08.696889+00:00",
-    "last_game_date": "2026-10-23",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Nottingham Forest",
     "template_version": "v2"
   },
   "malik nabers|nyg": {
@@ -351,15 +351,15 @@
     "team": "CIN",
     "template_version": "v2"
   },
-  "pascal gross|bha": {
-    "entity": "Pascal Gross",
-    "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-25",
+  "nicolas jackson|avl": {
+    "entity": "Nicolas Jackson",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
+    "last_game_date": "2026-10-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Brighton & Hove Albion",
+    "team": "Aston Villa",
     "template_version": "v2"
   },
   "pedro neto|che": {
@@ -384,15 +384,15 @@
     "team": "LA",
     "template_version": "v2"
   },
-  "rayan|bou": {
-    "entity": "Rayan",
-    "generated_at": "2026-10-25T17:13:24.869465+00:00",
-    "last_game_date": "2026-10-25",
+  "senne lammens|mun": {
+    "entity": "Senne Lammens",
+    "generated_at": "2026-10-31T17:55:14.380737+00:00",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "AFC Bournemouth",
+    "team": "Manchester United",
     "template_version": "v2"
   },
   "tee higgins|cin": {
