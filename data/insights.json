@@ -10,28 +10,6 @@
     "team": "PIT",
     "template_version": "v2"
   },
-  "alexander isak|liv": {
-    "entity": "Alexander Isak",
-    "generated_at": "2026-09-24T05:29:56.913653+00:00",
-    "last_game_date": "2026-10-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Liverpool",
-    "template_version": "v2"
-  },
-  "alisson becker|liv": {
-    "entity": "Alisson Becker",
-    "generated_at": "2026-10-10T14:25:49.706699+00:00",
-    "last_game_date": "2026-10-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Liverpool",
-    "template_version": "v2"
-  },
   "bart verbruggen|bha": {
     "entity": "Bart Verbruggen",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
@@ -41,6 +19,28 @@
     "summary": null,
     "takeaways": [],
     "team": "Brighton & Hove Albion",
+    "template_version": "v2"
+  },
+  "ben white|ars": {
+    "entity": "Ben White",
+    "generated_at": "2026-11-01T18:33:00.027069+00:00",
+    "last_game_date": "2026-10-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Arsenal",
+    "template_version": "v2"
+  },
+  "brandon thomas-asante|cov": {
+    "entity": "Brandon Thomas-Asante",
+    "generated_at": "2026-11-01T18:33:00.027069+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Coventry City",
     "template_version": "v2"
   },
   "bucky irving|tb": {
@@ -76,21 +76,10 @@
     "team": "DAL",
     "template_version": "v2"
   },
-  "cody gakpo|liv": {
-    "entity": "Cody Gakpo",
-    "generated_at": "2026-10-31T17:55:14.380737+00:00",
-    "last_game_date": "2026-10-25",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Liverpool",
-    "template_version": "v2"
-  },
   "david raya|ars": {
     "entity": "David Raya",
     "generated_at": "2026-10-11T16:11:32.210516+00:00",
-    "last_game_date": "2026-10-24",
+    "last_game_date": "2026-11-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -112,7 +101,7 @@
   "declan rice|ars": {
     "entity": "Declan Rice",
     "generated_at": "2026-10-10T14:25:49.706699+00:00",
-    "last_game_date": "2026-10-24",
+    "last_game_date": "2026-11-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -272,6 +261,17 @@
     "summary": null,
     "takeaways": [],
     "team": "GB",
+    "template_version": "v2"
+  },
+  "jordan pickford|eve": {
+    "entity": "Jordan Pickford",
+    "generated_at": "2026-11-01T18:33:00.027069+00:00",
+    "last_game_date": "2026-10-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Everton",
     "template_version": "v2"
   },
   "jo\u00e3o pedro|che": {
