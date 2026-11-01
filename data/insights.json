@@ -43,17 +43,6 @@
     "team": "Brighton & Hove Albion",
     "template_version": "v2"
   },
-  "bryan mbeumo|mun": {
-    "entity": "Bryan Mbeumo",
-    "generated_at": "2026-10-25T17:13:24.869465+00:00",
-    "last_game_date": "2026-10-31",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Manchester United",
-    "template_version": "v2"
-  },
   "bucky irving|tb": {
     "entity": "Bucky Irving",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -263,10 +252,10 @@
     "team": "CIN",
     "template_version": "v2"
   },
-  "john mcginn|avl": {
-    "entity": "John McGinn",
-    "generated_at": "2026-10-25T17:13:24.869465+00:00",
-    "last_game_date": "2026-10-24",
+  "johan manzambi|avl": {
+    "entity": "Johan Manzambi",
+    "generated_at": "2026-11-01T16:38:54.694222+00:00",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -351,10 +340,21 @@
     "team": "CIN",
     "template_version": "v2"
   },
+  "mohammed kudus|tot": {
+    "entity": "Mohammed Kudus",
+    "generated_at": "2026-11-01T16:38:54.694222+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Tottenham Hotspur",
+    "template_version": "v2"
+  },
   "nicolas jackson|avl": {
     "entity": "Nicolas Jackson",
     "generated_at": "2026-10-31T17:55:14.380737+00:00",
-    "last_game_date": "2026-10-24",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -431,7 +431,7 @@
   "zion suzuki|avl": {
     "entity": "Zion Suzuki",
     "generated_at": "2026-10-24T13:53:27.180582+00:00",
-    "last_game_date": "2026-10-24",
+    "last_game_date": "2026-10-31",
     "matchup_note": null,
     "story": null,
     "summary": null,
