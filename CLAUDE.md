@@ -392,17 +392,53 @@ always-home on the same true-home games, with a paired 95% bootstrap interval:
 | rest difference | 3,643 | +0.057 [+0.025, +0.089] | 0.545 | −0.1pp [−3.3, +3.2] |
 | prior-season margin | 2,460 | +0.251 [+0.214, +0.287] | 0.590 | +3.9pp [+1.2, +6.8] |
 
-- **Season margin is the signal.** Its accuracy is flat from a 5- to a
-  20-game floor (0.657-0.658), so the floor trades coverage only.
-- **Last-10 margin adds little.** It correlates with season margin at
-  r = +0.81, the same collinearity that excluded NFL's `scoring_margin`.
+**THIS IS ACCURACY, NOT EDGE. Do not read the table as "NBA has edge".**
+Always-home is a weak baseline, and beating it says nothing about beating the
+market. This repo has the precedent: CFB hits 70.7% and returns −10.3%. NBA
+books pick winners straight up somewhere around 68-70%, so a 65.7% model
+plausibly sits *below* the market. That can't be checked, because NBA has no
+price history on this endpoint. **NBA's accuracy is measurable; its edge is
+not**, and won't be until prices accumulate going forward through
+`odds_first_seen`. Any claim that NBA picks have edge needs that forward
+record and its named baseline, never this table.
+
+- **Season margin is the signal, at a 5-game floor, and the floor must not be
+  "tuned" upward.** Signal accuracy is flat across floors, but always-home
+  *decays* on the subset as the floor rises, so the paired gap grows without
+  the model improving:
+
+  | floor | n | signal acc | always-home, same games | paired |
+  | --- | --- | --- | --- | --- |
+  | 5 | 3,440 | 0.6570 | 0.5477 | +10.9pp [+8.6, +13.3] |
+  | 10 | 3,215 | 0.6594 | 0.5428 | +11.7pp |
+  | 20 | 2,754 | 0.6583 | 0.5378 | +12.1pp |
+
+  The +12.1pp at floor 20 is the baseline weakening late in a season. Raising
+  the floor "improves" NBA by measuring nothing and costs coverage. (These
+  true-home figures were reproduced exactly by an independent review session's
+  walk-forward, which shares no code with `nba_backtest.py`.)
+- **Last-10 margin is excluded as collinear:** r = +0.806 with season margin
+  on 3,224 games, on the same side 79.9% of the time. Where they disagree (647
+  games), season margin is right 51.8%. That is a coin flip, so it is **not**
+  evidence that season margin is the better of the two, only that last-10 adds
+  nothing.
 - **Rest difference does not beat always-home.** Its r clears zero, but only
   barely.
-- **Prior-season margin is a real but weak cold-start tier.** Its coverage is
-  67%, because 2022-23 is not in the dataset.
+- **Prior-season margin: two different quantities, don't merge them.**
+  - The table row (+3.9pp [+1.2, +6.8], n = 2,460, 67% coverage) is measured
+    on *every* game where both teams have a prior season. It is not a
+    cold-start figure. Coverage is 67% because 2022-23 is not in the dataset.
+  - The true **cold-start** sample, games before both teams reach 5, is only
+    **157** (78 in 2024-25, 79 in 2025-26). It is too small to settle how the
+    fallback tier should behave. Part 2 reports it separately.
 - **These are single signals, and none includes the home shift.** Part 2
-  combines season margin with the fitted shift (+1.854), tests on a later
-  season than it fits, and only then writes weights.
+  combines season margin with the fitted shift, fits on 2023-25 and tests on
+  2025-26, and only then writes weights. Two rules for its report:
+  - every figure states **always-home on its own subset**, never the global
+    0.5473, which moves with the floor as shown above;
+  - the shift is stated as **fitted on 3,678 true-home games, pooled +1.854
+    [+1.316, +2.370]**, so the interval it carries is visible wherever it is
+    used.
 
 **Baselines, named before any NBA number exists:**
 - **Hit rate** is judged against the break-even of the graded price.
