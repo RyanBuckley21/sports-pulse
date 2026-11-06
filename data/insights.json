@@ -1,13 +1,13 @@
 {
-  "abdoul ouattara|ips": {
-    "entity": "Abdoul Ouattara",
-    "generated_at": "2026-11-05T17:54:04.758079+00:00",
-    "last_game_date": "2026-10-31",
+  "alisson becker|liv": {
+    "entity": "Alisson Becker",
+    "generated_at": "2026-11-06T17:15:15.293913+00:00",
+    "last_game_date": "2026-11-01",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "Ipswich Town",
+    "team": "Liverpool",
     "template_version": "v2"
   },
   "bart verbruggen|bha": {
@@ -19,6 +19,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Brighton & Hove Albion",
+    "template_version": "v2"
+  },
+  "bernd leno|ful": {
+    "entity": "Bernd Leno",
+    "generated_at": "2026-11-06T17:15:15.293913+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Fulham",
     "template_version": "v2"
   },
   "braelon allen|nyj": {
@@ -85,17 +96,6 @@
     "summary": null,
     "takeaways": [],
     "team": "Arsenal",
-    "template_version": "v2"
-  },
-  "dean henderson|cry": {
-    "entity": "Dean Henderson",
-    "generated_at": "2026-10-31T19:31:05.461979+00:00",
-    "last_game_date": "2026-10-31",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Crystal Palace",
     "template_version": "v2"
   },
   "declan rice|ars": {
@@ -173,17 +173,6 @@
     "summary": null,
     "takeaways": [],
     "team": "AFC Bournemouth",
-    "template_version": "v2"
-  },
-  "iliman ndiaye|mci": {
-    "entity": "Iliman Ndiaye",
-    "generated_at": "2026-11-05T17:54:04.758079+00:00",
-    "last_game_date": "2026-10-31",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Manchester City",
     "template_version": "v2"
   },
   "jahmyr gibbs|det": {
@@ -274,17 +263,6 @@
     "team": "GB",
     "template_version": "v2"
   },
-  "jordan pickford|eve": {
-    "entity": "Jordan Pickford",
-    "generated_at": "2026-11-01T18:33:00.027069+00:00",
-    "last_game_date": "2026-11-02",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "Everton",
-    "template_version": "v2"
-  },
   "jo\u00e3o pedro|che": {
     "entity": "Jo\u00e3o Pedro",
     "generated_at": "2026-09-24T05:29:56.913653+00:00",
@@ -294,6 +272,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Chelsea",
+    "template_version": "v2"
+  },
+  "konstantinos tzolakis|hul": {
+    "entity": "Konstantinos Tzolakis",
+    "generated_at": "2026-11-06T17:15:15.293913+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Hull City",
     "template_version": "v2"
   },
   "kyle pitts|atl": {
@@ -338,6 +327,17 @@
     "summary": null,
     "takeaways": [],
     "team": "Aston Villa",
+    "template_version": "v2"
+  },
+  "pascal gross|bha": {
+    "entity": "Pascal Gross",
+    "generated_at": "2026-11-06T17:15:15.293913+00:00",
+    "last_game_date": "2026-10-31",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "Brighton & Hove Albion",
     "template_version": "v2"
   },
   "pedro neto|che": {
@@ -409,7 +409,7 @@
   "trevor lawrence|jax": {
     "entity": "Trevor Lawrence",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
-    "last_game_date": "2026-11-01",
+    "last_game_date": "2026-11-05",
     "matchup_note": null,
     "story": null,
     "summary": null,
