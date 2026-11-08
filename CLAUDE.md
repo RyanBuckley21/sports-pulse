@@ -333,7 +333,10 @@ What follows from it:
    `GAME_BUILDERS` entry, and the `SPORT_ADAPTERS` entry (adding
    `list_markets`/`top_market` to `nba_grading`). It is still in neither gate.
 3. **Activation:** the gates, a `continue-on-error` grading step, and the
-   `deploy-pages.yml` alarm list.
+   `deploy-pages.yml` alarm list. **Hard prerequisite: `odds_first_seen`
+   (#73) is merged.** That PR was still unmerged on 2026-11-08 and isn't on
+   this branch. NBA activated without it would have no first-capture anchor,
+   and its CLV would inherit the book-open confound #73 was built to remove.
 
 No weight exists anywhere for NBA. A builder can't produce a standout without
 one, so it waits for the backtest instead of shipping a placeholder (invariant
@@ -394,10 +397,9 @@ always-home on the same true-home games, with a paired 95% bootstrap interval:
 
 **THIS IS ACCURACY, NOT EDGE. Do not read the table as "NBA has edge".**
 Always-home is a weak baseline, and beating it says nothing about beating the
-market. This repo has the precedent: CFB hits 70.7% and returns −10.3%. NBA
-books pick winners straight up somewhere around 68-70%, so a 65.7% model
-plausibly sits *below* the market. That can't be checked, because NBA has no
-price history on this endpoint. **NBA's accuracy is measurable; its edge is
+market. This repo has the precedent: CFB hits 70.7% and returns −10.3%. And
+whether 65.7% is above or below the market can't be checked, because NBA has
+no price history on this endpoint. **NBA's accuracy is measurable; its edge is
 not**, and won't be until prices accumulate going forward through
 `odds_first_seen`. Any claim that NBA picks have edge needs that forward
 record and its named baseline, never this table.
@@ -490,6 +492,14 @@ warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
 Open, in rough priority:
+- **NBA prices are being lost every day until something stores them.** Nothing
+  stores NBA odds yet: builders run only for sports in `active_game_sports`,
+  so even a `GAME_BUILDERS` entry alone would store nothing. Measured
+  2026-11-04 by an independent review session: **121 counted games played
+  since 10-20 are unrecoverable**, at about 8 a day (~56 a week). Only **2 of
+  182** upcoming games carried a price at that moment, so capture has to run
+  often, not daily. How to start keeping them is an open decision for the
+  owner (see the session notes of 2026-11-08), not a default.
 - **NBA playoffs and play-in are not handled.** Their competition types were
   never captured, and the counted-game rule keeps regular season only. Capture
   them before the regular season ends in mid-April.
