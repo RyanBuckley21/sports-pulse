@@ -41,13 +41,14 @@ python3 -m tools.verify.test_stand_down          # stood-down sport: grades what
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
+python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "218 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "235 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -400,6 +401,46 @@ picks) and the lists sort by score until one fills. NFL cards and Bets rows
 warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
+**The owner's betting constraints, measured (2026-11-10).** Singles: nothing
+shorter than −150. Parlays: only with a DraftKings profit boost, whose terms
+change daily. `nfl_odds_backtest.py` now reports both, on 1,245 NFL picks at
+closing prices (2015-2025; 658 out-of-sample):
+
+| | n | result |
+| --- | --- | --- |
+| win rate minus the no-vig closing probability, all picks | 1,245 | **+0.01pp [−2.5, +2.4]** |
+| singles, −150 or longer, ROI | 279 | −7.4% [−19.9, +5.7] (out-of-sample: −11.2% on 154) |
+| parlay legs, −300…−150, ROI | 457 | +0.7% [−5.7, +6.7] |
+
+**The model carries no information the closing price does not.** That agrees
+in sign with the live ledger at the singles floor (12-28, ROI −40.2%
+[−67.2, −12.0], measured the same day). So:
+
+- **Singles at −150 or longer have no measured edge.** Do not build a singles
+  selector on the current signals; the question is closed until a band's
+  interval clears zero on prices earlier than the close (none are stored for
+  NFL history; `odds_first_seen` is the forward record).
+- **Boosted parlays are priced from the market, not the model**
+  (`parlay_boost.py`, the Bets tray). A leg's chance is its two-sided price
+  with the vig removed; the Signal Score is not consulted. The value comes
+  from the boost: three legs at +312 lose 12.3% unboosted and are worth +20.9%
+  at a 50% boost. The no-vig method was measured on 5,788 NFL sides
+  (`tools/devig_calibration.py`): no band is measurably off, and each is only
+  known to about ±3.5pp, which the tray says beside every value.
+- **There is no default promo.** Every term is typed by the reader.
+
+Open on the boost work:
+- **Predicted vs realised is not tracked.** Nothing logs which boosted tickets
+  were priced or taken, so the independence assumption across games has never
+  been checked against results. This needs a log before it can be measured.
+- **The no-vig chance is measured on NFL closing lines only.** CFB and NBA are
+  assumed alike. NBA can be checked once `data/nba_prices.jsonl` has a season.
+- **No stake cap is modelled.** Boosts cap the stake, so the percentage is
+  per dollar staked, not a dollar value.
+- **The tray prices the board's leans only** (one per game, the side the
+  model named). Since the chance is the market's, any priced side could be a
+  leg; offering both sides is a design change, not yet made.
+
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
 −10.3%**. It is the first sport past the 30-pick gate, and it is the bettability
@@ -432,6 +473,7 @@ Open, in rough priority:
   against nflverse's injury history first.
 - **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
   nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
+  (Its owner-band report, added 2026-11-10, is that evidence in summary.)
 - **EPL has no captured prices**, so no Bets rows.
 - ~~CFB stats are not adjusted for opponent strength~~ **Closed 2026-09-26:**
   production CFB form is `fetchers.cfb.build_team_form_adjusted` at

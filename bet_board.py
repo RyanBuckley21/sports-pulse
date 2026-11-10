@@ -40,11 +40,16 @@ Pieces include games the football bettability filter removed as bets (past
 -1000): that filter declines them as STRAIGHT bets, and the owner asked for the
 short-priced legs specifically. They carry `past_cap` so the page can say so.
 
+BOOSTED PARLAYS (2026-11-10). Each leg also carries `fair`, the market's own
+no-vig chance for its side, so the tray can say what a profit boost is worth
+on the legs picked. The arithmetic and its evidence live in parlay_boost.py.
+
 DISPLAY ONLY. Nothing here reaches a Signal Score, the ledger or grading; it
 reads the scores and prices after the fact, like espn_odds' other readers.
 """
 
 import espn_odds
+import parlay_boost
 import signal_report
 
 # The owner's parlay-piece line (2026-09-25): -200 or shorter.
@@ -106,6 +111,12 @@ def _leg(ent, threshold, table, max_break_even):
         return None
     sport = ent.get("sport")
     rec = record_for(table, sport, be)
+    # The MARKET's chance for this side: both moneylines with the vig removed
+    # (parlay_boost.no_vig). None when the other side has no price -- one side
+    # alone cannot say how much of its price is margin. This is what the tray
+    # prices a boosted parlay from; it is not a model estimate and the Signal
+    # Score plays no part in it (see parlay_boost's docstring for why).
+    fair = parlay_boost.fair_prob(ent.get("odds"), side == home)
     return {
         "sport": sport,
         "sport_label": SPORT_LABELS.get(sport, (sport or "").upper()),
@@ -124,6 +135,7 @@ def _leg(ent, threshold, table, max_break_even):
         "decimal": round(dec, 6),
         "break_even": round(be, 4),
         "break_even_display": "{:.0f}%".format(100.0 * be),
+        "fair": round(fair, 6) if fair is not None else None,
         "provider": (ent.get("odds") or {}).get("provider"),
         "record": rec,
         # Record at this price minus what the price needs, only where the

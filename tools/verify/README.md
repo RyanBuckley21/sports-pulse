@@ -627,6 +627,38 @@ Sabotage-checked five ways, sources byte-identical afterwards:
 - A verdict on the book-open line fails 1.
 - Pooling the two baselines fails 3.
 
+```bash
+python3 -m tools.verify.test_parlay_boost     # from the repo root
+```
+
+**`test_parlay_boost`** (added 2026-11-10, 51 checks) pins what the Bets tray
+says a profit boost is worth (`parlay_boost.py`, and `fair` on each
+`bet_board` leg). Every way the number can be wrong reads as a reason to bet:
+
+- **The boost multiplies winnings, not the payout:** +312 at 50% pays +468.
+- **The chance is the market's, vig removed,** from both sides' prices. A
+  one-sided price gives none.
+- **Vig compounds:** the break-even boost rises with each leg.
+- **Promo terms are hard lines:** a −200 floor admits −200 and refuses −201;
+  a +300 minimum admits +300; every unmet term is listed.
+- **No chance beats a wrong one:** same-game legs and legs without a market
+  chance get no probability and no value.
+- **No default promo and no score in the price.**
+
+The board is the real `bets_fixture.json`. Sabotage-checked thirteen ways:
+5 / 8 / 2 / 2 / 6 / 1 / 1 / 1 / 1 / 2 / 1 failures in `parlay_boost.py`, and
+8 / 9 for the two `bet_board` cuts.
+
+The browser suite's `bets` group (now 235 checks in all, was 218) pins the
+page's numbers to that module on the same board, plus two bugs it found while
+being written: a promo change that rebuilt the rows swallowed a tap made in
+the same gesture, and the nested render threw. Sabotaged six ways: payout
+multiplied (3 fail), floor reversed (3), whole-view re-render on a promo
+change (1, the lost tap), a non-number read as zero (1), break-evens used as
+the chance (4), break-even boost rounded down (1). The non-number check first
+**passed under sabotage** (it typed into the floor field, where a zero is
+inert) and was moved to the boost field.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

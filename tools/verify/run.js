@@ -927,6 +927,73 @@ async function betsChecks(browser, base) {
      (await p.evaluate(() => SP.sport && SP.sport.get && SP.sport.get())) === league, league);
   await p.click(".bet-clear"); await p.waitForTimeout(100);
   ok("clear empties the tray", /Tap \+/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+
+  // THE BOOST LINE (2026-11-10). bets.js repeats parlay_boost.evaluate for the
+  // legs tapped, so every number below was computed by that Python module on
+  // this same fixture board and is pinned here -- a drift between the two
+  // would print a wrong value for a real ticket with nothing failing.
+  //   CWS -240 (fair .6756), CAR -148 (.5721), TOR -136 (.5511):
+  //   D = 4.1194 (+312), P = 21.3%, unboosted -12.3%, b* = 18.47% -> "19%",
+  //   50% boost pays +468 and is worth +20.9%.
+  const trayText = async () => p.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
+  const setPromo = async (field, value) => {
+    // Typed, then committed with Enter, as on a phone keyboard's "done".
+    await p.fill('.bet-promo-input[data-promo="' + field + '"]', value);
+    await p.press('.bet-promo-input[data-promo="' + field + '"]', "Enter");
+    await p.waitForTimeout(80);
+  };
+  ok("promo: four blank fields, no default promo",
+     (await p.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "|||");
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(80);   // the NFL filter above hides CWS and TOR
+  for (const side of ["CWS", "CAR", "TOR"]) {
+    await p.click('.bet[data-key*=":' + side + '"] .bet-add'); await p.waitForTimeout(80);
+  }
+  let t = await trayText();
+  ok("boost: three legs price at +312", /3 legs/.test(t) && /\+312/.test(t), t);
+  ok("  market chance and the vig's cost, with no boost entered",
+     /Market chance 21\.3%/.test(t) && /unboosted −12\.3% per \$1/.test(t), t);
+  ok("  and the boost that would break even, rounded UP", /breaks even at a 19% boost/.test(t), t);
+  ok("  no boosted value is printed until a boost is entered", !/With a/.test(t), t);
+  ok("  and no promo verdict while no term is entered", !/qualify|Meets the promo/.test(t), t);
+  ok("  the chance is labelled as the market's, not the model's", /Not a model estimate/.test(t), t);
+  await setPromo("boost", "50");
+  t = await trayText();
+  ok("a 50% boost multiplies the WINNINGS: +312 pays +468", /With a 50% boost: pays \+468/.test(t), t);
+  ok("  and is worth +20.9% per $1", /worth \+20\.9% per \$1/.test(t), t);
+  await setPromo("legs", "3"); await setPromo("total", "+300"); await setPromo("floor", "-250");
+  t = await trayText();
+  ok("terms met: 3 legs, +312 >= +300, shortest leg -240 within -250", /Meets the promo terms entered/.test(t), t);
+  ok("  the fields keep what was typed across re-renders",
+     (await p.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "50|3|+300|-250");
+  // The floor is "no leg SHORTER than": -200 refuses CWS at -240 and nothing else.
+  await setPromo("floor", "−200");            // a typographic minus, as phones insert
+  t = await trayText();
+  ok("a -200 floor refuses the -240 leg, by name (typographic minus accepted)",
+     /Doesn’t qualify: CWS is shorter than −200/.test(t) && !/CAR is shorter|TOR is shorter/.test(t), t);
+  await p.click('.bet[data-key*=":TOR"] .bet-add'); await p.waitForTimeout(80);
+  t = await trayText();
+  //   CWS + CAR: D = 2.3739 (+137), P = 38.6%, 50% boost pays +206, worth +18.3%.
+  ok("two legs: every unmet term is listed",
+     /needs 3\+ legs/.test(t) && /CWS is shorter than −200/.test(t) && /pays under \+300/.test(t), t);
+  ok("  and the value is still shown for what was picked", /pays \+206, worth \+18\.3%/.test(t), t);
+  // Typed and NOT committed, then a row is tapped. The field's blur fires
+  // `change` between the tap's mousedown and click; when that rebuilt the
+  // rows the tap was lost (the leg never joined) and the nested render threw.
+  // Both the typed value AND the tapped leg must land.
+  await p.fill('.bet-promo-input[data-promo="boost"]', "25");
+  await p.click('.bet[data-key*=":TOR"] .bet-add'); await p.waitForTimeout(120);
+  t = await trayText();
+  ok("a boost typed but not committed still takes effect when a row is tapped",
+     /With a 25% boost/.test(t), t);
+  ok("  and the tap itself is not swallowed: the leg joins the parlay", /3 legs/.test(t), t);
+  // "abc" in the boost field. Read as zero it would print "With a 0% boost"
+  // -- a typo turned into a term (the first version of this check used the
+  // floor field, where a zero happens to be inert, and passed under sabotage).
+  await setPromo("floor", "abc"); await setPromo("boost", "abc");
+  t = await trayText();
+  ok("a field that is not a number is ignored, not read as zero",
+     !/shorter than/.test(t) && !/With a/.test(t) && !/NaN|undefined|null/.test(t), t);
+  await p.click(".bet-clear"); await p.waitForTimeout(100);
   const wide = await p.evaluate(() => ({
     doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     rows: [].filter.call(document.querySelectorAll(".bet"), (r) => r.scrollWidth > r.clientWidth + 1).length,
