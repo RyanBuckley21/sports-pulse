@@ -158,6 +158,7 @@ and never touch the other two. It is opt-in and labeled in the header.
 import argparse
 import datetime
 import json
+import random
 import subprocess
 import sys
 
@@ -305,7 +306,11 @@ def _sport_partition(raw_store, sport_key):
 # 3 (2026-09-24): pick rows carry `season_phase` -- see build_pick_rows. Rows
 # without it are all regular season (read via _row_phase); nothing checks this
 # number, it labels which rows can answer the question.
-SCHEMA_VERSION = 3
+# 4 (2026-10-29): pick rows carry `clv_first`/`clv_first_delta`, movement from
+# the store's `odds_first_seen` rather than the book's open. Rows below 4 have
+# none; their `clv` is book-open only and is NOT a model result -- see
+# clv_record_lines.
+SCHEMA_VERSION = 4
 
 # Per-date outcomes the ledger distinguishes. A date with no entry at all means
 # the report was never run for it -- which is why "the store had nothing" and
@@ -555,6 +560,11 @@ def build_pick_rows(date, rows, source, run_id, sport_key=DEFAULT_SPORT_KEY, spo
             # when the market moved toward the pick.
             "clv": pick.get("clv"),
             "clv_delta": (pick.get("clv") or {}).get("delta"),
+            # From OUR FIRST CAPTURE, not the book's open -- the headline CLV.
+            # Kept as its own pair rather than replacing `clv`, so every row
+            # names its baseline and the two can never be pooled by accident.
+            "clv_first": pick.get("clv_first"),
+            "clv_first_delta": (pick.get("clv_first") or {}).get("delta"),
         })
     return out
 
@@ -1139,6 +1149,18 @@ def collect_picks(store, config, min_score, all_markets, sport_key=DEFAULT_SPORT
                                      (entry.get("home") or {}).get("abbr"),
                                      (entry.get("away") or {}).get("abbr"),
                                      bet_type=m["bet_type"]),
+                # THE SAME MOVEMENT FROM OUR FIRST CAPTURE, which is the one that
+                # can say anything about the model. `clv` above is measured from
+                # the book's own open and was shown on 2026-10-22 to credit the
+                # model with moves that finished before it had an opinion (NFL
+                # +7.90pp from the open, -0.50pp from first capture). None for a
+                # store row written before `odds_first_seen` existed, or a game
+                # never priced while it carried a pick. See espn_odds.clv_first_seen.
+                "clv_first": espn_odds.clv_first_seen(
+                    entry.get("odds_first_seen"), entry.get("odds"), m["side"],
+                    (entry.get("home") or {}).get("abbr"),
+                    (entry.get("away") or {}).get("abbr"),
+                    bet_type=m["bet_type"]),
             }
             # Resolved here rather than in grade(), which sees one pick at a time
             # and has no access to the game's other markets. `scored` is the full
@@ -1233,8 +1255,55 @@ def priced_record_lines(all_rows):
     return out
 
 
+CLV_BOOT, CLV_SEED = 4000, 17   # the 2026-10-22 measurement's exact procedure
+
+
+def _clv_interval(values):
+    """95% bootstrap interval of the mean, by the exact procedure behind the
+    2026-10-22 table (tools/clv_first_seen_backfill: 4,000 resamples, seed 17,
+    one randrange per draw), so a figure printed here and a figure in that
+    table are the same quantity. Deterministic: a fixed seed, so a report run
+    twice on the same ledger prints the same interval. None below 2 values,
+    where a resampled mean has nothing to vary."""
+    n = len(values)
+    if n < 2:
+        return None
+    rng = random.Random(CLV_SEED)
+    means = sorted(sum(values[rng.randrange(n)] for _ in range(n)) / n
+                   for _ in range(CLV_BOOT))
+    return means[int(0.025 * CLV_BOOT)], means[int(0.975 * CLV_BOOT)]
+
+
+def _clv_line(label, moved, verdict=True):
+    n = len(moved)
+    mean = sum(moved) / n
+    toward = sum(1 for d in moved if d > 0)
+    flat = sum(1 for d in moved if d == 0)
+    ci = _clv_interval(moved)
+    if not verdict:
+        # The book-open baseline. Its interval is printed so the size of the
+        # drift is visible, but it gets NO verdict: "clears zero" there is a
+        # statement about the market's drift since a number we never saw, and
+        # printed beside our picks it reads as a finding about the model --
+        # exactly the misreading this function was rewritten to stop.
+        read = "says nothing about the model"
+    elif ci is None:
+        read = "n=1, no interval"
+    elif ci[0] > 0:
+        read = "interval clears zero"
+    elif ci[1] < 0:
+        read = "interval is below zero"
+    else:
+        read = "interval spans zero: no evidence either way"
+    ci_txt = "" if ci is None else " [{:+.2f}, {:+.2f}]".format(100.0 * ci[0], 100.0 * ci[1])
+    return ["{}".format(label),
+            "    mean {:+.2f}pp{}  ·  moved toward {} of {} ({:.0%})  ·  {} unmoved  ·  {}"
+            .format(100.0 * mean, ci_txt, toward, n, toward / n, flat, read)]
+
+
 def clv_record_lines(all_rows):
-    """Did the market move toward these picks? The fastest honest read on edge.
+    """Did the market move toward these picks? The fastest honest read on edge
+    -- once it is measured from the right place.
 
     WHY THIS AND NOT ROI. Three walk-forward tests over 2010-2025 NFL said the
     signals here cannot out-predict a closing line -- jointly they explain
@@ -1243,32 +1312,55 @@ def clv_record_lines(all_rows):
     is answerable in weeks; an ROI with a usable confidence interval on a few
     dozen picks a week is not answerable until next season.
 
+    TWO BASELINES, AND EVERY LINE NAMES ITS OWN. Until 2026-10-29 this printed
+    one unlabelled "Line movement" mean, measured from the BOOK'S OPEN -- and on
+    2026-10-22 that baseline was shown to be the whole signal: over 116 priced
+    picks, +2.96pp [+1.56, +4.41] from the open became +0.35pp [-0.31, +0.99]
+    from the price when the pick existed (NFL +7.90pp -> -0.50pp). The open
+    can predate our first sighting of a game by days. So:
+      * FROM OUR FIRST CAPTURE (`clv_first_delta`, schema 4+) is the headline,
+        and is the only line that can say anything about the model.
+      * FROM THE BOOK'S OPEN (`clv_delta`) is still printed, because it is the
+        only figure with history behind it, but it is ALWAYS labelled as market
+        drift and not a model result, whatever its n. A row is never moved from
+        one pool to the other.
+
+    AN INTERVAL, NOT AN n THRESHOLD. The old caveat was `n < 100`, and it is what
+    let the overstated figure through: on 2026-10-29 CFB reached 133
+    book-open picks and printed "+1.87pp" with nothing under it, while MLB's 7
+    still got a warning. A sample size says nothing about whether a mean is
+    distinguishable from the null; its interval does. So every mean prints with
+    its 95% bootstrap interval and says plainly whether that clears zero.
+
     MEAN MOVEMENT IN PROBABILITY POINTS, plus the share of picks the market
     moved toward. Both are reported because they fail differently: a single
     steamed longshot can carry the mean while most picks drifted the wrong
     way, and a 51% share can sit on movement too small to mean anything.
 
-    THE NULL IS ZERO, not 50%. With no edge the market is as likely to move
-    away as toward, so a mean of +0.0pp and a share near half is the expected
-    result -- and the honest one to report. Picks the feed could not measure
-    (unpriced, or a book that pulled the market) are EXCLUDED rather than
-    counted as no movement, which would drag the mean toward zero by
-    construction.
+    THE NULL IS 0.0pp, not 50%. With no edge the market is as likely to move
+    away as toward. Picks the feed could not measure (unpriced, a pulled market,
+    or a row from before `odds_first_seen`) are EXCLUDED from that baseline's
+    pool rather than counted as no movement, which would drag the mean toward
+    zero by construction.
 
-    Silent until something is measurable, rather than printing a 0.0pp that
-    would read as a finding."""
-    moved = [r["clv_delta"] for r in all_rows
-             if r.get("clv_delta") is not None and r.get("verdict") in ("HIT", "MISS", "PUSH")]
-    if not moved:
+    Silent until either baseline is measurable, rather than printing a 0.0pp
+    that would read as a finding."""
+    graded = [r for r in all_rows if r.get("verdict") in ("HIT", "MISS", "PUSH")]
+    first = [r["clv_first_delta"] for r in graded if r.get("clv_first_delta") is not None]
+    book = [r["clv_delta"] for r in graded if r.get("clv_delta") is not None]
+    if not first and not book:
         return []
-    n = len(moved)
-    mean = sum(moved) / n
-    toward = sum(1 for d in moved if d > 0)
-    flat = sum(1 for d in moved if d == 0)
-    out = ["Line movement:     mean {:+.2f}pp toward the pick  ·  moved toward {} of {} "
-           "({:.0%})  ·  {} unmoved".format(100.0 * mean, toward, n, toward / n, flat)]
-    if n < 100:
-        out.append("         (n={} -- too few to read yet; the null is 0.0pp and ~50%)".format(n))
+    out = []
+    if first:
+        out += _clv_line("Line movement from OUR FIRST CAPTURE (the price when the pick "
+                         "existed; null 0.0pp):", first)
+    else:
+        out.append("Line movement from OUR FIRST CAPTURE: none measured yet "
+                   "(recorded from schema 4, 2026-10-29; null 0.0pp)")
+    if book:
+        out += _clv_line("Book open -> close, MARKET DRIFT, NOT A MODEL RESULT (the open can "
+                         "predate our first sighting by days; overstated the model on "
+                         "2026-10-22):", book, verdict=False)
     return out
 
 

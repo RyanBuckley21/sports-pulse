@@ -105,6 +105,16 @@ config.yaml ───▶ │ SPORT_FETCHERS[sport].fetch()  → normalizer.norma
   picks (95% CI [-0.31, +0.99]) once measured from the price the board actually
   came in at rather than the book's opening number. Every sport's interval spans
   zero. A high Signal Score means "wins more often", never "is mispriced".
+  Since 2026-10-29 the store keeps that price live (`odds_first_seen`: both
+  moneylines the first time a game has a scored pick and a price, written once).
+  Each ledger pick row carries `clv_first` from it, beside the book-open `clv`.
+  The grading report's headline is first-capture movement, with a 95% bootstrap
+  interval and a verdict. The book-open figure is still printed, but it is always
+  labelled **market drift, not a model result**.
+- **The first real ROI number is negative.** On 2026-10-29 CFB became the first
+  sport with enough priced picks to read: 94-39 on 133, a 70.7% hit rate against
+  the 76.2% its prices needed, **ROI −10.3%**. Right more often than not, and
+  still losing money. That is what "hit rate is not edge" looks like in practice.
 - **Prices are for display only.** `espn_odds.py` captures the pre-kickoff line
   for NFL, CFB and MLB and keeps it ("sticky price", since ESPN drops odds at
   kickoff). It records closing-line value, and prices **moneyline picks only**:

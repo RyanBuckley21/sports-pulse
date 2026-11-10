@@ -593,6 +593,40 @@ Sabotage-checked in three directions, with measured counts:
 - Skipping a stood-down sport outright fails 5: the stranded pick.
 - Using `or` instead of `is None` fails the 3 kill-switch checks.
 
+```bash
+python3 -m tools.verify.test_clv_first_seen   # from the repo root
+```
+
+**`test_clv_first_seen`** (added 2026-10-29, 37 checks) covers measuring CLV
+from our first capture rather than the book's open. On 2026-10-22 the
+book-open baseline turned out to be the whole of NFL's "+7.90pp". Then on
+2026-10-29 production printed CFB's book-open +1.87pp on 133 picks with no
+caveat, because the only caveat was `n < 100`. The suite pins four rules:
+
+- **The anchor is written once**, on real PHI @ JAX history: it holds −285
+  while the line runs to −410 and closes at −395. A game first stored unpriced
+  (CFB 401856713), or with no scored standout (IND @ WAS), anchors only once it
+  has both.
+- **The graded side reads its own anchor price** from a snapshot of both sides.
+- **The ledger row carries both baselines, each named**: +5.8pp and +32.2pp on
+  PHI @ JAX. The second is the real 2026-10-11 row's value.
+- **The report names every baseline.** First capture is the headline, with an
+  interval and a verdict. The book-open line is labelled "not a model result"
+  and gets no verdict at any n. The two pools never merge.
+
+`first_seen_fixture.json` holds real committed store states at named commits.
+Two edges were never observed, so each is built by editing exactly one field:
+a dropped line (`odds` blanked), and a standout with a side but score 0.
+
+Sabotage-checked five ways, sources byte-identical afterwards:
+
+- Re-taking the snapshot every run fails 6.
+- Dropping the scored-standout requirement fails 1. It passed silently until
+  the score-0 edge was added, because an absent standout already has no side.
+- Reading the snapshot's side instead of the graded side fails 1.
+- A verdict on the book-open line fails 1.
+- Pooling the two baselines fails 3.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

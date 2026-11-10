@@ -29,6 +29,7 @@ pip install -r requirements.txt                  # requests, PyYAML (Python 3.11
 python3 -m tools.verify.test_game_isolation      # per-sport store freeze vs. off-day clear
 python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-forward window; empty-store grading exits
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
+python3 -m tools.verify.test_clv_first_seen      # write-once CLV anchor; report names every baseline, never pools them
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
 python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED); ESPN page limit; unabbreviated sides
@@ -92,6 +93,11 @@ days later in an append-only file. Most have a test. Don't weaken them.
    - `odds` is **sticky**: a rebuild never replaces a stored price with `None`,
      because ESPN drops lines at kickoff. `betting_signals`/`standout` *are*
      rebuilt every run.
+   - `odds_first_seen` is **write-once** (since 2026-10-29): both moneylines
+     the first time a game carried a scored standout and a price for its side.
+     It is the CLV baseline. Re-taking it on a later run walks the anchor to
+     the close and credits the model with nothing; using the book's open
+     instead credits it with moves that were over before it had an opinion.
 5. **Per-sport isolation.** One feed outage must not take other sports down, in
    either `generate_stats.main` (leaderboards) or `_build_game_entities` (games).
    A sport contributes all of its rows or none of them.
@@ -306,14 +312,25 @@ over before the model had an opinion.
 baseline** (see the opponent adjustment's +2.1pp -> −0.2%). Treat any new
 "the market agrees with us" claim as guilty until the baseline is named.
 
-What follows from it:
+**`odds_first_seen` SHIPPED 2026-10-29** (branch `claude/odds-first-seen`):
+the store anchor, `clv_first`/`clv_first_delta` on ledger pick rows (schema
+4), and a report whose headline is first capture, with a 95% bootstrap
+interval (the 10-22 table's exact procedure) and a verdict. The book-open line
+is always labelled "MARKET DRIFT, NOT A MODEL RESULT" and gets no verdict. The
+first-capture pool **starts empty**: the ledger is append-only, so history is
+not back-filled, and the headline reads "none measured yet" until newly graded
+picks arrive. Pinned by `test_clv_first_seen`.
+
+What followed from it (kept for the record):
 
 - **Ship `odds_first_seen`** — a price snapshot written once and never
   overwritten, with its capture timestamp — and make the first-capture figure
   the headline CLV. Keep the book-open figure if useful, but the report must not
   present it as a model result. This is a correctness fix, not a discovery.
-- **The reported "Line movement" line currently overstates by about 8pp on NFL.**
-  Until the field lands, do not quote it.
+- ~~The reported "Line movement" line overstates by about 8pp on NFL~~ It is now
+  labelled as book-open market drift and carries no verdict. On 2026-10-29,
+  before the fix, CFB's +1.87pp on 133 picks printed with no caveat at all,
+  because the only caveat was `n < 100`.
 - **No model change is justified by CLV yet**, and three prior negative results
   stand against reaching for one: the picks do not beat a closing line, no
   combination of current signals out-predicts a spread, and MLB's score is
@@ -383,13 +400,33 @@ picks) and the lists sort by score until one fills. NFL cards and Bets rows
 warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
+**First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
+priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
+−10.3%**. It is the first sport past the 30-pick gate, and it is the bettability
+story out loud: right more often than not, money still going the wrong way.
+MLB's "+11.9% ROI" in the same block is 7 picks of noise. Don't let the sign
+fool anyone.
+
 Open, in rough priority:
+- **The first-capture CLV pool is empty until new picks are graded.** History
+  can't move into it: the ledger is append-only, and the 10-22 git-history
+  measurement is a one-off. Read the headline once its interval has a few dozen
+  picks behind it. Games already in the store when the field shipped anchor on
+  the first run after the deploy, which is later than the truth and can only
+  shrink the movement credited.
+- **The Games card's "Market" row is still the book's open.** It is labelled
+  "opened", with a tooltip saying the open can predate the pick. That is
+  per-game market display, not a model claim, so it was left as is.
+- `tools/clv_first_seen_backfill.py` anchors on the standout side's price only,
+  so a standout that flipped sides would compare two different sides' prices.
+  Checked 2026-10-29: 0 of its 116 anchors flipped, so the 10-22 table stands.
+  The live field keeps both sides.
 - ~~CLV measures from the book's opening price~~ **Measured 2026-10-22, and it
   was the whole signal.** Re-anchored to the first committed store state where a
   pick had both a price and a standout, NFL falls from +7.90pp to −0.50pp
-  [−1.69, +0.76] and every sport spans zero (see *Next up*). The remaining work
-  is the `odds_first_seen` field so the live report stops overstating; the
-  backfill proved the method on git history and needs no ledger rewrite.
+  [−1.69, +0.76] and every sport spans zero (see *Next up*). `odds_first_seen`
+  shipped 2026-10-29, so the live report no longer prints the overstated figure
+  as a result.
 - **A QB who misses every practice doesn't move the score.** Only an official
   Out/Doubtful does (`qb_out`). Changing that is a model change: backtest it
   against nflverse's injury history first.
