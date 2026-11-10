@@ -657,6 +657,41 @@ Sabotage-checked eleven ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures, 4 and
 7 for the two postponed-shell cuts, and 3 for a game seeing its own result. Cut S3
 (filtering on `neutralSite`) fails in both directions.
 
+```bash
+python3 -m tools.verify.test_nba_price_capture   # from the repo root
+```
+
+**`test_nba_price_capture`** (added 2026-11-10, 58 checks) pins the NBA price
+capture (`nba_price_capture.py`, `capture-nba-prices.yml`). NBA prices exist
+only before tip, so every mistake is unrecoverable and silent:
+
+- **What is kept:** status `pre` plus an odds block, nothing else. The expected
+  three events are read from the fixture's own labels. The counted-game rule
+  must not drop rows, a started game is never stored, and an `OFF` moneyline
+  is kept as a refusal to quote.
+- **Change-only price rows plus a run row.** An unchanged quote writes no price
+  row; a moved one writes exactly one; a line moving back is judged against
+  the latest row. Each run that saw a price lists the ids it saw.
+- **Append-only.** Existing bytes stay in place, a torn last line cannot fuse
+  with a new row, and an unparseable line neither stops the capture nor is
+  repaired.
+- **Failure writes nothing wrong.** Every request failing exits 1 with the file
+  byte-identical; one day failing still captures the rest; an idle run and
+  `--dry-run` leave the file untouched; a full 500-event page is refused.
+- **Days asked are yesterday, today and tomorrow, Eastern**, one single-day
+  request each at `limit=500`.
+- **Capture only:** NBA is in neither gate, the module imports no builder,
+  grader or store, and the workflow stages one file.
+
+The fixture is `nba_games_fixture.json`, unedited. Four edges were never
+observed, so each edits one field of a real event: a moved line, a started
+game still carrying odds, an `OFF` moneyline, and an unknown competition type.
+
+Sabotage-checked seventeen ways, source byte-identical afterwards: 2 / 2 / 1 /
+8 / 3 / 10 / 3 / 6 / 2 / 4 / 1 / 3 / 1 / 4 / 1 / 1 / 1 failures (the table is
+in the suite's docstring). Two cuts first crashed the suite instead of
+failing checks; the lookups were made tolerant.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

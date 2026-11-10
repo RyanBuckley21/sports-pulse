@@ -14,7 +14,7 @@ sessions.
 2. **The history in a fresh container is shallow.** Run `git fetch --unshallow origin main`
    before any `git log`/`blame` archaeology. Bot commits drown out everything
    else, so filter them:
-   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB"`.
+   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Capture NBA"`.
 3. **The why lives in the code comments and PR bodies**, not in docs. PRs #1–#61
    carry the measurements behind each decision. Before changing a threshold,
    weight, cron or guard, read the comment block above it. It almost always
@@ -38,6 +38,7 @@ python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
 python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
+python3 -m tools.verify.test_nba_price_capture   # NBA price capture: pre-game only, change-only rows + run row, append-only
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
@@ -351,8 +352,7 @@ What followed from it (kept for the record):
    `list_markets`/`top_market` to `nba_grading`). It is still in neither gate.
 3. **Activation:** the gates, a `continue-on-error` grading step, and the
    `deploy-pages.yml` alarm list. **Hard prerequisite: `odds_first_seen`
-   (#73) is merged.** That PR was still unmerged on 2026-11-08 and isn't on
-   this branch. NBA activated without it would have no first-capture anchor,
+   (#73) is merged.** It merged on 2026-11-10 (`132964b`). NBA activated without it would have no first-capture anchor,
    and its CLV would inherit the book-open confound #73 was built to remove.
 
 No weight exists anywhere for NBA. A builder can't produce a standout without
@@ -529,17 +529,33 @@ Open, in rough priority:
   so a standout that flipped sides would compare two different sides' prices.
   Checked 2026-10-29: 0 of its 116 anchors flipped, so the 10-22 table stands.
   The live field keeps both sides.
-- **NBA prices are being lost every day until something stores them.** Nothing
-  stores NBA odds yet: builders run only for sports in `active_game_sports`,
-  so even a `GAME_BUILDERS` entry alone would store nothing. Measured
-  2026-11-04 by an independent review session: **121 counted games played
-  since 10-20 are unrecoverable**, at about 8 a day (~56 a week). Only **2 of
-  182** upcoming games carried a price at that moment, so capture has to run
-  often, not daily. How to start keeping them is an open decision for the
-  owner (see the session notes of 2026-11-08), not a default.
+- ~~NBA prices are being lost every day until something stores them~~
+  **Capture built 2026-11-10** (`nba_price_capture.py`,
+  `capture-nba-prices.yml`, `test_nba_price_capture`): capture only, appending
+  to `data/nba_prices.jsonl`, in no gate and read by nothing. Losses stop from
+  its first scheduled run after merge, not before: 121 counted games were
+  already gone on 2026-11-04, at about 56 a week. What it leaves open:
+  - **It has never run against the live feed.** The build sandbox cannot reach
+    `site.api.espn.com`; everything is pinned on the 2026-10-30/31 fixture.
+    **Check the first run's log line** (`N events, N pre-game, N priced`) and
+    that a `Capture NBA prices` commit appears on a game day. Zero priced on a
+    day with evening games means the feed's shape differs from the fixture.
+  - **The hourly cadence is not measured** (16 entries, 13:20-04:20 UTC). After
+    two weeks, re-derive it from the file: `run` rows give arrival times,
+    `price` rows give how early a line appears and how often it moves.
+  - **Nothing alarms on a silent day.** A day with games and no rows is only
+    visible by looking. Add an alarm once a normal day's row count is known.
+  - **ESPN's `dates=YYYYMMDD` day boundary is still unmeasured.** The capture
+    asks for yesterday, today and tomorrow so it does not matter; the file's
+    `slate_date` against the day each event was listed under would settle it.
+  - **Rows are not filtered by the counted-game rule** (each carries `counted`
+    and the raw types), so preseason, Cup-final and future playoff prices are
+    kept. Any reader must filter.
 - **NBA playoffs and play-in are not handled.** Their competition types were
   never captured, and the counted-game rule keeps regular season only. Capture
-  them before the regular season ends in mid-April.
+  them before the regular season ends in mid-April. (The price capture keeps
+  such games anyway, with `counted: false`; their types can be read from its
+  rows once April arrives.)
 - **NBA team colours collide after the legibility lift:** BKN/SA (`#8C8C8C`)
   and DET/NY/PHI (`#577BC2`). This is display only. Settle it at activation,
   as EPL did with alternate colours.

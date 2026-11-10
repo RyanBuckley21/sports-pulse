@@ -1,0 +1,116 @@
+name: Capture NBA prices
+
+# CAPTURE ONLY (approved by the owner 2026-11-08, built 2026-11-10). Appends
+# what ESPN quotes for pre-game NBA events to data/nba_prices.jsonl and commits
+# that one file. It touches no gate, no store, no ledger and nothing the site
+# reads; NBA stays unregistered. The why is in nba_price_capture.py's docstring.
+#
+# WHY IT CANNOT WAIT FOR NBA TO BE BUILT. NBA prices are live-only: ESPN strips
+# the odds block when a game completes (0 of 170 across February 2026).
+# Measured 2026-11-04, 121 counted games since 10-20 were already
+# unrecoverable, at about 8 a day (~56 a week). Every week this does not run is
+# another ~56 games for which no edge question can ever be asked.
+#
+# Its OWN workflow, for the reasons capture-training-data.yml gives:
+#   * `contents: write` is scoped to this workflow and used for nothing but
+#     committing data/nba_prices.jsonl;
+#   * deploy-pages.yml keeps `permissions: contents: read` (invariant 10) and
+#     is not modified;
+#   * if this fails, grading, regeneration and the site are unaffected.
+#
+# NOTHING DOWNSTREAM IS TRIGGERED. A push made with GITHUB_TOKEN does not start
+# other workflows (CLAUDE.md, "Lessons"), so these commits cause no test run
+# and no deploy. They do add bot commits to main: at most one per run that saw
+# a price. Filter them like the others:
+#   git log ... | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Capture NBA"
+
+on:
+  schedule:
+    # HOURLY, 13:20-04:20 UTC. THIS CADENCE IS NOT MEASURED, and says so rather
+    # than pretending: it is a starting point chosen to be safely too frequent,
+    # and the file it writes is the measurement that will replace it.
+    #
+    # What IS measured, and why "a few times a day" is not enough:
+    #   * prices are intermittent before tip -- 6 of 7 same-day games priced on
+    #     2026-10-31, 10 of 10 a day ahead on 10-29, 0 of 4 a day ahead on
+    #     10-31, and only 2 of 182 upcoming games at one moment on 11-04
+    #     (fetchers/nba.py, CLAUDE.md). There is no reliable hour to aim at.
+    #   * GitHub creates scheduled runs 3-9h late and drops whole days
+    #     (capture-training-data.yml: mean delays +4.4h..+6.5h over 16 runs,
+    #     and 2026-07-27 with no run at all). Its lesson was that entries are
+    #     NOT independent tries; what many entries buy is surviving a drop.
+    #   * tips run from about 17:00 UTC (weekend matinees; the fixture's
+    #     2026-10-31 game is 19:00Z) to 03:30 UTC (10:30 PM Eastern).
+    #
+    # So: sixteen entries, from four hours before the earliest tip seen to
+    # after the last one. Each run is three small requests and a few seconds.
+    # A run that sees nothing priced commits nothing.
+    #
+    # RE-DERIVE THIS once the file has two weeks of rows (open item in
+    # CLAUDE.md): the `run` rows give real arrival times, and the `price` rows
+    # give how early a line first appears and how often it moves. If lines
+    # turn out to move rarely, most of these entries can go.
+    #
+    # :20, not :00 -- the top of the hour is GitHub's busiest minute.
+    # Daylight saving: UTC and deliberately not shifted, as everywhere else in
+    # this repo. The window is wide enough that an hour either way is inside it.
+    - cron: "20 13-23 * * *"
+    - cron: "20 0-4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capture-nba-prices
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    # The job is seconds long. Ten minutes bounds a hung request (three calls
+    # at a 30s timeout each) without ever cutting a healthy run.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Capture NBA prices
+        id: capture
+        run: python3 nba_price_capture.py
+
+      - name: Annotate capture failure
+        if: failure() && steps.capture.outcome == 'failure'
+        run: |
+          echo "::warning title=NBA price capture failed::No scoreboard request succeeded at $(date -u +%Y-%m-%dT%H:%MZ). Prices for games tipping before the next successful run are permanently lost -- see the Capture step log."
+
+      - name: Commit the price file
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ ! -f data/nba_prices.jsonl ]; then
+            echo "Nothing priced yet -- no file to commit."
+            exit 0
+          fi
+          git add data/nba_prices.jsonl
+          if git diff --staged --quiet; then
+            echo "No new price rows this run -- nothing to commit."
+            exit 0
+          fi
+          git commit -m "Capture NBA prices for $(date -u +%Y-%m-%d)"
+          # main moves under this job (grading and regenerate commits). The
+          # file is appended by this workflow alone, so a rebase cannot
+          # conflict on it; three tries is the pattern the other bots use.
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}); rebasing onto the new main"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          echo "::error title=NBA prices not pushed::three push attempts failed; this run's rows are lost"
+          exit 1

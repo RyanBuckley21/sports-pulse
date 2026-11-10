@@ -193,6 +193,7 @@ change touches locally first anyway.
 | Workflow | When (UTC) | What | Writes |
 | --- | --- | --- | --- |
 | `daily-stats-and-grade.yml` | 10:00, 12:00, 13:40, 15:40 | **Grades first** (MLB strict; EPL, CFB and NFL `continue-on-error`), **then** regenerates | ledger, `insights*.json`, `boxscores.json` |
+| `capture-nba-prices.yml` | hourly at :20, 13:20–04:20 (a starting cadence, not yet measured) | **Capture only.** Appends pre-game NBA prices to an append-only file. NBA prices vanish when a game ends, so this runs before NBA is built. Touches no gate, store or page | `data/nba_prices.jsonl` |
 | `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
@@ -223,6 +224,7 @@ espn_odds.py             price capture, bettability filter, CLV
 espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ranges 2026-09-15)
 slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward window
 training_capture.py      MLB append-only feature/outcome stores
+nba_price_capture.py     NBA pre-game prices, append-only (capture only; NBA is not built or shown)
 team_meta.py             abbreviations + brand colours (legibility-lifted)
 nba_grading.py           NBA grading rules (written; registered with the NBA builder)
 nba_backtest.py          NBA signal measurement, offline on a captured 2023-26 dataset; writes nothing
