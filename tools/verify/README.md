@@ -627,6 +627,71 @@ Sabotage-checked five ways, sources byte-identical afterwards:
 - A verdict on the book-open line fails 1.
 - Pooling the two baselines fails 3.
 
+```bash
+python3 -m tools.verify.test_nba              # from the repo root
+```
+
+**`test_nba`** (added 2026-10-31, 92 checks) pins the NBA data layer, which is
+registered but not yet built or active. Every rule it checks fails silently:
+
+- **The counted-game rule needs both halves.** `season.type == 2` alone admits
+  All-Star games and the NBA Cup final. Competition type STD alone admits
+  preseason. `neutralSite` separates nothing.
+- **Slate dates are Eastern.** Three fixture games cross UTC midnight.
+- **Form reads only decided, counted games.** ATL has a preseason game, NY the
+  Cup final and CLE an unplayed 0-0, each beside a counted game, so a leak
+  shows up as a wrong game count.
+- **A level score is UNRESOLVED,** because the NBA cannot tie.
+- **Postponed shells are not games.** These are real: all four of 2025-26's.
+  Each passes the counted-game rule and reads state `post` with "0"/"0", yet
+  must grade POSTPONED and count toward nothing. The makeup gets a new id.
+- **`NBA_TEAMS` equals the `/teams` capture.**
+
+The expected counted set is read from the capture's own case labels
+(`_provenance.cases`), not computed by the code under test.
+
+It also pins that `nba_backtest.point_in_time` never lets a game see its
+own result or a later one, checked on 400 real 2025-26 games.
+
+Sabotage-checked eleven ways: 7 / 15 / 14 / 6 / 2 / 1 / 1 / 1 failures, 4 and
+7 for the two postponed-shell cuts, and 3 for a game seeing its own result. Cut S3
+(filtering on `neutralSite`) fails in both directions.
+
+```bash
+python3 -m tools.verify.test_nba_price_capture   # from the repo root
+```
+
+**`test_nba_price_capture`** (added 2026-11-10, 58 checks) pins the NBA price
+capture (`nba_price_capture.py`, `capture-nba-prices.yml`). NBA prices exist
+only before tip, so every mistake is unrecoverable and silent:
+
+- **What is kept:** status `pre` plus an odds block, nothing else. The expected
+  three events are read from the fixture's own labels. The counted-game rule
+  must not drop rows, a started game is never stored, and an `OFF` moneyline
+  is kept as a refusal to quote.
+- **Change-only price rows plus a run row.** An unchanged quote writes no price
+  row; a moved one writes exactly one; a line moving back is judged against
+  the latest row. Each run that saw a price lists the ids it saw.
+- **Append-only.** Existing bytes stay in place, a torn last line cannot fuse
+  with a new row, and an unparseable line neither stops the capture nor is
+  repaired.
+- **Failure writes nothing wrong.** Every request failing exits 1 with the file
+  byte-identical; one day failing still captures the rest; an idle run and
+  `--dry-run` leave the file untouched; a full 500-event page is refused.
+- **Days asked are yesterday, today and tomorrow, Eastern**, one single-day
+  request each at `limit=500`.
+- **Capture only:** NBA is in neither gate, the module imports no builder,
+  grader or store, and the workflow stages one file.
+
+The fixture is `nba_games_fixture.json`, unedited. Four edges were never
+observed, so each edits one field of a real event: a moved line, a started
+game still carrying odds, an `OFF` moneyline, and an unknown competition type.
+
+Sabotage-checked seventeen ways, source byte-identical afterwards: 2 / 2 / 1 /
+8 / 3 / 10 / 3 / 6 / 2 / 4 / 1 / 3 / 1 / 4 / 1 / 1 / 1 failures (the table is
+in the suite's docstring). Two cuts first crashed the suite instead of
+failing checks; the lookups were made tolerant.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

@@ -43,7 +43,9 @@ REQUEST_TIMEOUT = 20
 # home/away open/close shape, 12 of 17 events priced -- which is why one module
 # serves them; another league is a line in this dict.
 LEAGUE_PATHS = {"cfb": "football/college-football", "nfl": "football/nfl",
-                "mlb": "baseball/mlb"}
+                "mlb": "baseball/mlb", "nba": "basketball/nba"}
+# nba (2026-10-31): the same DraftKings open/close shape, parsed unchanged by
+# parse_event (test_nba). LIVE-ONLY and intermittent -- see fetchers/nba.
 # CFB only: ESPN's FBS group. Without it the scoreboard returns all divisions.
 # Same value fetchers/cfb.py and cfb_grading.py use.
 FBS_GROUPS = 80

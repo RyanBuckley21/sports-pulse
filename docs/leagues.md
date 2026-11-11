@@ -41,6 +41,7 @@ as a kill switch (no scored picks at all) rather than falling back.
 | **nfl** | yes | yes (moneyline) | yes | `fetchers/nfl.py` -- nflverse CSVs + ESPN scoreboard |
 | **epl** | yes | yes (double chance, match result) | yes | `fetchers/epl.py` -- ESPN soccer API |
 | **cfb** | no, by design | yes (moneyline) | yes | `fetchers/cfb.py` -- cfbfastR CSVs + CFBD + ESPN |
+| **nba** | not yet | not yet: data layer only (step 1 of 3) | rules written, not registered | `fetchers/nba.py` -- ESPN scoreboard |
 | **mlb** | **stood down** | **stood down** | only what its frozen store still holds (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
 
 CFB has no `SPORT_FETCHERS` entry and no `cfb.stat_categories`, so it never
