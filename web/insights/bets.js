@@ -34,6 +34,100 @@
 
   function legKey(l) { return l.sport + ":" + l.id + ":" + l.side; }
 
+  // TODAY'S PROMO, typed by the reader, page session only. There is NO default
+  // promo anywhere: DraftKings' terms change by day and state (the owner,
+  // 2026-11-10: "3+ legs, +300 minimum", sometimes +400, sometimes a per-leg
+  // floor of -200 or -250, sometimes only +100 on the ticket). A blank field
+  // means that term is not part of today's offer.
+  var promo = { boost: "", legs: "", total: "", floor: "" };
+  var PROMO_FIELDS = [
+    ["boost", "Boost %", "50"],
+    ["legs", "Min legs", "3"],
+    ["total", "Min total odds", "+300"],
+    ["floor", "Shortest leg allowed", "-200"]
+  ];
+
+  // "+300", "-200", "−200" (a typographic minus, as phones insert) or "50%".
+  // Anything else is "not set" rather than zero -- a zero would silently turn
+  // a typo into a term.
+  function num(s) {
+    var t = String(s == null ? "" : s).replace(/\u2212/g, "-").replace(/[+%\s]/g, "");
+    if (t === "" || !/^-?\d+(\.\d+)?$/.test(t)) return null;
+    return parseFloat(t);
+  }
+  function toDecimal(american) {
+    if (american == null || american === 0) return null;
+    return 1 + (american > 0 ? american / 100 : 100 / Math.abs(american));
+  }
+  function toAmerican(dec) {
+    return dec >= 2 ? "+" + Math.round((dec - 1) * 100) : "\u2212" + Math.round(100 / (dec - 1));
+  }
+  function signed(american) {
+    return (american > 0 ? "+" : "\u2212") + Math.abs(american);
+  }
+  function pct(x, digits) {
+    var v = (100 * x).toFixed(digits == null ? 0 : digits);
+    return (x > 0 ? "+" : x < 0 ? "\u2212" : "") + v.replace("-", "") + "%";
+  }
+
+  // THE BOOST LINE. This repeats parlay_boost.evaluate for the legs picked;
+  // that module holds the formula's derivation and the evidence behind the
+  // "market chance" (the book's two-sided price with the vig removed -- NOT a
+  // model estimate), and tools/verify/run.js pins these numbers to it.
+  //   P = product of the legs' fair chances, D = product of their prices
+  //   unboosted value  P*D - 1                       (what the vig costs)
+  //   boosted value    P*(1 + (D-1)*(1+b)) - 1       (b multiplies WINNINGS)
+  //   break-even boost (1 - P*D) / (P*D - P)
+  function boostLines(legs, dec) {
+    var lines = [];
+    var reasons = [];
+    var minLegs = num(promo.legs), minTotal = toDecimal(num(promo.total)),
+        floor = num(promo.floor), floorDec = toDecimal(floor), boost = num(promo.boost);
+    if (minLegs != null && legs.length < minLegs) reasons.push("needs " + minLegs + "+ legs");
+    if (floorDec != null) legs.forEach(function (l) {
+      if (l.decimal < floorDec - 1e-9) reasons.push(l.side + " is shorter than " + signed(floor));
+    });
+    if (minTotal != null && dec < minTotal - 1e-9) reasons.push("pays under " + signed(num(promo.total)));
+    if (reasons.length) {
+      lines.push('<div class="bet-tray-promo is-out">Doesn\u2019t qualify: ' + esc(reasons.join("; ")) + "</div>");
+    } else if (minLegs != null || floorDec != null || minTotal != null) {
+      lines.push('<div class="bet-tray-promo is-in">Meets the promo terms entered.</div>');
+    }
+    if (!legs.every(function (l) { return typeof l.fair === "number"; })) {
+      lines.push('<div class="bet-tray-ev">No market chance: a leg has no two-sided price.</div>');
+      return lines.join("");
+    }
+    var win = legs.reduce(function (p, l) { return p * l.fair; }, 1);
+    var gross = win * dec;
+    var need = gross > win ? (1 - gross) / (gross - win) : null;
+    lines.push('<div class="bet-tray-ev">Market chance ' + (100 * win).toFixed(1) + "% \u00b7 unboosted " +
+      pct(gross - 1, 1) + " per $1" +
+      (need == null ? "" : need > 0 ? " \u00b7 breaks even at a " + Math.ceil(100 * need) + "% boost"
+                                    : " \u00b7 already worth its stake") + "</div>");
+    if (boost != null && boost >= 0) {
+      var boosted = 1 + (dec - 1) * (1 + boost / 100);
+      var ev = win * boosted - 1;
+      lines.push('<div class="bet-tray-ev bet-tray-boosted ' + (ev > 0 ? "is-pos" : "is-neg") + '">With a ' +
+        boost + "% boost: pays " + toAmerican(boosted) + ", worth " + pct(ev, 1) + " per $1</div>");
+    }
+    lines.push('<div class="bet-tray-fine">Chance is the book\u2019s own price with the vig removed, ' +
+      "legs treated as independent. Not a model estimate; each leg\u2019s chance is only known to " +
+      "about \u00b13.5 points.</div>");
+    return lines.join("");
+  }
+
+  function promoForm() {
+    return (
+      '<div class="bet-promo" role="group" aria-label="Today\u2019s boost terms">' +
+      PROMO_FIELDS.map(function (f) {
+        return '<label class="bet-promo-field"><span>' + esc(f[1]) + "</span>" +
+          '<input type="text" inputmode="text" autocomplete="off" class="bet-promo-input" data-promo="' +
+          f[0] + '" placeholder="' + esc(f[2]) + '" value="' + esc(promo[f[0]]) + '"></label>';
+      }).join("") +
+      "</div>"
+    );
+  }
+
   // The record at this price, in words. "No graded picks yet" is the honest
   // state for nearly every band until priced picks accumulate (capture began
   // 2026-09-24) -- it is shown rather than hidden so the absence of evidence
@@ -119,6 +213,7 @@
       "</div>" +
       '<div class="bet-tray-sub">' + esc(legs.map(function (l) { return l.side + " " + l.display; }).join(" · ")) +
       " — " + esc(est) + "</div>" +
+      boostLines(legs, dec) +
       "</div>"
     );
   }
@@ -161,6 +256,7 @@
       "counts once it reaches " + min + " picks. Scores don't see prices, so a high score is not value " +
       "by itself; both lists are sorted by score until a record is proven.</p>" +
       filters(board) +
+      promoForm() +
       tray(board) +
       section("Parlay pieces", "Priced " + line + " or shorter.", board.parlay, min) +
       section("Straight bets", "Priced longer than " + line + ".", board.straight, min) +
@@ -186,6 +282,30 @@
     render(lastData, lastRoot);
   }
   document.addEventListener("click", onClick);
+
+  // Promo fields commit on `change` (blur or Enter), not on every keystroke,
+  // and a change repaints ONLY THE TRAY, never the whole view. Both halves
+  // were found by the browser suite on 2026-11-10:
+  //   * typing a boost and then tapping "+" on a row blurs the field, which
+  //     fires `change` between the tap's mousedown and its click. Rebuilding
+  //     the rows there replaced the button under the finger and the tap was
+  //     silently lost -- the leg never joined the parlay;
+  //   * rebuilding the view also removes the focused field, and that removal
+  //     fires a second `change` from inside the render, which threw.
+  // Swapping the tray alone touches neither the rows nor the fields.
+  function onChange(e) {
+    if (!lastRoot || !lastRoot.contains(e.target)) return;
+    var input = e.target.closest && e.target.closest(".bet-promo-input");
+    if (!input) return;
+    promo[input.getAttribute("data-promo")] = input.value;
+    var board = lastData && lastData.insights && lastData.insights.bets;
+    var old = lastRoot.querySelector(".bet-tray");
+    if (!board || !old) return;
+    var holder = document.createElement("div");
+    holder.innerHTML = tray(board);
+    old.parentNode.replaceChild(holder.firstChild, old);
+  }
+  document.addEventListener("change", onChange);
 
   SP.bets = { render: render };
 })();

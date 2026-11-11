@@ -348,6 +348,24 @@
     // Williams, 2026-09-25), or a CFB lean built on a game or two with no
     // opponent adjustment (App State +440, same day). Sits ABOVE the Best
     // Angle so it is read first.
+    // THE MODEL'S PICK FOR THIS GAME (NFL so far), on every card whether or
+    // not a Best Angle cleared the bar -- the Signal Score names a side on
+    // fewer than half the slate (6 of 14 in week 10, 2026) and the owner wants
+    // a pick each week. The market's chance for the SAME side is printed
+    // beside it whenever the game is priced, because measured over 3,020
+    // games the model is the worse of the two (62.9% right against 66.4%):
+    // shown alone, "KC 63%" would read as an edge it does not have.
+    modelPick: function (m) {
+      if (!m || !m.side || typeof m.chance !== "number") return "";
+      var pct = function (x) { return Math.round(100 * x) + "%"; };
+      return '<div class="ba-model"><span class="ba-model-label">Model pick</span> ' +
+        '<span class="ba-model-side">' + esc(m.side) + " " + pct(m.chance) + "</span>" +
+        (typeof m.market_chance === "number"
+          ? ' <span class="ba-model-mkt">market ' + pct(m.market_chance) + "</span>" : "") +
+        '<span class="ba-model-fine">Price-blind estimate, refit weekly. It predicts winners; it has not beaten the market.</span>' +
+        "</div>";
+    },
+
     cautions: function (notes) {
       if (!notes || !notes.length) return "";
       return '<div class="avail-notes" role="note">' + notes.map(function (n) {
@@ -619,6 +637,7 @@
         Cards.categoryStrip(ui.signal_categories) +
         Cards.pulseScore(g.pulse) +
         section("Key Signals", Cards.keySignals(g.signals)) +
+        Cards.modelPick(g.model_pick) +
         Cards.cautions(g.caution_notes) +
         Cards.bestAngle(g.best_angle, away, home, g.price) +
         Cards.noBet(g.no_bet) +

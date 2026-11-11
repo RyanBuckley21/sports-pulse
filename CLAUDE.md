@@ -14,7 +14,7 @@ sessions.
 2. **The history in a fresh container is shallow.** Run `git fetch --unshallow origin main`
    before any `git log`/`blame` archaeology. Bot commits drown out everything
    else, so filter them:
-   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Capture NBA"`.
+   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Capture NBA|Refit NFL"`.
 3. **The why lives in the code comments and PR bodies**, not in docs. PRs #1–#61
    carry the measurements behind each decision. Before changing a threshold,
    weight, cron or guard, read the comment block above it. It almost always
@@ -31,6 +31,7 @@ python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
 python3 -m tools.verify.test_clv_first_seen      # write-once CLV anchor; report names every baseline, never pools them
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
+python3 -m tools.verify.test_nfl_winprob         # NFL win probability: no leakage, price-blind, refit refusal, card line + row note
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
 python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED); ESPN page limit; unabbreviated sides
 python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chance, loses match_result
@@ -43,13 +44,14 @@ python3 -m tools.verify.test_stand_down          # stood-down sport: grades what
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
+python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "218 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "240 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -508,6 +510,109 @@ picks) and the lists sort by score until one fills. NFL cards and Bets rows
 warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
+**The owner's betting constraints, measured (2026-11-10).** Singles: nothing
+shorter than −150. Parlays: only with a DraftKings profit boost, whose terms
+change daily. `nfl_odds_backtest.py` now reports both, on 1,245 NFL picks at
+closing prices (2015-2025; 658 out-of-sample):
+
+| | n | result |
+| --- | --- | --- |
+| win rate minus the no-vig closing probability, all picks | 1,245 | **+0.01pp [−2.5, +2.4]** |
+| singles, −150 or longer, ROI | 279 | −7.4% [−19.9, +5.7] (out-of-sample: −11.2% on 154) |
+| parlay legs, −300…−150, ROI | 457 | +0.7% [−5.7, +6.7] |
+
+**The model carries no information the closing price does not.** That agrees
+in sign with the live ledger at the singles floor (12-28, ROI −40.2%
+[−67.2, −12.0], measured the same day). So:
+
+- **Singles at −150 or longer have no measured edge.** Do not build a singles
+  selector on the current signals; the question is closed until a band's
+  interval clears zero on prices earlier than the close (none are stored for
+  NFL history; `odds_first_seen` is the forward record).
+- **Boosted parlays are priced from the market, not the model**
+  (`parlay_boost.py`, the Bets tray). A leg's chance is its two-sided price
+  with the vig removed; the Signal Score is not consulted. The value comes
+  from the boost: three legs at +312 lose 12.3% unboosted and are worth +20.9%
+  at a 50% boost. The no-vig method was measured on 5,788 NFL sides
+  (`tools/devig_calibration.py`): no band is measurably off, and each is only
+  known to about ±3.5pp, which the tray says beside every value.
+- **There is no default promo.** Every term is typed by the reader.
+
+Open on the boost work:
+- **Predicted vs realised is not tracked.** Nothing logs which boosted tickets
+  were priced or taken, so the independence assumption across games has never
+  been checked against results. This needs a log before it can be measured.
+- **The no-vig chance is measured on NFL closing lines only.** CFB and NBA are
+  assumed alike. NBA can be checked once `data/nba_prices.jsonl` has a season.
+- **No stake cap is modelled.** Boosts cap the stake, so the percentage is
+  per dollar staked, not a dollar value.
+- **The tray prices the board's leans only** (one per game, the side the
+  model named). Since the chance is the market's, any priced side could be a
+  leg; offering both sides is a design change, not yet made.
+
+**NFL win probability: a predictor that learns, and is not an edge
+(2026-11-11).** What the owner asked for (2026-11-10): bets identified each
+day as singles with parlay pieces highlighted, NFL predictors every week, and
+models that are "graded, learn from those grades, and adjust". `nfl_winprob.py`
+is the learning part: a price-blind logistic model on the builder's own seven
+inputs, **refit weekly on every completed game** (`refit-nfl-winprob.yml`,
+Tuesday and Wednesday), with its walk-forward grade stored beside the weights
+in `data/nfl_winprob.json`. Every NFL game now carries `win_prob` (chance for
+each side plus the raw features) in the graded store, a "Model pick" line on
+its card, and the Signal Score is untouched.
+
+Measured before it was built (`python3 nfl_winprob.py --audit`; 4,297 decided
+games 2010 to week 10 of 2026, walk-forward 2015-2026 on 3,020):
+
+| | accuracy | log loss |
+| --- | --- | --- |
+| always-home | 54.4% | 0.690 |
+| the model | 62.9% | 0.647 |
+| closing price | 66.4% | 0.613 |
+
+- **No input predicts what the price left over.** Each of the seven correlates
+  with results (+0.03 to +0.25) and with the price's residual at ~0; only
+  defensive EPA's interval excludes zero (−0.04 [−0.07, −0.01]).
+- **Model minus price, log loss: +0.034 [+0.026, +0.043].** Stacked on the
+  price it adds nothing (−0.0004 [−0.0012, +0.0004]).
+- **Where it disagrees with the price, the price is right.** A side the model
+  rates 5+ points above the no-vig price wins 2.4 points less often than
+  priced [−4.5, −0.3], n=1,829 (10 points: −2.1 [−5.0, +0.9]; 15: −3.5).
+  Singles at −150 or longer on sides it likes by 10+ points return −10.4%
+  [−20.3, +0.0], against −4.3% for every side in that range.
+- **This season so far** (by fits that never saw it): 87 of 135, 64.4%,
+  against the price's 68.1% and always-home's 49.6%.
+
+So: **do not present the model's chance as value.** The card prints the
+market's chance for the same side beside it and says in the line that it has
+not beaten the market. `bet_board` adds a caution to a row when the model is
+5+ points above the market; that evidence is thin and it is a note, never a
+filter or a sort key.
+
+Rules for working on it:
+- **Improve it by adding information, not by tuning.** The L2 penalty is flat
+  from 0.01 to 100 (0.6466 to 0.6456). A change counts only if walk-forward
+  log loss improves with an interval, on the same games.
+- **The weights are data, not config.** They live in `data/nfl_winprob.json`
+  with their scorecard, are written only by `--fit`, and `--fit` refuses a fit
+  that is no better than always-home or built on fewer games than the file's.
+- **It is price-blind (invariant 1).** Prices appear only in `--audit` and at
+  display.
+
+Open on it:
+- **The refit job has never run in Actions.** After merge, run it once by hand
+  and read its log line; a Tuesday that says "no new games" every week means
+  nflverse publishes later than assumed and the cron should move.
+- **The model's picks are not in the ledger.** The weekly scorecard grades
+  every game, but `signal_report` still grades only standouts. A per-game
+  graded row for the model's pick is the next step if the owner wants the
+  record on the Model Review tab.
+- **NFL only.** CFB has no price history to audit against and CFBD revises its
+  inputs; NBA has no prices yet. Same shape applies once either can be graded.
+- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) is not
+  scoped: asked what it means (player-prop parlays from the leaderboards, or
+  something else) before building.
+
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
 −10.3%**. It is the first sport past the 30-pick gate, and it is the bettability
@@ -572,6 +677,7 @@ Open, in rough priority:
   against nflverse's injury history first.
 - **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
   nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
+  (Its owner-band report, added 2026-11-10, is that evidence in summary.)
 - **EPL has no captured prices**, so no Bets rows.
 - ~~CFB stats are not adjusted for opponent strength~~ **Closed 2026-09-26:**
   production CFB form is `fetchers.cfb.build_team_form_adjusted` at

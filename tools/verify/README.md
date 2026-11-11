@@ -692,6 +692,66 @@ Sabotage-checked seventeen ways, source byte-identical afterwards: 2 / 2 / 1 /
 in the suite's docstring). Two cuts first crashed the suite instead of
 failing checks; the lookups were made tolerant.
 
+python3 -m tools.verify.test_parlay_boost     # from the repo root
+```
+
+**`test_parlay_boost`** (added 2026-11-10, 51 checks) pins what the Bets tray
+says a profit boost is worth (`parlay_boost.py`, and `fair` on each
+`bet_board` leg). Every way the number can be wrong reads as a reason to bet:
+
+- **The boost multiplies winnings, not the payout:** +312 at 50% pays +468.
+- **The chance is the market's, vig removed,** from both sides' prices. A
+  one-sided price gives none.
+- **Vig compounds:** the break-even boost rises with each leg.
+- **Promo terms are hard lines:** a −200 floor admits −200 and refuses −201;
+  a +300 minimum admits +300; every unmet term is listed.
+- **No chance beats a wrong one:** same-game legs and legs without a market
+  chance get no probability and no value.
+- **No default promo and no score in the price.**
+
+The board is the real `bets_fixture.json`. Sabotage-checked thirteen ways:
+5 / 8 / 2 / 2 / 6 / 1 / 1 / 1 / 1 / 2 / 1 failures in `parlay_boost.py`, and
+8 / 9 for the two `bet_board` cuts.
+
+The browser suite's `bets` group (now 235 checks in all, was 218) pins the
+page's numbers to that module on the same board, plus two bugs it found while
+being written: a promo change that rebuilt the rows swallowed a tap made in
+the same gesture, and the nested render threw. Sabotaged six ways: payout
+multiplied (3 fail), floor reversed (3), whole-view re-render on a promo
+change (1, the lost tap), a non-number read as zero (1), break-evens used as
+the chance (4), break-even boost rounded down (1). The non-number check first
+**passed under sabotage** (it typed into the floor field, where a zero is
+inert) and was moved to the boost field.
+
+```bash
+python3 -m tools.verify.test_nfl_winprob      # from the repo root
+```
+
+**`test_nfl_winprob`** (added 2026-11-11, 63 checks) pins the NFL
+win-probability model (`nfl_winprob.py`), which a weekly job refits, plus the
+card line and Bets row note built from it. Each failure it guards is silent:
+
+- **No leakage:** flipping every result in the tested season leaves that
+  season's predictions unchanged (and flipping an earlier one moves them).
+- **Price-blind:** removing or inverting every market number on the training
+  rows leaves the fit identical.
+- **Direction:** home minus away; a better home team, an away QB out and a
+  true home venue each raise the home chance.
+- **Unknown is not even:** a missing gap is centred and flagged in its own
+  column.
+- **The fit is the optimum** (penalised gradient zero) and deterministic.
+- **A bad refit is refused:** no better than always-home, or built on fewer
+  games than the model on file. A quiet week rewrites nothing.
+- **A missing model costs the probability, not the slate,** and the raw
+  features are still recorded.
+- **The row note is one-sided:** model at least 5 points above the market.
+
+Fixture: `nfl_winprob_fixture.json`, 1,355 real decided games 2021-2025
+captured through the production builder. Sabotage-checked 22 ways (table in
+the suite's docstring); three of its own checks were wrong when first written
+and are recorded there. The browser suite (now 240 checks) pins the card's
+model line and was sabotaged three ways (1 / 1 / 4 failures).
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

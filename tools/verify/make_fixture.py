@@ -218,6 +218,10 @@ def _with_signals(game, i):
         # on nflverse's 2026-09-25 injury report (see test_caution_notes).
         game["caution_notes"] = [
             "CHI QB Caleb Williams: did not practice (hamstring) (week 3 injury report)"]
+        # The model's pick line, shaped exactly as nfl_winprob.display returns
+        # it (test_nfl_winprob pins that shape; this pins the renderer).
+        game["model_pick"] = {"side": home, "chance": 0.6312, "market_chance": 0.5874,
+                              "fitted_at": "2026-11-10"}
     # THE THIRD GAME IS SUPPRESSED FOR PRICE, and it keeps its Signal Scores.
     # That combination is the whole point of the bettability filter: the model
     # still has an opinion, it just is not backable at -8000, and a card that
