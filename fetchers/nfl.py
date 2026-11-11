@@ -769,6 +769,19 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         neutral_site=(g.get("location") or "Home") != "Home",
     )
     betting = nfl_signals.score_game(config, "nfl", inputs, availability=availability)
+    # A calibrated, price-blind chance for EVERY game, beside the Signal Score
+    # and never mixed into it (added 2026-11-10; see nfl_winprob's docstring
+    # for what it is and, measured, what it is not). Built from the same
+    # `inputs` the score just read, so the two can never describe different
+    # games. Wrapped because it is an addition to a slate that already scores:
+    # a failure here must cost this one field.
+    try:
+        import nfl_winprob
+        win_prob = nfl_winprob.game_block(inputs, availability)
+    except Exception as exc:  # noqa: BLE001
+        print("nfl: win_prob unavailable for {} ({}: {})".format(
+            g.get("game_id"), type(exc).__name__, str(exc)[:100]), file=sys.stderr)
+        win_prob = None
     # Display only -- see qb_availability_note. Never reaches score_game.
     caution_notes = [n for n in (
         qb_availability_note(injuries, away_qb_id, away_qb_name, away, week),
@@ -791,6 +804,7 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         }
 
     return {
+        "win_prob": win_prob,
         "gamePk": g["game_id"],  # generic "id" field name, reused across sports -- see generate_insights._build_games_section
         "sport": "nfl",
         # nflverse's schedule has no in-progress state (it is only ever

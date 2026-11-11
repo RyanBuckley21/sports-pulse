@@ -659,6 +659,35 @@ the chance (4), break-even boost rounded down (1). The non-number check first
 **passed under sabotage** (it typed into the floor field, where a zero is
 inert) and was moved to the boost field.
 
+```bash
+python3 -m tools.verify.test_nfl_winprob      # from the repo root
+```
+
+**`test_nfl_winprob`** (added 2026-11-11, 63 checks) pins the NFL
+win-probability model (`nfl_winprob.py`), which a weekly job refits, plus the
+card line and Bets row note built from it. Each failure it guards is silent:
+
+- **No leakage:** flipping every result in the tested season leaves that
+  season's predictions unchanged (and flipping an earlier one moves them).
+- **Price-blind:** removing or inverting every market number on the training
+  rows leaves the fit identical.
+- **Direction:** home minus away; a better home team, an away QB out and a
+  true home venue each raise the home chance.
+- **Unknown is not even:** a missing gap is centred and flagged in its own
+  column.
+- **The fit is the optimum** (penalised gradient zero) and deterministic.
+- **A bad refit is refused:** no better than always-home, or built on fewer
+  games than the model on file. A quiet week rewrites nothing.
+- **A missing model costs the probability, not the slate,** and the raw
+  features are still recorded.
+- **The row note is one-sided:** model at least 5 points above the market.
+
+Fixture: `nfl_winprob_fixture.json`, 1,355 real decided games 2021-2025
+captured through the production builder. Sabotage-checked 22 ways (table in
+the suite's docstring); three of its own checks were wrong when first written
+and are recorded there. The browser suite (now 240 checks) pins the card's
+model line and was sabotaged three ways (1 / 1 / 4 failures).
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

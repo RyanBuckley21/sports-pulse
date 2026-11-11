@@ -192,6 +192,7 @@ change touches locally first anyway.
 | Workflow | When (UTC) | What | Writes |
 | --- | --- | --- | --- |
 | `daily-stats-and-grade.yml` | 10:00, 12:00, 13:40, 15:40 | **Grades first** (MLB strict; EPL, CFB and NFL `continue-on-error`), **then** regenerates | ledger, `insights*.json`, `boxscores.json` |
+| `refit-nfl-winprob.yml` | Tue + Wed 11:37 | **The learning step.** Refits the NFL win-probability model on every completed game since 2010, re-grades it walk-forward, and commits the weights with their scorecard. Refuses a fit that is no better than always-home; rewrites nothing in a week with no new games | `data/nfl_winprob.json` |
 | `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
@@ -219,6 +220,7 @@ betting_signals.py       MLB Signal Scores     {nfl,cfb,epl}_signals.py  other s
 signal_core.py           shared lean math      pulse.py                  Pulse band ladder
 implied_total.py         MLB run estimate (display + estimate-graded totals)
 espn_odds.py             price capture, bettability filter, CLV
+nfl_winprob.py           NFL win probability: price-blind, refit weekly from results, graded against the closing price
 parlay_boost.py          boosted-parlay arithmetic: no-vig chance, promo terms, value of a profit boost
 espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ranges 2026-09-15)
 slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward window
@@ -249,6 +251,12 @@ docs/                    schema, league how-to, MLB API field maps, dev notes
 - [`CLAUDE.md`](CLAUDE.md): working agreement for AI coding sessions in this repo
 
 ## Honest caveats
+
+**The NFL "Model pick" is a prediction, not a bet.** Every NFL card shows the
+model's pick and chance with the market's chance for the same side beside it.
+The model is refit each week from results and is right about 63% of the time;
+the closing price is right about 66%. Where the two disagree, the price has
+been the better guide.
 
 **Singles have no measured edge; boosted parlays are priced from the market.**
 Over 1,245 NFL picks at closing prices the model's win rate minus the no-vig

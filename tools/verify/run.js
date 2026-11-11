@@ -408,6 +408,16 @@ async function reEntryChecks(browser, base) {
   ok("  and what it would have needed", /99%/.test(nb[0] || ""), nb[0] || "none");
   ok("  and the model's own ceiling it passed", /91%/.test(nb[0] || ""), nb[0] || "none");
   ok("  while still showing the score the model gave it", /91/.test(nb[0] || ""), nb[0] || "none");
+  // THE MODEL'S PICK LINE (2026-11-11): on the one fixture game that carries
+  // a fitted chance, with the market's chance for the same side beside it and
+  // the "has not beaten the market" line in the text itself, not a tooltip.
+  const mp = await p.$$eval("#insightsRoot .ba-model", (n) => n.map((x) => x.textContent.replace(/\s+/g, " ")));
+  ok("the model's pick renders once, on the game that has one", mp.length === 1, mp.join(" | ") || "none");
+  ok("  with its side and chance, rounded to a whole percent", /Model pick \S+ 63%/.test(mp[0] || ""), mp[0] || "none");
+  ok("  the market's chance for the same side beside it", /market 59%/.test(mp[0] || ""), mp[0] || "none");
+  ok("  and the caveat in the line itself", /has not beaten the market/.test(mp[0] || ""), mp[0] || "none");
+  ok("  a game with no fitted chance draws no model line (and no empty box)",
+     (await p.$$eval("#insightsRoot .ba-model", (n) => n.filter((x) => !x.textContent.trim()).length)) === 0);
   // WHO MIGHT NOT PLAY, above the pick it could undo (2026-09-25: CHI's QB
   // missed every practice while CHI was the model's side).
   const avail = await p.$$eval("#insightsRoot .avail-note", (n) => n.map((x) => x.textContent));

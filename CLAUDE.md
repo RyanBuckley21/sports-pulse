@@ -14,7 +14,7 @@ sessions.
 2. **The history in a fresh container is shallow.** Run `git fetch --unshallow origin main`
    before any `git log`/`blame` archaeology. Bot commits drown out everything
    else, so filter them:
-   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB"`.
+   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Refit NFL"`.
 3. **The why lives in the code comments and PR bodies**, not in docs. PRs #1–#61
    carry the measurements behind each decision. Before changing a threshold,
    weight, cron or guard, read the comment block above it. It almost always
@@ -31,6 +31,7 @@ python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
 python3 -m tools.verify.test_clv_first_seen      # write-once CLV anchor; report names every baseline, never pools them
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
+python3 -m tools.verify.test_nfl_winprob         # NFL win probability: no leakage, price-blind, refit refusal, card line + row note
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
 python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED); ESPN page limit; unabbreviated sides
 python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chance, loses match_result
@@ -48,7 +49,7 @@ python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (p
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "235 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "240 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -440,6 +441,69 @@ Open on the boost work:
 - **The tray prices the board's leans only** (one per game, the side the
   model named). Since the chance is the market's, any priced side could be a
   leg; offering both sides is a design change, not yet made.
+
+**NFL win probability: a predictor that learns, and is not an edge
+(2026-11-11).** What the owner asked for (2026-11-10): bets identified each
+day as singles with parlay pieces highlighted, NFL predictors every week, and
+models that are "graded, learn from those grades, and adjust". `nfl_winprob.py`
+is the learning part: a price-blind logistic model on the builder's own seven
+inputs, **refit weekly on every completed game** (`refit-nfl-winprob.yml`,
+Tuesday and Wednesday), with its walk-forward grade stored beside the weights
+in `data/nfl_winprob.json`. Every NFL game now carries `win_prob` (chance for
+each side plus the raw features) in the graded store, a "Model pick" line on
+its card, and the Signal Score is untouched.
+
+Measured before it was built (`python3 nfl_winprob.py --audit`; 4,297 decided
+games 2010 to week 10 of 2026, walk-forward 2015-2026 on 3,020):
+
+| | accuracy | log loss |
+| --- | --- | --- |
+| always-home | 54.4% | 0.690 |
+| the model | 62.9% | 0.647 |
+| closing price | 66.4% | 0.613 |
+
+- **No input predicts what the price left over.** Each of the seven correlates
+  with results (+0.03 to +0.25) and with the price's residual at ~0; only
+  defensive EPA's interval excludes zero (−0.04 [−0.07, −0.01]).
+- **Model minus price, log loss: +0.034 [+0.026, +0.043].** Stacked on the
+  price it adds nothing (−0.0004 [−0.0012, +0.0004]).
+- **Where it disagrees with the price, the price is right.** A side the model
+  rates 5+ points above the no-vig price wins 2.4 points less often than
+  priced [−4.5, −0.3], n=1,829 (10 points: −2.1 [−5.0, +0.9]; 15: −3.5).
+  Singles at −150 or longer on sides it likes by 10+ points return −10.4%
+  [−20.3, +0.0], against −4.3% for every side in that range.
+- **This season so far** (by fits that never saw it): 87 of 135, 64.4%,
+  against the price's 68.1% and always-home's 49.6%.
+
+So: **do not present the model's chance as value.** The card prints the
+market's chance for the same side beside it and says in the line that it has
+not beaten the market. `bet_board` adds a caution to a row when the model is
+5+ points above the market; that evidence is thin and it is a note, never a
+filter or a sort key.
+
+Rules for working on it:
+- **Improve it by adding information, not by tuning.** The L2 penalty is flat
+  from 0.01 to 100 (0.6466 to 0.6456). A change counts only if walk-forward
+  log loss improves with an interval, on the same games.
+- **The weights are data, not config.** They live in `data/nfl_winprob.json`
+  with their scorecard, are written only by `--fit`, and `--fit` refuses a fit
+  that is no better than always-home or built on fewer games than the file's.
+- **It is price-blind (invariant 1).** Prices appear only in `--audit` and at
+  display.
+
+Open on it:
+- **The refit job has never run in Actions.** After merge, run it once by hand
+  and read its log line; a Tuesday that says "no new games" every week means
+  nflverse publishes later than assumed and the cron should move.
+- **The model's picks are not in the ledger.** The weekly scorecard grades
+  every game, but `signal_report` still grades only standouts. A per-game
+  graded row for the model's pick is the next step if the owner wants the
+  record on the Model Review tab.
+- **NFL only.** CFB has no price history to audit against and CFBD revises its
+  inputs; NBA has no prices yet. Same shape applies once either can be graded.
+- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) is not
+  scoped: asked what it means (player-prop parlays from the leaderboards, or
+  something else) before building.
 
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
