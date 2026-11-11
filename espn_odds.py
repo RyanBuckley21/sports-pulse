@@ -483,7 +483,8 @@ def apply_bettability(entities, cap, sport=""):
         cut += 1
     if cut:
         print("insights(games): {} bettability -- {} pick{} suppressed for price "
-              "(needs more than {:.0%}; the model's best measured band is 90.9%). "
+              "(needs more than {:.0%}, this sport's cap: the best hit rate its model "
+              "has measured -- see max_break_even in config.yaml). "
               "Their Signal Scores still render; they are no longer bets."
               .format(sport, cut, "" if cut == 1 else "s", cap))
     return cut

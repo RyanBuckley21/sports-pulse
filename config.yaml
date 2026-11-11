@@ -113,10 +113,12 @@ active_sports: [nfl]
 # partition freezes as the last pre-flip run left it; the grader settles any
 # pick that partition still holds and is otherwise silent (test_stand_down).
 #
-# nba is REGISTERED (builder, grading adapter, measured weights) but not listed
-# yet: it goes in once its builder has run once against the live feed, which
-# the build sandbox cannot reach (docs/leagues.md: register, then activate).
-active_game_sports: [nfl, cfb]
+# nba ACTIVE since 2026-11-11, picks only (it has no leaderboards and must not
+# be added to active_sports). Registered in PR #75; activated after
+# check-nba-builder.yml ran the builder against the live feed that evening
+# (run 43122746230): 10 games, 10 priced, every lean on this season's margin,
+# 4 over the bar, 2 of those withheld for price (-1180 and -840).
+active_game_sports: [nfl, cfb, nba]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --

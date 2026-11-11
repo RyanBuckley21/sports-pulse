@@ -355,7 +355,18 @@ What followed from it (kept for the record):
   595 picks and 76 dates). That inversion remains the most interesting
   unexplained thing here, and it is a data question, not a tuning one.
 
-### Add NBA — steps 1 and 2 DONE (2026-10-31, 2026-11-11); step 3 is the gate
+### Add NBA — DONE: picks live since 2026-11-11 (no leaderboards)
+
+**Activated the same evening** (`active_game_sports: [nfl, cfb, nba]`), after
+`check-nba-builder.yml` ran the builder against the live feed (run
+43122746230): 10 games, all priced, every lean on this season's margin, 4 over
+the bar and 2 of those withheld for price (−1180, −840). The two picks that
+shipped were NY −205 and **MEM +136 against a −161 favourite** -- a lean the
+market does not share. In the NFL, where it can be measured, that is the kind
+of pick that underperforms its price; here it most likely means an injury the
+model cannot see. Watch those first when the record fills.
+
+The grading alarm watches NBA from 2026-11-12, its first stored slate.
 
 **Step 2 ran on 2026-11-11** (owner: "Put NBA on there"). `nba_backtest.py
 --fit` fitted on 2023-24 and 2024-25 and tested once on 2025-26;

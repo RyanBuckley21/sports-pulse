@@ -10,6 +10,7 @@ it's designed to run on a GitHub Actions runner instead.
 Writes:
   assets/logos/mlb/{team_id}.png
   assets/logos/nfl/{abbr}.png
+  assets/logos/nba/{abbr}.png
   assets/logos/epl/{slug}.png
   assets/logos/cfb/{slug}.png
   assets/logos/worldcup/{slug}.png
@@ -288,6 +289,44 @@ def fetch_worldcup_logos(session, manifest):
             print(f"  FAILED: {name} ({logo_url}): {e}")
 
 
+def fetch_nba_logos(session, manifest):
+    """Cache the 30 NBA club logos from ESPN's team list (added 2026-11-11,
+    when NBA picks went live without them).
+
+    Keyed by ESPN's own abbreviation, which is what every NBA row in the
+    pipeline carries -- fetchers/nba reads the same feed, so unlike NFL there
+    is nothing to translate (team_meta.NBA_TEAMS uses the same 30 codes: GS,
+    NO, NY, SA, UTAH, WSH and so on)."""
+    data = session.get(
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams",
+        timeout=REQUEST_TIMEOUT,
+    ).json()
+
+    out_dir = os.path.join(LOGOS_DIR, "nba")
+    os.makedirs(out_dir, exist_ok=True)
+    manifest.setdefault("nba", {})
+
+    entries = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
+    for entry in entries:
+        team = entry.get("team", {})
+        abbr = team.get("abbreviation")
+        logos = team.get("logos") or []
+        if not abbr or not logos:
+            print(f"  FAILED: {team.get('displayName')} (no abbreviation/logo in payload)")
+            continue
+        logo_url = logos[0].get("href")
+        dest_path = os.path.join(out_dir, f"{abbr}.png")
+        try:
+            resp = session.get(logo_url, timeout=REQUEST_TIMEOUT)
+            resp.raise_for_status()
+            img = Image.open(io.BytesIO(resp.content))
+            pad_to_square(img, LOGO_SIZE).save(dest_path, "PNG", optimize=True)
+            manifest["nba"][abbr] = f"logos/nba/{abbr}.png"
+            print(f"  ok: {team.get('displayName')} [{abbr}] -> {dest_path}")
+        except Exception as e:
+            print(f"  FAILED: {team.get('displayName')} ({logo_url}): {e}")
+
+
 def main():
     manifest = {}
     if os.path.exists(MANIFEST_PATH):
@@ -304,6 +343,9 @@ def main():
 
     print("Fetching NFL team logos...")
     fetch_nfl_logos(session, manifest)
+
+    print("Fetching NBA team logos...")
+    fetch_nba_logos(session, manifest)
 
     print("Fetching Premier League club crests...")
     fetch_epl_logos(session, manifest)
