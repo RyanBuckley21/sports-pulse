@@ -887,6 +887,18 @@ async function betsChecks(browser, base) {
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(500);
   await goRoute(p, "#/bets");
+  // THE TAB OPENS ON NFL (owner, 2026-11-11) when the board has NFL leans:
+  // the fixture's three (KC and BUF as parlay pieces, CAR straight).
+  const opening = await p.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
+  ok("bets: opens on the NFL filter", (await p.$eval('.bet-filter[aria-pressed="true"]',
+     (x) => x.getAttribute("data-bet-sport"))) === "nfl");
+  ok("  showing only NFL leans (2 parlay pieces, 1 straight)",
+     /^Parlay pieces 2$/.test(opening[0] || "") && /^Straight bets 1$/.test(opening[1] || ""), opening.join(" | "));
+  ok("  every row on screen is an NFL row",
+     (await p.$$eval("#insightsRoot .bet", (n) => n.every((x) => /^nfl:/.test(x.getAttribute("data-key"))))));
+  // The rest of this group reads the whole board, so widen to All -- and the
+  // reader's own choice must then stick through every later re-render.
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(100);
   const heads = await p.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
   ok("bets: parlay pieces and straight bets, in that order",
      /^Parlay pieces 5$/.test(heads[0] || "") && /^Straight bets 3$/.test(heads[1] || ""), heads.join(" | "));
@@ -927,6 +939,31 @@ async function betsChecks(browser, base) {
      (await p.evaluate(() => SP.sport && SP.sport.get && SP.sport.get())) === league, league);
   await p.click(".bet-clear"); await p.waitForTimeout(100);
   ok("clear empties the tray", /Tap \+/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(80);
+  await p.click('.bet[data-key*=":CWS"] .bet-add'); await p.waitForTimeout(80);
+  ok("a chosen filter is never snapped back to the default by a re-render",
+     (await p.$eval('.bet-filter[aria-pressed="true"]', (x) => x.getAttribute("data-bet-sport"))) === "all");
+  await p.click(".bet-clear"); await p.waitForTimeout(80);
+  // A board with NO NFL leans must open on All, not on an empty NFL list: a
+  // fresh page (the default is settled once per page) served the same
+  // data.json with its NFL rows taken out.
+  const q = await newPage(browser);
+  await q.route("**/data.json*", async (route) => {
+    const data = JSON.parse(fs.readFileSync(path.join(WEB, "data.json"), "utf8"));
+    const b = data.insights.bets;
+    b.parlay = b.parlay.filter((l) => l.sport !== "nfl");
+    b.straight = b.straight.filter((l) => l.sport !== "nfl");
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await q.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await q.waitForTimeout(500);
+  await goRoute(q, "#/bets");
+  ok("no NFL leans on the board: the tab opens on All",
+     (await q.$eval('.bet-filter[aria-pressed="true"]', (x) => x.getAttribute("data-bet-sport"))) === "all");
+  ok("  with every lean showing, not an empty list",
+     (await q.$$eval("#insightsRoot .bet", (n) => n.length)) === 5 &&
+     !(await q.$('.bet-filter[data-bet-sport="nfl"]')));
+  await q.close();
   const wide = await p.evaluate(() => ({
     doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     rows: [].filter.call(document.querySelectorAll(".bet"), (r) => r.scrollWidth > r.clientWidth + 1).length,

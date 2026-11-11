@@ -4,8 +4,8 @@ The site is multi-sport. Which sports actually build and appear is controlled
 by two lists in `config.yaml`, one per pipeline:
 
 ```yaml
-active_sports: [epl, nfl]            # leaderboards ("Who's Hot")
-active_game_sports: [epl, cfb, nfl]  # scored per-game picks (absent -> falls back to active_sports)
+active_sports: [nfl, epl]            # leaderboards ("Who's Hot")
+active_game_sports: [nfl, cfb, epl]  # scored per-game picks (absent -> falls back to active_sports)
 ```
 
 Only keys listed in `active_sports` are fetched into `data.json`'s leaderboard

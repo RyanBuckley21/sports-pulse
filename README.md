@@ -33,8 +33,8 @@ Controlled by two independent keys in `config.yaml`:
 
 | Key | Pipeline | Current value |
 | --- | --- | --- |
-| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[epl, nfl]` |
-| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[epl, cfb, nfl]` |
+| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl, epl]` (first is the default league) |
+| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[nfl, cfb, epl]` |
 
 | Sport | Leaderboards | Games / Teams / picks | Graded | Data sources |
 | --- | --- | --- | --- | --- |

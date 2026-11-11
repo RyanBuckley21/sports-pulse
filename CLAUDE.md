@@ -47,7 +47,7 @@ python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (p
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "218 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "224 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -246,7 +246,9 @@ already known about each, so a new session does not re-derive it:
 
 **Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
 last-10-games boards would show a frozen September snapshot all winter, and it
-was the site's default sport (now EPL). The few World Series picks left could
+was the site's default sport (EPL after it; **NFL since 2026-11-11**, by
+putting `nfl` first in both `active_sports` and `active_game_sports` -- list
+order is the default, and out of season the next league leads). The few World Series picks left could
 add nothing to the record's open question. The mechanics and the re-activation
 steps are in `docs/leagues.md` ("Standing a sport down"). The parts that are
 easy to get wrong:
@@ -399,6 +401,10 @@ capture began 2026-09-24, so every price band starts unproven (under 30 graded
 picks) and the lists sort by score until one fills. NFL cards and Bets rows
 warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
+
+**The Bets tab opens on its NFL filter** when the board has NFL leans, and on
+All otherwise (2026-11-11, owner's request; `bets.js` `DEFAULT_SPORT`). The
+reader's own tap is never overridden by a re-render.
 
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
