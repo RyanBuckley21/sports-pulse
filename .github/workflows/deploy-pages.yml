@@ -233,6 +233,7 @@ jobs:
               "nfl": (espn.format("football/nfl"), lambda j: len(j.get("events") or [])),
               "cfb": (espn.format("football/college-football") + "&groups=80&limit=500",
                       lambda j: len(j.get("events") or [])),
+              "nba": (espn.format("basketball/nba"), lambda j: len(j.get("events") or [])),
               # epl LEFT OUT since 2026-11-11: stood down (config.yaml), and a
               # stood-down sport writes no ledger row on a day its frozen store
               # does not cover, so watching it here would fire on every
@@ -267,7 +268,16 @@ jobs:
                       if attempt == 0:
                           time.sleep(3)
               raise err
+          # A sport is only watched from the first date it could have been
+          # graded. NBA went live on the evening of 2026-11-11, after that day's
+          # last grading run, so its first stored slate is 11-12; without this
+          # the alarm would report 11-10 and 11-11 as "missed entirely" for a
+          # sport that did not exist on the site yet.
+          SINCE = {"nba": "2026-11-12"}
           for sport, (url, count) in SPORTS.items():
+              if d < SINCE.get(sport, ""):
+                  print("signal grading %s for %s: not live until %s -- not watched" % (sport, d, SINCE[sport]))
+                  continue
               if rows[sport]:
                   print("signal grading %s for %s: %d ledger row(s) on file -- OK" % (sport, d, rows[sport]))
                   continue

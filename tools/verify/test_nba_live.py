@@ -386,6 +386,8 @@ ok("NBA has a games builder, a grading adapter and a name",
 ad = signal_report.SPORT_ADAPTERS["nba"]
 ok("  the adapter has every key the grader calls, and defers games not on the graded date",
    set(ad) == set(signal_report.SPORT_ADAPTERS["nfl"]) and ad["store_spans_dates"] is True, sorted(ad))
+ok("  its picks are live: nba is in active_game_sports",
+   "nba" in (CONFIG.get("active_game_sports") or []))
 ok("  it has NO leaderboards: no stats fetcher, and not in active_sports",
    "nba" not in generate_stats.SPORT_FETCHERS and "nba" not in (CONFIG.get("active_sports") or []))
 pick = {"away_abbr": "PHI", "home_abbr": "CHA", "side": "CHA", "bet_type": "moneyline"}
