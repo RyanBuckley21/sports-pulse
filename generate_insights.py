@@ -35,7 +35,7 @@ import slate_clock
 
 import pulse
 import training_capture
-from fetchers import cfb, epl, mlb, nfl
+from fetchers import cfb, epl, mlb, nba, nfl
 
 # Stamped onto every player store entry as `template_version`. It used to mean
 # "which prompt produced this text", and bumping it forced regeneration; with the
@@ -95,7 +95,11 @@ BOXSCORE_CACHE_PATH = "data/boxscores.json"
 # why the two were split and how `active_game_sports` falls back when absent.
 # Publishing a sport's leaderboards no longer switches on its betting markets.
 GAME_BUILDERS = {"mlb": mlb.build_game_entities, "nfl": nfl.build_game_entities,
-                 "cfb": cfb.build_game_entities, "epl": epl.build_game_entities}
+                 "cfb": cfb.build_game_entities, "epl": epl.build_game_entities,
+                 # NBA since 2026-11-11: one date's games, scored on points
+                 # margin (nba_signals.py). Registered here; it builds only
+                 # once `nba` is in active_game_sports.
+                 "nba": nba.build_game_entities}
 # Only the top-N players by pulse score get insights (store entries and rendered
 # cards). Caps merge work and keeps the committed store bounded -- stale entries
 # below the cap are pruned on each run.

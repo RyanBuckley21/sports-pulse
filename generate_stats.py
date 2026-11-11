@@ -46,7 +46,7 @@ SPORT_FETCHERS = {
 }
 
 SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "epl": "Premier League",
-                "cfb": "College Football"}
+                "cfb": "College Football", "nba": "NBA"}
 
 # Which categories the redesigned UI actually surfaces, and in what order
 # the stat chips appear.

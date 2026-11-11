@@ -39,6 +39,7 @@ python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
 python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
+python3 -m tools.verify.test_nba_live            # NBA picks: site scores what the backtest measured, config is the fit, builder
 python3 -m tools.verify.test_nba_price_capture   # NBA price capture: pre-game only, change-only rows + run row, append-only
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
@@ -253,6 +254,11 @@ already known about each, so a new session does not re-derive it:
 
 ### Stand MLB down — DONE 2026-10-25 (this branch)
 
+**EPL was stood down the same way on 2026-11-11** (owner: "Make EPL
+inactive"): out of both gates and out of the grading alarm, everything else
+kept. `docs/leagues.md` has its re-activation steps. With it gone,
+`active_sports` is `[nfl]` and Who's Hot has one league.
+
 **Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
 last-10-games boards would show a frozen September snapshot all winter, and it
 was the site's default sport (EPL after it; **NFL since 2026-11-11**, by
@@ -349,9 +355,46 @@ What followed from it (kept for the record):
   595 picks and 76 dates). That inversion remains the most interesting
   unexplained thing here, and it is a data question, not a tuning one.
 
-### Add NBA — step 1 of 3 DONE 2026-10-31 (branch `claude/nba-groundwork`)
+### Add NBA — steps 1 and 2 DONE (2026-10-31, 2026-11-11); step 3 is the gate
 
-**Three steps, and only the first is done.**
+**Step 2 ran on 2026-11-11** (owner: "Put NBA on there"). `nba_backtest.py
+--fit` fitted on 2023-24 and 2024-25 and tested once on 2025-26;
+`nba_signals.py` scores on the result; `fetchers.nba.build_game_entities` is
+`GAME_BUILDERS["nba"]`; `SPORT_ADAPTERS["nba"]` grades it; `test_nba_live`
+pins all of it.
+
+| | value | how |
+| --- | --- | --- |
+| signal | season points margin / game, both clubs at 5 games | part 1 below |
+| fallback | last season's margin, only until then | part 1 below |
+| scales | 8.5151 / 7.8801 pts | sd of each tier's gap, fit seasons |
+| home shift | +2.502 / +2.784 pts | OLS intercept / slope, not the folk 3 |
+| threshold | 70 | largest of 0..70 naming a side in a third of games |
+| bettability cap | 0.8391 | best held-out band's hit rate (scores 90+) |
+
+**Held-out 2025-26, scored once: 535 picks (43% of games), 77.9% right,
+always-home 61.5% on the same games, +16.5pp [+12.0, +21.0].** Home leans
+78.9% (365), road leans 75.9% (170). Cold start (79 games): +2.5pp
+[−11.4, +16.5], not established.
+
+What it does not know, and says on the card:
+- **Tonight's injury report.** NBA clubs rest stars on a report published
+  hours before tip. No free feed for it has been verified, so the lean is the
+  standings and nothing else. NFL's QB-out override has no NBA counterpart.
+- **Whether it beats the price.** Unmeasurable until `data/nba_prices.jsonl`
+  (started 2026-11-11) has a season. Do not present 77.9% as value.
+
+Still open for NBA:
+- **No leaderboards.** There is no player-stats fetcher, so NBA must not go in
+  `active_sports`, and Who's Hot has no NBA boards. Building one needs ESPN
+  access the build sandbox lacks.
+- **Logos are not cached** (`fetch-logos.yml` has no NBA step) and **team
+  colours collide** (BKN/SA, DET/NY/PHI). Display only.
+- **Playoff and play-in types are not handled**; due before mid-April.
+- **The builder walks the whole season each run** (two requests in November,
+  nine by June). Cheap now; cache finished months if it ever matters.
+
+**Three steps (kept for the record).**
 1. **Data layer (done):** `fetchers/nba.py`, `nba_grading.py`, `NBA_TEAMS`, an
    `nba:` config block with no weights, and `test_nba`. Nothing in the
    pipeline imports any of it.

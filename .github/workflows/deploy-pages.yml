@@ -233,7 +233,11 @@ jobs:
               "nfl": (espn.format("football/nfl"), lambda j: len(j.get("events") or [])),
               "cfb": (espn.format("football/college-football") + "&groups=80&limit=500",
                       lambda j: len(j.get("events") or [])),
-              "epl": (espn.format("soccer/eng.1"), lambda j: len(j.get("events") or [])),
+              # epl LEFT OUT since 2026-11-11: stood down (config.yaml), and a
+              # stood-down sport writes no ledger row on a day its frozen store
+              # does not cover, so watching it here would fire on every
+              # matchday. Re-activating EPL means restoring this entry:
+              #   "epl": (espn.format("soccer/eng.1"), lambda j: len(j.get("events") or [])),
           }
           path = "data/signal_report_history.jsonl"
           rows = collections.Counter()

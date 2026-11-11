@@ -1,0 +1,64 @@
+name: Check NBA builder (manual)
+
+# MANUAL ONLY, READ ONLY. Runs fetchers.nba.build_game_entities once against
+# the live ESPN feed and prints what it would put on the site. It commits
+# nothing, writes no file, and touches no gate.
+#
+# WHY IT EXISTS. The NBA picks path was built on 2026-11-11 in a sandbox that
+# cannot reach site.api.espn.com, against real captures from 2026-10-30/31.
+# docs/leagues.md's rule is "register first, activate in a separate step";
+# this is the look in between -- and afterwards, the quickest way to see why a
+# slate came out empty without waiting for the next regenerate.
+#
+# WHAT A GOOD RUN LOOKS LIKE in November: a line `nba YYYY-MM-DD -- N games, M
+# with a lean, K priced`, no "cold start" line (every club has 5 games by
+# then), and each game printed with a score. An exception here is the same one
+# the pipeline would have caught and frozen the NBA partition on.
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Slate date, YYYY-MM-DD (Eastern). Blank = today."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Two to nine month requests at a 30s timeout each, then arithmetic.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Build the slate and print it
+        env:
+          SLATE_DATE: ${{ inputs.date }}
+        run: |
+          python3 - <<'PY'
+          import os, yaml
+          import slate_clock
+          from fetchers import nba
+          config = yaml.safe_load(open("config.yaml"))
+          date = os.environ.get("SLATE_DATE") or slate_clock.eastern_date()
+          entities, _, _ = nba.build_game_entities(config, date, {})
+          print("slate asked for:", date, "-- games built:", len(entities))
+          for key, e in entities.items():
+              ml = (e.get("betting_signals") or {}).get("moneyline") or {}
+              odds = e.get("odds") or {}
+              ctx = e.get("context") or {}
+              print("  {} {:>4} @ {:<4} {:<11} {:<8} lean {:<13} score {:>3} tier {:<13} "
+                    "margins {} / {} (games {} / {})  price {} / {}  pick {}".format(
+                        key, e["away"]["abbr"], e["home"]["abbr"], e.get("start") or "-",
+                        e.get("status"), ml.get("side"), ml.get("score"), str(ml.get("tier")),
+                        ctx.get("away_season_margin"), ctx.get("home_season_margin"),
+                        ctx.get("away_games"), ctx.get("home_games"),
+                        odds.get("away_ml"), odds.get("home_ml"),
+                        (e.get("standout") or {}).get("side")))
+          PY

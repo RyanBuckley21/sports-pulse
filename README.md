@@ -33,16 +33,16 @@ Controlled by two independent keys in `config.yaml`:
 
 | Key | Pipeline | Current value |
 | --- | --- | --- |
-| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl, epl]` (first is the default league) |
-| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[nfl, cfb, epl]` |
+| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl]` (first is the default league) |
+| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[nfl, cfb]`, plus `nba` once its builder has been checked live |
 
 | Sport | Leaderboards | Games / Teams / picks | Graded | Data sources |
 | --- | --- | --- | --- | --- |
 | **MLB** | ⏸ stood down | ⏸ stood down (was 6 markets: moneyline, run line, game total, first-five ML, NRFI/YRFI, team total) | its 743 ledger rows stay in the record | MLB StatsAPI (`statsapi.mlb.com`) |
 | **NFL** | ✅ | ✅ moneyline | ✅ | nflverse CSV releases, plus the ESPN scoreboard for results and odds |
 | **CFB** (FBS) | ❌ (by design) | ✅ moneyline | ✅ | cfbfastR schedule CSVs, CollegeFootballData (CFBD, keyed), and the ESPN scoreboard |
-| **EPL** | ✅ | ✅ double chance, 3-way match result | ✅ | ESPN soccer site API |
-| NBA | not yet | not yet: data layer only, pending a backtest | not yet | ESPN scoreboard (`fetchers/nba.py`); see CLAUDE.md "Add NBA" |
+| **EPL** | ⏸ stood down 2026-11-11 | ⏸ stood down (was double chance and 3-way match result) | its ledger rows stay in the record | ESPN soccer site API |
+| **NBA** | ❌ (no player-stats fetcher) | ✅ moneyline, on points margin per game | ✅ | ESPN scoreboard (`fetchers/nba.py`) |
 | World Cup | archived until 2030 | none | none | ESPN (`fetchers/worldcup.py`, unregistered) |
 
 **MLB was stood down on 2026-10-25**, mid-World Series, and is out of both
@@ -194,6 +194,7 @@ change touches locally first anyway.
 | --- | --- | --- | --- |
 | `daily-stats-and-grade.yml` | 10:00, 12:00, 13:40, 15:40 | **Grades first** (MLB strict; EPL, CFB and NFL `continue-on-error`), **then** regenerates | ledger, `insights*.json`, `boxscores.json` |
 | `capture-nba-prices.yml` | hourly at :20, 13:20–04:20 (a starting cadence, not yet measured) | **Capture only.** Appends pre-game NBA prices to an append-only file. NBA prices vanish when a game ends, so this runs before NBA is built. Touches no gate, store or page | `data/nba_prices.jsonl` |
+| `check-nba-builder.yml` | **manual only** | Read only. Builds one NBA slate against the live feed and prints it; commits nothing. For checking the builder before activation, or why a slate came out empty | none |
 | `refit-nfl-winprob.yml` | Tue + Wed 11:37 | **The learning step.** Refits the NFL win-probability model on every completed game since 2010, re-grades it walk-forward, and commits the weights with their scorecard. Refuses a fit that is no better than always-home; rewrites nothing in a week with no new games | `data/nfl_winprob.json` |
 | `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
@@ -222,6 +223,8 @@ betting_signals.py       MLB Signal Scores     {nfl,cfb,epl}_signals.py  other s
 signal_core.py           shared lean math      pulse.py                  Pulse band ladder
 implied_total.py         MLB run estimate (display + estimate-graded totals)
 espn_odds.py             price capture, bettability filter, CLV
+nba_signals.py           NBA Signal Score: points margin per game, last season's as the cold-start fallback
+nba_backtest.py          NBA signal measurements, and `--fit` for the numbers config.yaml ships
 nfl_winprob.py           NFL win probability: price-blind, refit weekly from results, graded against the closing price
 parlay_boost.py          boosted-parlay arithmetic: no-vig chance, promo terms, value of a profit boost
 espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ranges 2026-09-15)
@@ -256,6 +259,13 @@ docs/                    schema, league how-to, MLB API field maps, dev notes
 - [`CLAUDE.md`](CLAUDE.md): working agreement for AI coding sessions in this repo
 
 ## Honest caveats
+
+**NBA picks are accurate and unproven.** On the held-out 2025-26 season the
+NBA lean named a side in 43% of games and was right 77.9% of the time, against
+61.5% for always picking the home team in those games. A 78% pick is a heavy
+favourite, and whether it beats its price cannot be measured yet: NBA prices
+only began being stored on 2026-11-11. The lean also does not know who is
+resting tonight, and every card with a pick says so.
 
 **The NFL "Model pick" is a prediction, not a bet.** Every NFL card shows the
 model's pick and chance with the market's chance for the same side beside it.

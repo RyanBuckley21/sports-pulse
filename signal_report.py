@@ -171,6 +171,8 @@ import betting_signals  # read-only: ranking (list_markets / top_market)
 import cfb_grading      # the same, for CFB -- see SPORT_ADAPTERS
 import nfl_grading      # the same, for NFL -- see SPORT_ADAPTERS
 import epl_grading      # the same, for EPL -- see SPORT_ADAPTERS
+import nba_grading      # the same, for NBA -- see SPORT_ADAPTERS
+import nba_signals      # read-only: NBA's ranking (list_markets / top_market)
 
 CONFIG_PATH = "config.yaml"
 STORE_PATH = "data/insights.games.json"
@@ -1017,6 +1019,27 @@ SPORT_ADAPTERS = {
         # week. Without this every stored game kicking off after the graded
         # date would be recorded UNRESOLVED -- "cannot be settled" for games
         # that had not kicked off.
+        "store_spans_dates": True,
+    },
+    "nba": {
+        "fetch_slate": nba_grading.fetch_slate,
+        "fetch_replay_dates": nba_grading.fetch_replay_dates,
+        "is_final": nba_grading.is_final,
+        "is_called_off": nba_grading.is_called_off,
+        "live_state": nba_grading.live_state,
+        "observed_facts": nba_grading.observed_facts,
+        "grade": nba_grading.grade,
+        "season_phase": nba_grading.season_phase,
+        "list_markets": nba_signals.list_markets,
+        "top_market": nba_signals.top_market,
+        # ONE DATE PER STORE, like MLB -- but True here, unlike MLB, for the
+        # day the league does not play. fetchers.nba.build_game_entities then
+        # serves the NEXT slate (Thanksgiving eve, the All-Star break), so the
+        # store can hold games dated after the date being graded. With False
+        # each of those would be handed to grade() as "not on this date's
+        # schedule" and recorded UNRESOLVED -- "cannot be settled" for games
+        # that had not tipped. Deferred instead: left for the run that grades
+        # their own date.
         "store_spans_dates": True,
     },
 }
