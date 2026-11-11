@@ -692,6 +692,7 @@ Sabotage-checked seventeen ways, source byte-identical afterwards: 2 / 2 / 1 /
 in the suite's docstring). Two cuts first crashed the suite instead of
 failing checks; the lookups were made tolerant.
 
+```bash
 python3 -m tools.verify.test_parlay_boost     # from the repo root
 ```
 

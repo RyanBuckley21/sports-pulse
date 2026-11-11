@@ -28,7 +28,14 @@
   // Selected legs and the sport filter live for the page session only. The
   // slate turns over daily, so a remembered parlay would be yesterday's games.
   var picked = {};
-  var sportFilter = "all";
+  //
+  // THE FILTER OPENS ON NFL when the board has NFL leans (owner, 2026-11-11),
+  // and on All otherwise -- a Tuesday with only college or Premier League
+  // prices must not open on an empty list. null means "not chosen yet": the
+  // default is settled at the first render that has a board, and after that
+  // the reader's own tap is never overridden.
+  var DEFAULT_SPORT = "nfl";
+  var sportFilter = null;
   var lastData = null;
   var lastRoot = null;
 
@@ -223,6 +230,11 @@
     board.straight.concat(board.parlay).forEach(function (l) {
       if (sports.indexOf(l.sport) < 0) sports.push(l.sport);
     });
+    if (sportFilter === null || (sportFilter !== "all" && sports.indexOf(sportFilter) < 0)) {
+      // Also re-settles a choice the board no longer has (the slate turned
+      // over while the page stayed open), instead of showing nothing.
+      sportFilter = sports.indexOf(DEFAULT_SPORT) >= 0 ? DEFAULT_SPORT : "all";
+    }
     var labels = {};
     board.straight.concat(board.parlay).forEach(function (l) { labels[l.sport] = l.sport_label; });
     var opts = [["all", "All"]].concat(sports.map(function (s) { return [s, labels[s]]; }));

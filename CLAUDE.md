@@ -51,7 +51,7 @@ python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (p
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "240 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "246 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -250,7 +250,9 @@ already known about each, so a new session does not re-derive it:
 
 **Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
 last-10-games boards would show a frozen September snapshot all winter, and it
-was the site's default sport (now EPL). The few World Series picks left could
+was the site's default sport (EPL after it; **NFL since 2026-11-11**, by
+putting `nfl` first in both `active_sports` and `active_game_sports` -- list
+order is the default, and out of season the next league leads). The few World Series picks left could
 add nothing to the record's open question. The mechanics and the re-activation
 steps are in `docs/leagues.md` ("Standing a sport down"). The parts that are
 easy to get wrong:
@@ -547,8 +549,8 @@ Open on the boost work:
 - **No stake cap is modelled.** Boosts cap the stake, so the percentage is
   per dollar staked, not a dollar value.
 - **The tray prices the board's leans only** (one per game, the side the
-  model named). Since the chance is the market's, any priced side could be a
-  leg; offering both sides is a design change, not yet made.
+  model named). **Decided 2026-11-10: keep it to the lean** (owner), even
+  though any priced side could be a leg now that the chance is the market's.
 
 **NFL win probability: a predictor that learns, and is not an edge
 (2026-11-11).** What the owner asked for (2026-11-10): bets identified each
@@ -609,9 +611,18 @@ Open on it:
   record on the Model Review tab.
 - **NFL only.** CFB has no price history to audit against and CFBD revises its
   inputs; NBA has no prices yet. Same shape applies once either can be graded.
-- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) is not
-  scoped: asked what it means (player-prop parlays from the leaderboards, or
-  something else) before building.
+- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) means
+  player-prop parlays from the leaderboards. A builder exists on
+  `claude/prop-builder` and is **PARKED, not merged** (owner, 2026-11-11:
+  "doesn't seem too useful if I have to do it myself. I don't want anything
+  paid"). The site captures no prop lines, so the reader had to type the line
+  and price. It becomes worth merging only with a FREE prop-line source. One
+  untested candidate: ESPN's core API may expose prop bets per event; the build
+  sandbox cannot reach ESPN, so it would have to be probed from Actions.
+
+**The Bets tab opens on its NFL filter** when the board has NFL leans, and on
+All otherwise (2026-11-11, owner's request; `bets.js` `DEFAULT_SPORT`). The
+reader's own tap is never overridden by a re-render.
 
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
