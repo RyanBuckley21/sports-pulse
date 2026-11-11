@@ -39,17 +39,17 @@ as a kill switch (no scored picks at all) rather than falling back.
 | sport | leaderboards | games / teams / picks | graded | fetcher |
 | --- | --- | --- | --- | --- |
 | **nfl** | yes | yes (moneyline) | yes | `fetchers/nfl.py` -- nflverse CSVs + ESPN scoreboard |
-| **epl** | yes | yes (double chance, match result) | yes | `fetchers/epl.py` -- ESPN soccer API |
 | **cfb** | no, by design | yes (moneyline) | yes | `fetchers/cfb.py` -- cfbfastR CSVs + CFBD + ESPN |
-| **nba** | not yet | not yet: data layer only (step 1 of 3) | rules written, not registered | `fetchers/nba.py` -- ESPN scoreboard |
+| **nba** | no (no player fetcher exists) | registered 2026-11-11 (moneyline on points margin); in `active_game_sports` once checked live | yes | `fetchers/nba.py` -- ESPN scoreboard |
+| **epl** | **stood down 2026-11-11** | **stood down** | only what its frozen store still holds | `fetchers/epl.py` -- ESPN soccer API |
 | **mlb** | **stood down** | **stood down** | only what its frozen store still holds (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
 
 CFB has no `SPORT_FETCHERS` entry and no `cfb.stat_categories`, so it never
 publishes player leaderboards; it is in `active_game_sports` only. Grading for
 every sport runs through `signal_report.SPORT_ADAPTERS`
-(`--sport mlb|nfl|cfb|epl`); only MLB's step in `daily-stats-and-grade.yml` is
-strict, the other three are `continue-on-error` for the offseason and bye-day
-reasons recorded in that workflow's header.
+(`--sport mlb|nfl|cfb|epl|nba`); only MLB's step in `daily-stats-and-grade.yml`
+is strict, the other four are `continue-on-error` for the offseason and
+bye-day reasons recorded in that workflow's header.
 
 A registered-but-inactive sport costs nothing per run: `main()` only calls
 fetchers for keys in the relevant active list, so its `fetch` is never invoked.
@@ -99,6 +99,25 @@ a frozen store for an older date never blocks a write (`_games_store_writable`).
 Until that first run, the frozen partition still holds the last 2026 pick.
 Check that nothing added since 2026-10-25 reads the store directly for display
 (see "grading-only" above).
+
+### EPL, since 2026-11-11
+
+Stood down on the owner's instruction ("Make EPL inactive"), in mid-season,
+the same way: out of `active_sports` and `active_game_sports`, and out of
+`deploy-pages.yml`'s grading alarm (commented, with the line to restore).
+Everything said above about MLB holds for it. The differences:
+
+- **Nothing else needed switching off.** EPL has no training capture and no
+  crons of its own; its grading step was already `continue-on-error`.
+- **Its partition froze holding a live matchday.** The grader settles those
+  picks as their matches finish (the store spans dates for EPL) and is then
+  silent.
+- **The league default moved on its own**: NFL was already first in both
+  lists, and with EPL gone the Who's Hot picker has one league.
+
+**To re-activate EPL:** restore `epl` in both lists (after `nfl` to keep NFL
+the default), restore the alarm line, and do the club-table check under
+"Seasonal maintenance" if a May has passed.
 
 ## Archived — World Cup (pending the 2030 cycle)
 

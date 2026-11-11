@@ -321,11 +321,15 @@ ok("config's nba.scoreboard_url is the module's endpoint",
 import generate_insights  # noqa: E402
 import generate_stats  # noqa: E402
 import signal_report  # noqa: E402
-ok("NBA is in neither gate", "nba" not in (cfg.get("active_sports") or [])
-   and "nba" not in (cfg.get("active_game_sports") or []))
-ok("  and in no registry: no builder, fetcher or grading adapter until the backtest",
-   "nba" not in generate_insights.GAME_BUILDERS and "nba" not in generate_stats.SPORT_FETCHERS
-   and "nba" not in signal_report.SPORT_ADAPTERS)
+# Until 2026-11-11 this section pinned "in neither gate and in no registry".
+# The backtest's part 2 ran that day and NBA picks were built on it, so what is
+# pinned now is the half that stays true: NBA has NO LEADERBOARDS (no player
+# fetcher exists), so it must never appear in active_sports. Its picks side --
+# builder, adapter, gate -- is test_nba_live's.
+ok("NBA publishes no leaderboards: not in active_sports, and no stats fetcher",
+   "nba" not in (cfg.get("active_sports") or []) and "nba" not in generate_stats.SPORT_FETCHERS)
+ok("  its games builder and grading adapter are registered (since 2026-11-11)",
+   "nba" in generate_insights.GAME_BUILDERS and "nba" in signal_report.SPORT_ADAPTERS)
 
 
 # ------------------------------------------- 8. backtest: no look-ahead

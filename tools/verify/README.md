@@ -753,6 +753,31 @@ the suite's docstring); three of its own checks were wrong when first written
 and are recorded there. The browser suite (now 240 checks) pins the card's
 model line and was sabotaged three ways (1 / 1 / 4 failures).
 
+```bash
+python3 -m tools.verify.test_nba_live         # from the repo root
+```
+
+**`test_nba_live`** (added 2026-11-11, 62 checks) pins the NBA picks path:
+`nba_signals`, the fit `config.yaml` ships, and `fetchers.nba`'s games builder.
+It was built in a sandbox that cannot reach ESPN, so the checks carry what a
+live run would otherwise have shown:
+
+- **The site scores what the backtest measured:** the live path's own
+  functions reproduce `nba_backtest.score_record` on all 1,230 games of
+  2025-26.
+- **Config is the fit:** scales, home shifts, thresholds and the bettability
+  cap are re-derived from the dataset and compared with `config.yaml`.
+- **No look-ahead; tiers do not mix; a neutral site gets no home shift.**
+- **Only counted games, on the Eastern date; an off day serves the next slate.**
+- **A price is display, never an input:** a game scores identically with its
+  odds block removed.
+- **A season that cannot be read raises; one unreadable game costs only itself.**
+
+Fixtures are the real `nba_games_fixture.json` and `nba_seasons_2024_2026.json`.
+Sabotage-checked 17 ways that fail (1 to 7 checks each; table in the suite's
+docstring), plus two cuts that fail nothing because the rule they remove is
+enforced a second time elsewhere, which the docstring records.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be

@@ -59,7 +59,7 @@ PARLAY_MAX_AMERICAN = -200
 # ranked on. 30 is the usual floor for a proportion's normal interval to mean
 # anything; at n=30 and p=0.7 the 95% interval is still about +/-16 points.
 PROVEN_MIN_N = 30
-SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "cfb": "CFB", "epl": "EPL"}
+SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "cfb": "CFB", "epl": "EPL", "nba": "NBA"}
 
 
 def record_table(ledger_rows):

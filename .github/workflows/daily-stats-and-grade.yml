@@ -240,6 +240,18 @@ jobs:
         continue-on-error: true
         run: python3 signal_report.py --sport cfb
 
+      # NBA (2026-11-11), same isolation and the same leniency as the three
+      # steps around it, for its own reason: the league skips days (Thanksgiving
+      # eve, the All-Star break, most of June to October), and on those the
+      # store holds the NEXT slate, which this defers rather than grades. Until
+      # `nba` is in active_game_sports this step finds no partition and exits
+      # clean without a row or a fetch (signal_report's stand-down path).
+      - name: Grade yesterday's NBA picks
+        id: grade_picks_nba
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 signal_report.py --sport nba
+
       # NFL, same isolation and the same leniency. The reason is its own: the
       # NFL plays Thursday, Sunday and Monday, so THREE OR FOUR DAYS A WEEK
       # have no games at all even at the height of the season, and from

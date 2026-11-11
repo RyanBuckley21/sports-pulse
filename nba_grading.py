@@ -1,11 +1,8 @@
 """NBA's grading rules, for signal_report.py -- written now, registered later.
 
-NOT YET IN signal_report.SPORT_ADAPTERS. An adapter entry also needs
-list_markets / top_market, which belong to nba_signals.py, and that module
-cannot exist before the backtest gives it weights. Registering an adapter whose
-ranking raises would be worse than not registering it. The rules themselves do
-not depend on any of that, so they are written and pinned now (test_nba), and
-step 2 adds the two delegating functions and the SPORT_ADAPTERS entry.
+REGISTERED in signal_report.SPORT_ADAPTERS since 2026-11-11. The adapter's
+list_markets / top_market come from nba_signals (the ranking is the scorer's
+own); everything else is this module's.
 
 WHAT IS DIFFERENT ABOUT NBA, each a rule rather than an accident:
 

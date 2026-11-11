@@ -36,7 +36,14 @@ top_n: 10
 # league picker opens on the first key present (web/sport-state.js `ensure`).
 # Out of season the nfl section is simply absent and epl leads again -- no
 # switch to flip in February.
-active_sports: [nfl, epl]
+#
+# epl STOOD DOWN 2026-11-11 (owner: "Make EPL inactive"), from BOTH gates, the
+# same way and with the same meaning as mlb on 2026-10-25: no boards, no picks.
+# Its config blocks, fetcher, grading adapter, ledger rows and logos are all
+# kept. To bring it back, restore `epl` here and in active_game_sports and the
+# "epl" line in deploy-pages.yml's grading alarm (docs/leagues.md, "Standing a
+# sport down").
+active_sports: [nfl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
 # GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
@@ -101,7 +108,15 @@ active_sports: [nfl, epl]
 # nfl first for the same reason as active_sports above: Games, Players and
 # Teams share the one league selection, so whichever tab is opened first must
 # land on the same default.
-active_game_sports: [nfl, cfb, epl]
+#
+# epl out since 2026-11-11 (stood down, see active_sports). Its games-store
+# partition freezes as the last pre-flip run left it; the grader settles any
+# pick that partition still holds and is otherwise silent (test_stand_down).
+#
+# nba is REGISTERED (builder, grading adapter, measured weights) but not listed
+# yet: it goes in once its builder has run once against the live feed, which
+# the build sandbox cannot reach (docs/leagues.md: register, then activate).
+active_game_sports: [nfl, cfb]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
@@ -1499,6 +1514,68 @@ betting_signals:
       - {min_score: 55, side: 0.563, draw: 0.266, other: 0.171}
       - {min_score: 75, side: 0.622, draw: 0.219, other: 0.159}
       - {min_score: 85, side: 0.778, draw: 0.132, other: 0.090}
+  # NBA moneyline -- fitted 2026-11-11 by `python3 nba_backtest.py --fit`,
+  # offline on tools/verify/nba_seasons_2024_2026.json (3,690 decided games).
+  # FITTED ON 2023-24 AND 2024-25 (2,460 games), TESTED ONCE ON 2025-26 (1,230).
+  # Nothing below was chosen by looking at the test season.
+  #
+  # ONE SIGNAL AND ONE FALLBACK, because that is all the measurement supports
+  # (nba_signals.py's docstring): this season's points margin per game once
+  # both clubs have played 5, else last season's. Last-10 margin is collinear
+  # with it (r = +0.806) and rest difference does not beat always-home.
+  #
+  # scales -- the standard deviation of each tier's own raw gap on the fit
+  #   seasons, the rule nfl_backtest.derive_calibration uses:
+  #     season_margin  8.5151 pts (n = 2,295 true-home games)
+  #     prior_margin   7.8801 pts (n = 1,225)
+  #
+  # home_field -- FITTED, NOT SEARCHED, and not the ~3 points usually quoted:
+  #   OLS of the home margin on the tier's gap, intercept / slope.
+  #     season_margin  home edge +2.028 pts / slope 0.8106 = +2.502
+  #     prior_margin   home edge +1.682 pts / slope 0.6044 = +2.784
+  #   On the held-out season home leans hit 78.9% (365) and road leans 75.9%
+  #   (170): the score means nearly the same thing at either venue.
+  #
+  # thresholds -- nfl_backtest._pick_threshold's rule, read on the FIT seasons:
+  #   the largest candidate of 0..70 that still names a side in a third of
+  #   games. That is 70 (40.2% of games, 77.5% hit on the fit seasons). The
+  #   grid stops at 70 as NFL's did; a higher bar would keep under 40% and has
+  #   not been looked at.
+  #
+  # HELD-OUT RESULT (2025-26, scored once): 535 picks, 43% of games,
+  #   hit 77.9%; always-home on the same games 61.5%; +16.5pp [+12.0, +21.0].
+  #   By score: 70-74 73.5% (68), 75-89 73.4% (237), 90-100 83.9% (230).
+  #   Cold start (a club under 5 games, 79 games at threshold 0): 62.0% against
+  #   always-home's 59.5%, +2.5pp [-11.4, +16.5] -- NOT established. The first
+  #   two weeks of a season lean on last season and the card says so.
+  #
+  # THIS IS ACCURACY, NOT EDGE. A 78% pick is a heavy favourite, and whether
+  # it beats its price cannot be measured: the NBA has no price history on
+  # this feed (data/nba_prices.jsonl began 2026-11-11). NFL's version of this
+  # model, which can be measured, knows nothing its closing price does not.
+  # Assume the same here until a season of captured prices says otherwise.
+  #
+  # max_break_even -- the bettability cap (espn_odds.apply_bettability), by
+  #   CFB's rule: a pick priced past the best hit rate the model has ever
+  #   demonstrated is one it has never shown it can clear. NBA's best measured
+  #   band is 83.9% (scores 90-100, held-out), which is about -521.
+  #
+  # FIRST PASS, SUBJECT TO REVISION AFTER REAL PRODUCTION DATA, as nfl's, cfb's
+  # and epl's blocks all say of themselves.
+  nba:
+    min_threshold: 70
+    standout_threshold: 70
+    max_break_even: 0.8391
+    scales:
+      season_margin_gap: 8.5151
+      prior_margin_gap: 7.8801
+    home_field:
+      season_margin: 2.502
+      prior_margin: 2.784
+    bet_types:
+      moneyline:
+        season_margin: 1.0
+        prior_margin: 1.0
   # Reserved for future sports; empty = no betting layer.
   worldcup: {}
 
@@ -1695,6 +1772,10 @@ insights_ui:
       moneyline: "Moneyline"
 
   cfb:
+    market_labels:
+      moneyline: "Moneyline"
+
+  nba:
     market_labels:
       moneyline: "Moneyline"
 
