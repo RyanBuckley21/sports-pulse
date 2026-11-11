@@ -20,7 +20,7 @@ commits its own state back to the repo.
 | --- | --- | --- |
 | **Who's Hot** (`#/`) | Player leaderboards ranked by raw production over a rolling window (last 10 G, last 20 G, active streaks, …). Descriptive only: no weights and nothing graded. | `sports.<sport>.categories` |
 | **Games** (`#/games`) | Today's slate per league: a 0–100 **Pulse** ("how notable"), key signals, and **Signal Scores**, which give a 0–100 conviction toward a named side for each market. The strongest market that clears the bar is the game's **standout** (the pick). Where a price exists it shows the price, break-even, spread and line movement as labelled rows. Cards warn in amber about things the score can't act on: an NFL starting QB on the injury report short of an official Out ("did not practice", "Questionable"), and a CFB lean resting on three or fewer games per team ("Early read": opponent adjustment doesn't measurably help that early). Both are display only and never move the score. | `insights.games` |
-| **Bets** (`#/bets`) | Every priced moneyline lean today across sports, split into **parlay pieces** (−200 or shorter) and **straight bets**. Each row shows what its price needs and the model's graded record at similar prices, marked unproven under 30 picks. A tray prices the legs you tap into a parlay. Rows carry the same caution notes as the cards. Built by `bet_board.py`. | `insights.bets` |
+| **Bets** (`#/bets`) | Every priced moneyline lean today across sports, split into **parlay pieces** (−200 or shorter) and **straight bets**. Each row shows what its price needs and the model's graded record at similar prices, marked unproven under 30 picks. A tray prices the legs you tap into a parlay, and says what a **profit boost** is worth on them: you type today's promo (boost %, minimum legs, minimum total odds, shortest leg allowed) and it shows whether the ticket qualifies, the market's chance of it winning (each leg's two-sided price with the vig removed, not a model estimate), and the value per $1 with and without the boost. Rows carry the same caution notes as the cards. Built by `bet_board.py`. | `insights.bets` |
 | **Players** (`#/players`) | Top players by Pulse, with signals and matchup angles. | `insights.players` |
 | **Teams** (`#/teams`) | Team Pulse profiles built from the same slate. | `insights.teams` |
 
@@ -33,8 +33,8 @@ Controlled by two independent keys in `config.yaml`:
 
 | Key | Pipeline | Current value |
 | --- | --- | --- |
-| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[epl, nfl]` |
-| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[epl, cfb, nfl]` |
+| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl, epl]` (first is the default league) |
+| `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[nfl, cfb, epl]` |
 
 | Sport | Leaderboards | Games / Teams / picks | Graded | Data sources |
 | --- | --- | --- | --- | --- |
@@ -42,6 +42,7 @@ Controlled by two independent keys in `config.yaml`:
 | **NFL** | ✅ | ✅ moneyline | ✅ | nflverse CSV releases, plus the ESPN scoreboard for results and odds |
 | **CFB** (FBS) | ❌ (by design) | ✅ moneyline | ✅ | cfbfastR schedule CSVs, CollegeFootballData (CFBD, keyed), and the ESPN scoreboard |
 | **EPL** | ✅ | ✅ double chance, 3-way match result | ✅ | ESPN soccer site API |
+| NBA | not yet | not yet: data layer only, pending a backtest | not yet | ESPN scoreboard (`fetchers/nba.py`); see CLAUDE.md "Add NBA" |
 | World Cup | archived until 2030 | none | none | ESPN (`fetchers/worldcup.py`, unregistered) |
 
 **MLB was stood down on 2026-10-25**, mid-World Series, and is out of both
@@ -192,6 +193,8 @@ change touches locally first anyway.
 | Workflow | When (UTC) | What | Writes |
 | --- | --- | --- | --- |
 | `daily-stats-and-grade.yml` | 10:00, 12:00, 13:40, 15:40 | **Grades first** (MLB strict; EPL, CFB and NFL `continue-on-error`), **then** regenerates | ledger, `insights*.json`, `boxscores.json` |
+| `capture-nba-prices.yml` | hourly at :20, 13:20–04:20 (a starting cadence, not yet measured) | **Capture only.** Appends pre-game NBA prices to an append-only file. NBA prices vanish when a game ends, so this runs before NBA is built. Touches no gate, store or page | `data/nba_prices.jsonl` |
+| `refit-nfl-winprob.yml` | Tue + Wed 11:37 | **The learning step.** Refits the NFL win-probability model on every completed game since 2010, re-grades it walk-forward, and commits the weights with their scorecard. Refuses a fit that is no better than always-home; rewrites nothing in a week with no new games | `data/nfl_winprob.json` |
 | `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
 | `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
@@ -219,14 +222,20 @@ betting_signals.py       MLB Signal Scores     {nfl,cfb,epl}_signals.py  other s
 signal_core.py           shared lean math      pulse.py                  Pulse band ladder
 implied_total.py         MLB run estimate (display + estimate-graded totals)
 espn_odds.py             price capture, bettability filter, CLV
+nfl_winprob.py           NFL win probability: price-blind, refit weekly from results, graded against the closing price
+parlay_boost.py          boosted-parlay arithmetic: no-vig chance, promo terms, value of a profit boost
 espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ranges 2026-09-15)
 slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward window
 training_capture.py      MLB append-only feature/outcome stores
+nba_price_capture.py     NBA pre-game prices, append-only (capture only; NBA is not built or shown)
 team_meta.py             abbreviations + brand colours (legibility-lifted)
+nba_grading.py           NBA grading rules (written; registered with the NBA builder)
+nba_backtest.py          NBA signal measurement, offline on a captured 2023-26 dataset; writes nothing
 normalizer.py            common leaderboard record schema
 fetchers/                mlb, nfl, cfb, epl (+ archived worldcup)
 *_backtest.py            standalone calibration/backtests (never touch the live ledger)
-nfl_odds_backtest.py     NFL picks vs the closing line
+nfl_odds_backtest.py     NFL picks vs the closing line, and at the owner's price bands
+tools/devig_calibration.py  how well a no-vig price predicts NFL results, by price band
 cfb_opponent_backtest.py CFB: opponent-adjusted form vs raw, walk-forward (run via cfb-backtest.yml)
 mlb_estimate_calibration.py  implied_total vs actual runs
 web/                     index.html shell, app.js (Who's Hot), insights/ (Games/Bets/Players/Teams)
@@ -247,6 +256,20 @@ docs/                    schema, league how-to, MLB API field maps, dev notes
 - [`CLAUDE.md`](CLAUDE.md): working agreement for AI coding sessions in this repo
 
 ## Honest caveats
+
+**The NFL "Model pick" is a prediction, not a bet.** Every NFL card shows the
+model's pick and chance with the market's chance for the same side beside it.
+The model is refit each week from results and is right about 63% of the time;
+the closing price is right about 66%. Where the two disagree, the price has
+been the better guide.
+
+**Singles have no measured edge; boosted parlays are priced from the market.**
+Over 1,245 NFL picks at closing prices the model's win rate minus the no-vig
+closing probability is +0.01pp [−2.5, +2.4]: it knows nothing the price does
+not. At −150 or longer its picks returned −7.4% [−19.9, +5.7]. A profit boost
+can still make a parlay worth more than its stake, and the Bets tray works
+that out from the book's own prices. That value comes from the boost, not
+from the picks.
 
 The ledger records hit rates, and a hit rate is not an edge. `nfl_odds_backtest.py`
 found that the NFL picks **do not beat the closing line**, and a walk-forward

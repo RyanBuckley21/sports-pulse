@@ -408,6 +408,16 @@ async function reEntryChecks(browser, base) {
   ok("  and what it would have needed", /99%/.test(nb[0] || ""), nb[0] || "none");
   ok("  and the model's own ceiling it passed", /91%/.test(nb[0] || ""), nb[0] || "none");
   ok("  while still showing the score the model gave it", /91/.test(nb[0] || ""), nb[0] || "none");
+  // THE MODEL'S PICK LINE (2026-11-11): on the one fixture game that carries
+  // a fitted chance, with the market's chance for the same side beside it and
+  // the "has not beaten the market" line in the text itself, not a tooltip.
+  const mp = await p.$$eval("#insightsRoot .ba-model", (n) => n.map((x) => x.textContent.replace(/\s+/g, " ")));
+  ok("the model's pick renders once, on the game that has one", mp.length === 1, mp.join(" | ") || "none");
+  ok("  with its side and chance, rounded to a whole percent", /Model pick \S+ 63%/.test(mp[0] || ""), mp[0] || "none");
+  ok("  the market's chance for the same side beside it", /market 59%/.test(mp[0] || ""), mp[0] || "none");
+  ok("  and the caveat in the line itself", /has not beaten the market/.test(mp[0] || ""), mp[0] || "none");
+  ok("  a game with no fitted chance draws no model line (and no empty box)",
+     (await p.$$eval("#insightsRoot .ba-model", (n) => n.filter((x) => !x.textContent.trim()).length)) === 0);
   // WHO MIGHT NOT PLAY, above the pick it could undo (2026-09-25: CHI's QB
   // missed every practice while CHI was the model's side).
   const avail = await p.$$eval("#insightsRoot .avail-note", (n) => n.map((x) => x.textContent));
@@ -887,6 +897,18 @@ async function betsChecks(browser, base) {
   await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(500);
   await goRoute(p, "#/bets");
+  // THE TAB OPENS ON NFL (owner, 2026-11-11) when the board has NFL leans:
+  // the fixture's three (KC and BUF as parlay pieces, CAR straight).
+  const opening = await p.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
+  ok("bets: opens on the NFL filter", (await p.$eval('.bet-filter[aria-pressed="true"]',
+     (x) => x.getAttribute("data-bet-sport"))) === "nfl");
+  ok("  showing only NFL leans (2 parlay pieces, 1 straight)",
+     /^Parlay pieces 2$/.test(opening[0] || "") && /^Straight bets 1$/.test(opening[1] || ""), opening.join(" | "));
+  ok("  every row on screen is an NFL row",
+     (await p.$$eval("#insightsRoot .bet", (n) => n.every((x) => /^nfl:/.test(x.getAttribute("data-key"))))));
+  // The rest of this group reads the whole board, so widen to All -- and the
+  // reader's own choice must then stick through every later re-render.
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(100);
   const heads = await p.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
   ok("bets: parlay pieces and straight bets, in that order",
      /^Parlay pieces 5$/.test(heads[0] || "") && /^Straight bets 3$/.test(heads[1] || ""), heads.join(" | "));
@@ -927,6 +949,98 @@ async function betsChecks(browser, base) {
      (await p.evaluate(() => SP.sport && SP.sport.get && SP.sport.get())) === league, league);
   await p.click(".bet-clear"); await p.waitForTimeout(100);
   ok("clear empties the tray", /Tap \+/.test(await p.$eval(".bet-tray", (x) => x.textContent)));
+
+  // THE BOOST LINE (2026-11-10). bets.js repeats parlay_boost.evaluate for the
+  // legs tapped, so every number below was computed by that Python module on
+  // this same fixture board and is pinned here -- a drift between the two
+  // would print a wrong value for a real ticket with nothing failing.
+  //   CWS -240 (fair .6756), CAR -148 (.5721), TOR -136 (.5511):
+  //   D = 4.1194 (+312), P = 21.3%, unboosted -12.3%, b* = 18.47% -> "19%",
+  //   50% boost pays +468 and is worth +20.9%.
+  const trayText = async () => p.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
+  const setPromo = async (field, value) => {
+    // Typed, then committed with Enter, as on a phone keyboard's "done".
+    await p.fill('.bet-promo-input[data-promo="' + field + '"]', value);
+    await p.press('.bet-promo-input[data-promo="' + field + '"]', "Enter");
+    await p.waitForTimeout(80);
+  };
+  ok("promo: four blank fields, no default promo",
+     (await p.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "|||");
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(80);   // the NFL filter above hides CWS and TOR
+  for (const side of ["CWS", "CAR", "TOR"]) {
+    await p.click('.bet[data-key*=":' + side + '"] .bet-add'); await p.waitForTimeout(80);
+  }
+  let t = await trayText();
+  ok("boost: three legs price at +312", /3 legs/.test(t) && /\+312/.test(t), t);
+  ok("  market chance and the vig's cost, with no boost entered",
+     /Market chance 21\.3%/.test(t) && /unboosted −12\.3% per \$1/.test(t), t);
+  ok("  and the boost that would break even, rounded UP", /breaks even at a 19% boost/.test(t), t);
+  ok("  no boosted value is printed until a boost is entered", !/With a/.test(t), t);
+  ok("  and no promo verdict while no term is entered", !/qualify|Meets the promo/.test(t), t);
+  ok("  the chance is labelled as the market's, not the model's", /Not a model estimate/.test(t), t);
+  await setPromo("boost", "50");
+  t = await trayText();
+  ok("a 50% boost multiplies the WINNINGS: +312 pays +468", /With a 50% boost: pays \+468/.test(t), t);
+  ok("  and is worth +20.9% per $1", /worth \+20\.9% per \$1/.test(t), t);
+  await setPromo("legs", "3"); await setPromo("total", "+300"); await setPromo("floor", "-250");
+  t = await trayText();
+  ok("terms met: 3 legs, +312 >= +300, shortest leg -240 within -250", /Meets the promo terms entered/.test(t), t);
+  ok("  the fields keep what was typed across re-renders",
+     (await p.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "50|3|+300|-250");
+  // The floor is "no leg SHORTER than": -200 refuses CWS at -240 and nothing else.
+  await setPromo("floor", "−200");            // a typographic minus, as phones insert
+  t = await trayText();
+  ok("a -200 floor refuses the -240 leg, by name (typographic minus accepted)",
+     /Doesn’t qualify: CWS is shorter than −200/.test(t) && !/CAR is shorter|TOR is shorter/.test(t), t);
+  await p.click('.bet[data-key*=":TOR"] .bet-add'); await p.waitForTimeout(80);
+  t = await trayText();
+  //   CWS + CAR: D = 2.3739 (+137), P = 38.6%, 50% boost pays +206, worth +18.3%.
+  ok("two legs: every unmet term is listed",
+     /needs 3\+ legs/.test(t) && /CWS is shorter than −200/.test(t) && /pays under \+300/.test(t), t);
+  ok("  and the value is still shown for what was picked", /pays \+206, worth \+18\.3%/.test(t), t);
+  // Typed and NOT committed, then a row is tapped. The field's blur fires
+  // `change` between the tap's mousedown and click; when that rebuilt the
+  // rows the tap was lost (the leg never joined) and the nested render threw.
+  // Both the typed value AND the tapped leg must land.
+  await p.fill('.bet-promo-input[data-promo="boost"]', "25");
+  await p.click('.bet[data-key*=":TOR"] .bet-add'); await p.waitForTimeout(120);
+  t = await trayText();
+  ok("a boost typed but not committed still takes effect when a row is tapped",
+     /With a 25% boost/.test(t), t);
+  ok("  and the tap itself is not swallowed: the leg joins the parlay", /3 legs/.test(t), t);
+  // "abc" in the boost field. Read as zero it would print "With a 0% boost"
+  // -- a typo turned into a term (the first version of this check used the
+  // floor field, where a zero happens to be inert, and passed under sabotage).
+  await setPromo("floor", "abc"); await setPromo("boost", "abc");
+  t = await trayText();
+  ok("a field that is not a number is ignored, not read as zero",
+     !/shorter than/.test(t) && !/With a/.test(t) && !/NaN|undefined|null/.test(t), t);
+  await p.click(".bet-clear"); await p.waitForTimeout(100);
+  await p.click('.bet-filter[data-bet-sport="all"]'); await p.waitForTimeout(80);
+  await p.click('.bet[data-key*=":CWS"] .bet-add'); await p.waitForTimeout(80);
+  ok("a chosen filter is never snapped back to the default by a re-render",
+     (await p.$eval('.bet-filter[aria-pressed="true"]', (x) => x.getAttribute("data-bet-sport"))) === "all");
+  await p.click(".bet-clear"); await p.waitForTimeout(80);
+  // A board with NO NFL leans must open on All, not on an empty NFL list: a
+  // fresh page (the default is settled once per page) served the same
+  // data.json with its NFL rows taken out.
+  const q = await newPage(browser);
+  await q.route("**/data.json*", async (route) => {
+    const data = JSON.parse(fs.readFileSync(path.join(WEB, "data.json"), "utf8"));
+    const b = data.insights.bets;
+    b.parlay = b.parlay.filter((l) => l.sport !== "nfl");
+    b.straight = b.straight.filter((l) => l.sport !== "nfl");
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await q.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await q.waitForTimeout(500);
+  await goRoute(q, "#/bets");
+  ok("no NFL leans on the board: the tab opens on All",
+     (await q.$eval('.bet-filter[aria-pressed="true"]', (x) => x.getAttribute("data-bet-sport"))) === "all");
+  ok("  with every lean showing, not an empty list",
+     (await q.$$eval("#insightsRoot .bet", (n) => n.length)) === 5 &&
+     !(await q.$('.bet-filter[data-bet-sport="nfl"]')));
+  await q.close();
   const wide = await p.evaluate(() => ({
     doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     rows: [].filter.call(document.querySelectorAll(".bet"), (r) => r.scrollWidth > r.clientWidth + 1).length,

@@ -771,6 +771,34 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 }
 .bet-tray-sub { margin-top: 4px; font: 400 11px/1.4 var(--font-body); color: var(--text-tertiary); overflow-wrap: anywhere; }
 
+/* The model's pick line on a game card (insights.js Cards.modelPick). The fine
+   print is part of the line, not a tooltip: phones have no hover. */
+.ba-model { margin: 8px 0; padding: 8px 10px; border-radius: var(--r-md, 10px);
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
+  font: 600 13px/1.4 var(--font-body); color: var(--text); overflow-wrap: anywhere; }
+.ba-model-label { color: var(--text-secondary); font-weight: 600; margin-right: 4px; }
+.ba-model-side { font-weight: 700; font-variant-numeric: tabular-nums; }
+.ba-model-mkt { color: var(--text-secondary); font-variant-numeric: tabular-nums; margin-left: 6px; }
+.ba-model-fine { display: block; margin-top: 2px; font: 400 11px/1.4 var(--font-body); color: var(--text-tertiary); }
+
+/* Today's boost terms, and what the tray says a boost is worth (bets.js
+   boostLines). The fine print is always shown with the number: the chance is
+   the market's, not the model's, and is only known to a few points per leg. */
+.bet-promo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 10px; }
+.bet-promo-field { display: flex; flex-direction: column; gap: 3px; font: 600 11px var(--font-body); color: var(--text-secondary); }
+.bet-promo-input {
+  width: 100%; box-sizing: border-box; padding: 7px 10px; border-radius: var(--r-md, 10px);
+  font: 600 16px var(--font-body); color: var(--text); font-variant-numeric: tabular-nums;
+  background: var(--glass-inset); border: 1px solid var(--glass-border);
+}
+.bet-promo-input:focus { outline: none; border-color: var(--gold); }
+.bet-tray-promo, .bet-tray-ev { margin-top: 6px; font: 600 12px/1.4 var(--font-body); color: var(--text); overflow-wrap: anywhere; }
+.bet-tray-promo.is-out { color: var(--text-secondary); }
+.bet-tray-boosted { font-size: 14px; }
+.bet-tray-boosted.is-pos { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
+.bet-tray-boosted.is-neg { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
+.bet-tray-fine { margin-top: 4px; font: 400 11px/1.4 var(--font-body); color: var(--text-tertiary); }
+
 .bet-section { margin: 0 0 18px; }
 .bet-h { font: 700 15px var(--font-head); color: var(--text); margin: 0 2px 2px; }
 .bet-count { font: 600 12px var(--font-body); color: var(--text-tertiary); margin-left: 4px; }

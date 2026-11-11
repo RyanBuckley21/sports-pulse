@@ -316,7 +316,8 @@ ok("the shared limit is ESPN's largest honoured value", espn_dates.SCOREBOARD_LI
 # literal over 500 anywhere in them is this bug again.
 import re  # noqa: E402
 for _f in ("cfb_grading.py", "epl_grading.py", "nfl_grading.py", "espn_odds.py",
-           "fetchers/cfb.py", "fetchers/epl.py", "fetchers/nfl.py"):
+           "fetchers/cfb.py", "fetchers/epl.py", "fetchers/nfl.py",
+           "fetchers/nba.py", "nba_grading.py"):
     _big = [int(m) for m in re.findall(r'["\']limit["\']\s*:\s*(\d+)', open(os.path.join(REPO, _f)).read())
             if int(m) > 500]
     ok("{} asks ESPN for no limit over 500".format(_f), not _big, _big)

@@ -110,6 +110,12 @@ def collect_picks(config, seasons, session=None):
                 game.get("home_moneyline") if picked_home else game.get("away_moneyline"))
             if decimal is None:
                 continue
+            # The OTHER side's closing price, kept only so the pick's price can
+            # have its vig removed (see the no-vig section in main). None when
+            # the feed priced one side; those picks are left out of that
+            # section and nothing else.
+            other = american_to_decimal(
+                game.get("away_moneyline") if picked_home else game.get("home_moneyline"))
             if home == away:
                 pnl, result = 0.0, "PUSH"        # a tie returns the stake
             elif picked_home == (home > away):
@@ -118,7 +124,8 @@ def collect_picks(config, seasons, session=None):
                 pnl, result = -1.0, "MISS"
             picks.append({"season": season, "week": int(game["week"]),
                           "score": standout["score"], "decimal": decimal,
-                          "pnl": pnl, "result": result, "favourite": decimal < 2.0})
+                          "pnl": pnl, "result": result, "favourite": decimal < 2.0,
+                          "other_decimal": other})
     return picks
 
 
@@ -154,6 +161,32 @@ def summarize(label, picks, minimum=30):
               100 * roi, 100 * lo, 100 * hi, verdict))
 
 
+# The owner's betting constraints (2026-11-10), as decimal price bounds
+# [low, high): singles nothing shorter than -150; parlay legs inside the
+# per-leg floors DraftKings' boosts usually set (-200 to -300).
+OWNER_BANDS = (("singles: -150 or longer", 1.0 + 100.0 / 150.0, float("inf")),
+               ("parlay legs: -300..-150", 1.0 + 100.0 / 300.0, 1.0 + 100.0 / 150.0),
+               ("shorter than -300", 1.0, 1.0 + 100.0 / 300.0))
+
+
+def summarize_no_vig(label, picks, minimum=30):
+    """Win rate minus the NO-VIG closing probability of the side picked.
+
+    ROI answers "did it make money at the price"; this answers the question
+    underneath it -- does the pick know anything the price does not? Zero means
+    the model is exactly as good as the market's own number, and then every
+    ROI above is just the vig. A tie counts half."""
+    rows = [(0.5 if p["result"] == "PUSH" else float(p["result"] == "HIT"))
+            - (1.0 / p["decimal"]) / (1.0 / p["decimal"] + 1.0 / p["other_decimal"])
+            for p in picks if p.get("other_decimal")]
+    if len(rows) < minimum:
+        print("  {:<26} n={:<5} (too few to report)".format(label, len(rows)))
+        return
+    lo, hi = bootstrap_mean_ci(rows)
+    print("  {:<26} n={:<5} {:+6.2f}pp  CI [{:+.1f}, {:+.1f}]".format(
+        label, len(rows), 100 * sum(rows) / len(rows), 100 * lo, 100 * hi))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seasons", nargs="+", type=int, default=DEFAULT_SEASONS)
@@ -184,6 +217,19 @@ def main(argv=None):
     print("\nout-of-sample, by price")
     summarize("  favourite (<2.00)", [p for p in out if p["favourite"]])
     summarize("  underdog (>=2.00)", [p for p in out if not p["favourite"]])
+
+    # Added 2026-11-10 for the owner's actual constraints. Reported on ALL
+    # seasons as well as out-of-sample: the bands are thin, and the in-sample
+    # seasons cannot flatter a model whose only fitted quantity is who wins.
+    for name, subset in (("out-of-sample", out), ("all seasons", picks)):
+        print("\n{}, at the prices the owner can bet (ROI at the closing price)".format(name))
+        for label, lo, hi in OWNER_BANDS:
+            summarize("  " + label, [p for p in subset if lo <= p["decimal"] < hi])
+    print("\nwin rate minus the no-vig closing probability (0 = no information beyond the price)")
+    summarize_no_vig("out-of-sample", out)
+    summarize_no_vig("all seasons", picks)
+    for label, lo, hi in OWNER_BANDS:
+        summarize_no_vig("  all, " + label, [p for p in picks if lo <= p["decimal"] < hi])
     return 0
 
 

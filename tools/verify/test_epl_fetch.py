@@ -235,7 +235,8 @@ ok("  crossing a month end takes two requests", _calls == ["202609", "202610"], 
 # the first time it was needed. A source sweep catches a seventh.
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 for _f in ("fetchers/epl.py", "fetchers/cfb.py", "fetchers/nfl.py",
-           "cfb_grading.py", "epl_grading.py", "nfl_grading.py", "espn_odds.py"):
+           "cfb_grading.py", "epl_grading.py", "nfl_grading.py", "espn_odds.py",
+           "fetchers/nba.py", "nba_grading.py"):
     _src = open(os.path.join(_root, _f)).read()
     ok("{} builds no range-shaped dates parameter".format(_f),
        '"{}-{}".format(' not in _src, _f)

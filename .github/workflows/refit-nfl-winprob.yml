@@ -1,0 +1,91 @@
+name: Refit NFL win probability
+
+# THE "LEARNS AND ADJUSTS" STEP (built 2026-11-11). Once a week it rebuilds
+# every completed NFL regular-season game since 2010 through the production
+# builder, refits the win-probability model on all of them, re-grades it
+# walk-forward (including THIS season so far, by fits that never saw it), and
+# commits data/nfl_winprob.json -- the weights with their scorecard beside
+# them. The next regenerate reads that file, so the following week's picks come
+# from a model that has seen the last week's results. See nfl_winprob.py.
+#
+# WHAT IT CANNOT DO, by design:
+#   * replace a good model with a bad one. --fit REFUSES (exit 1, nothing
+#     written) when the new fit is not better than always-home walk-forward,
+#     or when it found FEWER games than the model on file -- a truncated feed
+#     must not be able to teach the model. A refusal turns this run red and
+#     leaves last week's model in place, which is the safe state.
+#   * churn. A run that finds no new game leaves the file untouched and makes
+#     no commit, so the second cron entry below costs nothing when the first
+#     one worked.
+#   * touch anything else. It commits one file. The Signal Score, the ledger
+#     and the games store are not read or written here.
+#
+# Its own workflow, like the other committing jobs: `contents: write` is scoped
+# here, and deploy-pages.yml keeps `contents: read` (invariant 10). A push made
+# with GITHUB_TOKEN starts no other workflow, so this causes no test run and no
+# deploy; the site picks the new model up at its next scheduled regenerate.
+
+on:
+  schedule:
+    # TUESDAY and WEDNESDAY, 11:37 UTC. A week's last game is Monday night
+    # (ends ~04:30 UTC Tuesday) and nflverse publishes its stats overnight, so
+    # Tuesday morning is the first run that can see the whole week. Wednesday
+    # is the second try, for two measured reasons: GitHub drops whole days of
+    # scheduled runs (2026-07-27 had none), and a week whose stats are late
+    # would otherwise wait seven days. Thursday night's game is the deadline.
+    # Not measured: how late nflverse actually is on a Tuesday. If Tuesday
+    # runs routinely find no new games, that is the evidence to move it.
+    # :37, not :00 -- the top of the hour is GitHub's busiest minute.
+    - cron: "37 11 * * 2,3"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refit-nfl-winprob
+  cancel-in-progress: false
+
+jobs:
+  refit:
+    runs-on: ubuntu-latest
+    # Measured 2026-11-10: collecting 17 seasons and fitting takes ~40s on a
+    # laptop-class sandbox (35 nflverse fetches, then pure-Python arithmetic).
+    # Fifteen minutes is a wide margin for a slow runner, not a guess at need.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Refit and re-grade
+        id: refit
+        run: python3 nfl_winprob.py --fit
+
+      - name: Annotate a refused or failed refit
+        if: failure() && steps.refit.outcome == 'failure'
+        run: |
+          echo "::warning title=NFL win-probability refit did not run to a new model::Last week's model stays in place. See the Refit step log: a REFUSED line means the new fit was worse than always-home or was built on fewer games than the current one."
+
+      - name: Commit the model
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/nfl_winprob.json
+          if git diff --staged --quiet; then
+            echo "No new games -- the model is unchanged."
+            exit 0
+          fi
+          git commit -m "Refit NFL win probability for $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}); rebasing onto the new main"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          echo "::error title=Refit not pushed::three push attempts failed; the new model was not published"
+          exit 1

@@ -1,0 +1,372 @@
+{
+ "401810384": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "CHI",
+       "displayName": "Chicago Bulls"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Heat"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "Postponed due to court condensation. Makeup date Jan 29",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Postponed",
+      "detail": "Postponed",
+      "id": "6",
+      "name": "STATUS_POSTPONED",
+      "shortDetail": "Postponed",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Chicago"
+     },
+     "fullName": "United Center"
+    }
+   }
+  ],
+  "date": "2026-01-09T01:00Z",
+  "id": "401810384",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401810499": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "MIN",
+       "displayName": "Minnesota Timberwolves"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "GS",
+       "displayName": "Golden State Warriors"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "Makeup date Jan 25",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Postponed",
+      "detail": "Postponed",
+      "id": "6",
+      "name": "STATUS_POSTPONED",
+      "shortDetail": "Postponed",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Minneapolis"
+     },
+     "fullName": "Target Center"
+    }
+   }
+  ],
+  "date": "2026-01-24T22:30Z",
+  "id": "401810499",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401810506": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "MEM",
+       "displayName": "Memphis Grizzlies"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "DEN",
+       "displayName": "Denver Nuggets"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "Makeup date Mar 18",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Postponed",
+      "detail": "Postponed",
+      "id": "6",
+      "name": "STATUS_POSTPONED",
+      "shortDetail": "Postponed",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Memphis"
+     },
+     "fullName": "FedExForum"
+    }
+   }
+  ],
+  "date": "2026-01-25T20:30Z",
+  "id": "401810506",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401810507": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "0",
+      "team": {
+       "abbreviation": "MIL",
+       "displayName": "Milwaukee Bucks"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "0",
+      "team": {
+       "abbreviation": "DAL",
+       "displayName": "Dallas Mavericks"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "Makeup date Mar 31",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": false,
+      "description": "Postponed",
+      "detail": "Postponed",
+      "id": "6",
+      "name": "STATUS_POSTPONED",
+      "shortDetail": "Postponed",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Milwaukee"
+     },
+     "fullName": "Fiserv Forum"
+    }
+   }
+  ],
+  "date": "2026-01-26T00:00Z",
+  "id": "401810507",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401810547": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "118",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Heat"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "125",
+      "team": {
+       "abbreviation": "CHI",
+       "displayName": "Chicago Bulls"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "shortDetail": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Miami"
+     },
+     "fullName": "Kaseya Center"
+    }
+   }
+  ],
+  "date": "2026-02-01T01:00Z",
+  "id": "401810547",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "401850920": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "score": "113",
+      "team": {
+       "abbreviation": "CHI",
+       "displayName": "Chicago Bulls"
+      }
+     },
+     {
+      "homeAway": "away",
+      "score": "116",
+      "team": {
+       "abbreviation": "MIA",
+       "displayName": "Miami Heat"
+      }
+     }
+    ],
+    "neutralSite": false,
+    "notes": [
+     {
+      "headline": "Makeup from Jan 8",
+      "type": "event"
+     }
+    ],
+    "status": {
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "shortDetail": "Final",
+      "state": "post"
+     }
+    },
+    "type": {
+     "abbreviation": "STD",
+     "id": "1",
+     "text": null
+    },
+    "venue": {
+     "address": {
+      "city": "Chicago"
+     },
+     "fullName": "United Center"
+    }
+   }
+  ],
+  "date": "2026-01-30T01:00Z",
+  "id": "401850920",
+  "season": {
+   "slug": "regular-season",
+   "type": 2,
+   "year": 2026
+  }
+ },
+ "_provenance": {
+  "captured": "2026-10-31",
+  "cases": {
+   "401810384": "POSTPONED, court condensation, makeup Jan 29 -- scores read '0'/'0'",
+   "401810499": "POSTPONED, makeup Jan 25",
+   "401810506": "POSTPONED, makeup Mar 18",
+   "401810507": "POSTPONED, makeup Mar 31",
+   "401810547": "the regularly scheduled MIA/CHI meeting, for contrast",
+   "401850920": "the MAKEUP of 401810384 -- a NEW event id, so a replay cannot be followed by id"
+  },
+  "edits": "none. CLAUDE.md lists postponed games as an edge case never observed, to be simulated by editing one field. It no longer needs simulating: these are real.",
+  "endpoint": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=202601&limit=500",
+  "trim": "as nba_games_fixture.json, plus the full status.type block (id/name/state/detail).",
+  "why": "a postponed game passes the counted-game rule, reports state 'post' with completed false, and carries scores '0' and '0'. So: never key 'finished' off state=='post', and never read a score before completed -- 0-0 is a tie, which the NBA cannot produce. Every season carries a few: 2 in 2023-24, 5 in 2024-25, 4 in 2025-26, which is why the counted-game rule yields 1,232-1,235 and only the DECIDED subset is 1,230 games / 30 teams / 82 each."
+ }
+}

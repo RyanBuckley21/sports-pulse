@@ -897,6 +897,14 @@ def _carry_forward_games_store(entities, store, now_iso, game_date=None):
             "probables": ent.get("probables"), "signals": ent.get("signals"),
             "pulse": ent.get("pulse"), "betting_signals": ent.get("betting_signals"),
             "standout": ent.get("standout"),
+            # The calibrated win chance and the RAW FEATURES behind it (NFL
+            # only so far; None elsewhere). Kept in the graded snapshot for
+            # the same reason the ledger keeps `observed`: the features are
+            # what was known before kickoff, so a later fit -- or a different
+            # model -- can be scored on this game without rebuilding it.
+            # Rebuilt every run like betting_signals, never sticky: it holds
+            # no price. See nfl_winprob.
+            "win_prob": ent.get("win_prob"),
             "status": ent.get("status"),
             "template_version": GAME_PROMPT_VERSION,
             "generated_at": prev.get("generated_at", now_iso) if prev else now_iso,
@@ -1042,6 +1050,20 @@ def _price_block(ent):
     }
 
 
+def _model_pick(ent):
+    """nfl_winprob.display for one entity, or None (no fitted chance, or any
+    failure -- this is a display line and must never cost a card)."""
+    block = ent.get("win_prob")
+    if not block:
+        return None
+    try:
+        import nfl_winprob
+        return nfl_winprob.display(block, (ent.get("home") or {}).get("abbr"),
+                                   (ent.get("away") or {}).get("abbr"), ent.get("odds"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _build_games_section(entities, text_map):
     """Card-ready game insights for the UI, ranked by Best Angle score (highest
     first, no cap). Returns a bare list assigned to data["insights"]["games"] --
@@ -1090,6 +1112,12 @@ def _build_games_section(entities, text_map):
             # three or fewer FBS games, unadjusted for opponent
             # (fetchers.cfb.early_form_note).
             "caution_notes": ent.get("caution_notes"),
+            # The model's chance for each side (nfl_winprob). Display reads
+            # home/away; the features ride along for the record.
+            "win_prob": ent.get("win_prob"),
+            # ...and the one line the card prints from it: the model's pick
+            # and chance with the market's chance for the same side beside it.
+            "model_pick": _model_pick(ent),
             # WHAT THE PICK COSTS. Resolved here rather than in the browser so
             # the American-odds conversion lives in exactly one place (see
             # espn_odds) -- a second copy in JS would be free to drift, and the

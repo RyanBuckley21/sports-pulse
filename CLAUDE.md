@@ -14,7 +14,7 @@ sessions.
 2. **The history in a fresh container is shallow.** Run `git fetch --unshallow origin main`
    before any `git log`/`blame` archaeology. Bot commits drown out everything
    else, so filter them:
-   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB"`.
+   `git log --format='%h %ad %s' --date=short | grep -vE "Regenerate stats|Grade yesterday|Capture MLB|Capture NBA|Refit NFL"`.
 3. **The why lives in the code comments and PR bodies**, not in docs. PRs #1–#61
    carry the measurements behind each decision. Before changing a threshold,
    weight, cron or guard, read the comment block above it. It almost always
@@ -31,29 +31,38 @@ python3 -m tools.verify.test_slate_dates         # Eastern slate boundary, fall-
 python3 -m tools.verify.test_odds                # sticky price, OFF lines, bettability, CLV
 python3 -m tools.verify.test_clv_first_seen      # write-once CLV anchor; report names every baseline, never pools them
 python3 -m tools.verify.test_nfl                 # NFL tiers + grading (tie = PUSH)
+python3 -m tools.verify.test_nfl_winprob         # NFL win probability: no leakage, price-blind, refit refusal, card line + row note
 python3 -m tools.verify.test_cfb_signals         # CFB fallback-tier gating
 python3 -m tools.verify.test_cfb_grading         # CFB grading (tie = UNRESOLVED); ESPN page limit; unabbreviated sides
 python3 -m tools.verify.test_epl_grading         # draw rules: wins double_chance, loses match_result
 python3 -m tools.verify.test_epl_coldstart       # EPL below MIN_MATCHES
 python3 -m tools.verify.test_epl_fetch           # ESPN month-window walk; sweeps all callers for date ranges
 python3 -m tools.verify.test_season_phase        # postseason/preseason picks kept out of the regular-season record
+python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
+python3 -m tools.verify.test_nba_price_capture   # NBA price capture: pre-game only, change-only rows + run row, append-only
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
+python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "218 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "246 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
 python3 signal_report.py --sport mlb --date YYYY-MM-DD --no-record  # read-only grading look
 python3 signal_report.py --date D --rev <sha> --no-record           # grade from a past store
 ```
+
+**The browser job is pinned to `ubuntu-24.04`** (2026-11-11). `ubuntu-latest`
+became 26.04, which the pinned Playwright refuses, and the job was red on
+`main` from 2026-11-10 without running a single check. Move the image and the
+Playwright pin together or not at all.
 
 **CI runs every suite** (`.github/workflows/tests.yml`, since 2026-09-24) on each
 pull request and each push to `main`: all `tools/verify/test_*.py` and
@@ -246,7 +255,9 @@ already known about each, so a new session does not re-derive it:
 
 **Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
 last-10-games boards would show a frozen September snapshot all winter, and it
-was the site's default sport (now EPL). The few World Series picks left could
+was the site's default sport (EPL after it; **NFL since 2026-11-11**, by
+putting `nfl` first in both `active_sports` and `active_game_sports` -- list
+order is the default, and out of season the next league leads). The few World Series picks left could
 add nothing to the record's open question. The mechanics and the re-activation
 steps are in `docs/leagues.md` ("Standing a sport down"). The parts that are
 easy to get wrong:
@@ -338,29 +349,135 @@ What followed from it (kept for the record):
   595 picks and 76 dates). That inversion remains the most interesting
   unexplained thing here, and it is a data question, not a tuning one.
 
-### Add NBA
+### Add NBA — step 1 of 3 DONE 2026-10-31 (branch `claude/nba-groundwork`)
 
-Measured against the live feed on 2026-10-22, so this part is settled:
+**Three steps, and only the first is done.**
+1. **Data layer (done):** `fetchers/nba.py`, `nba_grading.py`, `NBA_TEAMS`, an
+   `nba:` config block with no weights, and `test_nba`. Nothing in the
+   pipeline imports any of it.
+2. **Backtest, then build:** `nba_backtest.py` measures each signal's
+   reliability. Then come `nba_signals.py` and `build_game_entities`, the
+   `GAME_BUILDERS` entry, and the `SPORT_ADAPTERS` entry (adding
+   `list_markets`/`top_market` to `nba_grading`). It is still in neither gate.
+3. **Activation:** the gates, a `continue-on-error` grading step, and the
+   `deploy-pages.yml` alarm list. **Hard prerequisite: `odds_first_seen`
+   (#73) is merged.** It merged on 2026-11-10 (`132964b`). NBA activated without it would have no first-capture anchor,
+   and its CLV would inherit the book-open confound #73 was built to remove.
 
-- `site.api.espn.com/.../basketball/nba/scoreboard` works; **odds coverage was
-  100%** (2 of 2 games, then 12 of 12 the next day), carrying **both open and
-  close** moneylines plus spread and total. So NBA arrives price-capable from
-  day one, unlike CFB and EPL.
-- Month queries work (`dates=202610`, 155 events). **Range queries 400**, same
-  as every other league — use `espn_dates` (invariant 11).
-- `/teams` returns 30; `/teams/{id}/statistics` and the standings endpoint both
-  respond, so richer signals than margin are available.
-- **Preseason is mixed into the month feed** — October 2026 showed 81 completed
-  games, far more than a two-day-old regular season. Filter by season type
-  before computing any form, or preseason results will train the model. This is
-  the same class of trap as CFB's postseason `week=1`.
-- The season began ~2026-10-20, so NBA starts in genuine cold start. The
-  prior-season-margin fallback pattern (`fetchers/nfl.build_prior_season_margin`
-  and the `_FALLBACK_TIERS` machinery) is the precedent to copy, including the
-  measured home-field shift.
+No weight exists anywhere for NBA. A builder can't produce a standout without
+one, so it waits for the backtest instead of shipping a placeholder (invariant
+8). The fixtures and the measurements below come from a separate session with
+ESPN access. This sandbox's proxy blocks `site.api.espn.com`.
 
-Follow `docs/leagues.md`: register the sport first, activate it in a separate
-step, and ship no weight before a backtest.
+Measured, and pinned in `test_nba` where a test can pin it:
+
+- **A counted game needs `season.type == 2` AND `competitions[0].type.id ==
+  "1"` (STD).** Neither half is enough. Season type 2 also admits All-Star
+  games (ALLSTAR, id 4: STARS/WORLD/STRIPES) and the NBA Cup final (CC, id 39).
+  STD also admits preseason (67 of October 2026's 155 events). For 2025-26
+  the rule gives 1,232-1,235 games a season, because **postponed shells pass
+  it**: ESPN keeps the called-off event beside its makeup, with state `post`,
+  `completed` false and scores "0"/"0". Only the **decided** subset is 1,230
+  games, 30 teams and 82 each, in all three seasons 2023-26. Count nothing
+  before filtering decided. Unfiltered (no rule at all), 2025-26 gives 1,235
+  games and 33 "teams".
+- **`neutralSite` is not a filter.** Five games that count are at neutral sites
+  (2 Cup semifinals, Mexico City, Berlin, London), while All-Star games report
+  `False`.
+- **Slate dates are Eastern** (invariant 3). Most games tip after 8 PM ET and
+  carry the next UTC date: the Mexico City game is `2025-11-02T02:00Z`, played
+  on November 1. `nba_grading.fetch_slate` walks both days' months and keeps
+  the Eastern date, rather than trusting ESPN's unmeasured `dates=` day
+  boundary.
+- **ESPN names a season for the year it ENDS.** 2026-27 is `season.year`
+  2027. nflverse does the opposite.
+- **Prices are live-only and intermittent.** This corrects the 2026-10-22 note
+  that said "odds coverage 100%". ESPN strips the odds block when a game
+  completes: 0 of 12 on 10-28, 0 of 170 in February 2026. Before tip it may or
+  may not carry one: 10 of 10 a day ahead on 10-29, but 0 of 15 for 11-02 on
+  10-31. **NBA has no price history on this endpoint.** So:
+  - price capture must be sticky and close to tip;
+  - a missed pre-game snapshot is gone for good;
+  - `odds_first_seen` is the only CLV baseline NBA will ever have;
+  - the Bets tab's NBA bands can only fill going forward.
+- **Home court is well under the usual ~3-point quote, every season.** Pooled
+  over 2023-26 on 3,678 true-home decided games: **+1.854 pts [+1.316,
+  +2.370]**, home win rate **0.5473**. Per season: 2023-24 +2.143, 2024-25
+  +1.692, 2025-26 +1.727 (4,000 resamples, seed 17; re-derived from
+  `tools/verify/nba_seasons_2024_2026.json`). In 2025-26 alone, including all
+  1,230 games gives +1.737, so dropping the
+  Cup final changes nothing. The shift gets fitted by the backtest, never
+  assumed at 3.
+
+**Step 2, part 1 (2026-10-31): the signals measured** (`nba_backtest.py`,
+offline on `tools/verify/nba_seasons_2024_2026.json`, 3,690 decided games
+2023-26, no look-ahead, pinned in `test_nba`). Every signal is compared with
+always-home on the same true-home games, with a paired 95% bootstrap interval:
+
+| signal | n | r [95%] | accuracy | minus always-home |
+| --- | --- | --- | --- | --- |
+| season margin, 5-game floor | 3,452 | +0.391 [+0.365, +0.418] | 0.657 | **+10.9pp [+8.6, +13.3]** |
+| last-10 margin | 3,224 | +0.353 [+0.323, +0.381] | 0.653 | +11.0pp [+8.6, +13.5] |
+| rest difference | 3,643 | +0.057 [+0.025, +0.089] | 0.545 | −0.1pp [−3.3, +3.2] |
+| prior-season margin | 2,460 | +0.251 [+0.214, +0.287] | 0.590 | +3.9pp [+1.2, +6.8] |
+
+**THIS IS ACCURACY, NOT EDGE. Do not read the table as "NBA has edge".**
+Always-home is a weak baseline, and beating it says nothing about beating the
+market. This repo has the precedent: CFB hits 70.7% and returns −10.3%. And
+whether 65.7% is above or below the market can't be checked, because NBA has
+no price history on this endpoint. **NBA's accuracy is measurable; its edge is
+not**, and won't be until prices accumulate going forward through
+`odds_first_seen`. Any claim that NBA picks have edge needs that forward
+record and its named baseline, never this table.
+
+- **Season margin is the signal, at a 5-game floor, and the floor must not be
+  "tuned" upward.** Signal accuracy is flat across floors, but always-home
+  *decays* on the subset as the floor rises, so the paired gap grows without
+  the model improving:
+
+  | floor | n | signal acc | always-home, same games | paired |
+  | --- | --- | --- | --- | --- |
+  | 5 | 3,440 | 0.6570 | 0.5477 | +10.9pp [+8.6, +13.3] |
+  | 10 | 3,215 | 0.6594 | 0.5428 | +11.7pp |
+  | 20 | 2,754 | 0.6583 | 0.5378 | +12.1pp |
+
+  The +12.1pp at floor 20 is the baseline weakening late in a season. Raising
+  the floor "improves" NBA by measuring nothing and costs coverage. (These
+  true-home figures were reproduced exactly by an independent review session's
+  walk-forward, which shares no code with `nba_backtest.py`.)
+- **Last-10 margin is excluded as collinear:** r = +0.806 with season margin
+  on 3,224 games, on the same side 79.9% of the time. Where they disagree (647
+  games), season margin is right 51.8%. That is a coin flip, so it is **not**
+  evidence that season margin is the better of the two, only that last-10 adds
+  nothing.
+- **Rest difference does not beat always-home.** Its r clears zero, but only
+  barely.
+- **Prior-season margin: two different quantities, don't merge them.**
+  - The table row (+3.9pp [+1.2, +6.8], n = 2,460, 67% coverage) is measured
+    on *every* game where both teams have a prior season. It is not a
+    cold-start figure. Coverage is 67% because 2022-23 is not in the dataset.
+  - The true **cold-start** sample, games before both teams reach 5, is only
+    **157** (78 in 2024-25, 79 in 2025-26). It is too small to settle how the
+    fallback tier should behave. Part 2 reports it separately.
+- **These are single signals, and none includes the home shift.** Part 2
+  combines season margin with the fitted shift, fits on 2023-25 and tests on
+  2025-26, and only then writes weights. Two rules for its report:
+  - every figure states **always-home on its own subset**, never the global
+    0.5473, which moves with the floor as shown above;
+  - the shift is stated as **fitted on 3,678 true-home games, pooled +1.854
+    [+1.316, +2.370]**, so the interval it carries is visible wherever it is
+    used.
+
+**Baselines, named before any NBA number exists:**
+- **Hit rate** is judged against the break-even of the graded price.
+- **CLV** is measured from `odds_first_seen` only.
+- **Backtest accuracy** must beat **always-home, 0.5473** (pooled 2023-26,
+  3,678 true-home decided games; 0.5543 was one season). "Always the favourite" is not available historically,
+  because there are no historical prices; it can only be measured going
+  forward.
+- **Cold start** uses prior-season margin (`build_prior_season_margin`, which
+  returns game counts so the backtest picks the floor) plus the fitted home
+  shift.
 
 ## Known drift and open items (as of 2026-09-26; state refreshed 2026-10-22)
 
@@ -400,6 +517,118 @@ picks) and the lists sort by score until one fills. NFL cards and Bets rows
 warn when a starting QB is on the injury report short of Out
 (`fetchers.nfl.qb_availability_note`); that warning is **display only**.
 
+**The owner's betting constraints, measured (2026-11-10).** Singles: nothing
+shorter than −150. Parlays: only with a DraftKings profit boost, whose terms
+change daily. `nfl_odds_backtest.py` now reports both, on 1,245 NFL picks at
+closing prices (2015-2025; 658 out-of-sample):
+
+| | n | result |
+| --- | --- | --- |
+| win rate minus the no-vig closing probability, all picks | 1,245 | **+0.01pp [−2.5, +2.4]** |
+| singles, −150 or longer, ROI | 279 | −7.4% [−19.9, +5.7] (out-of-sample: −11.2% on 154) |
+| parlay legs, −300…−150, ROI | 457 | +0.7% [−5.7, +6.7] |
+
+**The model carries no information the closing price does not.** That agrees
+in sign with the live ledger at the singles floor (12-28, ROI −40.2%
+[−67.2, −12.0], measured the same day). So:
+
+- **Singles at −150 or longer have no measured edge.** Do not build a singles
+  selector on the current signals; the question is closed until a band's
+  interval clears zero on prices earlier than the close (none are stored for
+  NFL history; `odds_first_seen` is the forward record).
+- **Boosted parlays are priced from the market, not the model**
+  (`parlay_boost.py`, the Bets tray). A leg's chance is its two-sided price
+  with the vig removed; the Signal Score is not consulted. The value comes
+  from the boost: three legs at +312 lose 12.3% unboosted and are worth +20.9%
+  at a 50% boost. The no-vig method was measured on 5,788 NFL sides
+  (`tools/devig_calibration.py`): no band is measurably off, and each is only
+  known to about ±3.5pp, which the tray says beside every value.
+- **There is no default promo.** Every term is typed by the reader.
+
+Open on the boost work:
+- **Predicted vs realised is not tracked.** Nothing logs which boosted tickets
+  were priced or taken, so the independence assumption across games has never
+  been checked against results. This needs a log before it can be measured.
+- **The no-vig chance is measured on NFL closing lines only.** CFB and NBA are
+  assumed alike. NBA can be checked once `data/nba_prices.jsonl` has a season.
+- **No stake cap is modelled.** Boosts cap the stake, so the percentage is
+  per dollar staked, not a dollar value.
+- **The tray prices the board's leans only** (one per game, the side the
+  model named). **Decided 2026-11-10: keep it to the lean** (owner), even
+  though any priced side could be a leg now that the chance is the market's.
+
+**NFL win probability: a predictor that learns, and is not an edge
+(2026-11-11).** What the owner asked for (2026-11-10): bets identified each
+day as singles with parlay pieces highlighted, NFL predictors every week, and
+models that are "graded, learn from those grades, and adjust". `nfl_winprob.py`
+is the learning part: a price-blind logistic model on the builder's own seven
+inputs, **refit weekly on every completed game** (`refit-nfl-winprob.yml`,
+Tuesday and Wednesday), with its walk-forward grade stored beside the weights
+in `data/nfl_winprob.json`. Every NFL game now carries `win_prob` (chance for
+each side plus the raw features) in the graded store, a "Model pick" line on
+its card, and the Signal Score is untouched.
+
+Measured before it was built (`python3 nfl_winprob.py --audit`; 4,297 decided
+games 2010 to week 10 of 2026, walk-forward 2015-2026 on 3,020):
+
+| | accuracy | log loss |
+| --- | --- | --- |
+| always-home | 54.4% | 0.690 |
+| the model | 62.9% | 0.647 |
+| closing price | 66.4% | 0.613 |
+
+- **No input predicts what the price left over.** Each of the seven correlates
+  with results (+0.03 to +0.25) and with the price's residual at ~0; only
+  defensive EPA's interval excludes zero (−0.04 [−0.07, −0.01]).
+- **Model minus price, log loss: +0.034 [+0.026, +0.043].** Stacked on the
+  price it adds nothing (−0.0004 [−0.0012, +0.0004]).
+- **Where it disagrees with the price, the price is right.** A side the model
+  rates 5+ points above the no-vig price wins 2.4 points less often than
+  priced [−4.5, −0.3], n=1,829 (10 points: −2.1 [−5.0, +0.9]; 15: −3.5).
+  Singles at −150 or longer on sides it likes by 10+ points return −10.4%
+  [−20.3, +0.0], against −4.3% for every side in that range.
+- **This season so far** (by fits that never saw it): 87 of 135, 64.4%,
+  against the price's 68.1% and always-home's 49.6%.
+
+So: **do not present the model's chance as value.** The card prints the
+market's chance for the same side beside it and says in the line that it has
+not beaten the market. `bet_board` adds a caution to a row when the model is
+5+ points above the market; that evidence is thin and it is a note, never a
+filter or a sort key.
+
+Rules for working on it:
+- **Improve it by adding information, not by tuning.** The L2 penalty is flat
+  from 0.01 to 100 (0.6466 to 0.6456). A change counts only if walk-forward
+  log loss improves with an interval, on the same games.
+- **The weights are data, not config.** They live in `data/nfl_winprob.json`
+  with their scorecard, are written only by `--fit`, and `--fit` refuses a fit
+  that is no better than always-home or built on fewer games than the file's.
+- **It is price-blind (invariant 1).** Prices appear only in `--audit` and at
+  display.
+
+Open on it:
+- **The refit job has never run in Actions.** After merge, run it once by hand
+  and read its log line; a Tuesday that says "no new games" every week means
+  nflverse publishes later than assumed and the cron should move.
+- **The model's picks are not in the ledger.** The weekly scorecard grades
+  every game, but `signal_report` still grades only standouts. A per-game
+  graded row for the model's pick is the next step if the owner wants the
+  record on the Model Review tab.
+- **NFL only.** CFB has no price history to audit against and CFBD revises its
+  inputs; NBA has no prices yet. Same shape applies once either can be graded.
+- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) means
+  player-prop parlays from the leaderboards. A builder exists on
+  `claude/prop-builder` and is **PARKED, not merged** (owner, 2026-11-11:
+  "doesn't seem too useful if I have to do it myself. I don't want anything
+  paid"). The site captures no prop lines, so the reader had to type the line
+  and price. It becomes worth merging only with a FREE prop-line source. One
+  untested candidate: ESPN's core API may expose prop bets per event; the build
+  sandbox cannot reach ESPN, so it would have to be probed from Actions.
+
+**The Bets tab opens on its NFL filter** when the board has NFL leans, and on
+All otherwise (2026-11-11, owner's request; `bets.js` `DEFAULT_SPORT`). The
+reader's own tap is never overridden by a re-render.
+
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI
 −10.3%**. It is the first sport past the 30-pick gate, and it is the bettability
@@ -421,6 +650,38 @@ Open, in rough priority:
   so a standout that flipped sides would compare two different sides' prices.
   Checked 2026-10-29: 0 of its 116 anchors flipped, so the 10-22 table stands.
   The live field keeps both sides.
+- ~~NBA prices are being lost every day until something stores them~~
+  **Capture built 2026-11-10** (`nba_price_capture.py`,
+  `capture-nba-prices.yml`, `test_nba_price_capture`): capture only, appending
+  to `data/nba_prices.jsonl`, in no gate and read by nothing. Losses stop from
+  its first scheduled run after merge, not before: 121 counted games were
+  already gone on 2026-11-04, at about 56 a week. What it leaves open:
+  - **It has never run against the live feed.** The build sandbox cannot reach
+    `site.api.espn.com`; everything is pinned on the 2026-10-30/31 fixture.
+    **Check the first run's log line** (`N events, N pre-game, N priced`) and
+    that a `Capture NBA prices` commit appears on a game day. Zero priced on a
+    day with evening games means the feed's shape differs from the fixture.
+  - **The hourly cadence is not measured** (16 entries, 13:20-04:20 UTC). After
+    two weeks, re-derive it from the file: `run` rows give arrival times,
+    `price` rows give how early a line appears and how often it moves.
+  - **Nothing alarms on a silent day.** A day with games and no rows is only
+    visible by looking. Add an alarm once a normal day's row count is known.
+  - **ESPN's `dates=YYYYMMDD` day boundary is still unmeasured.** The capture
+    asks for yesterday, today and tomorrow so it does not matter; the file's
+    `slate_date` against the day each event was listed under would settle it.
+  - **Rows are not filtered by the counted-game rule** (each carries `counted`
+    and the raw types), so preseason, Cup-final and future playoff prices are
+    kept. Any reader must filter.
+- **NBA playoffs and play-in are not handled.** Their competition types were
+  never captured, and the counted-game rule keeps regular season only. Capture
+  them before the regular season ends in mid-April. (The price capture keeps
+  such games anyway, with `counted: false`; their types can be read from its
+  rows once April arrives.)
+- **NBA team colours collide after the legibility lift:** BKN/SA (`#8C8C8C`)
+  and DET/NY/PHI (`#577BC2`). This is display only. Settle it at activation,
+  as EPL did with alternate colours.
+- **NBA logos are not cached.** `fetch-logos.yml` has no NBA step. The
+  `/teams` capture carries `logo` URLs; this is due at activation.
 - ~~CLV measures from the book's opening price~~ **Measured 2026-10-22, and it
   was the whole signal.** Re-anchored to the first committed store state where a
   pick had both a price and a standout, NFL falls from +7.90pp to −0.50pp
@@ -432,6 +693,7 @@ Open, in rough priority:
   against nflverse's injury history first.
 - **NFL price-band evidence exists historically.** `nfl_odds_backtest.py`'s
   nflverse closing lines (2015-2020) could seed the Bets tab's NFL records now.
+  (Its owner-band report, added 2026-11-10, is that evidence in summary.)
 - **EPL has no captured prices**, so no Bets rows.
 - ~~CFB stats are not adjusted for opponent strength~~ **Closed 2026-09-26:**
   production CFB form is `fetchers.cfb.build_team_form_adjusted` at

@@ -27,10 +27,16 @@ top_n: 10
 # BOTH gates -- "inactive" was decided to mean nothing at all, not leaderboards
 # only. Its board is last-10-games, so all winter it would publish a frozen
 # end-of-September snapshot as if it were "who's hot"; and being first in this
-# list it was the site's DEFAULT sport, which is now epl. Standing down is not
+# list it was the site's DEFAULT sport. Standing down is not
 # deleting: the fetcher, team_meta, logos and config block below all stay, and
 # re-adding `mlb` here (first, to make it the default again) restores the boards.
-active_sports: [epl, nfl]
+#
+# nfl FIRST since 2026-11-11 (owner: "I also want the bets and who's hot pages
+# to default on nfl"). Order here IS the default: data.json keeps it, and the
+# league picker opens on the first key present (web/sport-state.js `ensure`).
+# Out of season the nfl section is simply absent and epl leads again -- no
+# switch to flip in February.
+active_sports: [nfl, epl]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
 # GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
@@ -92,7 +98,10 @@ active_sports: [epl, nfl]
 #     ledger rows and data/training/mlb_features.jsonl stay (append-only).
 # To restore: add `mlb` back. The first run rebuilds its partition normally
 # (a frozen store for an older date is not "covering" today's slate).
-active_game_sports: [epl, cfb, nfl]
+# nfl first for the same reason as active_sports above: Games, Players and
+# Teams share the one league selection, so whichever tab is opened first must
+# land on the same default.
+active_game_sports: [nfl, cfb, epl]
 
 # Kill switch for the AI Insights layer (generate_insights.py's `claude -p`
 # prose + the JS AI Note blurb). false = no AI calls, no AI text in the UI --
@@ -220,6 +229,16 @@ mlb:
 #
 # Not fetched or shown while `nfl` is absent from active_sports (same gate the
 # worldcup block below sits behind).
+# NBA, REGISTERED 2026-10-31 AS A DATA LAYER ONLY -- in neither gate, in no
+# registry, imported by nothing in the pipeline. fetchers/nba.py and
+# nba_grading.py hold the counted-game rule (season.type 2 AND competition type
+# STD), Eastern slate dates and the grading rules; the backtest that will set
+# weights comes next, and NO WEIGHT, SCALE OR THRESHOLD belongs in this block
+# until it has run (invariant 8). See CLAUDE.md "Add NBA".
+nba:
+  # Read by nba_grading; test_nba asserts it matches fetchers/nba.SCOREBOARD_URL.
+  scoreboard_url: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+
 nfl:
   # Grading endpoint, read by nfl_grading. Present for the same reason cfb's
   # is: tools/verify/test_nfl_grading.py asserts config and the module constant
