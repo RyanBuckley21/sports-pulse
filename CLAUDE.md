@@ -59,6 +59,11 @@ python3 signal_report.py --sport mlb --date YYYY-MM-DD --no-record  # read-only 
 python3 signal_report.py --date D --rev <sha> --no-record           # grade from a past store
 ```
 
+**The browser job is pinned to `ubuntu-24.04`** (2026-11-11). `ubuntu-latest`
+became 26.04, which the pinned Playwright refuses, and the job was red on
+`main` from 2026-11-10 without running a single check. Move the image and the
+Playwright pin together or not at all.
+
 **CI runs every suite** (`.github/workflows/tests.yml`, since 2026-09-24) on each
 pull request and each push to `main`: all `tools/verify/test_*.py` and
 `tools/tokens/test_*.py` found by glob, with the network blocked by

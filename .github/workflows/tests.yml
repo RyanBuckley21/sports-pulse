@@ -107,7 +107,16 @@ jobs:
           fi
 
   browser:
-    runs-on: ubuntu-latest
+    # PINNED to ubuntu-24.04, not ubuntu-latest (2026-11-11). `ubuntu-latest`
+    # moved to the 26.04 image between 2026-10-29 (last green run, 40901184259)
+    # and 2026-11-10, and the Playwright version pinned below refuses it:
+    #   "ERROR: Playwright does not support chromium on ubuntu26.04-x64"
+    # (main's own push run 42875479381 on 11-10, then PR #74). The browser job
+    # had been red on main since, for every change, without any test running.
+    # Pinning the image keeps the suite on the pair it was verified on. To move
+    # to 26.04, raise the Playwright pin to a release that supports it and
+    # re-verify the count in the same change -- do not just restore `latest`.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
