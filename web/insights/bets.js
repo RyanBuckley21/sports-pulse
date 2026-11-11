@@ -94,7 +94,9 @@
       lines.push('<div class="bet-tray-promo is-in">Meets the promo terms entered.</div>');
     }
     if (!legs.every(function (l) { return typeof l.fair === "number"; })) {
-      lines.push('<div class="bet-tray-ev">No market chance: a leg has no two-sided price.</div>');
+      lines.push('<div class="bet-tray-ev">' + (legs.some(function (l) { return l.prop; })
+        ? "No value shown: a player prop has only the one price you typed, so its true chance is unknown. The season counts are counts, not chances."
+        : "No market chance: a leg has no two-sided price.") + "</div>");
       return lines.join("");
     }
     var win = legs.reduce(function (p, l) { return p * l.fair; }, 1);
@@ -191,10 +193,50 @@
   // break-evens -- so a four-leg parlay of -200s needs 0.667^4 = 20%, and
   // shows it. "From records" appears only when every leg's price band is
   // proven; otherwise it says why it cannot.
+  // PLAYER-PROP LEGS (2026-11-11) come from the reader's slip, built on the
+  // Who's Hot player pages (sport-state.js SP.slip), and join the same ticket:
+  // the same price product and the same promo terms. What they do NOT get is
+  // a market chance -- the reader typed one side's price, and one side alone
+  // cannot say how much of it is margin -- so a ticket holding a prop is
+  // priced and checked against the promo, and given no value. Each prop shows
+  // its season count instead, labelled as a count.
+  function propLegs() {
+    return (window.SP && SP.slip && SP.slip.legs) || [];
+  }
+
+  function propLines(props) {
+    if (!props.length) return "";
+    var teams = {};
+    var clash = [];
+    props.forEach(function (l) {
+      if (!l.team) return;
+      if (teams[l.team]) clash.push(l.team);
+      teams[l.team] = true;
+    });
+    return (
+      '<div class="bet-tray-props">' +
+      props.map(function (l) {
+        return '<div class="bet-tray-prop" data-prop-key="' + esc(l.key) + '">' +
+          '<span class="bet-tray-prop-text">' + esc(l.side) + " " + esc(l.display) +
+          " \u00b7 cleared " + l.hit.k + " of " + l.hit.n + " this season</span>" +
+          '<button type="button" class="bet-prop-remove" aria-label="Remove ' + esc(l.side) + '">\u00d7</button>' +
+          "</div>";
+      }).join("") +
+      // Two props on one team move together (a quarterback's yards and his
+      // receiver's). Books price same-game combinations as a unit, usually
+      // lower than the product shown here.
+      (clash.length ? '<div class="bet-tray-fine">Two legs on ' + esc(clash.join(", ")) +
+        ": same-game legs move together, and the book will price them as one ticket, usually lower than this product.</div>" : "") +
+      "</div>"
+    );
+  }
+
   function tray(board) {
-    var legs = board.straight.concat(board.parlay).filter(function (l) { return picked[legKey(l)]; });
+    var props = propLegs();
+    var legs = board.straight.concat(board.parlay).filter(function (l) { return picked[legKey(l)]; })
+      .concat(props);
     if (!legs.length) {
-      return '<div class="bet-tray is-empty">Tap + on any row to build a parlay.</div>';
+      return '<div class="bet-tray is-empty">Tap + on any row to build a parlay, or add a player prop from a Who\u2019s Hot player page.</div>';
     }
     var dec = legs.reduce(function (p, l) { return p * l.decimal; }, 1);
     var american = dec >= 2 ? "+" + Math.round((dec - 1) * 100) : "−" + Math.round(100 / (dec - 1));
@@ -213,6 +255,7 @@
       "</div>" +
       '<div class="bet-tray-sub">' + esc(legs.map(function (l) { return l.side + " " + l.display; }).join(" · ")) +
       " — " + esc(est) + "</div>" +
+      propLines(props) +
       boostLines(legs, dec) +
       "</div>"
     );
@@ -273,11 +316,20 @@
     var f = e.target.closest(".bet-filter");
     var add = e.target.closest(".bet-add");
     var clear = e.target.closest(".bet-clear");
+    var dropProp = e.target.closest(".bet-prop-remove");
+    if (dropProp && window.SP && SP.slip) {
+      SP.slip.remove(dropProp.closest(".bet-tray-prop").getAttribute("data-prop-key"));
+      render(lastData, lastRoot);
+      return;
+    }
     if (f) sportFilter = f.getAttribute("data-bet-sport");
     else if (add) {
       var key = add.closest(".bet").getAttribute("data-key");
       if (picked[key]) delete picked[key]; else picked[key] = true;
-    } else if (clear) picked = {};
+    } else if (clear) {
+      picked = {};
+      if (window.SP && SP.slip) SP.slip.clear();
+    }
     else return;
     render(lastData, lastRoot);
   }

@@ -252,6 +252,14 @@ docs/                    schema, league how-to, MLB API field maps, dev notes
 
 ## Honest caveats
 
+**Player props are yours to build, and the site only counts.** On a player's
+Who's Hot page, each category has a prop check: type the book's line and
+price, and it shows how often he cleared that line this season, with the range
+that small count is consistent with. Add it to your parlay and the Bets tab
+prices the ticket and checks your boost terms. It never shows a value for a
+prop: the site stores no prop lines and one side's price cannot say what the
+true chance is.
+
 **The NFL "Model pick" is a prediction, not a bet.** Every NFL card shows the
 model's pick and chance with the market's chance for the same side beside it.
 The model is refit each week from results and is right about 63% of the time;

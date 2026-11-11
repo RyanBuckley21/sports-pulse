@@ -1165,6 +1165,18 @@ def aggregate_category(by_player, cat_cfg, default_window, gameday_by_game_id):
                 {"date": gameday_by_game_id.get(r.get("game_id")), "value": v}
                 for r, v in zip(window, per_game_values)
             ],
+            # THE WHOLE SEASON, game by game, for the prop check on the player
+            # page (2026-11-11): "how often has he cleared 62.5?" is a question
+            # about every game he played, and the four-game `series` above
+            # would answer it from four. Same rows, same fields and the same
+            # position filter as the board value, just not cut to the window.
+            # Raw per-game totals even on a per-game board -- a prop line is
+            # a single game's number.
+            "log": [
+                {"date": gameday_by_game_id.get(r.get("game_id")),
+                 "value": sum(_cat_num(r, f) for f in fields)}
+                for r in rows
+            ],
         })
     return records
 

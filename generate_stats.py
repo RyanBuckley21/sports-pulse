@@ -410,6 +410,10 @@ def build_data(ranked_records, generated_at):
                         "last_game_date": r.get("last_game_date"),
                         "total_qualified": r.get("total_qualified"),
                         "series": r.get("series") or [],
+                        # The season's game-by-game values where the fetcher
+                        # supplies them (NFL since 2026-11-11); None elsewhere,
+                        # and the page then shows no prop check.
+                        "log": r.get("log"),
                         "vs_next_starter": r.get("vs_next_starter"),
                         # threshold_rate: met/window drive the "8/10" display.
                         "met": r.get("met"),

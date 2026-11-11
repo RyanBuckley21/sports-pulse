@@ -470,6 +470,124 @@
     );
   }
 
+  // ---- PROP CHECK (2026-11-11) ---------------------------------------------
+  // The owner: "I want to be able to use the Who's Hot board to build my own"
+  // -- player-prop parlays from the leaderboards. This block is that, on each
+  // category of a player's page: type the book's line and it says how often he
+  // cleared it this season; type the price and the leg can join the Bets tray.
+  //
+  // WHAT IT IS, AND IS NOT. It is a COUNT of this season's games against the
+  // line typed, with the range that count is consistent with. It is not a
+  // model, not a projection, and not evidence of value: the book set the line
+  // knowing every one of these games, and nothing here has been measured
+  // against prop prices (the site stores none -- the line and price are the
+  // reader's). The interval is printed with the count because a season is a
+  // dozen games at most: 6 of 9 is "67%" and is also anywhere from 35% to 88%.
+  //
+  // The interval is Wilson's 95% score interval, chosen over the plain
+  // p +/- 1.96*sqrt(pq/n) because that one runs outside 0-100% and collapses
+  // to a single point at 0 of n or n of n, which is exactly where a small
+  // sample most needs an honest width.
+  function wilson(k, n) {
+    if (!n) return null;
+    var z = 1.96, p = k / n, z2 = z * z;
+    var centre = (p + z2 / (2 * n)) / (1 + z2 / n);
+    var half = (z * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))) / (1 + z2 / n);
+    return [Math.max(0, centre - half), Math.min(1, centre + half)];
+  }
+
+  // "62.5", "-115", "+120", or a typographic minus as phones insert. Anything
+  // else is "not typed yet", never zero.
+  function propNum(s) {
+    var t = String(s == null ? "" : s).replace(/\u2212/g, "-").replace(/[+\s]/g, "");
+    if (t === "" || !/^-?\d+(\.\d+)?$/.test(t)) return null;
+    return parseFloat(t);
+  }
+
+  // How the season went against one line. A game that lands exactly ON the
+  // line is a push at the book -- neither over nor under -- so it is counted
+  // apart and left out of the rate.
+  function propTally(values, line, side) {
+    var over = 0, under = 0, push = 0;
+    values.forEach(function (v) {
+      if (v > line) over++; else if (v < line) under++; else push++;
+    });
+    var k = side === "under" ? under : over;
+    return { k: k, n: over + under, push: push };
+  }
+
+  function propCheckHtml(cat, player) {
+    var log = player.log;
+    // Count and per-game boards only: a threshold board's "value" is a rate
+    // of games, which is not something a book hangs a line on.
+    if (!log || !log.length || cat.kind === "threshold") return "";
+    var values = log.map(function (g) { return Number(g.value); });
+    var label = cat.short_label || cat.label || "";
+    return (
+      '<div class="prop-check" data-prop-values="' + esc(values.join(",")) + '"' +
+      ' data-prop-player="' + esc(player.entity) + '" data-prop-team="' + esc(player.team_abbr || "") + '"' +
+      ' data-prop-cat="' + esc(cat.key) + '" data-prop-label="' + esc(label) + '">' +
+      '<div class="breakdown-label">Prop check &middot; this season, ' + values.length +
+      (values.length === 1 ? " game" : " games") + "</div>" +
+      '<div class="prop-inputs">' +
+      '<button type="button" class="prop-side" data-side="over" aria-pressed="true">Over</button>' +
+      '<label class="prop-field"><span>Line</span><input type="text" inputmode="decimal" autocomplete="off" class="prop-line" placeholder="62.5"></label>' +
+      '<label class="prop-field"><span>Price</span><input type="text" inputmode="text" autocomplete="off" class="prop-price" placeholder="-115"></label>' +
+      "</div>" +
+      '<div class="prop-result">Type the book\u2019s line to see how often he cleared it.</div>' +
+      '<button type="button" class="prop-add" disabled>Add to my parlay</button>' +
+      "</div>"
+    );
+  }
+
+  // Recompute one block IN PLACE from what is typed. Never a re-render: the
+  // view rebuilds from innerHTML, which would throw the caret out of the
+  // field on every keystroke (the same trap bets.js documents).
+  function propUpdate(box) {
+    var values = box.getAttribute("data-prop-values").split(",").map(Number);
+    var side = box.querySelector(".prop-side").getAttribute("data-side");
+    var line = propNum(box.querySelector(".prop-line").value);
+    var price = propNum(box.querySelector(".prop-price").value);
+    var out = box.querySelector(".prop-result");
+    var add = box.querySelector(".prop-add");
+    add.textContent = "Add to my parlay";
+    if (line == null) {
+      out.textContent = "Type the book\u2019s line to see how often he cleared it.";
+      add.disabled = true;
+      return null;
+    }
+    var t = propTally(values, line, side);
+    var word = side === "under" ? "Under" : "Over";
+    var text;
+    if (!t.n) {
+      text = "Every game landed exactly on " + line + ": nothing to count.";
+    } else {
+      var ci = wilson(t.k, t.n);
+      text = word + " " + line + " in " + t.k + " of " + t.n + (t.n === 1 ? " game" : " games") +
+        " (" + Math.round(100 * t.k / t.n) + "%). With " + t.n + (t.n === 1 ? " game" : " games") +
+        " the true rate could be anywhere from " + Math.round(100 * ci[0]) + "% to " + Math.round(100 * ci[1]) + "%.";
+      if (t.push) text += " " + t.push + (t.push === 1 ? " push" : " pushes") + " left out.";
+    }
+    var dec = price == null || price === 0 ? null : 1 + (price > 0 ? price / 100 : 100 / Math.abs(price));
+    if (dec != null) {
+      text += " The price needs " + Math.round(100 / dec) + "%.";
+    }
+    text += " A count, not a prediction: the book set this line knowing these games.";
+    out.textContent = text;
+    add.disabled = !(dec != null && t.n);
+    if (add.disabled) return null;
+    var player = box.getAttribute("data-prop-player");
+    return {
+      key: "prop:" + player + ":" + box.getAttribute("data-prop-cat") + ":" + side + ":" + line,
+      side: player + " " + (side === "under" ? "u" : "o") + line + " " + box.getAttribute("data-prop-label"),
+      display: (price > 0 ? "+" : "\u2212") + Math.abs(price),
+      decimal: dec,
+      team: box.getAttribute("data-prop-team") || null,
+      hit: { k: t.k, n: t.n, push: t.push },
+      prop: true
+    };
+  }
+
   // The full per-category detail -- unchanged in content from what the page
   // rendered before this became a multi-category view. The key cells moved in
   // here from the page header: rank, ranked-of and the gap to #1/#2 are all
@@ -562,6 +680,7 @@
       keyCell(gapStr, gapLabel) +
       "</div>" +
       '<div class="bars-section"><div class="bars-label">' + barsTitle + "</div>" + barsHtml + "</div>" +
+      propCheckHtml(cat, player) +
       // vs-next-starter used to render here, once per category. It never
       // varied by category (see playerVsNextStarter, up in renderDetail) --
       // moved to the page level, once, below the category list.
@@ -683,7 +802,34 @@
     if (c) { c.scrollLeft = x; updateScrollFade(); }
   }
 
+  // Prop check: typing recomputes its own block in place (see propUpdate).
+  appEl.addEventListener("input", function (e) {
+    var box = e.target.closest && e.target.closest(".prop-check");
+    if (box) propUpdate(box);
+  });
+
   appEl.addEventListener("click", function (e) {
+    // Prop check buttons are handled first and stop here: they sit inside a
+    // player row whose own tap handlers (expand, open detail) must not fire.
+    var propSide = e.target.closest(".prop-side");
+    if (propSide) {
+      var over = propSide.getAttribute("data-side") === "over";
+      propSide.setAttribute("data-side", over ? "under" : "over");
+      propSide.textContent = over ? "Under" : "Over";
+      propUpdate(propSide.closest(".prop-check"));
+      return;
+    }
+    var propAdd = e.target.closest(".prop-add");
+    if (propAdd) {
+      var leg = propUpdate(propAdd.closest(".prop-check"));
+      if (leg && window.SP && SP.slip) {
+        SP.slip.add(leg);
+        propAdd.textContent = "Added \u2713 \u2014 see Bets";
+      }
+      return;
+    }
+    if (e.target.closest(".prop-check")) return;   // a tap in a field is not a tap on the row
+
     var sportBtn = e.target.closest("[data-sport]");
     if (sportBtn) {
       // What the tap MEANS (expand / choose / never mind) is the shared

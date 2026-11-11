@@ -152,6 +152,13 @@ def _board(board):
             "position": "SP" if name == "Tarik Skubal" else "RF",
             "value": value, "total_qualified": 142, "window": window, "met": met,
             "series": _series(board["kind"], value, span, i + 1),
+            # A season game log on ONE row (the first board's leader), shaped
+            # as fetchers.nfl.aggregate_category emits `log`, so the prop check
+            # has something to count. Nine games, chosen so one line splits
+            # them 5-4 and another lands on two of them exactly (pushes).
+            "log": ([{"date": "2026-09-%02d" % (6 + 7 * j), "value": v}
+                     for j, v in enumerate([3, 8, 5, 9, 2, 7, 6, 5, 10])]
+                    if board["key"] == "home_runs" and i == 0 else None),
             "vs_next_starter": VS_NEXT_STARTER if name == "Aaron Judge" else None,
         })
     return {

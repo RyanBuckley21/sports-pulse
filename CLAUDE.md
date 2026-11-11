@@ -43,13 +43,14 @@ python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when 
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
 python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines
+python3 -m tools.verify.test_prop_log            # season game log behind the prop check: whole season, raw per-game, all fields
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "240 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "267 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -501,9 +502,42 @@ Open on it:
   record on the Model Review tab.
 - **NFL only.** CFB has no price history to audit against and CFBD revises its
   inputs; NBA has no prices yet. Same shape applies once either can be graded.
-- **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) is not
-  scoped: asked what it means (player-prop parlays from the leaderboards, or
-  something else) before building.
+- ~~"Use the Who's Hot board to build my own" is not scoped~~ **Answered
+  2026-11-11: player-prop parlays from the leaderboards. Built; see below.**
+
+**Player props from Who's Hot (2026-11-11).** Each category on a player's
+page has a **prop check**: the reader types the book's line and it counts the
+season against it ("Over 62.5 in 6 of 9 games (67%). With 9 games the true
+rate could be anywhere from 35% to 88%."), and with a price typed the leg can
+be added to a slip that the Bets tray prices alongside the board's leans.
+`fetchers.nfl.aggregate_category` supplies the season `log`; `SP.slip`
+(sport-state.js) carries the legs between the two views.
+
+What it deliberately is not:
+- **The site captures no prop lines.** The line and the price are typed by the
+  reader. ESPN's keyless feed carries game lines only; prop feeds are paid,
+  keyed APIs (a search on 2026-11-11 found no free one). Capturing them is a
+  decision about a key and a budget, not a default.
+- **A count, not a prediction, and the page says so in the same sentence.**
+  Nothing here has been measured against prop prices, because none are stored.
+  The interval is Wilson's 95%, printed with every count: a season is a dozen
+  games at most.
+- **A ticket holding a prop gets no value.** One side's price cannot have its
+  vig removed, so the tray prices the ticket, checks the promo terms, shows
+  each prop's count, and prints no EV. Do not "fix" that by using the season
+  count as a chance: the count is not a probability the book has not already
+  seen (the browser suite's T1 cut is exactly this change, and fails).
+- **Two props on one team are flagged, not priced.** Same-game legs move
+  together and the book prices them as one ticket; the tray's product is not
+  that price.
+- **CFB never gets this** (permanent: no player-level CFB data is surfaced).
+
+Open on it:
+- **NFL only has a log.** EPL's fetcher does not emit one, so EPL player pages
+  show no prop check yet; the page reads any row with `log`.
+- **The slip is in memory**, like the league selection: a reload clears it.
+- **Whether a season count beats a prop line is unmeasured** and cannot be
+  measured without stored prop prices.
 
 **First real ROI (2026-10-29): CFB is negative.** At the price, 94-39 on 133
 priced picks: a 70.7% hit rate against the 76.2% the prices needed, **ROI

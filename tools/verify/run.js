@@ -1030,6 +1030,108 @@ async function betsChecks(browser, base) {
 }
 
 // -------------------------------------------------------------------- router
+// THE PROP CHECK AND THE SLIP (2026-11-11). A count of a player's season
+// against a line the reader types, and the leg it adds to the Bets tray. The
+// fixture's one logged player has games of 3 8 5 9 2 7 6 5 10, so:
+//   over 5.5  -> 5 of 9 (56%), Wilson 95% interval 27%..81%
+//   under 5.5 -> 4 of 9 (44%), 19%..73%
+//   over 5    -> two games land ON the line: 5 of 7 (71%), 36%..92%, 2 pushes
+//   -115 needs 1/1.8696 = 53%
+async function propChecks(browser, base) {
+  const p = await newPage(browser);
+  const problems = collectProblems(p, base);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(500);
+  await goRoute(p, "#/");
+  await p.waitForTimeout(200);
+  await p.evaluate(() => document.querySelectorAll(".player-row")[0].click());
+  await p.waitForTimeout(300);
+  // The category accordion opens one category at a time; the prop check lives
+  // inside it, so open home_runs if it is not the open one. (Typing into a
+  // COLLAPSED block "worked" in the first draft of this group -- Playwright
+  // fills a clipped input -- and only the button click showed it was hidden.)
+  if (!(await p.$('.pcat-item.is-open[data-pcat="home_runs"]'))) {
+    await p.click('.pcat-item[data-pcat="home_runs"] [data-pcat-btn]');
+    await p.waitForTimeout(400);
+  }
+  const boxes = await p.$$eval(".prop-check", (n) => n.length);
+  ok("prop check: shown on the one category that carries a season log", boxes === 1, boxes);
+  const text = async () => p.$eval(".prop-check .prop-result", (x) => x.textContent.replace(/\s+/g, " "));
+  const addOff = async () => p.$eval(".prop-check .prop-add", (x) => x.disabled);
+  ok("  it names the season's depth", /this season, 9 games/.test(
+     await p.$eval(".prop-check .breakdown-label", (x) => x.textContent)));
+  ok("  nothing is counted, and nothing can be added, before a line is typed",
+     /Type the book/.test(await text()) && (await addOff()) === true, await text());
+  await p.fill(".prop-check .prop-line", "5.5");
+  let t = await text();
+  ok("over 5.5: 5 of 9, 56%", /Over 5\.5 in 5 of 9 games \(56%\)/.test(t), t);
+  ok("  with the range that count is consistent with (27% to 81%)", /anywhere from 27% to 81%/.test(t), t);
+  ok("  and the line that it is a count, not a prediction", /A count, not a prediction/.test(t), t);
+  ok("  the caret stays in the field while typing (no re-render)",
+     await p.evaluate(() => document.activeElement && document.activeElement.classList.contains("prop-line")));
+  ok("  a line alone is not a leg: still nothing to add without a price", (await addOff()) === true);
+  await p.fill(".prop-check .prop-price", "-115");
+  t = await text();
+  ok("a price of -115 adds what it needs: 53%", /The price needs 53%/.test(t), t);
+  ok("  and now the leg can be added", (await addOff()) === false);
+  await p.click(".prop-check .prop-side");
+  t = await text();
+  ok("the Over button flips to Under: 4 of 9, 44%, 19% to 73%",
+     /Under 5\.5 in 4 of 9 games \(44%\)/.test(t) && /from 19% to 73%/.test(t), t);
+  await p.click(".prop-check .prop-side");
+  await p.fill(".prop-check .prop-line", "5");
+  t = await text();
+  ok("a game ON the line is a push, left out of the count: over 5 is 5 of 7, not 5 of 9",
+     /Over 5 in 5 of 7 games \(71%\)/.test(t) && /2 pushes left out/.test(t) && /36% to 92%/.test(t), t);
+  await p.fill(".prop-check .prop-line", "abc");
+  ok("a line that is not a number counts nothing and cannot be added",
+     /Type the book/.test(await text()) && (await addOff()) === true, await text());
+  ok("  tapping inside the block did not close the player page",
+     (await p.$$eval(".prop-check", (n) => n.length)) === 1);
+  await p.fill(".prop-check .prop-line", "5.5");
+  await p.click(".prop-check .prop-add");
+  ok("Add to my parlay puts one leg on the slip, with the count and the price",
+     await p.evaluate(() => {
+       const l = SP.slip.legs;
+       return l.length === 1 && l[0].prop === true && l[0].hit.k === 5 && l[0].hit.n === 9 &&
+         Math.abs(l[0].decimal - (1 + 100 / 115)) < 1e-9 && /Shohei Ohtani o5\.5 HR/.test(l[0].side);
+     }), JSON.stringify(await p.evaluate(() => SP.slip.legs)));
+  ok("  and the button says where it went",
+     /Added/.test(await p.$eval(".prop-check .prop-add", (x) => x.textContent)));
+  await p.click(".prop-check .prop-add");
+  ok("  adding the same leg twice keeps one", (await p.evaluate(() => SP.slip.legs.length)) === 1);
+
+  // The tray. A second prop on the same team is added straight onto the slip
+  // (the fixture logs one player; the team clash is the thing under test).
+  await p.evaluate(() => SP.slip.add({ key: "prop:x", side: "Teammate o24.5 Rec", display: "+120",
+    decimal: 2.2, team: SP.slip.legs[0].team, hit: { k: 3, n: 8, push: 0 }, prop: true }));
+  await goRoute(p, "#/bets");
+  const tray = async () => p.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
+  t = await tray();
+  //   1.8696 * 2.2 = 4.1130 -> +311
+  ok("the Bets tray carries the slip: 2 legs at +311", /2 legs/.test(t) && /\+311/.test(t), t);
+  ok("  each prop with its season count", /cleared 5 of 9 this season/.test(t) && /cleared 3 of 8 this season/.test(t), t);
+  ok("  no value is shown for a ticket holding a prop, and it says why",
+     /No value shown/.test(t) && !/Market chance|worth [+−]/.test(t), t);
+  ok("  two props on one team are flagged as moving together", /same-game legs move together/.test(t), t);
+  await p.fill('.bet-promo-input[data-promo="legs"]', "3");
+  await p.press('.bet-promo-input[data-promo="legs"]', "Enter");
+  await p.waitForTimeout(80);
+  ok("  the promo terms apply to prop legs like any other", /needs 3\+ legs/.test(await tray()), await tray());
+  await p.click('.bet[data-key*=":CAR"] .bet-add'); await p.waitForTimeout(80);
+  t = await tray();
+  ok("a board lean and the props share one ticket", /3 legs/.test(t) && /Meets the promo terms/.test(t), t);
+  await p.click('.bet-tray-prop[data-prop-key="prop:x"] .bet-prop-remove'); await p.waitForTimeout(80);
+  t = await tray();
+  ok("the × removes that one prop and leaves the rest", /2 legs/.test(t) && !/Teammate/.test(t) && /Ohtani/.test(t), t);
+  ok("  and the team warning goes with it", !/same-game/.test(t), t);
+  await p.click(".bet-clear"); await p.waitForTimeout(80);
+  ok("Clear empties the slip as well as the board picks",
+     (await p.evaluate(() => SP.slip.legs.length)) === 0 && /Tap \+/.test(await tray()), await tray());
+  ok("props: no page errors, 404s or failed requests", problems.length === 0, problems.join(" ; ") || "none");
+  await p.close();
+}
+
 async function routerChecks(browser, base) {
 
   // Cold launch with no hash.
@@ -1508,6 +1610,7 @@ const GROUPS = [
   ["game-only-league", gameOnlyLeagueChecks],
   ["router", routerChecks],
   ["bets", betsChecks],
+  ["props", propChecks],
   ["safe-area", safeAreaChecks],
   ["standalone", standaloneChecks],
 ];

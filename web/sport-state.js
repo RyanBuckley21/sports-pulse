@@ -24,6 +24,29 @@
 
   var SP = window.SP || (window.SP = {});
 
+  // THE READER'S OWN SLIP: player-prop legs built on the Who's Hot player
+  // page and priced in the Bets tray (2026-11-11). It sits here for the reason
+  // the league selection does -- app.js makes the legs, bets.js shows them,
+  // and neither reaches into the other.
+  //
+  // A leg is exactly what the reader typed plus what the season log says:
+  //   { key, side, display, decimal, team, hit: {over, n, push}, prop: true }
+  // The site captures NO prop lines (2026-11-11: ESPN's keyless feed carries
+  // game lines only; prop feeds are paid, keyed APIs), so the line and the
+  // price are the reader's, read off the book. In memory only, like the
+  // league: a slip is for today's card.
+  SP.slip = SP.slip || {
+    legs: [],
+    add: function (leg) {
+      this.remove(leg.key);
+      this.legs.push(leg);
+    },
+    remove: function (key) {
+      this.legs = this.legs.filter(function (l) { return l.key !== key; });
+    },
+    clear: function () { this.legs = []; }
+  };
+
   var selected = null;
 
   function esc(s) {

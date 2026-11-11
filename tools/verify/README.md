@@ -688,6 +688,30 @@ the suite's docstring); three of its own checks were wrong when first written
 and are recorded there. The browser suite (now 240 checks) pins the card's
 model line and was sabotaged three ways (1 / 1 / 4 failures).
 
+```bash
+python3 -m tools.verify.test_prop_log         # from the repo root
+```
+
+**`test_prop_log`** (added 2026-11-11, 14 checks) pins the season game log
+behind the prop check (`fetchers.nfl.aggregate_category`'s `log`). The page
+counts a season against a line the reader types, and each way the list can be
+wrong still prints a tidy fraction: it must be the **whole season, not the
+four-game window**; **one game's total, not the board's average**; **every
+field of the category** (Total TDs is rushing plus receiving); oldest first
+with dates, its tail equal to the board's own `series`; and filtered to the
+same players as the board. Fixture: `nfl_player_weeks_fixture.json`, real 2026
+rows for seven players. Sabotage-checked six ways: 9 / 2 / 6 / 8 / 2 / 3
+failures. The last cut first crashed the suite and the check was fixed.
+
+The browser suite's `props` group (27 checks; the suite is now 267) pins the
+prop check itself and the slip in the Bets tray: the count, its Wilson
+interval, pushes left out, Over/Under, the price's break-even, add and
+de-duplicate, the tray carrying prop legs with their counts, **no value shown
+for a ticket holding a prop**, the same-team warning, promo terms, remove and
+Clear. Sabotaged twelve ways, each caught (1 to 7 failures). Writing the group
+found that the first draft typed into a **collapsed** category: Playwright
+fills a clipped input, and only a button click showed the block was hidden.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
