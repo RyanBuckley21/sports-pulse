@@ -799,6 +799,31 @@ body.insights-scope .vs-starter-caveat { font: 500 10px var(--font-body); color:
 .bet-tray-boosted.is-neg { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
 .bet-tray-fine { margin-top: 4px; font: 400 11px/1.4 var(--font-body); color: var(--text-tertiary); }
 
+/* Today's boost tickets (bets.js tickets): the tickets the page names for the
+   promo typed above. Two at most -- best value, and the likeliest to cash --
+   each with its legs, what it pays boosted, the market's chance and its worth.
+   The button is a full 44px tall: it is the one control here meant for a thumb. */
+.bet-tickets { margin: 0 0 12px; padding: 12px 14px; border-radius: var(--r-lg);
+  background: var(--glass-fill-soft); border: 1px solid var(--glass-border); }
+.bet-tickets.is-empty { font: 500 12px/1.4 var(--font-body); color: var(--text-tertiary); }
+.bet-tickets-h { font: 700 15px var(--font-head); color: var(--text); margin-bottom: 8px; }
+.bet-tickets-none { font: 500 13px/1.4 var(--font-body); color: var(--text-secondary); overflow-wrap: anywhere; }
+.bet-ticket { padding: 10px 12px; margin-bottom: 8px; border-radius: var(--r-md, 10px);
+  background: var(--glass-inset); border: 1px solid var(--glass-border); }
+.bet-ticket-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.bet-ticket-title { font: 600 12px var(--font-body); color: var(--text-secondary); }
+.bet-ticket-pays { font: 800 18px var(--font-head); color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bet-ticket-legs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.bet-ticket-leg { padding: 3px 8px; border-radius: 999px; border: 1px solid var(--glass-border);
+  font: 700 13px var(--font-body); color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bet-ticket-facts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
+  font: 600 13px var(--font-body); color: var(--text); font-variant-numeric: tabular-nums; }
+.bet-ticket-facts .is-pos { color: color-mix(in srgb, var(--pos, #2e7d5b) 88%, currentColor); }
+.bet-ticket-facts .is-neg { color: color-mix(in srgb, var(--neg, #b4663a) 88%, currentColor); }
+.bet-ticket-use { margin-left: auto; min-height: 44px; padding: 0 14px; border-radius: 999px;
+  font: 700 13px var(--font-body); color: #111; background: var(--gold); border: 1px solid var(--gold); cursor: pointer; }
+.bet-ticket-use:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
 .bet-section { margin: 0 0 18px; }
 .bet-h { font: 700 15px var(--font-head); color: var(--text); margin: 0 2px 2px; }
 .bet-count { font: 600 12px var(--font-body); color: var(--text-tertiary); margin-left: 4px; }

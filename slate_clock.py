@@ -200,3 +200,47 @@ def window_start(available_dates, start, window_days,
         return start                      # the window already has fixtures
     nxt = min(upcoming)
     return nxt.isoformat() if nxt <= horizon else start
+
+
+def utc_iso(stamp):
+    """A feed's start instant as 'YYYY-MM-DDTHH:MM:SSZ', or None.
+
+    Accepts what the feeds send: ESPN's '2026-11-12T00:30Z', cfbfastR's
+    '2026-11-14T17:00:00.000Z', an offset form. A stamp with NO zone is
+    refused (None) rather than guessed: the one reader of this value hides a
+    bet once its game has started, and a start read five hours wrong hides a
+    live bet or shows a dead one.
+
+    WHY THE ENTITIES CARRY THIS (2026-11-12). `start` is a label for people
+    ('Sun Nov 15 - 1:00 PM ET', no year, no zone arithmetic), and until now it
+    was the only start time in the payload. The page is static between
+    deploys, so at 11:44 PM on 2026-11-11 the Bets tab still listed two
+    7:30 PM kickoffs as bets to place. A machine-readable instant lets the
+    page compare against the reader's own clock."""
+    if not stamp:
+        return None
+    try:
+        when = datetime.datetime.fromisoformat(str(stamp).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if when.tzinfo is None:
+        return None
+    return when.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def eastern_to_utc_iso(date_iso, time_hhmm):
+    """utc_iso for a wall-clock Eastern date and time (nflverse's `gameday` and
+    `gametime` columns, documented as Eastern). None when either is missing or
+    unreadable, or when the host has no tzdata: the fixed-offset fallback this
+    module uses elsewhere is an hour wrong for half the year, which is
+    harmless for 'which day' and not for 'has it kicked off'."""
+    if not date_iso or not time_hhmm:
+        return None
+    try:
+        day = datetime.date.fromisoformat(str(date_iso)[:10])
+        hh, mm = (int(x) for x in str(time_hhmm).split(":")[:2])
+        from zoneinfo import ZoneInfo
+        local = datetime.datetime(day.year, day.month, day.day, hh, mm, tzinfo=ZoneInfo(_ZONE))
+    except Exception:  # noqa: BLE001 -- unreadable input or no tzdata: say nothing
+        return None
+    return local.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -45,15 +45,15 @@ python3 -m tools.verify.test_nba_leaderboards    # NBA Who's Hot: DNP is not a z
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
-python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate
-python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines
+python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate, singles line, start instant
+python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines, which ticket to suggest
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "246 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "264 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -642,9 +642,52 @@ in sign with the live ledger at the singles floor (12-28, ROI −40.2%
   at a 50% boost. The no-vig method was measured on 5,788 NFL sides
   (`tools/devig_calibration.py`): no band is measurably off, and each is only
   known to about ±3.5pp, which the tray says beside every value.
-- **There is no default promo.** Every term is typed by the reader.
+- **There is no default promo.** Every term is typed by the reader. Since
+  2026-11-12 what he typed is remembered in his browser (`localStorage`,
+  guarded); that is his last entry coming back, still not a default.
+
+**The Bets tab names the tickets (2026-11-12).** Owner: "identify bets each
+day ... highlight parlay pieces", and of a builder he had to drive, "doesn't
+seem too useful if I have to do it myself". `parlay_boost.suggest` (copied in
+`bets.js`, pinned to each other by `run.js`) takes the promo and the board's
+legs and names two tickets: **best value**, and the **likeliest that keeps at
+least half that value**.
+
+- **What the arithmetic says, which the old headings got backwards.** Boosted
+  value is `k(1+b) - bP - 1` with `k = P*D`, about 0.96 a leg. So it rises as
+  the chance falls and drops with every leg: the best ticket is the **fewest
+  legs at the longest prices the terms allow**, not a stack of heavy
+  favourites. On the real board of 2026-11-12 (29 priced leans, 50%, 3+ legs,
+  +300): three legs at −105/−125/−135 are worth +24.6% and cash 14.4%; the
+  best ticket made only of −250-or-shorter legs is +12.6% on five legs. A +300
+  minimum on three legs needs them to average −170, so three "parlay pieces"
+  at −300 do not qualify at all.
+- **Favourites only**: no leg past +100 (`SUGGEST_LEG_MAX_AMERICAN`), the
+  owner's rule for boosted parlays. Without it the arithmetic always reaches
+  for the longest dog on the board.
+- **The chance is the market's.** The model is not consulted, and which side
+  it leans on does not enter the value. The legs offered are its leans only
+  because the owner decided the tray keeps to the lean.
+- **Half is a judgment** (`SUGGEST_LIKELY_KEEP`), not a measurement. Without a
+  bar, "likeliest" named KC −575 + TULN −1050: cashes 71.6%, worth +2.3%.
+- **No boost, no suggestion**; and when no ticket is worth its stake the page
+  says so and offers no button.
+- **A started game leaves the board.** Game entities carry `start_utc`
+  (`slate_clock.utc_iso`), the row carries it, and the page compares it with
+  the reader's clock. Found on 2026-11-11 at 11:44 PM: two 7:30 PM kickoffs
+  were still listed as bets. A row with no instant is kept.
+- **The owner's singles line (−150 or longer) is counted on the Straight
+  list**, with the measured result beside it (no edge). The −200 split itself
+  is unchanged; it is his line from 2026-09-25.
 
 Open on the boost work:
+- **The suggested tickets are not logged either**, so whether "+24.6%"
+  tickets return anything like that is unmeasured. Same log as the next item.
+- **The search is by sport filter, not by day.** A Thursday NFL leg and a
+  Saturday CFB leg can share a ticket; a promo tied to one day's games needs
+  the reader to notice. A day filter is the fix if it matters.
+- **NBA legs appear only while the feed prices them** (ESPN strips the line
+  at tip), so a late-evening board has none.
 - **Predicted vs realised is not tracked.** Nothing logs which boosted tickets
   were priced or taken, so the independence assumption across games has never
   been checked against results. This needs a log before it can be measured.

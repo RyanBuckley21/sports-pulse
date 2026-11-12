@@ -370,7 +370,7 @@ ok("one unreadable game costs only itself", set(part) == want - {"401909896"}, s
 
 NO_SEASON_KEYS = {"away", "best_angle", "betting_signals", "caution_notes", "compare", "context",
                   "est_total", "f5_total", "gamePk", "home", "probables", "pulse", "signal_scores",
-                  "signals", "sport", "standout", "start", "status", "venue"}
+                  "signals", "sport", "standout", "start", "start_utc", "status", "venue"}
 ok("an entity carries every field the store and the cards read (NFL's set, less win_prob)",
    set(bare) == NO_SEASON_KEYS and set(cha) == NO_SEASON_KEYS | {"odds"}, sorted(set(cha) ^ NO_SEASON_KEYS))
 

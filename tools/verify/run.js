@@ -1062,6 +1062,114 @@ async function betsChecks(browser, base) {
   });
   ok("a Bets row shows its availability note", warn.length === 1 && /did not practice/.test(warn[0]),
      warn.join(" | ") || "none");
+  // TODAY'S BOOST TICKETS (2026-11-12). bets.js repeats parlay_boost.suggest;
+  // these are that module's numbers on this same board (test_parlay_boost
+  // section 7), so the two copies cannot drift apart unnoticed:
+  //   50%, 3+ legs, +300:  TOR CAR CWS, pays +468, cashes 21.3%, worth +20.9%
+  //   50%, 2+ legs:        value TOR CAR (+286, 31.5%, +21.7%);
+  //                        likelier CWS BAY (+118, 51.3%, +12.1%: 12.149 before rounding)
+  //   5%, 3+ legs:         nothing is worth its stake
+  // A fresh page with its storage cleared first: the promo is remembered now,
+  // and the checks above typed one.
+  const r = await newPage(browser);
+  await r.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await r.evaluate(() => { try { localStorage.clear(); } catch (e) { /* none */ } });
+  await r.reload({ waitUntil: "domcontentloaded" });
+  await r.waitForTimeout(500);
+  await goRoute(r, "#/bets");
+  const rSet = async (field, value) => {
+    await r.fill('.bet-promo-input[data-promo="' + field + '"]', value);
+    await r.press('.bet-promo-input[data-promo="' + field + '"]', "Enter");
+    await r.waitForTimeout(80);
+  };
+  const tix = async () => r.$eval(".bet-tickets", (x) => x.textContent.replace(/\s+/g, " "));
+  await r.click('.bet-filter[data-bet-sport="all"]'); await r.waitForTimeout(80);
+  let k = await tix();
+  ok("tickets: with no boost typed the page names none, and says what to enter",
+     /Enter today.s boost/.test(k) && !(await r.$(".bet-ticket")), k);
+  await rSet("boost", "50"); await rSet("legs", "3"); await rSet("total", "+300");
+  k = await tix();
+  ok("tickets: 50%, 3+ legs, +300 names the three longest favourites",
+     /TOR -136/.test(k) && /CAR -148/.test(k) && /CWS -240/.test(k) &&
+     (await r.$$eval(".bet-ticket", (n) => n.length)) === 1, k);
+  ok("  priced as parlay_boost.suggest prices it: pays +468, cashes 21.3%, worth +20.9%",
+     /pays \+468/.test(k) && /cashes 21\.3%/.test(k) && /worth \+20\.9% per \$1/.test(k), k);
+  ok("  the underdog on the board (APP +440) is never a leg", !/APP/.test(k), k);
+  ok("  and it says the chance is the market's, not the model's",
+     /not the model.s/.test(k) && /favourites only/.test(k), k);
+  await rSet("legs", "2"); await rSet("total", "");
+  const cards = await r.$$eval(".bet-ticket", (n) => n.map((x) => x.textContent.replace(/\s+/g, " ")));
+  ok("two legs allowed: best value is TOR CAR, pays +286, cashes 31.5%, worth +21.7%",
+     cards.length === 2 && /Best value/.test(cards[0]) && /TOR -136/.test(cards[0]) && /CAR -148/.test(cards[0]) &&
+     /pays \+286/.test(cards[0]) && /cashes 31\.5%/.test(cards[0]) && /worth \+21\.7%/.test(cards[0]), cards.join(" | "));
+  ok("  and the likelier ticket is CWS BAY: pays +118, cashes 51.3%, worth +12.1%",
+     cards.length === 2 && /More likely/.test(cards[1]) && /CWS -240/.test(cards[1]) && /BAY -380/.test(cards[1]) &&
+     /pays \+118/.test(cards[1]) && /cashes 51\.3%/.test(cards[1]) && /worth \+12\.1%/.test(cards[1]), cards.join(" | "));
+  await r.click('[data-ticket-use="likeliest"]'); await r.waitForTimeout(100);
+  const used = await r.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
+  const ticked = await r.$$eval('.bet-add[aria-pressed="true"]', (n) => n.map((x) => x.closest(".bet").getAttribute("data-key").split(":").pop()).sort().join(","));
+  ok("Use these legs loads exactly that ticket into the tray, and ticks its rows",
+     /2 legs/.test(used) && /worth \+12.1% per \$1/.test(used) && ticked === "BAY,CWS", used + " / " + ticked);
+  await r.click('.bet-filter[data-bet-sport="nfl"]'); await r.waitForTimeout(80);
+  k = await tix();
+  ok("the tickets follow the sport filter: on NFL only NFL legs are offered",
+     !/TOR|CWS|BAY|TULN/.test(k) && /(CAR|BUF|KC)/.test(k), k);
+  await r.click('.bet-filter[data-bet-sport="all"]'); await r.waitForTimeout(80);
+  await rSet("boost", "5"); await rSet("legs", "3");
+  k = await tix();
+  ok("a 5% boost: no ticket is recommended, and the page says none is worth its stake",
+     /worth its stake/.test(k) && !(await r.$(".bet-ticket")) && !(await r.$(".bet-ticket-use")), k);
+  ok("  nothing unreadable is printed", !/NaN|undefined|null/.test(k), k);
+  const rowText = await r.$eval('.bet[data-key*=":BUF"]', (x) => x.textContent.replace(/\s+/g, " "));
+  ok("a row shows the market's chance beside what the price needs (BUF: needs 77%, market 74%)",
+     /needs 77%/.test(rowText) && /market 74%/.test(rowText), rowText);
+  const notes = await r.$$eval(".bet-section .bet-note", (n) => n.map((x) => x.textContent));
+  ok("the straight list counts the rows at the owner's singles line and claims no edge",
+     /3 at your singles line \(-150 or longer\)/.test(notes[1] || "") && /No measured edge/.test(notes[1] || ""), notes.join(" | "));
+  // REMEMBERED. Same browser, page reloaded: the terms come back as typed.
+  await rSet("boost", "50"); await rSet("total", "+400");
+  await r.reload({ waitUntil: "domcontentloaded" });
+  await r.waitForTimeout(500);
+  await goRoute(r, "#/bets");
+  ok("the promo typed is remembered across a reload, field for field",
+     (await r.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "50|3|+400|");
+  ok("  and the tickets are already on screen without retyping",
+     !!(await r.$(".bet-tickets-h")));
+  await r.evaluate(() => { localStorage.setItem("sp.bets.promo.v1", "{not json"); });
+  await r.reload({ waitUntil: "domcontentloaded" });
+  await r.waitForTimeout(500);
+  await goRoute(r, "#/bets");
+  ok("unreadable saved terms are a blank form, not a broken page",
+     (await r.$$eval(".bet-promo-input", (n) => n.map((x) => x.value).join("|"))) === "|||" &&
+     (await r.$$eval("#insightsRoot .bet", (n) => n.length)) > 0);
+  await r.evaluate(() => { try { localStorage.clear(); } catch (e) { /* none */ } });
+  await r.close();
+
+  // A GAME THAT HAS STARTED IS NOT A BET. The same board with BUF's game an
+  // hour gone and KC's an hour away (start_utc is the one field edited; the
+  // fixture's rows predate it and carry none, which must keep them listed).
+  const g = await newPage(browser);
+  await g.route("**/data.json*", async (route) => {
+    const data = JSON.parse(fs.readFileSync(path.join(WEB, "data.json"), "utf8"));
+    data.insights.bets.parlay.forEach((l) => {
+      if (l.side === "BUF") l.start_utc = new Date(Date.now() - 3600e3).toISOString();
+      if (l.side === "KC") l.start_utc = new Date(Date.now() + 3600e3).toISOString();
+    });
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await g.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await g.waitForTimeout(500);
+  await goRoute(g, "#/bets");
+  const gSides = await g.$$eval("#insightsRoot .bet", (n) => n.map((x) => x.getAttribute("data-key").split(":").pop()));
+  ok("a game that has started is off the board; one still to start, and rows with no time, stay",
+     gSides.indexOf("BUF") < 0 && gSides.indexOf("KC") >= 0 && gSides.indexOf("CAR") >= 0, gSides.join(","));
+  const gHeads = await g.$$eval("#insightsRoot .bet-h", (n) => n.map((x) => x.textContent.trim()));
+  ok("  the section count drops with it, and the page says a game has started",
+     /^Parlay pieces 1$/.test(gHeads[0] || "") &&
+     /1 game has started and is off the board/.test(await g.$eval("#insightsRoot .bets", (x) => x.textContent)),
+     gHeads.join(" | "));
+  await g.close();
+
   ok("bets: no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
   await p.close();
 }

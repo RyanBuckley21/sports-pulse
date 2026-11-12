@@ -1445,6 +1445,9 @@ def _build_one_game(config, g, form, margins, prior_margin=None, season_margin=N
         # this field exists to get right.
         "start": slate_clock.kickoff_label(
             _format_kickoff(g.get("start_date")), et_date(g.get("start_date"))),
+        # The same kickoff as an instant, for the Bets tab to drop a game once
+        # it has started -- see slate_clock.utc_iso.
+        "start_utc": slate_clock.utc_iso(g.get("start_date")),
         "venue": g.get("venue"),
         "probables": None,   # no starter feed for CFB -- see module docstring
         "signals": _display_signals(away_ref["abbr"], home_ref["abbr"], away_form, home_form,

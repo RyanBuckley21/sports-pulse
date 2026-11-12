@@ -821,6 +821,9 @@ def _build_one_game(config, g, schedule, team_stats, injuries, prior_margin=None
         # slate_clock.kickoff_label.
         "start": slate_clock.kickoff_label(
             _format_kickoff(g.get("gameday"), g.get("gametime")), g.get("gameday")),
+        # The same kickoff as an instant, for the Bets tab to drop a game once
+        # it has started -- see slate_clock.utc_iso.
+        "start_utc": slate_clock.eastern_to_utc_iso(g.get("gameday"), g.get("gametime")),
         "venue": g.get("stadium"),
         "probables": probables,
         "signals": _display_signals(away, home, away_form, home_form,

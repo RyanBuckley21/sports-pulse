@@ -404,6 +404,9 @@ def build_one_game(config, event, season, prior):
         "away": _team_ref(away),
         "home": _team_ref(home),
         "start": _tip_label(event),
+        # The tip as an instant, for the Bets tab to drop a game once it has
+        # started -- see slate_clock.utc_iso.
+        "start_utc": slate_clock.utc_iso(event.get("date")),
         "venue": ((_comp(event).get("venue") or {}).get("fullName")),
         "probables": None,
         "signals": signals,

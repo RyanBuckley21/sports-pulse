@@ -696,7 +696,9 @@ failing checks; the lookups were made tolerant.
 python3 -m tools.verify.test_parlay_boost     # from the repo root
 ```
 
-**`test_parlay_boost`** (added 2026-11-10, 51 checks) pins what the Bets tray
+**`test_parlay_boost`** (added 2026-11-10; 73 checks since 2026-11-12, when
+section 7 added `suggest`, the tickets the page names, sabotage-checked 13 ways
+in the suite's docstring) pins what the Bets tray
 says a profit boost is worth (`parlay_boost.py`, and `fair` on each
 `bet_board` leg). Every way the number can be wrong reads as a reason to bet:
 
@@ -723,6 +725,22 @@ change (1, the lost tap), a non-number read as zero (1), break-evens used as
 the chance (4), break-even boost rounded down (1). The non-number check first
 **passed under sabotage** (it typed into the floor field, where a zero is
 inert) and was moved to the boost field.
+
+**The tickets the page names (2026-11-12, 18 browser checks in `bets`).**
+`bets.js` copies `parlay_boost.suggest`, and the browser checks are that
+module's own numbers on the same fixture board, so the copies cannot drift:
+50% / 3+ legs / +300 names TOR CAR CWS at +468, 21.3%, +20.9%; with two legs
+allowed the value ticket is TOR CAR and the likelier one CWS BAY. Also pinned:
+the underdog is never a leg, the tickets follow the sport filter, "Use these
+legs" loads exactly the ticket shown, a 5% boost gets no recommendation and no
+button, the promo is remembered across a reload and unreadable saved terms are
+a blank form, a row shows the market's chance, the Straight list counts the
+owner's singles line, and a game that has started leaves the board while a row
+with no start instant stays. Sabotaged nine ways in `bets.js` (boost on the
+whole payout 4, underdogs as legs 5, started games kept 2, promo not saved 2,
+the wrong ticket loaded 1, the filter ignored 1, "likelier" with no bar 2, a
+losing ticket given a button 1, saved terms unguarded 1), suite 264 of 264
+again after each restore.
 
 ```bash
 python3 -m tools.verify.test_nfl_winprob      # from the repo root
