@@ -43,7 +43,11 @@ top_n: 10
 # kept. To bring it back, restore `epl` here and in active_game_sports and the
 # "epl" line in deploy-pages.yml's grading alarm (docs/leagues.md, "Standing a
 # sport down").
-active_sports: [nfl]
+#
+# nba ADDED 2026-11-11 (owner: "Who's hot should also have NBA"), second so
+# NFL stays the default. Its boards are fetchers.nba.fetch, on ESPN box scores
+# -- see the `nba:` block's stat_categories.
+active_sports: [nfl, nba]
 
 # Sports whose SCORED PER-GAME PICKS are built -- generate_insights.py's
 # GAME_BUILDERS pipeline. Deliberately a different key from `active_sports`
@@ -113,8 +117,8 @@ active_sports: [nfl]
 # partition freezes as the last pre-flip run left it; the grader settles any
 # pick that partition still holds and is otherwise silent (test_stand_down).
 #
-# nba ACTIVE since 2026-11-11, picks only (it has no leaderboards and must not
-# be added to active_sports). Registered in PR #75; activated after
+# nba ACTIVE since 2026-11-11 (its leaderboards followed the same night, in
+# active_sports). Registered in PR #75; activated after
 # check-nba-builder.yml ran the builder against the live feed that evening
 # (run 43122746230): 10 games, 10 priced, every lean on this season's margin,
 # 4 over the bar, 2 of those withheld for price (-1180 and -840).
@@ -246,15 +250,117 @@ mlb:
 #
 # Not fetched or shown while `nfl` is absent from active_sports (same gate the
 # worldcup block below sits behind).
-# NBA, REGISTERED 2026-10-31 AS A DATA LAYER ONLY -- in neither gate, in no
-# registry, imported by nothing in the pipeline. fetchers/nba.py and
+# NBA. LIVE IN BOTH GATES SINCE 2026-11-11: picks (active_game_sports, weights
+# in betting_signals.nba, fitted by nba_backtest.py --fit) and Who's Hot boards
+# (active_sports, the stat_categories below). fetchers/nba.py and
 # nba_grading.py hold the counted-game rule (season.type 2 AND competition type
-# STD), Eastern slate dates and the grading rules; the backtest that will set
-# weights comes next, and NO WEIGHT, SCALE OR THRESHOLD belongs in this block
-# until it has run (invariant 8). See CLAUDE.md "Add NBA".
+# STD), Eastern slate dates and the grading rules. NO WEIGHT, SCALE OR
+# THRESHOLD OF THE MODEL belongs in this block (invariant 8). See CLAUDE.md
+# "Add NBA".
 nba:
   # Read by nba_grading; test_nba asserts it matches fetchers/nba.SCOREBOARD_URL.
   scoreboard_url: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+
+  # WHO'S HOT BOARDS (2026-11-11). Display only: nothing below is a weight, a
+  # scale or a threshold of the picks model (those are betting_signals.nba),
+  # and nothing here is graded.
+  #
+  # One summary request per game in the window; test_nba_leaderboards asserts
+  # this matches fetchers/nba.SUMMARY_URL.
+  summary_url: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary"
+
+  # A player's last 5 games HE PLAYED IN. A night off is not a game with
+  # zeros: rest and injury move his window back instead (457 of 3,108 box-score
+  # rows in the 16 days to 2026-11-10 were did-not-plays).
+  window_games: 5
+
+  # How far back from the league's last game day to read box scores. Measured
+  # on the 16 days ending 2026-11-10 (117 games): every club played 6 to 9
+  # times and 336 players have five appearances. 14 days: 5 to 8, 306 players.
+  # 12 days leaves a club at 4 games, short of the window before anyone sits.
+  # Each day costs about 7 requests a run; 117 took 8 seconds on the runner.
+  lookback_days: 16
+
+  # EVERY BOARD IS A PER-GAME AVERAGE WITH A 3-GAME FLOOR. Per game because
+  # that is how these numbers are read (28.4 a night, not 142 in five), and a
+  # total would rank a man who played five above a better one who played four.
+  # The floor because an average over one game is one box score. 3 is EPL's
+  # floor for its rate board, taken as a convention and not a measurement; the
+  # cost is that a season's boards do not exist until its third game.
+  #
+  # `fields` are ESPN's box-score keys, read by name. Shooting splits arrive
+  # paired ("3-6" under threePointFieldGoalsMade-threePointFieldGoalsAttempted)
+  # and fetchers.nba.parse_stat_line splits them, so a made-shot count is a
+  # plain field here.
+  #
+  # Keys end in _pg because CATEGORY_META is one namespace across sports and
+  # EPL already owns "assists".
+  stat_categories:
+
+    - key: points_pg
+      label: Points per Game (last 5 G)
+      short_label: Points
+      unit: PTS/G
+      mode: rolling_sum
+      fields: [points]
+      per_game: true
+      min_games: 3
+
+    - key: rebounds_pg
+      label: Rebounds per Game (last 5 G)
+      short_label: Rebounds
+      unit: REB/G
+      mode: rolling_sum
+      fields: [rebounds]
+      per_game: true
+      min_games: 3
+
+    - key: assists_pg
+      label: Assists per Game (last 5 G)
+      short_label: Assists
+      unit: AST/G
+      mode: rolling_sum
+      fields: [assists]
+      per_game: true
+      min_games: 3
+
+    # Points + rebounds + assists, the combined line sportsbooks post as a
+    # player prop. Here it is only the sum of the three boards above.
+    - key: pra_pg
+      label: Points + Rebounds + Assists per Game (last 5 G)
+      short_label: Pts+Reb+Ast
+      unit: PRA/G
+      mode: rolling_sum
+      fields: [points, rebounds, assists]
+      per_game: true
+      min_games: 3
+
+    - key: threes_pg
+      label: Three-Pointers Made per Game (last 5 G)
+      short_label: Threes
+      unit: 3PM/G
+      mode: rolling_sum
+      fields: [threePointFieldGoalsMade]
+      per_game: true
+      min_games: 3
+
+    - key: steals_pg
+      label: Steals per Game (last 5 G)
+      short_label: Steals
+      unit: STL/G
+      mode: rolling_sum
+      fields: [steals]
+      per_game: true
+      min_games: 3
+
+    - key: blocks_pg
+      label: Blocks per Game (last 5 G)
+      short_label: Blocks
+      unit: BLK/G
+      mode: rolling_sum
+      fields: [blocks]
+      per_game: true
+      min_games: 3
 
 nfl:
   # Grading endpoint, read by nfl_grading. Present for the same reason cfb's

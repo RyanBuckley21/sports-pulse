@@ -489,3 +489,266 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None,
     cap = ((config.get("betting_signals") or {}).get("nba") or {}).get("max_break_even")
     espn_odds.apply_bettability(entities, cap, sport="nba")
     return entities, {}, []
+
+
+# ---------------------------------------------------------------------------
+# Who's Hot leaderboards (2026-11-11). generate_stats.SPORT_FETCHERS["nba"].
+#
+# Separate from the picks builder above and sharing only the event helpers:
+# nothing here is scored, weighted or graded, and no price is read.
+#
+# THE SOURCE is ESPN's game summary (`summary?event=<id>`), whose
+# boxscore.players block carries one stat line per athlete. Measured on 117
+# real decided games, 2026-10-26..11-10 (tools/verify/nba_boxscores_fixture.json,
+# captured from a GitHub runner because this sandbox cannot reach ESPN):
+#
+#   * every team block has exactly ONE statistics group, and all 234 carry the
+#     same 14 keys in the same order -- but the stats are read by KEY, never
+#     by position, so a reordered feed cannot silently swap points and
+#     rebounds;
+#   * shooting splits arrive paired, "3-6" under the key
+#     "threePointFieldGoalsMade-threePointFieldGoalsAttempted". parse_stat_line
+#     splits both halves, so config names plain fields;
+#   * 3,108 athlete rows: 2,651 played (didNotPlay False, 14 stats) and 457 did
+#     not (didNotPlay True, stats []). No row was anything else. A DNP is NOT a
+#     game with zeros -- it is not an appearance, and counting it would drag a
+#     resting star's average down for games he never played;
+#   * 9 rows played with minutes "0" (a few seconds on the floor; one has an
+#     assist). They are appearances: ESPN rounds minutes, and the row is real;
+#   * `reason` reads "COACH'S DECISION" on players who PLAYED, so it means
+#     nothing unless didNotPlay is true. It is not read;
+#   * position is the athlete's own (G / F / C), identical in every game he
+#     appears in (0 of 446 players carried two), so there is no EPL-style
+#     "Substitute" problem and no board is position-filtered;
+#   * one player appeared for two clubs in sixteen days. Team follows the most
+#     recent appearance, EPL's and NFL's rule.
+#
+# COST: the season's scoreboard months plus one summary per game in the window.
+# Measured on the runner: 8 seconds for 117 summaries. Nothing is cached; if it
+# ever matters, a finished game's box score never changes.
+# ---------------------------------------------------------------------------
+SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary"
+
+# The 16 days ending 2026-11-10 hold 6 to 9 games for every club (median 8)
+# and 336 players with five appearances; 14 days hold 5 to 8 and 306; 12 days
+# leave a club at 4, short of the window before anyone rests. 16 buys one
+# missed game of slack for the least-scheduled club at 117 requests a run.
+LEADERBOARD_WINDOW_GAMES = 5
+LEADERBOARD_LOOKBACK_DAYS = 16
+
+
+def parse_stat_line(keys, stats):
+    """One athlete's stat strings -> {field: int}, read by key.
+
+    A paired key ("a-b" with a value "3-6") yields both halves. A value that is
+    not a whole number ("--", "") is LEFT OUT rather than read as 0, so a
+    category that needs it fails loudly in aggregate_category instead of
+    ranking a player on an invented zero. Raises when the two lists disagree
+    in length: a line that cannot be aligned to its keys cannot be read at
+    all."""
+    if len(keys) != len(stats):
+        raise ValueError("NBA box score: {} stat keys but {} values".format(len(keys), len(stats)))
+    out = {}
+    for key, raw in zip(keys, stats):
+        names = key.split("-") if "-" in key else [key]
+        parts = str(raw).split("-") if len(names) > 1 else [str(raw)]
+        if len(parts) != len(names):
+            continue
+        for name, part in zip(names, parts):
+            try:
+                out[name] = int(part)
+            except ValueError:
+                pass
+    return out
+
+
+def extract_player_rows(summary):
+    """The stat line of everyone who PLAYED in one game: [{id, name, team,
+    position, stats}], team as ESPN's abbreviation (team_meta.NBA_TEAMS' key).
+
+    didNotPlay rows are skipped, and so is a row with no stats at all (never
+    observed without didNotPlay; a line with nothing on it is not an
+    appearance either way). Raises on a summary with no player block: a
+    decided game always has one, so its absence is a broken feed, and reading
+    it as "nobody played" would quietly shorten every window."""
+    teams = ((summary or {}).get("boxscore") or {}).get("players")
+    if not teams:
+        raise ValueError("NBA summary carries no boxscore.players")
+    rows = []
+    for block in teams:
+        abbr = (block.get("team") or {}).get("abbreviation")
+        for group in block.get("statistics") or []:
+            keys = group.get("keys") or []
+            for a in group.get("athletes") or []:
+                if a.get("didNotPlay") or not a.get("stats"):
+                    continue
+                athlete = a.get("athlete") or {}
+                if not athlete.get("id"):
+                    continue
+                rows.append({
+                    "id": str(athlete["id"]),
+                    "name": athlete.get("displayName"),
+                    "team": abbr,
+                    "position": (athlete.get("position") or {}).get("abbreviation"),
+                    "stats": parse_stat_line(keys, a["stats"]),
+                })
+    return rows
+
+
+def decided_events(events):
+    """[(slate_date, event)] for every decided counted game, oldest first.
+    Postponed shells (state post, not completed) fail parse_game's `completed`
+    and never reach a box-score request."""
+    out = []
+    for e in events:
+        if not is_counted_game(e):
+            continue
+        row = parse_game(e)
+        if row is None or not _decided(row) or not row["slate_date"]:
+            continue
+        out.append((row["slate_date"], e))
+    out.sort(key=lambda pair: (pair[0], pair[1].get("date") or "", str(pair[1].get("id"))))
+    return out
+
+
+def collect_appearances(session, events, start, end, summary_url=SUMMARY_URL):
+    """{player_id: [appearance, ...]} oldest first, over every decided counted
+    game whose EASTERN date is in [start, end] (both YYYY-MM-DD).
+
+    One summary request per game. Any failed request raises: a sport
+    contributes all of its rows or none (invariant 5), and a window with a
+    game missing would rank players on four games while saying five."""
+    by_player = {}
+    games = 0
+    for day, event in decided_events(events):
+        if not (start <= day <= end):
+            continue
+        r = session.get(summary_url, params={"event": str(event.get("id"))},
+                        timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
+        games += 1
+        for row in extract_player_rows(r.json()):
+            by_player.setdefault(row["id"], []).append({
+                "date": day, "name": row["name"], "team": row["team"],
+                "position": row["position"], "stats": row["stats"],
+            })
+    return by_player, games
+
+
+def aggregate_category(by_player, cat_cfg, default_window):
+    """Rank-ready raw records for ONE category: each player's average over his
+    most recent `window_games` APPEARANCES.
+
+    Games he sat out are not in his list, so rest and injury move the window
+    back rather than punching zeros into it. `min_games` drops a window too
+    thin to average (config sets 3 of 5 on every board: all seven are per-game
+    rates, and a rate over one game is one box score).
+
+    A field missing from an appearance RAISES. Every played row in the
+    captured feed carries every field, so a gap means ESPN changed the box
+    score, and averaging around it would publish a wrong number that looks
+    like a cold night."""
+    fields = cat_cfg["fields"]
+    window_games = cat_cfg.get("window_games", default_window)
+    min_games = cat_cfg.get("min_games", 1)
+    per_game = bool(cat_cfg.get("per_game"))
+
+    records = []
+    for player_id, appearances in by_player.items():
+        window = appearances[-window_games:]
+        if len(window) < min_games:
+            continue
+        per_match = []
+        for a in window:
+            missing = [f for f in fields if f not in a["stats"]]
+            if missing:
+                raise ValueError("NBA box score for {} on {} has no {}".format(
+                    a["name"], a["date"], ", ".join(missing)))
+            per_match.append(sum(a["stats"][f] for f in fields))
+        total = sum(per_match)
+        if total <= 0:
+            continue
+        latest = window[-1]
+        records.append({
+            "entity": latest["name"],
+            "entity_id": player_id,
+            "team": latest["team"],          # current club: most recent appearance
+            "team_id": None,
+            "position": latest["position"],
+            "stat_category": cat_cfg["key"],
+            "window": "last_{}_games".format(window_games) + ("_per_game" if per_game else ""),
+            "value": round(total / len(window), 1) if per_game else int(total),
+            "tiebreak": None,
+            "games_window": len(window),
+            "last_game_date": latest["date"],
+            "series": [{"date": a["date"], "value": v} for a, v in zip(window, per_match)],
+        })
+    return records
+
+
+def build_records(by_player, nba_cfg):
+    """Records for every configured category. An unknown mode raises whatever
+    the window held, so a typo in config is not hidden by an off day."""
+    default_window = nba_cfg.get("window_games", LEADERBOARD_WINDOW_GAMES)
+    records = []
+    for cat_cfg in nba_cfg.get("stat_categories") or []:
+        if cat_cfg.get("mode") != "rolling_sum":
+            raise ValueError("Unknown NBA stat category mode: {}".format(cat_cfg.get("mode")))
+        records.extend(aggregate_category(by_player, cat_cfg, default_window))
+    return records
+
+
+def fetch(config, today=None, session=None):
+    """Raw (unranked) Who's Hot records for every configured NBA category.
+
+    `today` is the EASTERN date (invariant 3), never the runner's UTC date: a
+    10 PM tip is stamped tomorrow in UTC.
+
+    THE WINDOW ENDS ON THE LAST DAY THE LEAGUE PLAYED, not on today. In season
+    those are the same day or one apart. Over the All-Star break, and after
+    the regular season ends in April, a window anchored to today would empty
+    out a day at a time and the boards would vanish while the numbers on them
+    were still the latest that exist. Anchored to the last game day they stay
+    whole and say how old they are (the log line below; each row carries its
+    own last_game_date). PLAYOFF GAMES ARE NOT COUNTED (their competition
+    types were never captured -- see is_counted_game), so from mid-April the
+    boards are the regular season's final stretch until that is handled.
+
+    Before a season's first game there is nothing to anchor to and this
+    returns [] -- no boards, rather than last season's under this season's
+    name.
+
+    The scoreboard is asked for one day past today because fetch_window
+    filters on the event's UTC date, and last night's late games carry it."""
+    import requests
+    nba_cfg = config["nba"]
+    lookback = nba_cfg.get("lookback_days", LEADERBOARD_LOOKBACK_DAYS)
+    window_games = nba_cfg.get("window_games", LEADERBOARD_WINDOW_GAMES)
+    today = today or slate_clock.eastern_date()
+    if isinstance(today, str):
+        today = datetime.date.fromisoformat(today)
+
+    session = session or requests.Session()
+    events = fetch_events_through(
+        session, season_year_for_date(today), today + datetime.timedelta(days=1),
+        nba_cfg.get("scoreboard_url", SCOREBOARD_URL))
+    played = [day for day, _ in decided_events(events) if day <= today.isoformat()]
+    if not played:
+        build_records({}, nba_cfg)           # still validate config on an empty day
+        print("whos-hot(nba): no decided regular-season game this season on or "
+              "before {} -- no boards".format(today))
+        return []
+
+    anchor = datetime.date.fromisoformat(max(played))
+    start = anchor - datetime.timedelta(days=lookback - 1)
+    by_player, games = collect_appearances(
+        session, events, start.isoformat(), anchor.isoformat(),
+        nba_cfg.get("summary_url", SUMMARY_URL))
+    records = build_records(by_player, nba_cfg)
+
+    depth = max((r["games_window"] for r in records), default=0)
+    stale = (today - anchor).days
+    print("whos-hot(nba): {} games {}..{}, {} players, {} rows, depth {} of {}{}".format(
+        games, start, anchor, len(by_player), len(records), depth, window_games,
+        "" if stale <= 1 else " -- the league last played {} days ago".format(stale)))
+    return records

@@ -32,7 +32,6 @@ import re
 
 import requests
 from PIL import Image
-from playwright.sync_api import sync_playwright
 
 REQUEST_TIMEOUT = 20
 LOGO_SIZE = 64
@@ -327,6 +326,19 @@ def fetch_nba_logos(session, manifest):
             print(f"  FAILED: {team.get('displayName')} ({logo_url}): {e}")
 
 
+def _wanted(sport):
+    """Whether this run fetches `sport`. LOGO_SPORTS is a comma list ("nba",
+    "nba,nfl"); unset or empty means every sport, the behaviour before
+    2026-11-11.
+
+    Added so one league's logos can be fetched alone. A full run spends a CFBD
+    call (CLAUDE.md invariant 9: any CFBD work outside the pipeline counts
+    against the 300 the pipeline leaves) and launches Chromium for MLB's
+    crests, neither of which adding thirty NBA logos should cost."""
+    only = {s.strip() for s in (os.environ.get("LOGO_SPORTS") or "").split(",") if s.strip()}
+    return not only or sport in only
+
+
 def main():
     manifest = {}
     if os.path.exists(MANIFEST_PATH):
@@ -335,34 +347,43 @@ def main():
 
     session = requests.Session()
 
-    print("Fetching MLB team logos...")
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        fetch_mlb_logos(session, browser, manifest)
-        browser.close()
+    if _wanted("mlb"):
+        print("Fetching MLB team logos...")
+        # Imported here, not at the top: only MLB's crests need a browser, and
+        # a run for another league should not need Playwright installed.
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            fetch_mlb_logos(session, browser, manifest)
+            browser.close()
 
-    print("Fetching NFL team logos...")
-    fetch_nfl_logos(session, manifest)
+    if _wanted("nfl"):
+        print("Fetching NFL team logos...")
+        fetch_nfl_logos(session, manifest)
 
-    print("Fetching NBA team logos...")
-    fetch_nba_logos(session, manifest)
+    if _wanted("nba"):
+        print("Fetching NBA team logos...")
+        fetch_nba_logos(session, manifest)
 
-    print("Fetching Premier League club crests...")
-    fetch_epl_logos(session, manifest)
+    if _wanted("epl"):
+        print("Fetching Premier League club crests...")
+        fetch_epl_logos(session, manifest)
 
-    print("Fetching FBS crests...")
-    fetch_cfb_logos(session, manifest, CFB_SEASON)
+    if _wanted("cfb"):
+        print("Fetching FBS crests...")
+        fetch_cfb_logos(session, manifest, CFB_SEASON)
 
-    print("Fetching World Cup team logos...")
-    fetch_worldcup_logos(session, manifest)
+    if _wanted("worldcup"):
+        print("Fetching World Cup team logos...")
+        fetch_worldcup_logos(session, manifest)
 
     os.makedirs(LOGOS_DIR, exist_ok=True)
     with open(MANIFEST_PATH, "w") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
-    print("Wrote manifest with {} MLB, {} NFL, {} EPL, {} FBS and {} World Cup logos".format(
+    print("Wrote manifest with {} MLB, {} NFL, {} NBA, {} EPL, {} FBS and {} World Cup logos".format(
         len(manifest.get("mlb", {})), len(manifest.get("nfl", {})),
-        len(manifest.get("epl", {})), len(manifest.get("cfb", {})),
-        len(manifest.get("worldcup", {}))))
+        len(manifest.get("nba", {})), len(manifest.get("epl", {})),
+        len(manifest.get("cfb", {})), len(manifest.get("worldcup", {}))))
 
 
 if __name__ == "__main__":

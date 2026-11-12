@@ -12,7 +12,7 @@ import yaml
 import generate_insights
 import normalizer
 import team_meta
-from fetchers import epl, mlb, nfl
+from fetchers import epl, mlb, nba, nfl
 
 CONFIG_PATH = "config.yaml"
 
@@ -43,6 +43,13 @@ SPORT_FETCHERS = {
         # anyway, so a single year would be misleading rather than helpful.
         "competition": lambda cfg: "Premier League",
     },
+    "nba": {
+        "fetch": nba.fetch,
+        # No season number, for EPL's reason: the boards are a rolling window
+        # and an NBA season spans two calendar years (ESPN names it for the
+        # one it ENDS in), so a single year would mislead.
+        "competition": lambda cfg: "NBA Regular Season",
+    },
 }
 
 SPORT_LABELS = {"mlb": "MLB", "nfl": "NFL", "epl": "Premier League",
@@ -68,6 +75,10 @@ APPROVED_CATEGORIES = {
         "goals", "assists", "goal_or_assist",
         "goals_per_appearance", "shots_on_goal", "shots_total",
         "clean_sheets", "saves",
+    ],    # The three everyday boards, their sum, then the specialists' boards.
+    "nba": [
+        "points_pg", "rebounds_pg", "assists_pg", "pra_pg",
+        "threes_pg", "steals_pg", "blocks_pg",
     ],
 }
 
@@ -157,6 +168,18 @@ CATEGORY_META = {
     "shots_total": {"kind": "count", "sub": "Last {n} App · Fwd/Mid", "title": "Total Shots"},
     "clean_sheets": {"kind": "count", "sub": "Last {n} App · GK", "title": "Clean Sheets"},
     "saves": {"kind": "count", "sub": "Last {n} App · GK", "title": "Saves"},
+    # NBA. All seven are `rate`: config marks each per_game, so the ranked
+    # value is already an average (the same distinction as NFL's yardage
+    # boards). "G" is games the player PLAYED -- a night off moves his window
+    # back, it is not a zero in it -- and `{n}` resolves to the board's real
+    # depth, so in a season's first week it reads "Last 3 G", not 5.
+    "points_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Points / G"},
+    "rebounds_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Rebounds / G"},
+    "assists_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Assists / G"},
+    "pra_pg": {"kind": "rate", "sub": "Pts + Reb + Ast · Last {n} G", "title": "Pts+Reb+Ast / G"},
+    "threes_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Threes Made / G"},
+    "steals_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Steals / G"},
+    "blocks_pg": {"kind": "rate", "sub": "Last {n} G", "title": "Blocks / G"},
 }
 
 CATEGORY_SHORT_LABELS = {}

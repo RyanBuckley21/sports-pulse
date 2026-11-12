@@ -5,7 +5,15 @@ name: Fetch team logos
 # a.espncdn.com. Re-run only when logos are missing or a new team needs
 # adding (e.g. a World Cup team not seen in the cached date range).
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      # Added 2026-11-11 with the NBA logos. Blank runs every sport, as before.
+      # Name one ("nba") to fetch it alone: a full run spends a CFBD call and
+      # installs Chromium for MLB, which one league's logos should not cost.
+      sports:
+        description: "Comma list of sports to fetch (mlb,nfl,nba,epl,cfb,worldcup). Blank = all."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -19,7 +27,10 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt -r scripts/requirements.txt
-      - run: playwright install --with-deps chromium
+      # Only MLB's crests need a browser (fetch_logos imports Playwright inside
+      # that branch), so a run that names other sports skips the install.
+      - if: ${{ inputs.sports == '' || contains(inputs.sports, 'mlb') }}
+        run: playwright install --with-deps chromium
       # CFBD_API_KEY is needed by fetch_cfb_logos alone -- the MLB, NFL, EPL
       # and World Cup fetchers are all keyless. Step-scoped, matching the
       # pattern in daily-stats-and-grade.yml and deploy-pages.yml.
@@ -33,6 +44,7 @@ jobs:
       - run: python3 scripts/fetch_logos.py
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          LOGO_SPORTS: ${{ inputs.sports }}
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

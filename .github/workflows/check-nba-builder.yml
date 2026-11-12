@@ -62,11 +62,14 @@ jobs:
                         odds.get("away_ml"), odds.get("home_ml"),
                         (e.get("standout") or {}).get("side")))
           PY
-      - name: TEMPORARY capture NBA box scores to this branch
+      - name: TEMPORARY fetch NBA logos to this branch
+        env:
+          LOGO_SPORTS: nba
         run: |
-          python3 -m tools.capture_nba_boxscores 16
+          pip install Pillow
+          python3 scripts/fetch_logos.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/verify/nba_boxscores_fixture.json tools/verify/nba_boxscore_sample_full.json
-          git commit -m "Capture NBA box-score fixture (real ESPN data)"
+          git add assets/logos
+          git commit -m "Cache the 30 NBA team logos"
           git push

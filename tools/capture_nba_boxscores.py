@@ -1,8 +1,19 @@
-"""One-off capture of real ESPN NBA box scores, run from GitHub's runners
-because the build sandbox cannot reach site.api.espn.com. Writes the fixture
-tools/verify/nba_boxscores_fixture.json: the raw scoreboard events of the
-window (trimmed to the fields fetchers.nba reads) and each decided counted
-game's boxscore.players block."""
+"""Capture of real ESPN NBA box scores for tools/verify/nba_boxscores_fixture.json
+(test_nba_leaderboards reads it). Manual, and not part of the pipeline.
+
+    python3 -m tools.capture_nba_boxscores [DAYS=14] [THROUGH=today, Eastern]
+
+It has to run somewhere that can reach site.api.espn.com, which the build
+sandbox cannot: the committed fixture was captured on 2026-11-12T00:13Z from a
+GitHub runner (run 43125639054, a temporary step on the feature branch), 117
+decided games from 2026-10-26 to 2026-11-10, 8 seconds for the season's
+scoreboard months plus 117 summary requests.
+
+The fixture is the feed trimmed to the fields fetchers.nba reads and nothing
+hand-written: each window event's id, date, season, competition type, status
+and competitors, and each decided counted game's boxscore.players with the
+stat keys and every athlete's id, name, position, starter, didNotPlay and
+stat strings."""
 import datetime, json, sys
 import requests
 import slate_clock
@@ -44,20 +55,19 @@ def trim_players(players):
         groups = []
         for g in t.get("statistics") or []:
             groups.append({
-                "names": g.get("names"), "keys": g.get("keys"), "labels": g.get("labels"),
+                "keys": g.get("keys"),
                 "athletes": [{
                     "athlete": {"id": (a.get("athlete") or {}).get("id"),
                                 "displayName": (a.get("athlete") or {}).get("displayName"),
                                 "position": {"abbreviation": ((a.get("athlete") or {}).get("position") or {}).get("abbreviation")}},
                     "starter": a.get("starter"), "didNotPlay": a.get("didNotPlay"),
-                    "reason": a.get("reason"), "ejected": a.get("ejected"),
                     "stats": a.get("stats")} for a in g.get("athletes") or []]})
         out.append({"team": {k: team.get(k) for k in ("id", "abbreviation", "displayName")},
                     "statistics": groups})
     return out
 
 
-summaries, sample, shapes = {}, None, {}
+summaries = {}
 for e in keep:
     if not nba.is_counted_game(e):
         continue
@@ -69,13 +79,9 @@ for e in keep:
     r.raise_for_status()
     data = r.json()
     players = (data.get("boxscore") or {}).get("players")
-    if sample is None:
-        sample = {"top_level_keys": sorted(data), "boxscore_keys": sorted(data.get("boxscore") or {}),
-                  "players_full": players}
     summaries[row["id"]] = {"boxscore": {"players": trim_players(players)}}
 print("summaries:", len(summaries))
 json.dump({"captured": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
            "window": [start.isoformat(), through.isoformat()],
            "events": [trim_event(e) for e in keep], "summaries": summaries},
           open("tools/verify/nba_boxscores_fixture.json", "w"), separators=(",", ":"))
-json.dump(sample, open("tools/verify/nba_boxscore_sample_full.json", "w"), indent=1)
