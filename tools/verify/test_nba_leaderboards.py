@@ -75,6 +75,16 @@ restored and the suite re-run clean. What each one failed:
                                                never arrive -- two guards
   config not validated on an empty day      -> the empty-day mode check alone
   SPORT_FETCHERS["nba"] pointed elsewhere   -> the registration check alone
+
+MINUTES (2026-11-12, 9 checks). Each row also carries `usage` -- minutes a
+game over the window, the stat per 36 minutes, and minutes in the games just
+before the window -- and each series entry its `min`. Sabotaged six ways:
+  per 36 replaced by the per-game value        5 fail
+  "before" taken over the window itself        5 fail
+  one earlier game treated as a baseline       2 fail
+  minutes averaged over the whole lookback     5 fail
+  per-game minutes dropped from the series     3 fail
+  a box score with no minutes tolerated        1 fail
 """
 
 import contextlib
@@ -307,11 +317,64 @@ ok("  his window skips the night off and reaches back to 10-30 instead",
    and [s["value"] for s in siakam["series"]] == [13, 17, 20, 23, 29]
    and siakam["value"] == 20.4, siakam)
 
+# --- minutes beside the average (2026-11-12) ---------------------------------
+# Re-derived from the raw lines: minutes over the window, the stat per 36 of
+# them (TOTAL over TOTAL), and minutes in the games just before the window.
+def usage_by_hand(name, field):
+    played = [l for l in RAW[name] if l[2]]
+    win, before = played[-5:], played[:-5]
+    mins = [int(l[3]["minutes"]) for l in win]
+    total = sum(int(l[3][field]) for l in win)
+    prev = [int(l[3]["minutes"]) for l in before]
+    return {"minutes": round(sum(mins) / len(mins), 1), "per36": round(36.0 * total / sum(mins), 1),
+            "prev_minutes": round(sum(prev) / len(prev), 1) if len(prev) >= 2 else None,
+            "prev_games": len(prev)}
+
+
+ok("Doncic: 36.6 minutes a game, 41.7 points per 36, and 37.0 in his two games before",
+   luka is not None and luka.get("usage") == usage_by_hand("Luka Doncic", "points")
+   == {"minutes": 36.6, "per36": 41.7, "prev_minutes": 37.0, "prev_games": 2}, luka and luka.get("usage"))
+wemby = row_for(RECORDS, "points_pg", "Victor Wembanyama")
+ok("a role that shrank is two numbers: Wembanyama 26.6 minutes now, 33.3 in the three games before",
+   wemby is not None and wemby["usage"]["minutes"] == 26.6 and wemby["usage"]["prev_minutes"] == 33.3
+   and wemby["usage"]["prev_games"] == 3 and wemby["usage"] == usage_by_hand("Victor Wembanyama", "points"),
+   wemby and wemby.get("usage"))
+ok("  per 36 is total over total (44.1), not the average of each game's rate",
+   wemby is not None and wemby["usage"]["per36"] == 44.1
+   and round(sum(36.0 * s["value"] / s.get("min", float("nan")) for s in wemby["series"]) / 5, 1) != 44.1, wemby and wemby["series"])
+ok("  each game in the series carries its own minutes",
+   luka is not None and [s.get("min") for s in luka["series"]] ==
+   [int(l[3]["minutes"]) for l in raw_luka], luka and luka["series"])
+bad_usage = []
+for cat in NBA_CFG["stat_categories"]:
+    if len(cat["fields"]) != 1 or cat["fields"][0] == "threePointFieldGoalsMade":
+        continue
+    for r in board(RECORDS, cat["key"])[:10]:
+        if r.get("usage") != usage_by_hand(r["entity"], cat["fields"][0]):
+            bad_usage.append((cat["key"], r["entity"], r.get("usage")))
+ok("every top-ten row's minutes, per-36 and earlier minutes match the independent reading",
+   not bad_usage, bad_usage[:3])
+ok("  the same player's minutes agree on every board he is on",
+   len({json.dumps(r["usage"]["minutes"]) for r in RECORDS if r["entity"] == "Luka Doncic"}) == 1)
+ok("one earlier game is not a baseline: with fewer than two, no earlier minutes are stated",
+   all(r["usage"]["prev_minutes"] is None for r in RECORDS if r["usage"]["prev_games"] < 2)
+   and any(r["usage"]["prev_games"] == 1 for r in RECORDS)
+   and all(r["usage"]["prev_minutes"] is not None for r in RECORDS if r["usage"]["prev_games"] >= 2))
+no_min = copy.deepcopy(SUMMARIES)
+a_game = next(str(e["id"]) for e in EVENTS if nba.slate_date(e) == "2026-11-10")
+blk = no_min[a_game]["boxscore"]["players"][0]["statistics"][0]
+scorer = max((a for a in blk["athletes"] if a["stats"]), key=lambda a: int(a["stats"][1]))
+scorer["stats"][blk["keys"].index("minutes")] = "--"
+exc_min = raises(nba.fetch, CONFIG, today="2026-11-11", session=_Session(summaries=no_min))
+ok("a box score with no minutes raises, naming the player",
+   isinstance(exc_min, ValueError) and "minutes" in str(exc_min)
+   and scorer["athlete"]["displayName"] in str(exc_min), exc_min)
+
 # --- the window and its floor ------------------------------------------------
 clifford = row_for(RECORDS, "points_pg", "Nique Clifford")
 ok("a traded player keeps one window and shows his CURRENT club",
    clifford is not None and clifford["team"] == "OKC" and clifford["games_window"] == 5
-   and clifford["series"][-1] == {"date": "2026-11-10", "value": 4}
+   and clifford["series"][-1] == {"date": "2026-11-10", "value": 4, "min": 20}
    and [l[1] for l in RAW["Nique Clifford"] if l[2]][-5:] == ["SAC"] * 4 + ["OKC"], clifford)
 ok("under the floor: Morant's two games (18.5 a night) rank on no board",
    len([l for l in RAW["Ja Morant"] if l[2]]) == 2
@@ -439,6 +502,10 @@ top = cats[0]["players"][0] if cats else {}
 ok("  points leads with Doncic at 42.4",
    (top.get("entity"), top.get("value"), top.get("rank"), top.get("window")) ==
    ("Luka Doncic", 42.4, 1, 5), top)
+ok("  the minutes context reaches the page: usage on the row, minutes on each game",
+   top.get("usage") == {"minutes": 36.6, "per36": 41.7, "prev_minutes": 37.0, "prev_games": 2}
+   and [g.get("min") for g in top.get("series") or []] == [int(l[3]["minutes"]) for l in raw_luka],
+   top.get("usage"))
 ok("the label for the sport is NBA", (data["sports"].get("nba") or {}).get("label") == "NBA")
 
 print("nba leaderboards: {} checks pass".format(checks["pass"]) if not checks["fail"]

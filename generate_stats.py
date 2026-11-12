@@ -437,6 +437,10 @@ def build_data(ranked_records, generated_at):
                         # threshold_rate: met/window drive the "8/10" display.
                         "met": r.get("met"),
                         "window": r.get("games_window"),
+                        # Minutes a game, the stat per 36 minutes, and minutes
+                        # in the games just before the window (NBA only for
+                        # now; None elsewhere). See fetchers.nba.aggregate_category.
+                        "usage": r.get("usage"),
                     }
                 )
             categories_out.append(

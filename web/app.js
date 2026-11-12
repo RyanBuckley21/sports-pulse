@@ -274,6 +274,50 @@
     );
   }
 
+  // WHO HE PLAYS NEXT, from the slate the Games tab already carries
+  // (insights.games). The boards say who has been producing; a bet is about a
+  // game that has not happened, so the row names it: opponent, home or away,
+  // and when. Matched on the team abbreviation both payloads use. A game whose
+  // start has passed on the reader's clock is skipped (the page is static
+  // between deploys), and a slate with no instant on it is still shown --
+  // dropping what cannot be dated would blank the tag on a missing field.
+  // null when his club is not on the slate: nothing is printed then, which on
+  // a night his team is off is itself the information.
+  function nextGame(teamAbbr) {
+    var games = (state.data.insights && state.data.insights.games) || [];
+    var best = null;
+    for (var i = 0; i < games.length; i++) {
+      var g = games[i];
+      if (g.sport && g.sport !== state.sport) continue;
+      var away = g.away && g.away.abbr, home = g.home && g.home.abbr;
+      if (!teamAbbr || (away !== teamAbbr && home !== teamAbbr)) continue;
+      var t = g.start_utc ? Date.parse(g.start_utc) : NaN;
+      if (!isNaN(t) && t <= Date.now()) continue;
+      if (!best || (!isNaN(t) && (isNaN(best.t) || t < best.t))) {
+        best = { t: t, opp: home === teamAbbr ? away : home, home: home === teamAbbr, start: g.start };
+      }
+    }
+    return best;
+  }
+  function nextGameText(teamAbbr) {
+    var n = nextGame(teamAbbr);
+    if (!n) return "";
+    return "Next: " + (n.home ? "vs " : "@ ") + n.opp + (n.start ? " · " + n.start : "");
+  }
+
+  // MINUTES BESIDE THE AVERAGE (p.usage, NBA for now). A per-game number moves
+  // most with how long a player is on the floor, so the row shows his minutes,
+  // the stat per 36 of them, and -- when he had at least two games just before
+  // this window -- what his minutes were then. Two numbers, no verdict: the
+  // page does not decide what counts as a role change.
+  function usageText(u) {
+    if (!u || u.minutes == null) return "";
+    var s = Number(u.minutes).toFixed(1) + " min";
+    if (u.prev_minutes != null) s += " (was " + Number(u.prev_minutes).toFixed(1) + ")";
+    if (u.per36 != null) s += " · " + Number(u.per36).toFixed(1) + " per 36";
+    return s;
+  }
+
   function renderList() {
     var cat = currentCategory();
     var players = cat.players;
@@ -320,6 +364,10 @@
           : "";
         var barShadow = isLeader ? "box-shadow:0 0 10px " + alpha(p.team_color, "80") + ";" : "";
         var valDisplay = cat.kind === "threshold" ? esc(thresholdDisplay(p)) : fmtValue(p.value, cat.kind);
+        var subBits = [usageText(p.usage), nextGameText(p.team_abbr)].filter(Boolean);
+        var rowSub = subBits.length
+          ? '<div class="row-sub">' + subBits.map(function (b) { return "<span>" + esc(b) + "</span>"; }).join("") + "</div>"
+          : "";
         return (
           '<li><button class="player-row" data-rank="' + Number(p.rank) + '" type="button">' +
           '<div class="row-top">' +
@@ -330,6 +378,7 @@
           teamMark +
           '<span class="row-value-wrap"><span class="row-value">' + valDisplay + "</span></span>" +
           "</div>" +
+          rowSub +
           '<div class="mag-track"><div class="mag-fill" style="width:' + pct + "%;background:" + teamColor + ";" + barShadow + '"></div></div>' +
           "</button></li>"
         );
@@ -390,6 +439,8 @@
         teamChipLogo + esc(player.team_abbr) + "</span>"
       : "";
     var posLine = esc(player.team) + (player.position ? " &middot; " + esc(player.position) : "");
+    var nextLine = nextGameText(player.team_abbr);
+    if (nextLine) posLine += '<span class="identity-next">' + esc(nextLine) + "</span>";
     // The flame now means "#1 on some board", not "#1 on the board you came
     // from" -- entries are rank-sorted, so the first entry carries the best rank.
     var bestRank = Number(ctx.entries[0].player.rank) || 99;
@@ -502,7 +553,9 @@
     // Pitching series (K/G) also carry innings pitched per outing, shown
     // as a secondary label under each bar. Rendered raw: "5.2" is MLB
     // thirds notation (5 2/3 IP), standard as-is per game.
-    var hasIp = series.some(function (s) { return s.ip != null; });
+    // NBA series carry minutes played that game (`min`) the same way: a
+    // 12-point night in 19 minutes and one in 38 are different facts.
+    var hasIp = series.some(function (s) { return s.ip != null || s.min != null; });
     // A 20-game window can't fit a legible numeric label above every bar in
     // the fixed-width column, so dense series render as a label-less
     // hit/miss sparkline (the exact per-game counts live in the breakdown).
@@ -518,7 +571,8 @@
         var barLabel = dense ? "" : '<span class="bar-label">' + esc(label) + "</span>";
         // Keep an empty sublabel slot when other bars have one, so every
         // bar in the row shares the same bottom baseline.
-        var ipLabel = hasIp ? '<span class="bar-sublabel">' + (s.ip != null ? esc(s.ip) : "") + "</span>" : "";
+        var ipLabel = hasIp ? '<span class="bar-sublabel">' +
+          (s.ip != null ? esc(s.ip) : s.min != null ? esc(Number(s.min)) + "m" : "") + "</span>" : "";
         return (
           '<div class="bar-col">' +
           barLabel +
@@ -645,11 +699,20 @@
     if (cat.kind === "rate") {
       var peak = vals.length ? Math.max.apply(null, vals) : 0;
       var low = vals.length ? Math.min.apply(null, vals) : 0;
-      return [
+      var out = [
         { l: "Average", v: fmtValue(player.value, "rate") },
         { l: "Peak " + noun, v: peak.toFixed(1) },
         { l: "Low " + noun, v: low.toFixed(1) },
       ];
+      var u = player.usage;
+      if (u && u.minutes != null) {
+        out.push({ l: "Minutes per " + noun, v: Number(u.minutes).toFixed(1) });
+        if (u.prev_minutes != null) {
+          out.push({ l: "Minutes, " + Number(u.prev_games) + " " + nounPlural.toLowerCase() + " before", v: Number(u.prev_minutes).toFixed(1) });
+        }
+        if (u.per36 != null) out.push({ l: "Per 36 minutes", v: Number(u.per36).toFixed(1) });
+      }
+      return out;
     }
     // streak
     var hitsInSpan = vals.reduce(function (a, b) { return a + b; }, 0);

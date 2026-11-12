@@ -44,6 +44,9 @@ def normalize(sport, competition, raw_records):
                 # "8/10" display; tiebreak (= met) breaks value (rate) ties.
                 "met": r.get("met"),
                 "games_window": r.get("games_window"),
+                # Minutes context beside a per-game board (fetchers.nba, 2026-11-12):
+                # None from every fetcher that has none.
+                "usage": r.get("usage"),
                 "tiebreak": r.get("tiebreak"),
             }
         )

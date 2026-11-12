@@ -41,7 +41,7 @@ python3 -m tools.verify.test_season_phase        # postseason/preseason picks ke
 python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
 python3 -m tools.verify.test_nba_live            # NBA picks: site scores what the backtest measured, config is the fit, builder
 python3 -m tools.verify.test_nba_price_capture   # NBA price capture: pre-game only, change-only rows + run row, append-only
-python3 -m tools.verify.test_nba_leaderboards    # NBA Who's Hot: DNP is not a zero, stats by key, Eastern days, last-5 window, all-or-nothing
+python3 -m tools.verify.test_nba_leaderboards    # NBA Who's Hot: DNP is not a zero, stats by key, Eastern days, last-5 window, all-or-nothing, minutes context
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
@@ -53,7 +53,7 @@ python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (p
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "264 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "275 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -434,10 +434,37 @@ in `fetchers/nba.py` has all of it):
   back 16 days (every club 6 to 9 games; 14 days gives 5 to 8). About 117
   summary requests a run, 8 seconds, uncached.
 
+**Minutes and the next game on every row (2026-11-12).** Who's Hot ranked who
+has been producing and said nothing about why or about tonight. Each NBA row
+now carries `usage`: minutes a game over the window, the stat **per 36
+minutes** (total over total, never an average of per-game rates), and his
+minutes in the games **just before** the window when there are at least two
+(`MIN_PRIOR_GAMES`, a convention). Each game in the series carries its `min`.
+Example from the fixture: Wembanyama 26.6 minutes now, 33.3 before, 44.1 per
+36 -- a 32.6-point average on shrinking minutes.
+
+- **No threshold calls anything a "role change".** Two numbers are shown and
+  the reader judges; a cut-off would be a constant nobody measured.
+- **Why minutes and not a hit rate:** see "Who's Hot and props: what NOT to
+  build" below.
+- **"Next: vs OPP · time"** on every row and player page, all sports, joined in
+  `app.js` (`nextGame`) from `insights.games` on the team abbreviation. The
+  games section now carries `start_utc`; a game that has started is skipped, a
+  game with no instant is still named, and a club not on the slate prints
+  nothing.
+- Pinned by `test_nba_leaderboards` (minutes, 9 checks) and the browser
+  suite's `hot context` group (11 checks); sabotaged 6 and 6 ways.
+
 Open on the boards:
-- **It has never run in the pipeline against the live feed** until the first
-  deploy after merge. Read its log line: `whos-hot(nba): N games A..B, N
-  players, N rows, depth 5 of 5`.
+- **Minutes are not a projection.** The row shows what his minutes were, not
+  what they will be tonight; no injury report or starting lineup is read.
+- **"Next" is the picks slate, so it exists only for sports with a games
+  builder** and only for the slate in the payload (tonight for NBA, the week
+  for NFL). A player whose club plays tomorrow shows nothing today.
+- **Per 36 is only as good as the window**: five games.
+- ~~It has never run in the pipeline against the live feed~~ **Ran
+  2026-11-11**: `whos-hot(nba): 116 games 2026-10-27..2026-11-11, 441
+  players, 2510 rows, depth 5 of 5`.
 - **Playoffs are not counted** (same gap as the picks). From mid-April the
   boards freeze on the regular season's last 16 days and the log says how many
   days old they are; nothing on the page does beyond each row's last game date.
