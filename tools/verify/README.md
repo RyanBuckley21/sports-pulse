@@ -696,9 +696,9 @@ failing checks; the lookups were made tolerant.
 python3 -m tools.verify.test_parlay_boost     # from the repo root
 ```
 
-**`test_parlay_boost`** (added 2026-11-10; 73 checks since 2026-11-12, when
-section 7 added `suggest`, the tickets the page names, sabotage-checked 13 ways
-in the suite's docstring) pins what the Bets tray
+**`test_parlay_boost`** (added 2026-11-10; 78 checks since 2026-11-12, when
+section 7 added `suggest`, the value and Kelly-growth tickets the page names,
+sabotage-checked 16 ways in the suite's docstring) pins what the Bets tray
 says a profit boost is worth (`parlay_boost.py`, and `fair` on each
 `bet_board` leg). Every way the number can be wrong reads as a reason to bet:
 
@@ -729,8 +729,9 @@ inert) and was moved to the boost field.
 **The tickets the page names (2026-11-12, 18 browser checks in `bets`).**
 `bets.js` copies `parlay_boost.suggest`, and the browser checks are that
 module's own numbers on the same fixture board, so the copies cannot drift:
-50% / 3+ legs / +300 names TOR CAR CWS at +468, 21.3%, +20.9%; with two legs
-allowed the value ticket is TOR CAR and the likelier one CWS BAY. Also pinned:
+50% / 3+ legs / +300 names TOR CAR CWS at +468, 21.3%, +20.9%; with no total
+minimum the value ticket is unchanged and the Kelly-growth ticket is CAR BUF
+BAY (+261, 32.2%, +16.2%, Kelly 6.2%). Also pinned:
 the underdog is never a leg, the tickets follow the sport filter, "Use these
 legs" loads exactly the ticket shown, a 5% boost gets no recommendation and no
 button, the promo is remembered across a reload and unreadable saved terms are

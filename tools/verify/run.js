@@ -1066,8 +1066,8 @@ async function betsChecks(browser, base) {
   // these are that module's numbers on this same board (test_parlay_boost
   // section 7), so the two copies cannot drift apart unnoticed:
   //   50%, 3+ legs, +300:  TOR CAR CWS, pays +468, cashes 21.3%, worth +20.9%
-  //   50%, 2+ legs:        value TOR CAR (+286, 31.5%, +21.7%);
-  //                        likelier CWS BAY (+118, 51.3%, +12.1%: 12.149 before rounding)
+  //   50%, 3+ legs, no total: value unchanged (Kelly 4.5%);
+  //                        growth CAR BUF BAY (+261, 32.2%, +16.2%, Kelly 6.2%)
   //   5%, 3+ legs:         nothing is worth its stake
   // A fresh page with its storage cleared first: the promo is remembered now,
   // and the checks above typed one.
@@ -1096,26 +1096,27 @@ async function betsChecks(browser, base) {
      /pays \+468/.test(k) && /cashes 21\.3%/.test(k) && /worth \+20\.9% per \$1/.test(k), k);
   ok("  the underdog on the board (APP +440) is never a leg", !/APP/.test(k), k);
   ok("  and it says the chance is the market's, not the model's",
-     /not the model.s/.test(k) && /favourites only/.test(k), k);
-  await rSet("legs", "2"); await rSet("total", "");
+     /not the model.s/.test(k) && /favourites only/.test(k) && /Kelly/.test(k), k);
+  await rSet("total", "");
   const cards = await r.$$eval(".bet-ticket", (n) => n.map((x) => x.textContent.replace(/\s+/g, " ")));
-  ok("two legs allowed: best value is TOR CAR, pays +286, cashes 31.5%, worth +21.7%",
-     cards.length === 2 && /Best value/.test(cards[0]) && /TOR -136/.test(cards[0]) && /CAR -148/.test(cards[0]) &&
-     /pays \+286/.test(cards[0]) && /cashes 31\.5%/.test(cards[0]) && /worth \+21\.7%/.test(cards[0]), cards.join(" | "));
-  ok("  and the likelier ticket is CWS BAY: pays +118, cashes 51.3%, worth +12.1%",
-     cards.length === 2 && /More likely/.test(cards[1]) && /CWS -240/.test(cards[1]) && /BAY -380/.test(cards[1]) &&
-     /pays \+118/.test(cards[1]) && /cashes 51\.3%/.test(cards[1]) && /worth \+12\.1%/.test(cards[1]), cards.join(" | "));
-  await r.click('[data-ticket-use="likeliest"]'); await r.waitForTimeout(100);
+  ok("no total minimum: the value ticket is unchanged and carries its Kelly ceiling (4.5%)",
+     cards.length === 2 && /Best value per \$1/.test(cards[0]) && /TOR -136/.test(cards[0]) && /CWS -240/.test(cards[0]) &&
+     /pays \+468/.test(cards[0]) && /Kelly: at most 4\.5% of bankroll/.test(cards[0]), cards.join(" | "));
+  ok("  and the growth ticket is CAR BUF BAY: pays +261, cashes 32.2%, worth +16.2%, Kelly 6.2%",
+     cards.length === 2 && /Best for bankroll growth/.test(cards[1]) && /CAR -148/.test(cards[1]) && /BUF -340/.test(cards[1]) &&
+     /BAY -380/.test(cards[1]) && /pays \+261/.test(cards[1]) && /cashes 32\.2%/.test(cards[1]) &&
+     /worth \+16\.2%/.test(cards[1]) && /Kelly: at most 6\.2% of bankroll/.test(cards[1]), cards.join(" | "));
+  await r.click('[data-ticket-use="growth"]'); await r.waitForTimeout(100);
   const used = await r.$eval(".bet-tray", (x) => x.textContent.replace(/\s+/g, " "));
   const ticked = await r.$$eval('.bet-add[aria-pressed="true"]', (n) => n.map((x) => x.closest(".bet").getAttribute("data-key").split(":").pop()).sort().join(","));
   ok("Use these legs loads exactly that ticket into the tray, and ticks its rows",
-     /2 legs/.test(used) && /worth \+12.1% per \$1/.test(used) && ticked === "BAY,CWS", used + " / " + ticked);
+     /3 legs/.test(used) && /worth \+16\.2% per \$1/.test(used) && ticked === "BAY,BUF,CAR", used + " / " + ticked);
   await r.click('.bet-filter[data-bet-sport="nfl"]'); await r.waitForTimeout(80);
   k = await tix();
   ok("the tickets follow the sport filter: on NFL only NFL legs are offered",
      !/TOR|CWS|BAY|TULN/.test(k) && /(CAR|BUF|KC)/.test(k), k);
   await r.click('.bet-filter[data-bet-sport="all"]'); await r.waitForTimeout(80);
-  await rSet("boost", "5"); await rSet("legs", "3");
+  await rSet("boost", "5");
   k = await tix();
   ok("a 5% boost: no ticket is recommended, and the page says none is worth its stake",
      /worth its stake/.test(k) && !(await r.$(".bet-ticket")) && !(await r.$(".bet-ticket-use")), k);

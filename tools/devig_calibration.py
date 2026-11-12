@@ -19,10 +19,36 @@ price said (the proportional method under-rates them); negative, less.
 WHAT IT IS NOT. Not a model result -- no pick is involved, every side is
 counted. And closing lines only: nflverse carries no earlier price.
 
+WHICH METHOD (--methods, added 2026-11-12). Proportional is the simplest of
+several ways to take the vig out, and the published guidance is that it is the
+weakest where a market has a favourite-longshot bias: it leaves longshots
+rated too high and favourites too low, and the power and Shin methods correct
+for it (the R `implied` package's documentation calls basic normalisation the
+least accurate of its methods; Shin 1993). That is a claim about other
+markets, so it was measured here, on decided regular-season games 2010-2025
+(4,161), each method's log loss against the result and its paired difference
+from proportional (2,000 resamples, seed 17):
+
+    proportional  0.60936
+    power         0.60911   -0.00025 [-0.00092, +0.00044]
+    odds-ratio    0.60913   -0.00023 [-0.00067, +0.00024]
+    additive      0.60915   -0.00021 [-0.00064, +0.00022]
+    Shin          0.60915   -0.00021 [-0.00063, +0.00022]
+
+Every alternative is better by a hair and none by an amount this sample can
+tell from zero. The bias is visible in the direction the literature says --
+under proportional, sides at -500 or shorter won 2.8 points MORE than rated
+and sides at +200 or longer 1.4 points LESS, and power flattens both ends to
+about a point -- but across the prices a boost leg can be (-250 to +100) the
+methods agree to within half a point. So parlay_boost keeps proportional:
+there is no measured gain to switch for, and the legs it prices sit where the
+choice does not matter. Re-run this if the board ever prices long underdogs.
+
 Network: one nflverse schedule CSV, no key. Writes nothing.
 """
 
 import argparse
+import math
 import random
 import sys
 
@@ -45,6 +71,70 @@ BANDS = (("-500 or shorter", None, -500), ("-499..-301", -499, -301),
 def no_vig(home_dec, away_dec):
     inv_h, inv_a = 1.0 / home_dec, 1.0 / away_dec
     return inv_h / (inv_h + inv_a), inv_a / (inv_h + inv_a)
+
+
+def _solve(fn, lo, hi):
+    """Bisection for the constant that makes a method's two chances sum to 1
+    (fn is decreasing in it)."""
+    for _ in range(60):
+        mid = (lo + hi) / 2.0
+        if fn(mid) > 1.0:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def devig_methods(home_dec, away_dec):
+    """{method: the home side's chance} for the five two-outcome methods."""
+    x, y = 1.0 / home_dec, 1.0 / away_dec
+    total = x + y
+    k = _solve(lambda k: x ** k + y ** k, 0.5, 3.0)
+    odds = lambda p, c: p / (c + p - c * p)                      # noqa: E731
+    c = _solve(lambda c: odds(x, c) + odds(y, c), 1.0, 3.0)
+    z = ((total - 1.0) * ((x - y) ** 2 - total)) / (total * ((x - y) ** 2 - 1.0))
+    return {
+        "proportional": x / total,
+        "power": x ** k,
+        "odds-ratio": odds(x, c),
+        "additive": x - (total - 1.0) / 2.0,
+        "Shin": (math.sqrt(z * z + 4.0 * (1.0 - z) * x * x / total) - z) / (2.0 * (1.0 - z)),
+    }
+
+
+def compare_methods(seasons, session=None, iters=2000, seed=BOOTSTRAP_SEED):
+    """Print each method's log loss on decided games and its paired difference
+    from proportional. Ties are left out: log loss needs a winner."""
+    losses = {}
+    for g in nfl.get_schedule(session or requests.Session()):
+        if g.get("game_type") != "REG" or g.get("season") not in {str(s) for s in seasons}:
+            continue
+        hs, as_ = nfl._num(g.get("home_score")), nfl._num(g.get("away_score"))
+        hd = espn_odds.american_to_decimal(g.get("home_moneyline"))
+        ad = espn_odds.american_to_decimal(g.get("away_moneyline"))
+        if None in (hs, as_, hd, ad) or hs == as_:
+            continue
+        won = hs > as_
+        for name, p in devig_methods(hd, ad).items():
+            p = min(max(p if won else 1.0 - p, 1e-9), 1.0)
+            losses.setdefault(name, []).append(-math.log(p))
+    n = len(losses.get("proportional", []))
+    if not n:
+        print("devig: no decided priced games in {}".format(seasons))
+        return 1
+    print("{} decided games, {}-{}: log loss by method, and minus proportional".format(
+        n, min(seasons), max(seasons)))
+    base = losses["proportional"]
+    rng = random.Random(seed)
+    for name, vals in losses.items():
+        line = "  {:<13} {:.5f}".format(name, sum(vals) / n)
+        if name != "proportional":
+            diff = [a - b for a, b in zip(vals, base)]
+            means = sorted(sum(diff[rng.randrange(n)] for _ in range(n)) / n for _ in range(iters))
+            line += "   {:+.5f} [{:+.5f}, {:+.5f}]".format(
+                sum(diff) / n, means[int(0.025 * iters)], means[int(0.975 * iters)])
+        print(line)
+    return 0
 
 
 def bootstrap_mean_ci(values, iters=BOOTSTRAP_ITERS, seed=BOOTSTRAP_SEED):
@@ -80,7 +170,11 @@ def in_band(american, lo, hi):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seasons", nargs="+", type=int, default=list(range(2015, 2026)))
+    parser.add_argument("--methods", action="store_true",
+                        help="compare five de-vig methods by log loss instead")
     args = parser.parse_args(argv)
+    if args.methods:
+        return compare_methods(args.seasons)
     sides = collect(args.seasons)
     if not sides:
         print("devig: no priced games in {}".format(args.seasons))

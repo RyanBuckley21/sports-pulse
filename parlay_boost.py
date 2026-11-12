@@ -66,6 +66,8 @@ web/insights/bets.js repeats the EV formula for the legs the reader taps;
 tools/verify/run.js pins the page's numbers to this module's.
 """
 
+import math
+
 
 def american_to_decimal(american):
     """American odds -> decimal, or None for zero/garbage."""
@@ -232,17 +234,31 @@ def evaluate(legs, promo=None):
 # and a +300 minimum on three legs needs them to average -170, so three
 # "parlay pieces" at -300 do not even qualify.
 #
-# TWO TICKETS, because the best value is also the least likely to cash:
-#   value      the highest boosted value;
-#   likeliest  the highest win chance among tickets that keep at least HALF
-#              the best ticket's value (SUGGEST_LIKELY_KEEP).
-# Half is a judgment, not a measurement. Without it "likeliest" degenerates:
-# on the fixture board with a 2-leg promo it named KC -575 + TULN -1050,
-# cashing 71.6% and worth +2.3% -- a ticket that is technically positive and
-# no use of a boost at all.
-# They differ by a point or two of value and several points of chance, and
-# each leg's chance is only known to about +/-3.5 points (see the calibration
-# above), so the page shows both and does not pretend one is right.
+# TWO TICKETS, because "best" depends on what limits the stake:
+#   value   the highest boosted value per dollar. The right ticket when the
+#           promo caps the stake below what you would otherwise bet, which
+#           boosts nearly always do: at a fixed stake, most value per dollar
+#           is most dollars.
+#   growth  the highest expected growth of a bankroll staked at Kelly,
+#               f* = EV / b            (b = the boosted net odds)
+#               g  = P*ln(1 + f*b) + (1-P)*ln(1 - f*)
+#           This is the standard answer to "which bet is best" once variance
+#           counts (Kelly 1956), and the published work on parlays lands in
+#           the same place: Whelan, "The Parlay Puzzle" -- even with an edge,
+#           an expected-utility bettor should not play long parlays -- and
+#           Establish The Run's parlay maths, that bankroll growth matters
+#           more than value quoted as a percentage. Growth favours the ticket
+#           that cashes more often: on the 2026-11-12 board the value ticket
+#           (+24.6%, cashes 14.4%) grows a Kelly bankroll 0.39% a bet and the
+#           growth ticket (+21.2%, cashes 22.0%) grows it 0.49%.
+#
+# The second ticket was first "the likeliest that keeps half the best value"
+# (2026-11-12, a judgment constant of mine). Growth replaces it the same day:
+# it needs no constant and it is what the literature uses.
+#
+# Each ticket also carries `kelly`, f* as a share of bankroll. It is an UPPER
+# bound, not advice: each leg's chance is only known to a few points, and the
+# usual practice is to stake a fraction of Kelly for exactly that reason.
 #
 # LEGS ARE FAVOURITES ONLY by default (`leg_max_american`, +100): the owner's
 # rule for boosted parlays is no leg past +100 -- "a long-odds underdog leg
@@ -261,7 +277,6 @@ SUGGEST_EXTRA_LEGS = 2
 # Combinations tried per size before a size is skipped. 40 legs choose 5 is
 # 658,008; the page repeats this search on a phone.
 SUGGEST_MAX_COMBOS = 1500000
-SUGGEST_LIKELY_KEEP = 0.5
 
 
 def _combos(n, r):
@@ -299,19 +314,18 @@ def suggest(legs, promo, leg_max_american=SUGGEST_LEG_MAX_AMERICAN):
     """The tickets worth showing for `promo` from `legs` (evaluate()'s leg
     shape, plus a "label").
 
-    Returns {"eligible", "qualifying", "skipped_sizes", "value", "likeliest",
-    "why"}. `value` and `likeliest` are {"legs": [...], "win_prob", "decimal",
-    "boosted_american", "ev_boosted"} or None. `likeliest` is None when no
-    qualifying ticket is worth more than its stake, and equal to `value` when
-    they are the same ticket. `why` says so in words when there is nothing to
-    suggest. The search runs twice: once for the best value, once for the
-    likeliest ticket above the bar that value sets.
+    Returns {"eligible", "qualifying", "skipped_sizes", "value", "growth",
+    "why"}. `value` and `growth` are {"legs": [...], "win_prob", "decimal",
+    "boosted_american", "ev_boosted", "kelly", "log_growth"} or None. `growth`
+    is None when no qualifying ticket is worth more than its stake (a losing
+    bet has no Kelly stake), and may be the same ticket as `value`. `why` says
+    so in words when there is nothing to suggest.
 
     No boost, no suggestion: unboosted, every parlay on the board is worth
     less than its stake by the vig, and ranking losers would read as advice."""
     promo = promo or {}
     out = {"eligible": 0, "qualifying": 0, "skipped_sizes": [],
-           "value": None, "likeliest": None, "why": None}
+           "value": None, "growth": None, "why": None}
     boost_pct = promo.get("boost_pct")
     if boost_pct is None or float(boost_pct) <= 0:
         out["why"] = "no boost entered"
@@ -328,31 +342,39 @@ def suggest(legs, promo, leg_max_american=SUGGEST_LEG_MAX_AMERICAN):
         out["why"] = "fewer than {} legs fit these terms".format(min_legs)
         return out
 
-    best_value = best_likely = None
+    best_value = best_growth = None
+
+    def kelly(p, dec):
+        """(f*, g) for a ticket winning with chance p at boosted decimal odds
+        1 + (dec-1)*(1+boost); (0, 0) when it is not worth its stake."""
+        net = (dec - 1.0) * (1.0 + boost)
+        ev = p * (1.0 + net) - 1.0
+        if net <= 0 or ev <= 1e-12:
+            return 0.0, 0.0
+        f = min(ev / net, 1.0 - 1e-9)
+        return f, p * math.log(1.0 + f * net) + (1.0 - p) * math.log(1.0 - f)
 
     def better_value(a, b):
         return b is None or (a["ev"], a["p"]) > (b["ev"] + 1e-12, b["p"]) or (
             abs(a["ev"] - b["ev"]) <= 1e-12 and a["p"] > b["p"] + 1e-12)
 
-    def better_likely(a, b):
-        return b is None or a["p"] > b["p"] + 1e-12 or (
-            abs(a["p"] - b["p"]) <= 1e-12 and a["ev"] > b["ev"] + 1e-12)
-
-    bar = None      # None on the first pass; the likeliest ticket's value floor on the second
+    def better_growth(a, b):
+        return b is None or a["g"] > b["g"] + 1e-15 or (
+            abs(a["g"] - b["g"]) <= 1e-15 and a["p"] > b["p"] + 1e-12)
 
     def walk(start, need, dec, p, chosen):
-        nonlocal best_value, best_likely
+        nonlocal best_value, best_growth
         if need == 0:
             if min_total is not None and dec < min_total - 1e-9:
                 return
+            out["qualifying"] += 1
+            f, g = kelly(p, dec)
             cand = {"ev": p * (1.0 + (dec - 1.0) * (1.0 + boost)) - 1.0, "p": p,
-                    "dec": dec, "legs": list(chosen)}
-            if bar is None:
-                out["qualifying"] += 1
-                if better_value(cand, best_value):
-                    best_value = cand
-            elif cand["ev"] >= bar - 1e-12 and better_likely(cand, best_likely):
-                best_likely = cand
+                    "dec": dec, "legs": list(chosen), "f": f, "g": g}
+            if better_value(cand, best_value):
+                best_value = cand
+            if g > 0 and better_growth(cand, best_growth):
+                best_growth = cand
             return
         for i in range(start, len(pool) - need + 1):
             leg = pool[i]
@@ -370,21 +392,18 @@ def suggest(legs, promo, leg_max_american=SUGGEST_LEG_MAX_AMERICAN):
         sizes.append(size)
     for size in sizes:
         walk(0, size, 1.0, 1.0, [])
-    if best_value is not None and best_value["ev"] > 1e-12:
-        bar = SUGGEST_LIKELY_KEEP * best_value["ev"]
-        for size in sizes:
-            walk(0, size, 1.0, 1.0, [])
 
     def ticket(c):
         boosted = 1.0 + (c["dec"] - 1.0) * (1.0 + boost)
         return {"legs": c["legs"], "win_prob": c["p"], "decimal": c["dec"],
-                "boosted_american": decimal_to_american(boosted), "ev_boosted": c["ev"]}
+                "boosted_american": decimal_to_american(boosted), "ev_boosted": c["ev"],
+                "kelly": c["f"], "log_growth": c["g"]}
 
     if best_value is None:
         out["why"] = "no combination of these legs meets the terms"
         return out
     out["value"] = ticket(best_value)
-    out["likeliest"] = ticket(best_likely) if best_likely is not None else None
-    if best_likely is None:
+    out["growth"] = ticket(best_growth) if best_growth is not None else None
+    if best_growth is None:
         out["why"] = "no qualifying ticket is worth its stake at this boost"
     return out
