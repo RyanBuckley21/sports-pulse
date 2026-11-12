@@ -631,8 +631,8 @@ Sabotage-checked five ways, sources byte-identical afterwards:
 python3 -m tools.verify.test_nba              # from the repo root
 ```
 
-**`test_nba`** (added 2026-10-31, 92 checks) pins the NBA data layer, which is
-registered but not yet built or active. Every rule it checks fails silently:
+**`test_nba`** (added 2026-10-31, 92 checks) pins the NBA data layer (the picks and the
+boards built on it have their own suites, below). Every rule it checks fails silently:
 
 - **The counted-game rule needs both halves.** `season.type == 2` alone admits
   All-Star games and the NBA Cup final. Competition type STD alone admits
@@ -757,7 +757,7 @@ model line and was sabotaged three ways (1 / 1 / 4 failures).
 python3 -m tools.verify.test_nba_live         # from the repo root
 ```
 
-**`test_nba_live`** (added 2026-11-11, 62 checks) pins the NBA picks path:
+**`test_nba_live`** (added 2026-11-11, 63 checks) pins the NBA picks path:
 `nba_signals`, the fit `config.yaml` ships, and `fetchers.nba`'s games builder.
 It was built in a sandbox that cannot reach ESPN, so the checks carry what a
 live run would otherwise have shown:
@@ -777,6 +777,34 @@ Fixtures are the real `nba_games_fixture.json` and `nba_seasons_2024_2026.json`.
 Sabotage-checked 17 ways that fail (1 to 7 checks each; table in the suite's
 docstring), plus two cuts that fail nothing because the rule they remove is
 enforced a second time elsewhere, which the docstring records.
+
+```bash
+python3 -m tools.verify.test_nba_leaderboards # from the repo root
+```
+
+**`test_nba_leaderboards`** (added 2026-11-11, 49 checks) pins NBA's Who's Hot
+boards: `fetchers.nba.fetch` and the box-score reading under it. Every failure
+it guards still renders ten names with plausible numbers:
+
+- **A night off is not a game with zeros.** 457 of the fixture's 3,108 rows are
+  did-not-plays; Pascal Siakam sat out 11-02 and his window reaches back past it.
+- **Stats are read by key**, paired splits ("3-6") are split, and a blank stat
+  raises instead of reading as 0.
+- **Days are Eastern:** 94 of the 117 games carry the next UTC date.
+- **Only decided, counted games, none after today, one request each.**
+- **The window is the last 5 games played, with a 3-game floor**, and a traded
+  player shows his current club.
+- **It ends on the last day the league played**, so the boards survive a break.
+- **One failed box score raises** (invariant 5).
+- **The payload:** seven rate boards, ten deep, with club colours, and every
+  top-ten value re-derived by a reader that shares no code with the fetcher.
+
+The fixture is `nba_boxscores_fixture.json`: 117 real box scores, 2026-10-26 to
+2026-11-10, captured from a GitHub runner by `tools/capture_nba_boxscores.py`
+and trimmed to the fields read. Three edges were never observed and are made
+by editing one field of a real row in a copy (preseason, a postponed shell, a
+blank stat). Sabotage-checked 16 ways, each failing 1 to 12 checks; the table,
+including one cut that is guarded twice, is in the suite's docstring.
 
 ## What it cannot cover
 

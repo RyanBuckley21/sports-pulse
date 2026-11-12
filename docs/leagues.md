@@ -40,7 +40,7 @@ as a kill switch (no scored picks at all) rather than falling back.
 | --- | --- | --- | --- | --- |
 | **nfl** | yes | yes (moneyline) | yes | `fetchers/nfl.py` -- nflverse CSVs + ESPN scoreboard |
 | **cfb** | no, by design | yes (moneyline) | yes | `fetchers/cfb.py` -- cfbfastR CSVs + CFBD + ESPN |
-| **nba** | no (no player fetcher exists) | **yes** (moneyline, on points margin per game), live since 2026-11-11 | yes | `fetchers/nba.py` -- ESPN scoreboard |
+| **nba** | **yes** (points, rebounds, assists, their sum, threes, steals, blocks: per game over the last 5 played), since 2026-11-11 | **yes** (moneyline, on points margin per game), live since 2026-11-11 | yes | `fetchers/nba.py` -- ESPN scoreboard |
 | **epl** | **stood down 2026-11-11** | **stood down** | only what its frozen store still holds | `fetchers/epl.py` -- ESPN soccer API |
 | **mlb** | **stood down** | **stood down** | only what its frozen store still holds (strict CI step) | `fetchers/mlb.py` -- MLB StatsAPI |
 

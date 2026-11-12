@@ -322,12 +322,14 @@ import generate_insights  # noqa: E402
 import generate_stats  # noqa: E402
 import signal_report  # noqa: E402
 # Until 2026-11-11 this section pinned "in neither gate and in no registry".
-# The backtest's part 2 ran that day and NBA picks were built on it, so what is
-# pinned now is the half that stays true: NBA has NO LEADERBOARDS (no player
-# fetcher exists), so it must never appear in active_sports. Its picks side --
-# builder, adapter, gate -- is test_nba_live's.
-ok("NBA publishes no leaderboards: not in active_sports, and no stats fetcher",
-   "nba" not in (cfg.get("active_sports") or []) and "nba" not in generate_stats.SPORT_FETCHERS)
+# The backtest's part 2 ran that day and NBA picks were built on it; the same
+# night a player-stats fetcher was built on ESPN box scores and NBA joined the
+# leaderboard gate too. What is pinned here is only that the gate and the
+# registry agree -- a sport in active_sports with no fetcher is skipped with a
+# log line and nothing fails. The picks side is test_nba_live's, the boards
+# are test_nba_leaderboards'.
+ok("NBA's leaderboard gate and its stats fetcher agree: both present",
+   "nba" in (cfg.get("active_sports") or []) and "nba" in generate_stats.SPORT_FETCHERS)
 ok("  its games builder and grading adapter are registered (since 2026-11-11)",
    "nba" in generate_insights.GAME_BUILDERS and "nba" in signal_report.SPORT_ADAPTERS)
 

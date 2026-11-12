@@ -41,6 +41,7 @@ python3 -m tools.verify.test_season_phase        # postseason/preseason picks ke
 python3 -m tools.verify.test_nba                 # NBA data layer: counted-game rule, postponed shells, Eastern dates, grading
 python3 -m tools.verify.test_nba_live            # NBA picks: site scores what the backtest measured, config is the fit, builder
 python3 -m tools.verify.test_nba_price_capture   # NBA price capture: pre-game only, change-only rows + run row, append-only
+python3 -m tools.verify.test_nba_leaderboards    # NBA Who's Hot: DNP is not a zero, stats by key, Eastern days, last-5 window, all-or-nothing
 python3 -m tools.verify.test_stand_down          # stood-down sport: grades what its frozen store holds, else no row, no fetch
 python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when it skipped every date
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
@@ -257,7 +258,8 @@ already known about each, so a new session does not re-derive it:
 **EPL was stood down the same way on 2026-11-11** (owner: "Make EPL
 inactive"): out of both gates and out of the grading alarm, everything else
 kept. `docs/leagues.md` has its re-activation steps. With it gone,
-`active_sports` is `[nfl]` and Who's Hot has one league.
+`active_sports` was `[nfl]` and Who's Hot had one league, until NBA's boards
+joined it the same night (`[nfl, nba]`).
 
 **Decided: "inactive" means nothing at all.** MLB is out of both gates. Its
 last-10-games boards would show a frozen September snapshot all winter, and it
@@ -355,7 +357,7 @@ What followed from it (kept for the record):
   595 picks and 76 dates). That inversion remains the most interesting
   unexplained thing here, and it is a data question, not a tuning one.
 
-### Add NBA — DONE: picks live since 2026-11-11 (no leaderboards)
+### Add NBA — DONE: picks and leaderboards live since 2026-11-11
 
 **Activated the same evening** (`active_game_sports: [nfl, cfb, nba]`), after
 `check-nba-builder.yml` ran the builder against the live feed (run
@@ -396,14 +398,57 @@ What it does not know, and says on the card:
   (started 2026-11-11) has a season. Do not present 77.9% as value.
 
 Still open for NBA:
-- **No leaderboards.** There is no player-stats fetcher, so NBA must not go in
-  `active_sports`, and Who's Hot has no NBA boards. Building one needs ESPN
-  access the build sandbox lacks.
-- **Logos are not cached** (`fetch-logos.yml` has no NBA step) and **team
-  colours collide** (BKN/SA, DET/NY/PHI). Display only.
+- ~~No leaderboards~~ **Built 2026-11-11** (owner: "Who's hot should also
+  have NBA"); see "NBA on Who's Hot" below.
+- ~~Logos are not cached~~ **Cached 2026-11-11** (30, `assets/logos/nba/`).
+  **Team colours still collide** (BKN/SA, DET/NY/PHI). Display only.
 - **Playoff and play-in types are not handled**; due before mid-April.
 - **The builder walks the whole season each run** (two requests in November,
   nine by June). Cheap now; cache finished months if it ever matters.
+
+**NBA on Who's Hot (2026-11-11).** `fetchers.nba.fetch` is
+`SPORT_FETCHERS["nba"]`, and `nba` is second in `active_sports` (NFL stays the
+default). Seven boards, all per-game averages over a player's last 5 games
+**played**, 3-game floor: points, rebounds, assists, their sum, threes made,
+steals, blocks (`nba.stat_categories`; keys end `_pg` because `CATEGORY_META`
+is one namespace and EPL owns `assists`). Pinned by `test_nba_leaderboards` on
+117 real box scores.
+
+How it was built without ESPN access, for the next time: a temporary step on
+the feature branch's copy of `check-nba-builder.yml` (dispatchable with
+`ref=<branch>` because the workflow exists on `main`) ran
+`tools/capture_nba_boxscores.py` on a runner and committed the fixture to the
+branch. The step was removed before the PR. The same route fetched the logos.
+
+What the feed is (measured on 117 games, 2026-10-26..11-10; the comment block
+in `fetchers/nba.py` has all of it):
+- The source is `summary?event=<id>`, `boxscore.players`: one statistics group
+  per team, values beside a list of keys. **Read by key**, and shooting splits
+  arrive paired (`"3-6"`).
+- **`didNotPlay` rows are not appearances** (457 of 3,108). `reason` reads
+  "COACH'S DECISION" even on players who played, so it means nothing alone.
+- **One played row had no athlete at all** (no id, name or position). Skipped.
+- **A blank or missing stat raises.** One failed summary raises. NBA
+  contributes all of its rows or none (invariant 5).
+- **The window ends on the last day the league played**, not today, and reaches
+  back 16 days (every club 6 to 9 games; 14 days gives 5 to 8). About 117
+  summary requests a run, 8 seconds, uncached.
+
+Open on the boards:
+- **It has never run in the pipeline against the live feed** until the first
+  deploy after merge. Read its log line: `whos-hot(nba): N games A..B, N
+  players, N rows, depth 5 of 5`.
+- **Playoffs are not counted** (same gap as the picks). From mid-April the
+  boards freeze on the regular season's last 16 days and the log says how many
+  days old they are; nothing on the page does beyond each row's last game date.
+- **Before a season's third game there are no boards**, and nothing says why
+  (`NO_DATA_SPORTS` is EPL only).
+- **The 3-game floor is a convention** (EPL's), not a measurement, and so is
+  the choice of 5 games.
+- **No minutes floor.** A per-game board cannot be topped by a bench player in
+  practice, but nothing prevents it.
+- **Prop lines are still not captured**, so the `pra_pg` board is the stat
+  only. The prop builder stays parked (see below).
 
 **Three steps (kept for the record).**
 1. **Data layer (done):** `fetchers/nba.py`, `nba_grading.py`, `NBA_TEAMS`, an
@@ -734,7 +779,9 @@ Open, in rough priority:
 - **NBA team colours collide after the legibility lift:** BKN/SA (`#8C8C8C`)
   and DET/NY/PHI (`#577BC2`). This is display only. Settle it at activation,
   as EPL did with alternate colours.
-- **NBA logos are not cached.** `fetch-logos.yml` has no NBA step. The
+- ~~NBA logos are not cached.~~ **Cached 2026-11-11**, and `fetch-logos.yml`
+  takes a `sports` input so one league can be fetched without the CFBD call
+  and the Chromium install a full run costs. (Was:) The
   `/teams` capture carries `logo` URLs; this is due at activation.
 - ~~CLV measures from the book's opening price~~ **Measured 2026-10-22, and it
   was the whole signal.** Re-anchored to the first committed store state where a
