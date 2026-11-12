@@ -24,7 +24,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   check:
@@ -37,28 +37,15 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: Build the slate and print it
+      - name: TEMPORARY snapshot of the live payload (evaluation only, branch never merged)
         env:
-          SLATE_DATE: ${{ inputs.date }}
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: |
-          python3 - <<'PY'
-          import os, yaml
-          import slate_clock
-          from fetchers import nba
-          config = yaml.safe_load(open("config.yaml"))
-          date = os.environ.get("SLATE_DATE") or slate_clock.eastern_date()
-          entities, _, _ = nba.build_game_entities(config, date, {})
-          print("slate asked for:", date, "-- games built:", len(entities))
-          for key, e in entities.items():
-              ml = (e.get("betting_signals") or {}).get("moneyline") or {}
-              odds = e.get("odds") or {}
-              ctx = e.get("context") or {}
-              print("  {} {:>4} @ {:<4} {:<11} {:<8} lean {:<13} score {:>3} tier {:<13} "
-                    "margins {} / {} (games {} / {})  price {} / {}  pick {}".format(
-                        key, e["away"]["abbr"], e["home"]["abbr"], e.get("start") or "-",
-                        e.get("status"), ml.get("side"), ml.get("score"), str(ml.get("tier")),
-                        ctx.get("away_season_margin"), ctx.get("home_season_margin"),
-                        ctx.get("away_games"), ctx.get("home_games"),
-                        odds.get("away_ml"), odds.get("home_ml"),
-                        (e.get("standout") or {}).get("side")))
-          PY
+          python3 generate_stats.py
+          mkdir -p snapshot && cp output/data.json snapshot/data.json
+          git checkout -- data/ || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f snapshot/data.json
+          git commit -m "Snapshot of the live payload for evaluation"
+          git push
