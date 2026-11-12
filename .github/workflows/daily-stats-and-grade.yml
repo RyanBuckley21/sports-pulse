@@ -345,6 +345,18 @@ jobs:
           CFB_ALLOW_CFBD: "1"
         run: python3 generate_stats.py
 
+      # THE BOOST-TICKET LOG (2026-11-12, boost_log.py). Settles yesterday's
+      # reference tickets, then captures today's from the board just built.
+      # After regenerate because the capture reads output/data.json; once a
+      # day because the file is write-once per day and only this workflow
+      # commits data/. continue-on-error: it is a measurement, and a failure
+      # here must never cost the stats commit below. It makes one scoreboard
+      # request per sport-day with an open ticket and no CFBD call.
+      - name: Log and settle the boost tickets
+        if: ${{ !cancelled() && steps.generate_stats.outcome == 'success' }}
+        continue-on-error: true
+        run: python3 boost_log.py --settle --capture
+
       # Independent of the grading step: commits only if regeneration itself
       # succeeded.
       - name: Commit stats and signals
@@ -363,6 +375,9 @@ jobs:
           # It is self-limiting, not an accumulating log: build_game_entities
           # returns it pruned to exactly the gamePks the current run touched.
           git add data/insights.games.json data/insights.json data/boxscores.json
+          # Append-only, written by the step above (it exists in the repo, so
+          # this never fails on a missing path).
+          git add data/boost_tickets.jsonl
           if git diff --staged --quiet; then
             echo "No changes this run -- nothing to commit."
             exit 0

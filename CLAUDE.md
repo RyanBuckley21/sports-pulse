@@ -47,13 +47,14 @@ python3 -m tools.verify.test_backtest_season     # backtest_season exits 1 when 
 python3 -m tools.verify.test_mlb_odds            # MLB price join (names, doubleheaders); moneyline-only market gate
 python3 -m tools.verify.test_bet_board           # Bets tab: -200 split, record matched on PRICE, 30-pick proven gate, singles line, start instant
 python3 -m tools.verify.test_parlay_boost        # boosted parlays: boost on winnings, no-vig chance, promo terms as hard lines, which ticket to suggest
+python3 -m tools.verify.test_boost_log           # boost-ticket log: pre-game only, write-once a day, settles by side, void is not a win, append-only
 python3 -m tools.verify.test_caution_notes       # card cautions: NFL QB injury report, CFB early read (display only)
 python3 -m tools.verify.test_cfbd_budget         # CFBD monthly budget: count survives every return, no call past it
 python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (production since 09-26) + the walk-forward, paired harness
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "275 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "277 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -723,17 +724,52 @@ bankroll growth** (Kelly).
   list**, with the measured result beside it (no edge). The −200 split itself
   is unchanged; it is his line from 2026-09-25.
 
+**The boost-ticket log (2026-11-12, `boost_log.py`,
+`data/boost_tickets.jsonl`).** The page's "+24.6% per $1" is arithmetic on
+prices, never checked against results. Once a day the daily workflow now logs
+the value and growth tickets `suggest` names for five **reference promos** (the
+owner's own description of his offers: 3+ legs at +300 or +400, with a −200 or
+−250 leg floor, or 2 legs at +100, all at 50%), then settles them through the
+graders' own adapters when the games finish. `python3 boost_log.py --report`
+prints stated chance against cash rate and stated value against return, with
+paired bootstrap intervals; the Bets tab shows one sentence of it.
+
+- **The reader's real promo never reaches the pipeline** (it lives in his
+  browser), so the log is of reference tickets, not of what he saw or took.
+  The grid is a measurement, **not a default promo**; the form still starts
+  blank and a test pins it.
+- **Append-only, write-once per (day, promo, kind)**: the first capture wins,
+  for `odds_first_seen`'s reason. Only legs with a known start still in the
+  future can be on a ticket.
+- **A void leg makes a ticket "reduced"**, counted apart and in neither
+  comparison: a book re-prices it and the stated chance was for another ticket.
+- **One ticket under several promos is counted once** in the record (the
+  best-value ticket was the same three legs under all five on 2026-11-12).
+- **How long before it means anything:** about 4 distinct tickets a day. A
+  ticket cashes roughly one time in five, so the cash-rate gap needs a few
+  dozen and the return needs hundreds. Tickets from one day share legs, so
+  the printed intervals are too narrow; the report says so.
+
+Open on the log:
+- **Settlement has never run against live results.** The first tickets
+  (2026-11-12) settle after Sunday 11-15. Read the step's log line
+  (`boost log: settled N tickets`) on 11-16 and 11-17; a count stuck at 0 with
+  open tickets means an adapter's slate is not keyed the way the board's ids
+  are.
+- **The intervals ignore the overlap between a day's tickets.** Resample by
+  day once there are enough days.
+- **Nothing alarms if the step stops running** (it is `continue-on-error`).
+- **A reduced ticket's real payout is not computed.**
+
 Open on the boost work:
-- **The suggested tickets are not logged either**, so whether "+24.6%"
-  tickets return anything like that is unmeasured. Same log as the next item.
 - **The search is by sport filter, not by day.** A Thursday NFL leg and a
   Saturday CFB leg can share a ticket; a promo tied to one day's games needs
   the reader to notice. A day filter is the fix if it matters.
 - **NBA legs appear only while the feed prices them** (ESPN strips the line
   at tip), so a late-evening board has none.
-- **Predicted vs realised is not tracked.** Nothing logs which boosted tickets
-  were priced or taken, so the independence assumption across games has never
-  been checked against results. This needs a log before it can be measured.
+- ~~Predicted vs realised is not tracked.~~ **Logged from 2026-11-12** (above),
+  for reference tickets. Which tickets the owner actually takes is still
+  unrecorded: a static page has nowhere to write it.
 - **The no-vig chance is measured on NFL closing lines only.** CFB and NBA are
   assumed alike. NBA can be checked once `data/nba_prices.jsonl` has a season.
 - **No stake cap is modelled.** Boosts cap the stake, so the percentage is

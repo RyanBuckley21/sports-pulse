@@ -1156,6 +1156,8 @@ async function betsChecks(browser, base) {
       if (l.side === "BUF") l.start_utc = new Date(Date.now() - 3600e3).toISOString();
       if (l.side === "KC") l.start_utc = new Date(Date.now() + 3600e3).toISOString();
     });
+    data.insights.bets.ticket_log = { logged: 9, settled: 6, reduced: 1, cashed: 2, cash_rate: 2 / 6,
+      expected_rate: 0.21, roi: 0.4, expected_roi: 0.22 };
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
   });
   await g.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
@@ -1169,7 +1171,13 @@ async function betsChecks(browser, base) {
      /^Parlay pieces 1$/.test(gHeads[0] || "") &&
      /1 game has started and is off the board/.test(await g.$eval("#insightsRoot .bets", (x) => x.textContent)),
      gHeads.join(" | "));
+  const logLine = await g.$eval("#insightsRoot .bet-log", (x) => x.textContent).catch(() => "");
+  ok("the ticket record is one sentence with its counts, and claims nothing from six tickets",
+     /2 of 6 reference tickets cashed \(33%, against 21% stated\)/.test(logLine) &&
+     /\+40% per \$1 against \+22% stated/.test(logLine) && /Too few to judge/.test(logLine), logLine);
   await g.close();
+  ok("  and with nothing logged the page says nothing about a record",
+     !(await p.$("#insightsRoot .bet-log")));
 
   ok("bets: no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
   await p.close();

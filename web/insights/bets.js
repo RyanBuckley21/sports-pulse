@@ -332,6 +332,23 @@
     return out;
   }
 
+  // HOW THE NAMED TICKETS HAVE DONE (board.ticket_log, from boost_log.py). Each
+  // morning the pipeline logs the tickets this page would name for five
+  // typical promos and settles them when the games finish. One sentence, no
+  // verdict: a boosted ticket cashes about one time in five, so the cash rate
+  // is noise until there are a few dozen and the return until there are
+  // hundreds. The count is shown so the reader can see how little it is.
+  function ticketLog(log) {
+    if (!log || !log.logged) return "";
+    if (!log.settled) {
+      return '<p class="bet-note bet-log">Ticket record: ' + log.logged + " logged, none settled yet.</p>";
+    }
+    return '<p class="bet-note bet-log">Ticket record: ' + log.cashed + " of " + log.settled +
+      " reference tickets cashed (" + (100 * log.cash_rate).toFixed(0) + "%, against " +
+      (100 * log.expected_rate).toFixed(0) + "% stated), returning " + pct(log.roi, 0) +
+      " per $1 against " + pct(log.expected_roi, 0) + " stated. Too few to judge until there are dozens.</p>";
+  }
+
   // The last suggestion painted, so "Use these legs" loads exactly the ticket
   // on screen rather than re-deriving one.
   var lastTickets = null;
@@ -482,6 +499,7 @@
       tray(board) +
       section("Parlay pieces", "Priced " + line + " or shorter.", board.parlay, min) +
       section("Straight bets", straightNote, board.straight, min) +
+      ticketLog(board.ticket_log) +
       (started ? '<p class="bet-note bet-started">' + started + " game" + (started === 1 ? " has" : "s have") +
         " started and " + (started === 1 ? "is" : "are") + " off the board.</p>" : "") +
       (board.unpriced ? '<p class="bet-note">' + board.unpriced +
