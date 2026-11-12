@@ -29,6 +29,7 @@ import shutil
 import traceback
 
 import bet_board
+import boost_log
 import espn_odds
 import signal_report  # read-only: the ledger reader bet_board judges picks by
 import slate_clock
@@ -692,6 +693,10 @@ def run(data, generated_at, config=None, store_path=STORE_PATH):
         try:
             data["insights"]["bets"] = bet_board.build(
                 game_entities, config, signal_report.load_ledger())
+            # How the tickets the page would have named have done so far
+            # (boost_log, a read of its committed file -- no request). Inside
+            # this try for the same reason as the board: display only.
+            data["insights"]["bets"]["ticket_log"] = boost_log.summary(boost_log.load())
         except Exception as exc:  # noqa: BLE001 -- display-only section
             detail = "{}: {}".format(type(exc).__name__, str(exc)[:200])
             print("insights(bets): board FAILED ({}); the Bets tab shows its empty "

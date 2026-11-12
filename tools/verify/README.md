@@ -835,6 +835,21 @@ has started is not next; a game with no start instant still is; the player
 page repeats the next game and lists the minutes lines, with each game's
 minutes under its bar. Sabotaged six ways in `app.js`, each failing 1 to 3.
 
+```bash
+python3 -m tools.verify.test_boost_log        # from the repo root
+```
+
+**`test_boost_log`** (added 2026-11-12, 40 checks) pins the record of the
+tickets the Bets tab would name and what happened to them (`boost_log.py`).
+Each failure it guards makes the page's promise look better or worse than the
+truth without throwing: a ticket logged after a game began, a later capture
+replacing the first, a leg settled on the wrong side, a void leg counted as a
+win, one ticket counted once per promo, the file rewritten. The board is
+make_fixture's (real, with `start_utc` set on its rows, the one edit); the
+resolver is checked on three real decided NBA games through `nba_grading`.
+Sabotaged 14 ways, each failing 1 to 3 checks; the table is in the docstring.
+Two browser checks pin the one-sentence record on the Bets tab.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
