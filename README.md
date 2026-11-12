@@ -33,7 +33,7 @@ Controlled by two independent keys in `config.yaml`:
 
 | Key | Pipeline | Current value |
 | --- | --- | --- |
-| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl]` (first is the default league) |
+| `active_sports` | Leaderboards: `generate_stats.SPORT_FETCHERS` | `[nfl, nba]` (first is the default league) |
 | `active_game_sports` | Scored picks: `generate_insights.GAME_BUILDERS` | `[nfl, cfb, nba]` |
 
 | Sport | Leaderboards | Games / Teams / picks | Graded | Data sources |
@@ -42,7 +42,7 @@ Controlled by two independent keys in `config.yaml`:
 | **NFL** | ✅ | ✅ moneyline | ✅ | nflverse CSV releases, plus the ESPN scoreboard for results and odds |
 | **CFB** (FBS) | ❌ (by design) | ✅ moneyline | ✅ | cfbfastR schedule CSVs, CollegeFootballData (CFBD, keyed), and the ESPN scoreboard |
 | **EPL** | ⏸ stood down 2026-11-11 | ⏸ stood down (was double chance and 3-way match result) | its ledger rows stay in the record | ESPN soccer site API |
-| **NBA** | ❌ (no player-stats fetcher) | ✅ moneyline, on points margin per game | ✅ | ESPN scoreboard (`fetchers/nba.py`) |
+| **NBA** | ✅ seven per-game boards over a player's last 5 games played (since 2026-11-11) | ✅ moneyline, on points margin per game | ✅ | ESPN scoreboard and game summaries (`fetchers/nba.py`) |
 | World Cup | archived until 2030 | none | none | ESPN (`fetchers/worldcup.py`, unregistered) |
 
 **MLB was stood down on 2026-10-25**, mid-World Series, and is out of both
@@ -198,7 +198,7 @@ change touches locally first anyway.
 | `refit-nfl-winprob.yml` | Tue + Wed 11:37 | **The learning step.** Refits the NFL win-probability model on every completed game since 2010, re-grades it walk-forward, and commits the weights with their scorecard. Refuses a fit that is no better than always-home; rewrites nothing in a week with no new games | `data/nfl_winprob.json` |
 | `capture-training-data.yml` | **manual only** while MLB is stood down (its six crons are commented out, to be restored with MLB) | MLB pre-game features and post-game outcomes | `data/training/` |
 | `deploy-pages.yml` | 14:00, on push to `main`, and after each daily run | Builds `data.json` and deploys Pages. Also hosts the "missed day" alarms. | nothing (`contents: read`) |
-| `fetch-logos.yml` | manual | Caches team logos into `assets/logos/` | `assets/logos/` |
+| `fetch-logos.yml` | manual | Caches team logos into `assets/logos/`. Its `sports` input fetches one league alone (`nba`); blank runs all of them, which spends a CFBD call and installs Chromium for MLB | `assets/logos/` |
 | `tests.yml` | pull requests, push to `main` | Every Python suite (network blocked), a clean-tree check, then the browser suite | nothing (`contents: read`) |
 | `cfb-backtest.yml` | manual only | `mode=compare`: `cfb_opponent_backtest.py`, opponent-adjusted CFB form vs raw, walk-forward and paired. `mode=refit`: `cfb_backtest.py` re-derives CFB's weights on the adjusted form, with a raw run beside it as a parity check. CFBD capped per run; cache kept so reruns are free | nothing (`contents: read`); report in the job summary and an artifact |
 
@@ -230,12 +230,12 @@ parlay_boost.py          boosted-parlay arithmetic: no-vig chance, promo terms, 
 espn_dates.py            ESPN month-window fetch (ESPN stopped accepting date ranges 2026-09-15)
 slate_clock.py           Eastern slate boundary, kickoff labels, fall-forward window
 training_capture.py      MLB append-only feature/outcome stores
-nba_price_capture.py     NBA pre-game prices, append-only (capture only; NBA is not built or shown)
+nba_price_capture.py     NBA pre-game prices, append-only (capture only; read by nothing yet)
 team_meta.py             abbreviations + brand colours (legibility-lifted)
 nba_grading.py           NBA grading rules (written; registered with the NBA builder)
 nba_backtest.py          NBA signal measurement, offline on a captured 2023-26 dataset; writes nothing
 normalizer.py            common leaderboard record schema
-fetchers/                mlb, nfl, cfb, epl (+ archived worldcup)
+fetchers/                mlb, nfl, cfb, epl, nba (+ archived worldcup)
 *_backtest.py            standalone calibration/backtests (never touch the live ledger)
 nfl_odds_backtest.py     NFL picks vs the closing line, and at the owner's price bands
 tools/devig_calibration.py  how well a no-vig price predicts NFL results, by price band
@@ -259,6 +259,16 @@ docs/                    schema, league how-to, MLB API field maps, dev notes
 - [`CLAUDE.md`](CLAUDE.md): working agreement for AI coding sessions in this repo
 
 ## Honest caveats
+
+**NBA on Who's Hot (2026-11-11).** Seven boards: points, rebounds, assists,
+points + rebounds + assists, threes made, steals and blocks, each a per-game
+average over a player's last 5 games *he played in*, with a 3-game floor. A
+night off is not a zero: it moves his window back. The numbers come from
+ESPN's box score for every regular-season game in the 16 days up to the last
+day the league played (about 117 requests a run, 8 seconds), so the boards
+stay whole over the All-Star break and say how old they are. Playoff games
+are not counted yet. `fetchers.nba.fetch`, pinned by `test_nba_leaderboards`
+on 117 real box scores.
 
 **NBA picks are accurate and unproven.** On the held-out 2025-26 season the
 NBA lean named a side in 43% of games and was right 77.9% of the time, against

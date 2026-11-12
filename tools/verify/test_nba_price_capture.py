@@ -361,12 +361,12 @@ with tempfile.TemporaryDirectory() as tmp:
 # ------------------------------------------------------------ 5. capture only
 with open(os.path.join(_ROOT, "config.yaml")) as fh:
     CONFIG = yaml.safe_load(fh)
-# When this suite was written NBA was in neither gate. Its PICKS went live on
-# 2026-11-11 (active_game_sports); what must stay true for the capture is that
-# it is independent of that -- it reads no gate at all -- and that NBA never
-# enters the leaderboard gate, where there is no fetcher behind it.
-ok("NBA is not in the leaderboard gate", "nba" not in (CONFIG.get("active_sports") or []))
-ok("  and the capture reads no gate: it would run the same with NBA switched off",
+# When this suite was written NBA was in neither gate. Its picks and then its
+# leaderboards went live on 2026-11-11; what must stay true for the capture is
+# that it is independent of both -- it reads no gate at all. (This used to
+# assert NBA was absent from active_sports. That was a fact about the day, not
+# about the capture, and stopped being true when the boards shipped.)
+ok("the capture reads no gate: it would run the same with NBA switched off",
    "active_game_sports" not in open(os.path.join(_ROOT, "nba_price_capture.py")).read()
    .split('"""', 2)[2] and "active_sports" not in open(os.path.join(_ROOT, "nba_price_capture.py")).read()
    .split('"""', 2)[2])

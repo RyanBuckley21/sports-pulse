@@ -1,13 +1,16 @@
-"""NBA: ESPN's scoreboard filtered to the games that count, and the games builder.
+"""NBA: ESPN's scoreboard filtered to the games that count, the games builder,
+and the Who's Hot leaderboards.
 
-THE PICKS PATH IS BUILT (2026-11-11); THERE ARE NO LEADERBOARDS. This module
+PICKS AND LEADERBOARDS ARE BOTH LIVE (2026-11-11). This module
 began as the first of three NBA steps -- which events are real games, which
 day they belong to, and the prior-season quantities the cold-start tier
 needs. Step 2 ran on 2026-11-11: nba_backtest.py --fit measured the weights,
 nba_signals.py scores on them, and build_game_entities (at the foot of this
 file) is GAME_BUILDERS["nba"]. Step 3, activation, is `nba` in
-active_game_sports. What is NOT here is a player-stats fetcher: NBA has no
-SPORT_FETCHERS entry and must not be added to active_sports.
+active_game_sports. The leaderboards came the same night: `fetch`, at the foot
+of the file, is SPORT_FETCHERS["nba"], reading ESPN's per-game box scores, and
+`nba` is in active_sports. The two paths share the event helpers and nothing
+else -- the boards are not scored, and no price reaches them.
 
 Every weight NBA uses is in config.yaml's betting_signals.nba block with its
 derivation (invariant 8). Nothing in this file carries one.
@@ -513,6 +516,9 @@ def build_game_entities(config, game_date, boxscore_cache, team_entities=None,
 #     not (didNotPlay True, stats []). No row was anything else. A DNP is NOT a
 #     game with zeros -- it is not an appearance, and counting it would drag a
 #     resting star's average down for games he never played;
+#   * ONE played row has no athlete at all -- no id, no name, no position --
+#     only a stat line (UTAH, game 401909890, 28 minutes). It cannot be
+#     attributed to anyone, so it is skipped; 2,650 rows are read;
 #   * 9 rows played with minutes "0" (a few seconds on the floor; one has an
 #     assist). They are appearances: ESPN rounds minutes, and the row is real;
 #   * `reason` reads "COACH'S DECISION" on players who PLAYED, so it means
@@ -584,7 +590,7 @@ def extract_player_rows(summary):
                     continue
                 athlete = a.get("athlete") or {}
                 if not athlete.get("id"):
-                    continue
+                    continue    # a line ESPN attached to nobody (1 of 2,651)
                 rows.append({
                     "id": str(athlete["id"]),
                     "name": athlete.get("displayName"),
