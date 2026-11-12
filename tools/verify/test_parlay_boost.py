@@ -45,14 +45,13 @@ byte-identical afterwards), failures measured, of 51:
 The page repeats the formula in bets.js; tools/verify/run.js pins its numbers
 to this module's and was sabotaged six ways of its own (see its README).
 
-WHICH TICKET (section 7, added 2026-11-12, 22 checks, of 73). suggest() names
-the tickets for a promo, so a wrong one reads as advice. Sabotage-checked the
-same way:
-  S1  boost multiplies the whole payout             4 fail
+WHICH TICKET (section 7, 2026-11-12, 27 checks, of 78). suggest() names the
+tickets for a promo, so a wrong one reads as advice: the best value per
+dollar, and the best Kelly growth. Sabotage-checked the same way:
+  S1  boost multiplies the whole payout             fails the value checks
   S2  the +100 leg cap ignored (underdogs as legs)  11 fail
   S3  the promo's leg floor ignored                 1 fail
   S4  the total minimum ignored                     3 fail
-  S5  "likeliest" = any ticket above its stake      3 fail
   S6  two legs from one game on a ticket            1 fail
   S7  a leg with no chance treated as certain       1 fail
   S8  a zero boost given a suggestion               1 fail
@@ -60,14 +59,20 @@ same way:
   S10 "best value" picks the likeliest instead      5 fail
   S12 +100 itself refused                           1 fail
   S13 only the minimum size searched                3 fail
-  S11 the positive-value gate on the second pass removed: 0 fail, and
-      correctly. The bar is half the best value, so when the best ticket
-      loses, nothing can reach half of a loss either. Guarded twice.
+  G1  the growth ticket picked on value             5 fail
+  G2  Kelly stake not divided by the net odds       7 fail
+  G3  Kelly computed on the unboosted odds          8 fail
+  G4  a losing ticket offered as the growth ticket  1 fail
+  G5  growth = the likeliest ticket                 5 fail
+S1-S13 were measured against the first version of the second ticket ("the
+likeliest that keeps half the best value", a judgment constant); G1-G5 against
+the Kelly growth ticket that replaced it the same day.
 """
 
 import ast
 import copy
 import json
+import math
 import os
 import sys
 
@@ -238,8 +243,10 @@ ok("no legs: nothing is priced and nothing throws", not e["priceable"] and e["de
 
 # ----------------------------------------- 6. no default promo, no score in it
 SRC = open(os.path.join(_ROOT, "parlay_boost.py")).read()
-ok("the module imports nothing: no score, signal, ledger or config reaches a price",
-   not [n for n in ast.walk(ast.parse(SRC)) if isinstance(n, (ast.Import, ast.ImportFrom))])
+IMPORTED = sorted({a.name for n in ast.walk(ast.parse(SRC)) if isinstance(n, ast.Import) for a in n.names}
+                  | {n.module for n in ast.walk(ast.parse(SRC)) if isinstance(n, ast.ImportFrom)})
+ok("the module imports only `math` (for Kelly's logarithm): no score, signal, ledger or config reaches a price",
+   IMPORTED == ["math"], IMPORTED)
 ok("  and never reads a Signal Score", '"score"' not in SRC and "['score']" not in SRC)
 for name in ("signal_core.py", "nfl_signals.py", "cfb_signals.py", "epl_signals.py", "betting_signals.py"):
     ok("  {} does not import the pricing module (invariant 1)".format(name),
@@ -279,11 +286,11 @@ ok("  priced exactly as evaluate() prices those legs: +468, 21.3%, +20.9%",
    and near(got(s, "value")["ev_boosted"], pb.evaluate(legs("TOR", "CAR", "CWS"), P3)["ev_boosted"], 1e-12),
    s["value"])
 ok("  the underdog is not a leg: 7 eligible of 8, APP +440 left out",
-   s["eligible"] == 7 and "APP" in ROWS and all("APP" not in (names(t) or []) for t in (s["value"], s["likeliest"])), s["eligible"])
+   s["eligible"] == 7 and "APP" in ROWS and all("APP" not in (names(t) or []) for t in (s["value"], s["growth"])), s["eligible"])
 ok("  every ticket counted meets the terms: 26 qualify, and no three shorter favourites do",
    s["qualifying"] == 26 and pb.check(legs("BUF", "BAY", "KC"), P3) != [], s["qualifying"])
-ok("  here the likeliest ticket above the bar is the same ticket",
-   names(s["likeliest"]) == names(s["value"]))
+ok("  with a +300 minimum the growth ticket is the same ticket (nothing shorter qualifies)",
+   names(s["growth"]) == names(s["value"]))
 brute = []
 import itertools  # noqa: E402
 pool = [l for l in ALL if l["decimal"] <= 2.0]
@@ -302,38 +309,62 @@ ok("two legs allowed: best value is the two longest, TOR CAR (+21.7%, 31.5%)",
    and near(got(s2, "value")["win_prob"], 0.3152, 5e-4), s2["value"])
 ok("  FEWER legs beat more: no three-leg ticket is worth as much",
    got(s2, "value")["ev_boosted"] > got(s, "value")["ev_boosted"])
-ok("  the likelier ticket is CWS BAY: cashes 51.3%, still worth +12.1%",
-   names(s2["likeliest"]) == ["BAY", "CWS"] and near(got(s2, "likeliest")["win_prob"], 0.5134, 5e-4)
-   and near(got(s2, "likeliest")["ev_boosted"], 0.1215, 5e-4), s2["likeliest"])
-ok("  it keeps at least half the best value, and nothing likelier does",
-   got(s2, "likeliest")["ev_boosted"] >= 0.5 * got(s2, "value")["ev_boosted"]
-   and not [1 for a, b in itertools.combinations(pool, 2)
-            if a["fair"] * b["fair"] > got(s2, "likeliest")["win_prob"] + 1e-9
-            and pb.evaluate([a, b], P2)["ev_boosted"] >= 0.5 * got(s2, "value")["ev_boosted"]])
-kc = pb.evaluate(legs("KC", "TULN"), P2)
-ok("  KC TULN cashes 71.6% and is worth +2.3%: positive, and NOT suggested",
-   near(kc["win_prob"], 0.716, 2e-3) and 0 < kc["ev_boosted"] < 0.03
-   and names(s2["likeliest"]) != ["KC", "TULN"], kc)
+
+# THE GROWTH TICKET. 50%, 3+ legs, no total minimum: the value ticket is still
+# the three longest, and the Kelly-growth ticket is three SHORTER favourites
+# that cash half again as often.
+P4 = {"boost_pct": 50, "min_legs": 3}
+s4 = pb.suggest(ALL, P4)
+ok("no total minimum: value is still TOR CAR CWS, growth is CAR BUF BAY",
+   names(s4["value"]) == ["CAR", "CWS", "TOR"] and names(s4["growth"]) == ["BAY", "BUF", "CAR"],
+   (names(s4["value"]), names(s4["growth"])))
+ok("  growth cashes more often (32.2% v 21.3%) for less value per $1 (+16.2% v +20.9%)",
+   near(got(s4, "growth")["win_prob"], 0.3221, 5e-4) and near(got(s4, "growth")["ev_boosted"], 0.1624, 5e-4)
+   and got(s4, "growth")["boosted_american"] == 261, s4["growth"])
+
+
+def kelly_by_hand(ticket, boost=0.5):
+    net = (ticket["decimal"] - 1.0) * (1.0 + boost)
+    f = (ticket["win_prob"] * (1.0 + net) - 1.0) / net
+    return f, ticket["win_prob"] * math.log(1.0 + f * net) + (1.0 - ticket["win_prob"]) * math.log(1.0 - f)
+
+
+for which, f_want in (("value", 0.0448), ("growth", 0.0623)):
+    f, g = kelly_by_hand(got(s4, which)) if s4[which] else (float("nan"), float("nan"))
+    ok("  {}: Kelly stake {:.1f}% of bankroll, recomputed here as EV / net odds".format(which, 100 * f_want),
+       near(got(s4, which)["kelly"], f_want, 5e-4) and near(got(s4, which)["kelly"], f, 1e-12)
+       and near(got(s4, which)["log_growth"], g, 1e-12), (got(s4, which)["kelly"], f))
+ok("  and it does grow a Kelly bankroll faster: 0.490% a bet against 0.446%",
+   near(got(s4, "growth")["log_growth"], 0.004902, 5e-6) and near(got(s4, "value")["log_growth"], 0.004456, 5e-6)
+   and got(s4, "growth")["log_growth"] > got(s4, "value")["log_growth"], (s4["growth"], s4["value"]))
+best_g = max((kelly_by_hand(dict(decimal=r["decimal"], win_prob=r["win_prob"]))[1], sorted(l["label"] for l in c))
+             for n in (3, 4, 5) for c in itertools.combinations(pool, n)
+             for r in [pb.evaluate(list(c), P4)] if r["ev_boosted"] > 0)
+ok("  an independent brute force over evaluate() names the same growth ticket",
+   best_g[1] == names(s4["growth"]), best_g)
+ok("  the growth ticket is never one that loses: every candidate it beat had EV > 0 too",
+   got(s4, "growth")["ev_boosted"] > 0 and got(s4, "growth")["kelly"] > 0)
 
 sf = pb.suggest(ALL, dict(P3, leg_floor_american=-200))
 ok("a -200 leg floor leaves TOR and CAR only: fewer than 3 legs, said in words",
    sf["eligible"] == 2 and sf["value"] is None and "fewer than 3" in (sf["why"] or ""), sf)
 sx = pb.suggest(ALL, dict(P3, min_total_american=1000))
 ok("terms no ticket can meet: nothing suggested, and it says so",
-   sx["qualifying"] == 0 and sx["value"] is None and sx["likeliest"] is None
+   sx["qualifying"] == 0 and sx["value"] is None and sx["growth"] is None
    and "no combination" in (sx["why"] or ""), sx)
 sl = pb.suggest(ALL, {"boost_pct": 5, "min_legs": 3})
 ok("a 5% boost cannot beat the vig: the closest ticket is named, NO ticket is recommended",
-   sl["value"] is not None and got(sl, "value")["ev_boosted"] < 0 and sl["likeliest"] is None
+   sl["value"] is not None and got(sl, "value")["ev_boosted"] < 0 and sl["growth"] is None
+   and got(sl, "value")["kelly"] == 0
    and "not worth" not in (sl["why"] or "") and "worth its stake" in (sl["why"] or ""), sl)
 for label, promo in (("no boost", {"min_legs": 3}), ("a zero boost", {"boost_pct": 0, "min_legs": 3})):
     sn = pb.suggest(ALL, promo)
     ok("{}: no suggestion at all (unboosted, every ticket loses the vig)".format(label),
-       sn["value"] is None and sn["likeliest"] is None and sn["why"] == "no boost entered", sn)
+       sn["value"] is None and sn["growth"] is None and sn["why"] == "no boost entered", sn)
 two = legs("TOR", "CAR", "CWS") + [dict(legs("CWS")[0], decimal=1.9, fair=0.5, label="CWS-other")]
 sg = pb.suggest(two, P2)
 ok("two legs from one game are never on one ticket",
-   sg["eligible"] == 3 and all("CWS-other" not in (names(t) or []) for t in (sg["value"], sg["likeliest"])), sg)
+   sg["eligible"] == 3 and all("CWS-other" not in (names(t) or []) for t in (sg["value"], sg["growth"])), sg)
 nofair = legs("TOR", "CAR") + [dict(legs("CWS")[0], fair=None)]
 ok("a leg with no market chance is not eligible",
    pb.suggest(nofair, P2)["eligible"] == 2)
@@ -345,10 +376,12 @@ many = [priced(-110 - i, game="g%d" % i) for i in range(60)]
 sm = pb.suggest(many, {"boost_pct": 50, "min_legs": 4})
 ok("a search too large for a phone is skipped by size and reported, not run",
    sm["skipped_sizes"] == [5, 6] and sm["value"] is not None and len(got(sm, "value")["legs"]) == 4, sm["skipped_sizes"])
-ok("the page's copy carries the same four constants",
+ok("the page's copy carries the same three constants",
    "var LEG_MAX_DEC = 2.0;" in JS and "var EXTRA_LEGS = 2;" in JS and "var MAX_COMBOS = 1500000;" in JS
-   and "var LIKELY_KEEP = 0.5;" in JS and pb.SUGGEST_LEG_MAX_AMERICAN == 100 and pb.SUGGEST_EXTRA_LEGS == 2
-   and pb.SUGGEST_MAX_COMBOS == 1500000 and pb.SUGGEST_LIKELY_KEEP == 0.5)
+   and pb.SUGGEST_LEG_MAX_AMERICAN == 100 and pb.SUGGEST_EXTRA_LEGS == 2
+   and pb.SUGGEST_MAX_COMBOS == 1500000)
+ok("  and neither copy keeps the judgment constant the growth ticket replaced",
+   "LIKELY_KEEP" not in JS and not hasattr(pb, "SUGGEST_LIKELY_KEEP"))
 
 print("parlay boost: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "parlay boost: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))

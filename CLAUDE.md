@@ -650,8 +650,8 @@ in sign with the live ledger at the singles floor (12-28, ROI −40.2%
 day ... highlight parlay pieces", and of a builder he had to drive, "doesn't
 seem too useful if I have to do it myself". `parlay_boost.suggest` (copied in
 `bets.js`, pinned to each other by `run.js`) takes the promo and the board's
-legs and names two tickets: **best value**, and the **likeliest that keeps at
-least half that value**.
+legs and names two tickets: **best value per dollar**, and **best for
+bankroll growth** (Kelly).
 
 - **What the arithmetic says, which the old headings got backwards.** Boosted
   value is `k(1+b) - bP - 1` with `k = P*D`, about 0.96 a leg. So it rises as
@@ -662,14 +662,30 @@ least half that value**.
   best ticket made only of −250-or-shorter legs is +12.6% on five legs. A +300
   minimum on three legs needs them to average −170, so three "parlay pieces"
   at −300 do not qualify at all.
-- **Favourites only**: no leg past +100 (`SUGGEST_LEG_MAX_AMERICAN`), the
-  owner's rule for boosted parlays. Without it the arithmetic always reaches
-  for the longest dog on the board.
+- **Favourites only**: no leg past +100 (`SUGGEST_LEG_MAX_AMERICAN`). It
+  began as the owner's rule, and the evidence backs it: longshots are the
+  side proportional de-vig over-rates (see the method test below), so a
+  boosted value that leans on a long dog is the least trustworthy number the
+  page could print. Without the cap the arithmetic always reaches for one.
 - **The chance is the market's.** The model is not consulted, and which side
   it leans on does not enter the value. The legs offered are its leans only
   because the owner decided the tray keeps to the lean.
-- **Half is a judgment** (`SUGGEST_LIKELY_KEEP`), not a measurement. Without a
-  bar, "likeliest" named KC −575 + TULN −1050: cashes 71.6%, worth +2.3%.
+- **The second ticket is the Kelly-growth ticket** (`f* = EV / b`,
+  `g = P ln(1 + f*b) + (1−P) ln(1 − f*)`), and each card prints `f*` as a
+  ceiling ("Kelly: at most 4.8% of bankroll"). It replaced, the same day, a
+  rule of mine ("the likeliest ticket keeping half the best value") after the
+  owner asked for what the outside literature uses and not his or my
+  one-off rules. Kelly needs no constant. Take the value ticket when the
+  promo caps the stake (most do); the growth ticket cashes more often. On the
+  2026-11-12 board: value +24.6% / 14.4% grows a Kelly bankroll 0.37% a bet,
+  growth +21.7% / 21.9% grows it 0.49%.
+- **Proportional de-vig was tested against power, Shin, additive and
+  odds-ratio** (`python3 -m tools.devig_calibration --methods`), because the
+  literature calls proportional the weakest under favourite-longshot bias. On
+  4,161 NFL games the alternatives are better by 0.0002 log loss, intervals
+  spanning zero; the bias shows at the extremes (−500 or shorter: +2.8pp
+  under-rated; +200 or longer: −1.4pp) and not across −250…+100, where boost
+  legs live. **Kept proportional. Re-measure before pricing long underdogs.**
 - **No boost, no suggestion**; and when no ticket is worth its stake the page
   says so and offers no button.
 - **A started game leaves the board.** Game entities carry `start_utc`
@@ -758,6 +774,13 @@ Open on it:
   record on the Model Review tab.
 - **NFL only.** CFB has no price history to audit against and CFBD revises its
   inputs; NBA has no prices yet. Same shape applies once either can be graded.
+- **Who's Hot and props: what NOT to build** (2026-11-12). A "cleared X in 4 of
+  his last 5" ladder was proposed and withdrawn: a recent hit rate is not a
+  probability (window choice is arbitrary, context is ignored), and published
+  projection practice is per-minute production × projected minutes with recent
+  games weighted, minutes being the input that matters most. The next step for
+  the NBA boards is therefore minutes and per-minute rates, role changes
+  (minutes up or down), and who plays tonight, not hit-rate ladders.
 - **"Use the Who's Hot board to build my own"** (owner, 2026-11-10) means
   player-prop parlays from the leaderboards. A builder exists on
   `claude/prop-builder` and is **PARKED, not merged** (owner, 2026-11-11:

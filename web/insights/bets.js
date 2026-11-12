@@ -14,7 +14,7 @@
 //
 // TODAY'S BOOST TICKETS (2026-11-12). The page used to list legs and leave
 // the building to the reader. It now names the tickets for the promo typed:
-// the best value, and a likelier one that keeps at least half of it. See
+// the best value per dollar, and the best for bankroll growth (Kelly). See
 // `suggest` below and parlay_boost.suggest, which it copies. The promo is
 // remembered in this browser, and a game that has started leaves the board.
 //
@@ -246,16 +246,16 @@
   // output on the same board. In short: a boost multiplies WINNINGS, so it is
   // worth most on the fewest legs the terms allow at the longest prices they
   // allow, and every extra leg costs another slice of vig. Two tickets are
-  // named because the best value is also the least likely to cash:
-  //   value      the highest boosted value
-  //   likeliest  the highest market chance among tickets that keep at least
-  //              half the best ticket's value
+  // named because "best" depends on what limits the stake:
+  //   value   the highest boosted value per $1 (best when the promo caps the
+  //           stake, as boosts nearly always do)
+  //   growth  the highest expected growth of a bankroll staked at Kelly,
+  //           f* = EV / b, g = P*ln(1 + f*b) + (1-P)*ln(1 - f*)
   // Legs are favourites only (nothing past +100): the owner's rule for boosted
   // parlays. The chance is the market's; the model is not consulted.
   var LEG_MAX_DEC = 2.0;          // +100
   var EXTRA_LEGS = 2;
   var MAX_COMBOS = 1500000;
-  var LIKELY_KEEP = 0.5;
 
   function combos(n, r) {
     if (r < 0 || r > n) return 0;
@@ -265,7 +265,7 @@
   }
 
   function suggest(legs) {
-    var out = { eligible: 0, qualifying: 0, skipped: [], value: null, likeliest: null, why: null };
+    var out = { eligible: 0, qualifying: 0, skipped: [], value: null, growth: null, why: null };
     var boostPct = num(promo.boost);
     if (boostPct == null || boostPct <= 0) { out.why = "no boost entered"; return out; }
     var boost = boostPct / 100;
@@ -288,21 +288,25 @@
     out.eligible = pool.length;
     if (pool.length < minLegs) { out.why = "fewer than " + minLegs + " legs fit these terms"; return out; }
 
-    var bestValue = null, bestLikely = null, chosen = [];
-    var bar = null;   // null on the first pass; the likeliest ticket's value floor on the second
+    var bestValue = null, bestGrowth = null, chosen = [];
     function walk(start, need, dec, p) {
       if (need === 0) {
         if (minTotal != null && dec < minTotal - 1e-9) return;
-        var ev = p * (1 + (dec - 1) * (1 + boost)) - 1;
-        if (bar === null) {
-          out.qualifying++;
-          if (!bestValue || ev > bestValue.ev + 1e-12 ||
-              (Math.abs(ev - bestValue.ev) <= 1e-12 && p > bestValue.p + 1e-12)) {
-            bestValue = { ev: ev, p: p, dec: dec, legs: chosen.slice() };
-          }
-        } else if (ev >= bar - 1e-12 && (!bestLikely || p > bestLikely.p + 1e-12 ||
-            (Math.abs(p - bestLikely.p) <= 1e-12 && ev > bestLikely.ev + 1e-12))) {
-          bestLikely = { ev: ev, p: p, dec: dec, legs: chosen.slice() };
+        out.qualifying++;
+        var net = (dec - 1) * (1 + boost);
+        var ev = p * (1 + net) - 1;
+        var f = 0, g = 0;
+        if (net > 0 && ev > 1e-12) {
+          f = Math.min(ev / net, 1 - 1e-9);
+          g = p * Math.log(1 + f * net) + (1 - p) * Math.log(1 - f);
+        }
+        if (!bestValue || ev > bestValue.ev + 1e-12 ||
+            (Math.abs(ev - bestValue.ev) <= 1e-12 && p > bestValue.p + 1e-12)) {
+          bestValue = { ev: ev, p: p, dec: dec, f: f, legs: chosen.slice() };
+        }
+        if (g > 0 && (!bestGrowth || g > bestGrowth.g + 1e-15 ||
+            (Math.abs(g - bestGrowth.g) <= 1e-15 && p > bestGrowth.p + 1e-12))) {
+          bestGrowth = { ev: ev, p: p, dec: dec, f: f, g: g, legs: chosen.slice() };
         }
         return;
       }
@@ -318,17 +322,13 @@
       sizes.push(size);
     }
     sizes.forEach(function (n) { walk(0, n, 1, 1); });
-    if (bestValue && bestValue.ev > 1e-12) {
-      bar = LIKELY_KEEP * bestValue.ev;
-      sizes.forEach(function (n) { walk(0, n, 1, 1); });
-    }
     function ticket(c) {
-      return { legs: c.legs, p: c.p, ev: c.ev, pays: toAmerican(1 + (c.dec - 1) * (1 + boost)) };
+      return { legs: c.legs, p: c.p, ev: c.ev, kelly: c.f, pays: toAmerican(1 + (c.dec - 1) * (1 + boost)) };
     }
     if (!bestValue) { out.why = "no combination of these legs meets the terms"; return out; }
     out.value = ticket(bestValue);
-    out.likeliest = bestLikely ? ticket(bestLikely) : null;
-    if (!bestLikely) out.why = "no qualifying ticket is worth its stake at this boost";
+    out.growth = bestGrowth ? ticket(bestGrowth) : null;
+    if (!bestGrowth) out.why = "no qualifying ticket is worth its stake at this boost";
     return out;
   }
 
@@ -346,6 +346,9 @@
       }).join("") + "</div>" +
       '<div class="bet-ticket-facts"><span>cashes ' + (100 * t.p).toFixed(1) + "%</span>" +
       '<span class="' + (t.ev > 0 ? "is-pos" : "is-neg") + '">worth ' + pct(t.ev, 1) + " per $1</span>" +
+      // Full Kelly, as a ceiling: the usual practice is a fraction of it,
+      // because each leg's chance is only known to a few points.
+      (t.kelly > 0 ? '<span class="bet-ticket-kelly">Kelly: at most ' + (100 * t.kelly).toFixed(1) + "% of bankroll</span>" : "") +
       '<button type="button" class="bet-ticket-use" data-ticket-use="' + kind + '">Use these legs</button></div>' +
       "</div>"
     );
@@ -358,24 +361,24 @@
       return '<div class="bet-tickets is-empty">Enter today’s boost and its terms: the best ' +
         "tickets on this board appear here.</div>";
     }
-    var same = s.value && s.likeliest && s.value.legs.length === s.likeliest.legs.length &&
-      s.value.legs.every(function (l, i) { return l === s.likeliest.legs[i]; });
+    var same = s.value && s.growth && s.value.legs.length === s.growth.legs.length &&
+      s.value.legs.every(function (l, i) { return l === s.growth.legs[i]; });
     var cards = "";
-    if (s.value && s.likeliest) {
+    if (s.value && s.growth) {
       cards = same
-        ? ticketCard("value", "Best value, and the likeliest to cash", s.value)
-        : ticketCard("value", "Best value", s.value) + ticketCard("likeliest", "More likely to cash", s.likeliest);
+        ? ticketCard("value", "Best value per $1, and best for bankroll growth", s.value)
+        : ticketCard("value", "Best value per $1", s.value) + ticketCard("growth", "Best for bankroll growth", s.growth);
     }
     return (
       '<div class="bet-tickets">' +
       '<div class="bet-tickets-h">Today’s boost tickets</div>' +
       (cards || '<div class="bet-tickets-none">' + esc(s.why ? s.why.charAt(0).toUpperCase() + s.why.slice(1) + "." : "") +
-        (s.value && !s.likeliest ? " The closest is " + esc(s.value.legs.map(function (l) {
+        (s.value && !s.growth ? " The closest is " + esc(s.value.legs.map(function (l) {
           return l.side + " " + l.display; }).join(" · ")) + ", worth " + pct(s.value.ev, 1) + " per $1." : "") + "</div>") +
       '<div class="bet-tray-fine">From ' + s.eligible + " leg" + (s.eligible === 1 ? "" : "s") +
-      " that fit: favourites only (nothing past +100), one per game. A boost is worth most on the " +
-      "fewest legs at the longest prices the terms allow; the second ticket is the likeliest that " +
-      "keeps at least half that value. Chances are the book’s price with the vig " +
+      " that fit: favourites only (nothing past +100), one per game. Take the first ticket when the " +
+      "promo caps your stake; the second cashes more often and grows a bankroll fastest (Kelly). " +
+      "Chances are the book’s price with the vig " +
       "removed, not the model’s, and each is only known to about ±3.5 points." +
       (s.skipped.length ? " Tickets of " + s.skipped.join(" and ") + " legs were not searched (too many)." : "") +
       "</div></div>"
