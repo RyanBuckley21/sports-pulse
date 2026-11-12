@@ -108,6 +108,18 @@ def test_minus_200_is_a_parlay_piece():
     ents["822760"]["odds"]["home_ml"] = -199
     board = bet_board.build(ents, _config(), [])
     check("-199 is a straight bet", "TOR" in {l["side"] for l in board["straight"]})
+    # The owner's SINGLES line (2026-11-10) is narrower than the split and is
+    # carried beside it, not instead of it: the page counts the straight bets
+    # at -150 or longer and says no edge was measured there.
+    check("the board carries the singles line (-150) beside the -200 split",
+          board["singles_min"] == -150 and board["parlay_max"] == -200, board.get("singles_min"))
+    # EDIT (one field): the fixture's entities predate start_utc.
+    ents["822760"]["start_utc"] = "2026-09-25T23:07:00Z"
+    board = bet_board.build(ents, _config(), [])
+    rows = {l["side"]: l for l in board["straight"] + board["parlay"]}
+    check("a row carries its game's start instant, and None when the builder gave none",
+          rows["TOR"]["start_utc"] == "2026-09-25T23:07:00Z" and rows["CAR"]["start_utc"] is None,
+          (rows["TOR"].get("start_utc"), rows["CAR"].get("start_utc")))
 
 
 def test_the_record_is_matched_on_price_not_score():

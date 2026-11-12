@@ -428,6 +428,26 @@ for sport in ("nfl", "cfb", "epl"):
 ok("fetchers/mlb does NOT -- its tab is a single date, so the time is unambiguous",
    "slate_clock.kickoff_label(" not in mlb_src)
 
+# --- start instants (2026-11-12): what lets the Bets tab drop a started game --
+ok("utc_iso reads ESPN's and cfbfastR's stamps as one instant form",
+   slate_clock.utc_iso("2026-11-12T00:30Z") == "2026-11-12T00:30:00Z"
+   and slate_clock.utc_iso("2026-11-14T17:00:00.000Z") == "2026-11-14T17:00:00Z"
+   and slate_clock.utc_iso("2026-11-14T12:00:00-05:00") == "2026-11-14T17:00:00Z")
+ok("  a stamp with no zone is refused, never guessed",
+   slate_clock.utc_iso("2026-11-14T17:00") is None and slate_clock.utc_iso("") is None
+   and slate_clock.utc_iso(None) is None and slate_clock.utc_iso("soon") is None)
+ok("an Eastern kickoff becomes the right instant in standard time (1 PM EST = 18:00Z)",
+   slate_clock.eastern_to_utc_iso("2026-11-15", "13:00") == "2026-11-15T18:00:00Z")
+ok("  and in daylight time, across midnight (8:20 PM EDT = 00:20Z next day)",
+   slate_clock.eastern_to_utc_iso("2026-09-13", "20:20") == "2026-09-14T00:20:00Z")
+ok("  a missing or unreadable time gives nothing",
+   slate_clock.eastern_to_utc_iso("2026-11-15", None) is None
+   and slate_clock.eastern_to_utc_iso(None, "13:00") is None
+   and slate_clock.eastern_to_utc_iso("2026-11-15", "TBD") is None)
+for sport in ("nfl", "cfb", "nba"):
+    src = open(_os.path.join(_root, "fetchers", "%s.py" % sport)).read()
+    ok("fetchers/{} puts start_utc on its game entities".format(sport), '"start_utc": slate_clock.' in src)
+
 
 print("slate dates: {} checks pass".format(checks["pass"]) if not checks["fail"]
       else "slate dates: {} PASS, {} FAIL".format(checks["pass"], checks["fail"]))

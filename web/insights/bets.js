@@ -12,6 +12,12 @@
 // picker; this one answers "what is worth a look today" across all of them, so
 // it has its own sport filter and ignores the picker's selection.
 //
+// TODAY'S BOOST TICKETS (2026-11-12). The page used to list legs and leave
+// the building to the reader. It now names the tickets for the promo typed:
+// the best value, and a likelier one that keeps at least half of it. See
+// `suggest` below and parlay_boost.suggest, which it copies. The promo is
+// remembered in this browser, and a game that has started leaves the board.
+//
 // It never ranks or colours a row as "good". A Signal Score cannot see price,
 // and until a price band has PROVEN_MIN_N graded picks there is nothing to say
 // a pick beats its price -- the rows say so rather than implying it.
@@ -41,12 +47,33 @@
 
   function legKey(l) { return l.sport + ":" + l.id + ":" + l.side; }
 
-  // TODAY'S PROMO, typed by the reader, page session only. There is NO default
-  // promo anywhere: DraftKings' terms change by day and state (the owner,
-  // 2026-11-10: "3+ legs, +300 minimum", sometimes +400, sometimes a per-leg
-  // floor of -200 or -250, sometimes only +100 on the ticket). A blank field
-  // means that term is not part of today's offer.
+  // TODAY'S PROMO, typed by the reader. There is NO default promo anywhere:
+  // DraftKings' terms change by day and state (the owner, 2026-11-10: "3+
+  // legs, +300 minimum", sometimes +400, sometimes a per-leg floor of -200 or
+  // -250, sometimes only +100 on the ticket). A blank field means that term is
+  // not part of today's offer.
+  //
+  // REMEMBERED BETWEEN VISITS (2026-11-12), in this browser only. The terms
+  // repeat far more often than they change, and retyping four numbers on a
+  // phone every visit was most of the work of using this page. What comes back
+  // is what THIS reader last typed -- still not a default. localStorage can
+  // throw (private mode, a full quota) and can hold anything, so both ends are
+  // guarded and a bad value is just a blank form.
+  var PROMO_KEY = "sp.bets.promo.v1";
   var promo = { boost: "", legs: "", total: "", floor: "" };
+  (function restorePromo() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(PROMO_KEY) || "null");
+      if (saved && typeof saved === "object") {
+        Object.keys(promo).forEach(function (k) {
+          if (typeof saved[k] === "string" && saved[k].length <= 12) promo[k] = saved[k];
+        });
+      }
+    } catch (err) { /* no storage: the form starts blank */ }
+  })();
+  function savePromo() {
+    try { window.localStorage.setItem(PROMO_KEY, JSON.stringify(promo)); } catch (err) { /* fine */ }
+  }
   var PROMO_FIELDS = [
     ["boost", "Boost %", "50"],
     ["legs", "Min legs", "3"],
@@ -163,6 +190,10 @@
       "</div>" +
       '<div class="bet-facts">' +
       "<span>needs " + esc(l.break_even_display) + "</span>" +
+      // The market's own chance for this side (the price with the vig taken
+      // out). It sits beside "needs" because the gap between them is the vig
+      // -- the cost of the bet before any opinion about the game.
+      (typeof l.fair === "number" ? "<span>market " + Math.round(100 * l.fair) + "%</span>" : "") +
       "<span>score " + esc(l.score) + "</span>" +
       (l.start ? "<span>" + esc(l.start) + "</span>" : "") +
       (l.past_cap ? '<span class="bet-cap">past −1000 cap</span>' : "") +
@@ -181,7 +212,7 @@
   }
 
   function section(title, note, legs, min) {
-    var shown = legs.filter(function (l) { return sportFilter === "all" || l.sport === sportFilter; });
+    var shown = legs.filter(function (l) { return live(l) && (sportFilter === "all" || l.sport === sportFilter); });
     return (
       '<section class="bet-section">' +
       '<h2 class="bet-h">' + esc(title) + ' <span class="bet-count">' + shown.length + "</span></h2>" +
@@ -193,13 +224,171 @@
     );
   }
 
+  // A GAME THAT HAS STARTED IS NOT A BET. The page is static between deploys,
+  // so the board's rows outlive their kickoffs: at 11:44 PM on 2026-11-11 two
+  // 7:30 PM games were still listed. Each row now carries its start as an
+  // instant (start_utc) and is dropped once the reader's own clock passes it.
+  // A row with no instant (an older payload, a builder with no time) is kept:
+  // hiding what cannot be dated would empty the board on a missing field.
+  function live(l) {
+    if (!l.start_utc) return true;
+    var t = Date.parse(l.start_utc);
+    return isNaN(t) || t > Date.now();
+  }
+  function shownLegs(board) {
+    return board.straight.concat(board.parlay).filter(function (l) {
+      return live(l) && (sportFilter === "all" || l.sport === sportFilter);
+    });
+  }
+
+  // WHICH TICKET. A copy of parlay_boost.suggest, which holds the reasoning
+  // and the measurements; tools/verify/run.js pins this copy to that module's
+  // output on the same board. In short: a boost multiplies WINNINGS, so it is
+  // worth most on the fewest legs the terms allow at the longest prices they
+  // allow, and every extra leg costs another slice of vig. Two tickets are
+  // named because the best value is also the least likely to cash:
+  //   value      the highest boosted value
+  //   likeliest  the highest market chance among tickets that keep at least
+  //              half the best ticket's value
+  // Legs are favourites only (nothing past +100): the owner's rule for boosted
+  // parlays. The chance is the market's; the model is not consulted.
+  var LEG_MAX_DEC = 2.0;          // +100
+  var EXTRA_LEGS = 2;
+  var MAX_COMBOS = 1500000;
+  var LIKELY_KEEP = 0.5;
+
+  function combos(n, r) {
+    if (r < 0 || r > n) return 0;
+    var out = 1;
+    for (var i = 0; i < r; i++) out = Math.floor(out * (n - i) / (i + 1) + 0.5);
+    return out;
+  }
+
+  function suggest(legs) {
+    var out = { eligible: 0, qualifying: 0, skipped: [], value: null, likeliest: null, why: null };
+    var boostPct = num(promo.boost);
+    if (boostPct == null || boostPct <= 0) { out.why = "no boost entered"; return out; }
+    var boost = boostPct / 100;
+    var floorDec = toDecimal(num(promo.floor));
+    var minTotal = toDecimal(num(promo.total));
+    var minLegs = Math.max(2, Math.floor(num(promo.legs) || 2));
+    var seen = {};
+    var pool = legs.filter(function (l) {
+      if (typeof l.fair !== "number" || typeof l.decimal !== "number") return false;
+      if (l.decimal > LEG_MAX_DEC + 1e-9) return false;
+      if (floorDec != null && l.decimal < floorDec - 1e-9) return false;
+      var g = l.sport + ":" + l.id;
+      if (seen[g]) return false;
+      seen[g] = true;
+      return true;
+    });
+    pool.sort(function (a, b) {
+      return b.decimal - a.decimal || (a.side + " " + a.display < b.side + " " + b.display ? -1 : 1);
+    });
+    out.eligible = pool.length;
+    if (pool.length < minLegs) { out.why = "fewer than " + minLegs + " legs fit these terms"; return out; }
+
+    var bestValue = null, bestLikely = null, chosen = [];
+    var bar = null;   // null on the first pass; the likeliest ticket's value floor on the second
+    function walk(start, need, dec, p) {
+      if (need === 0) {
+        if (minTotal != null && dec < minTotal - 1e-9) return;
+        var ev = p * (1 + (dec - 1) * (1 + boost)) - 1;
+        if (bar === null) {
+          out.qualifying++;
+          if (!bestValue || ev > bestValue.ev + 1e-12 ||
+              (Math.abs(ev - bestValue.ev) <= 1e-12 && p > bestValue.p + 1e-12)) {
+            bestValue = { ev: ev, p: p, dec: dec, legs: chosen.slice() };
+          }
+        } else if (ev >= bar - 1e-12 && (!bestLikely || p > bestLikely.p + 1e-12 ||
+            (Math.abs(p - bestLikely.p) <= 1e-12 && ev > bestLikely.ev + 1e-12))) {
+          bestLikely = { ev: ev, p: p, dec: dec, legs: chosen.slice() };
+        }
+        return;
+      }
+      for (var i = start; i <= pool.length - need; i++) {
+        chosen.push(pool[i]);
+        walk(i + 1, need - 1, dec * pool[i].decimal, p * pool[i].fair);
+        chosen.pop();
+      }
+    }
+    var sizes = [];
+    for (var size = minLegs; size <= minLegs + EXTRA_LEGS && size <= pool.length; size++) {
+      if (combos(pool.length, size) > MAX_COMBOS) { out.skipped.push(size); continue; }
+      sizes.push(size);
+    }
+    sizes.forEach(function (n) { walk(0, n, 1, 1); });
+    if (bestValue && bestValue.ev > 1e-12) {
+      bar = LIKELY_KEEP * bestValue.ev;
+      sizes.forEach(function (n) { walk(0, n, 1, 1); });
+    }
+    function ticket(c) {
+      return { legs: c.legs, p: c.p, ev: c.ev, pays: toAmerican(1 + (c.dec - 1) * (1 + boost)) };
+    }
+    if (!bestValue) { out.why = "no combination of these legs meets the terms"; return out; }
+    out.value = ticket(bestValue);
+    out.likeliest = bestLikely ? ticket(bestLikely) : null;
+    if (!bestLikely) out.why = "no qualifying ticket is worth its stake at this boost";
+    return out;
+  }
+
+  // The last suggestion painted, so "Use these legs" loads exactly the ticket
+  // on screen rather than re-deriving one.
+  var lastTickets = null;
+
+  function ticketCard(kind, title, t) {
+    return (
+      '<div class="bet-ticket" data-ticket="' + kind + '">' +
+      '<div class="bet-ticket-head"><span class="bet-ticket-title">' + esc(title) + "</span>" +
+      '<span class="bet-ticket-pays">pays ' + esc(t.pays) + "</span></div>" +
+      '<div class="bet-ticket-legs">' + t.legs.map(function (l) {
+        return '<span class="bet-ticket-leg">' + esc(l.side) + " " + esc(l.display) + "</span>";
+      }).join("") + "</div>" +
+      '<div class="bet-ticket-facts"><span>cashes ' + (100 * t.p).toFixed(1) + "%</span>" +
+      '<span class="' + (t.ev > 0 ? "is-pos" : "is-neg") + '">worth ' + pct(t.ev, 1) + " per $1</span>" +
+      '<button type="button" class="bet-ticket-use" data-ticket-use="' + kind + '">Use these legs</button></div>' +
+      "</div>"
+    );
+  }
+
+  function tickets(board) {
+    var s = suggest(shownLegs(board));
+    lastTickets = s;
+    if (s.why === "no boost entered") {
+      return '<div class="bet-tickets is-empty">Enter today’s boost and its terms: the best ' +
+        "tickets on this board appear here.</div>";
+    }
+    var same = s.value && s.likeliest && s.value.legs.length === s.likeliest.legs.length &&
+      s.value.legs.every(function (l, i) { return l === s.likeliest.legs[i]; });
+    var cards = "";
+    if (s.value && s.likeliest) {
+      cards = same
+        ? ticketCard("value", "Best value, and the likeliest to cash", s.value)
+        : ticketCard("value", "Best value", s.value) + ticketCard("likeliest", "More likely to cash", s.likeliest);
+    }
+    return (
+      '<div class="bet-tickets">' +
+      '<div class="bet-tickets-h">Today’s boost tickets</div>' +
+      (cards || '<div class="bet-tickets-none">' + esc(s.why ? s.why.charAt(0).toUpperCase() + s.why.slice(1) + "." : "") +
+        (s.value && !s.likeliest ? " The closest is " + esc(s.value.legs.map(function (l) {
+          return l.side + " " + l.display; }).join(" · ")) + ", worth " + pct(s.value.ev, 1) + " per $1." : "") + "</div>") +
+      '<div class="bet-tray-fine">From ' + s.eligible + " leg" + (s.eligible === 1 ? "" : "s") +
+      " that fit: favourites only (nothing past +100), one per game. A boost is worth most on the " +
+      "fewest legs at the longest prices the terms allow; the second ticket is the likeliest that " +
+      "keeps at least half that value. Chances are the book’s price with the vig " +
+      "removed, not the model’s, and each is only known to about ±3.5 points." +
+      (s.skipped.length ? " Tickets of " + s.skipped.join(" and ") + " legs were not searched (too many)." : "") +
+      "</div></div>"
+    );
+  }
+
   // THE TRAY. Combined decimal odds are the product of the legs'; the win rate
   // that price needs is its reciprocal, which is the product of the legs'
   // break-evens -- so a four-leg parlay of -200s needs 0.667^4 = 20%, and
   // shows it. "From records" appears only when every leg's price band is
   // proven; otherwise it says why it cannot.
   function tray(board) {
-    var legs = board.straight.concat(board.parlay).filter(function (l) { return picked[legKey(l)]; });
+    var legs = board.straight.concat(board.parlay).filter(function (l) { return live(l) && picked[legKey(l)]; });
     if (!legs.length) {
       return '<div class="bet-tray is-empty">Tap + on any row to build a parlay.</div>';
     }
@@ -227,7 +416,7 @@
 
   function filters(board) {
     var sports = [];
-    board.straight.concat(board.parlay).forEach(function (l) {
+    board.straight.concat(board.parlay).filter(live).forEach(function (l) {
       if (sports.indexOf(l.sport) < 0) sports.push(l.sport);
     });
     if (sportFilter === null || (sportFilter !== "all" && sports.indexOf(sportFilter) < 0)) {
@@ -261,17 +450,37 @@
     }
     var min = board.proven_min_n;
     var line = board.parlay_max;
+    var chips = filters(board);     // settles sportFilter before anything reads it
+    var all = board.straight.concat(board.parlay);
+    var started = all.filter(function (l) { return !live(l); }).length;
+    // THE OWNER'S SINGLES LINE (-150 or longer, 2026-11-10) is narrower than
+    // the list's own -200 split, so the list says how many rows meet it. It
+    // also says what was measured there, because a list headed "Straight
+    // bets" reads as a recommendation and the evidence does not make one:
+    // the model's NFL picks at -150 or longer returned -7.4% over 279 at
+    // closing prices (nfl_odds_backtest.py).
+    var singles = board.singles_min;
+    var singleCount = board.straight.filter(function (l) {
+      return live(l) && (sportFilter === "all" || l.sport === sportFilter) &&
+        singles != null && l.american >= singles;
+    }).length;
+    var straightNote = "Priced longer than " + line + "." + (singles == null ? "" :
+      " " + singleCount + " at your singles line (" + singles + " or longer). No measured edge there: " +
+      "the model has not beaten the price.");
     root.innerHTML =
       '<div class="bets">' +
-      '<p class="bet-intro">Every priced moneyline lean today. <b>Needs</b> is the win rate the price ' +
-      "requires. The <b>record</b> is how the model's graded picks at similar prices did — it only " +
-      "counts once it reaches " + min + " picks. Scores don't see prices, so a high score is not value " +
-      "by itself; both lists are sorted by score until a record is proven.</p>" +
-      filters(board) +
+      '<p class="bet-intro">Leans with a price. <b>Needs</b> is the win rate the price requires, ' +
+      "<b>market</b> is the book’s own chance with the vig removed, and the <b>record</b> is how the " +
+      "model’s graded picks at similar prices did (it counts from " + min + " picks). A high score is " +
+      "not value: the value on this page is the boost.</p>" +
+      chips +
       promoForm() +
+      tickets(board) +
       tray(board) +
       section("Parlay pieces", "Priced " + line + " or shorter.", board.parlay, min) +
-      section("Straight bets", "Priced longer than " + line + ".", board.straight, min) +
+      section("Straight bets", straightNote, board.straight, min) +
+      (started ? '<p class="bet-note bet-started">' + started + " game" + (started === 1 ? " has" : "s have") +
+        " started and " + (started === 1 ? "is" : "are") + " off the board.</p>" : "") +
       (board.unpriced ? '<p class="bet-note">' + board.unpriced +
         " more lean" + (board.unpriced === 1 ? " has" : "s have") + " no price from the book.</p>" : "") +
       "</div>";
@@ -285,7 +494,15 @@
     var f = e.target.closest(".bet-filter");
     var add = e.target.closest(".bet-add");
     var clear = e.target.closest(".bet-clear");
-    if (f) sportFilter = f.getAttribute("data-bet-sport");
+    var use = e.target.closest(".bet-ticket-use");
+    if (use) {
+      // Load the ticket on screen into the tray, replacing whatever was
+      // picked: the tray then shows its sums and the rows show their ticks.
+      var t = lastTickets && lastTickets[use.getAttribute("data-ticket-use")];
+      if (!t) return;
+      picked = {};
+      t.legs.forEach(function (l) { picked[legKey(l)] = true; });
+    } else if (f) sportFilter = f.getAttribute("data-bet-sport");
     else if (add) {
       var key = add.closest(".bet").getAttribute("data-key");
       if (picked[key]) delete picked[key]; else picked[key] = true;
@@ -310,12 +527,18 @@
     var input = e.target.closest && e.target.closest(".bet-promo-input");
     if (!input) return;
     promo[input.getAttribute("data-promo")] = input.value;
+    savePromo();
     var board = lastData && lastData.insights && lastData.insights.bets;
-    var old = lastRoot.querySelector(".bet-tray");
-    if (!board || !old) return;
-    var holder = document.createElement("div");
-    holder.innerHTML = tray(board);
-    old.parentNode.replaceChild(holder.firstChild, old);
+    if (!board) return;
+    // The tray and the suggested tickets both read the promo; neither holds a
+    // field or a row, so swapping them is safe for the reasons above.
+    [[".bet-tray", tray], [".bet-tickets", tickets]].forEach(function (pair) {
+      var old = lastRoot.querySelector(pair[0]);
+      if (!old) return;
+      var holder = document.createElement("div");
+      holder.innerHTML = pair[1](board);
+      old.parentNode.replaceChild(holder.firstChild, old);
+    });
   }
   document.addEventListener("change", onChange);
 

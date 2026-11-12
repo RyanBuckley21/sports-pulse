@@ -44,6 +44,11 @@ BOOSTED PARLAYS (2026-11-10). Each leg also carries `fair`, the market's own
 no-vig chance for its side, so the tray can say what a profit boost is worth
 on the legs picked. The arithmetic and its evidence live in parlay_boost.py.
 
+THE SINGLES LINE AND THE START (2026-11-12). The board also carries
+`singles_min` (-150, the owner's line for a bet placed alone, narrower than the
+split) and each row its game's `start_utc`, so the page can count the straight
+bets he would actually place and drop a game once it has started.
+
 DISPLAY ONLY. Nothing here reaches a Signal Score, the ledger or grading; it
 reads the scores and prices after the fact, like espn_odds' other readers.
 """
@@ -55,6 +60,11 @@ import signal_report
 
 # The owner's parlay-piece line (2026-09-25): -200 or shorter.
 PARLAY_MAX_AMERICAN = -200
+# The owner's SINGLES line (2026-11-10): nothing shorter than -150. Narrower
+# than the split above, which stays as he set it; the page counts the straight
+# bets that meet this and says what was measured there (no edge: -7.4% on 279
+# NFL picks at closing prices, nfl_odds_backtest.py).
+SINGLES_MIN_AMERICAN = -150
 # Below this many graded picks a record is shown but marked unproven and never
 # ranked on. 30 is the usual floor for a proportion's normal interval to mean
 # anything; at n=30 and p=0.7 the 95% interval is still about +/-16 points.
@@ -145,6 +155,11 @@ def _leg(ent, threshold, table, max_break_even):
         "away": away,
         "home": home,
         "start": ent.get("start"),
+        # The start as an instant (None from a builder that has none). The
+        # page hides a row once this has passed on the reader's own clock: it
+        # is static between deploys, and a game that has kicked off is not a
+        # bet. See slate_clock.utc_iso.
+        "start_utc": ent.get("start_utc"),
         "side": side,
         "opponent": home if side == away else away,
         "at_home": side == home,
@@ -202,4 +217,5 @@ def build(entities, config, ledger_rows):
     parlay.sort(key=lambda l: (l["gap"] is None, -(l["gap"] or 0), -l["score"],
                                l["break_even"], matchup(l)))
     return {"straight": straight, "parlay": parlay, "unpriced": unpriced,
-            "parlay_max": PARLAY_MAX_AMERICAN, "proven_min_n": PROVEN_MIN_N}
+            "parlay_max": PARLAY_MAX_AMERICAN, "singles_min": SINGLES_MIN_AMERICAN,
+            "proven_min_n": PROVEN_MIN_N}

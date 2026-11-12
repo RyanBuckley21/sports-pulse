@@ -205,3 +205,186 @@ def evaluate(legs, promo=None):
         out["boosted_american"] = decimal_to_american(boosted)
         out["ev_boosted"] = win * boosted - 1.0
     return out
+
+
+# ---------------------------------------------------------------------------
+# WHICH TICKET (2026-11-12). evaluate() prices legs the reader picked. The
+# owner's ask was the other way round: "identify bets each day ... highlight
+# parlay pieces", and of a builder he had to drive himself, "doesn't seem too
+# useful if I have to do it myself". suggest() takes today's promo and the
+# board's legs and names the tickets.
+#
+# WHAT THE ARITHMETIC SAYS, because it is not what the board's old headings
+# implied. With k = P*D (what the vig leaves of a dollar, about 0.96 a leg),
+#
+#     boosted value = P*(1 + (D-1)*(1+b)) - 1 = k*(1+b) - b*P - 1
+#
+# so for a given number of legs the value RISES as the win chance P falls: the
+# boost multiplies winnings, and a longer ticket has more winnings to
+# multiply. Every extra leg costs another slice of vig. The best ticket is
+# therefore the FEWEST legs the promo allows at the LONGEST prices it allows --
+# not a stack of heavy favourites. Measured on the real board of 2026-11-12
+# (29 priced leans, a 50% boost, 3+ legs, +300 minimum):
+#
+#     best three legs at -105 / -125 / -135     +24.6%, hits 14.4%
+#     best ticket made only of -250 or shorter  +12.6%, hits 18.6% (five legs)
+#
+# and a +300 minimum on three legs needs them to average -170, so three
+# "parlay pieces" at -300 do not even qualify.
+#
+# TWO TICKETS, because the best value is also the least likely to cash:
+#   value      the highest boosted value;
+#   likeliest  the highest win chance among tickets that keep at least HALF
+#              the best ticket's value (SUGGEST_LIKELY_KEEP).
+# Half is a judgment, not a measurement. Without it "likeliest" degenerates:
+# on the fixture board with a 2-leg promo it named KC -575 + TULN -1050,
+# cashing 71.6% and worth +2.3% -- a ticket that is technically positive and
+# no use of a boost at all.
+# They differ by a point or two of value and several points of chance, and
+# each leg's chance is only known to about +/-3.5 points (see the calibration
+# above), so the page shows both and does not pretend one is right.
+#
+# LEGS ARE FAVOURITES ONLY by default (`leg_max_american`, +100): the owner's
+# rule for boosted parlays is no leg past +100 -- "a long-odds underdog leg
+# makes it a bad bet" (he would rather bet that dog alone). The arithmetic
+# above would otherwise always reach for the longest dog on the board.
+#
+# The chance is the MARKET's. Which side the model leans on does not enter the
+# value at all; the board offers its lean for each game because the owner
+# decided the tray keeps to the lean (2026-11-10).
+# ---------------------------------------------------------------------------
+SUGGEST_LEG_MAX_AMERICAN = 100
+# Sizes tried: the promo's minimum (2 when it names none) and up to two more.
+# Two more is where a floor of -250 can still reach +300; beyond that each leg
+# only adds vig.
+SUGGEST_EXTRA_LEGS = 2
+# Combinations tried per size before a size is skipped. 40 legs choose 5 is
+# 658,008; the page repeats this search on a phone.
+SUGGEST_MAX_COMBOS = 1500000
+SUGGEST_LIKELY_KEEP = 0.5
+
+
+def _combos(n, r):
+    if r < 0 or r > n:
+        return 0
+    out = 1
+    for i in range(r):
+        out = out * (n - i) // (i + 1)
+    return out
+
+
+def eligible_legs(legs, promo=None, leg_max_american=SUGGEST_LEG_MAX_AMERICAN):
+    """The legs a suggested ticket may use: a two-sided price (so a chance can
+    be stated), no longer than `leg_max_american`, no shorter than the promo's
+    leg floor, and one per game (the first listed wins)."""
+    promo = promo or {}
+    cap = american_to_decimal(leg_max_american)
+    floor = american_to_decimal(promo.get("leg_floor_american"))
+    out, seen = [], set()
+    for leg in legs or []:
+        if leg.get("fair") is None or leg.get("decimal") is None:
+            continue
+        if cap is not None and leg["decimal"] > cap + 1e-9:
+            continue
+        if floor is not None and leg["decimal"] < floor - 1e-9:
+            continue
+        if leg.get("game") in seen:
+            continue
+        seen.add(leg.get("game"))
+        out.append(leg)
+    return out
+
+
+def suggest(legs, promo, leg_max_american=SUGGEST_LEG_MAX_AMERICAN):
+    """The tickets worth showing for `promo` from `legs` (evaluate()'s leg
+    shape, plus a "label").
+
+    Returns {"eligible", "qualifying", "skipped_sizes", "value", "likeliest",
+    "why"}. `value` and `likeliest` are {"legs": [...], "win_prob", "decimal",
+    "boosted_american", "ev_boosted"} or None. `likeliest` is None when no
+    qualifying ticket is worth more than its stake, and equal to `value` when
+    they are the same ticket. `why` says so in words when there is nothing to
+    suggest. The search runs twice: once for the best value, once for the
+    likeliest ticket above the bar that value sets.
+
+    No boost, no suggestion: unboosted, every parlay on the board is worth
+    less than its stake by the vig, and ranking losers would read as advice."""
+    promo = promo or {}
+    out = {"eligible": 0, "qualifying": 0, "skipped_sizes": [],
+           "value": None, "likeliest": None, "why": None}
+    boost_pct = promo.get("boost_pct")
+    if boost_pct is None or float(boost_pct) <= 0:
+        out["why"] = "no boost entered"
+        return out
+    boost = float(boost_pct) / 100.0
+    pool = eligible_legs(legs, promo, leg_max_american)
+    # A stable order, so the search and the page's copy of it visit
+    # combinations identically: longest price first, then label.
+    pool.sort(key=lambda l: (-l["decimal"], str(l.get("label"))))
+    out["eligible"] = len(pool)
+    min_legs = max(2, int(promo.get("min_legs") or 2))
+    min_total = american_to_decimal(promo.get("min_total_american"))
+    if len(pool) < min_legs:
+        out["why"] = "fewer than {} legs fit these terms".format(min_legs)
+        return out
+
+    best_value = best_likely = None
+
+    def better_value(a, b):
+        return b is None or (a["ev"], a["p"]) > (b["ev"] + 1e-12, b["p"]) or (
+            abs(a["ev"] - b["ev"]) <= 1e-12 and a["p"] > b["p"] + 1e-12)
+
+    def better_likely(a, b):
+        return b is None or a["p"] > b["p"] + 1e-12 or (
+            abs(a["p"] - b["p"]) <= 1e-12 and a["ev"] > b["ev"] + 1e-12)
+
+    bar = None      # None on the first pass; the likeliest ticket's value floor on the second
+
+    def walk(start, need, dec, p, chosen):
+        nonlocal best_value, best_likely
+        if need == 0:
+            if min_total is not None and dec < min_total - 1e-9:
+                return
+            cand = {"ev": p * (1.0 + (dec - 1.0) * (1.0 + boost)) - 1.0, "p": p,
+                    "dec": dec, "legs": list(chosen)}
+            if bar is None:
+                out["qualifying"] += 1
+                if better_value(cand, best_value):
+                    best_value = cand
+            elif cand["ev"] >= bar - 1e-12 and better_likely(cand, best_likely):
+                best_likely = cand
+            return
+        for i in range(start, len(pool) - need + 1):
+            leg = pool[i]
+            chosen.append(leg)
+            walk(i + 1, need - 1, dec * leg["decimal"], p * leg["fair"], chosen)
+            chosen.pop()
+
+    sizes = []
+    for size in range(min_legs, min_legs + SUGGEST_EXTRA_LEGS + 1):
+        if size > len(pool):
+            break
+        if _combos(len(pool), size) > SUGGEST_MAX_COMBOS:
+            out["skipped_sizes"].append(size)
+            continue
+        sizes.append(size)
+    for size in sizes:
+        walk(0, size, 1.0, 1.0, [])
+    if best_value is not None and best_value["ev"] > 1e-12:
+        bar = SUGGEST_LIKELY_KEEP * best_value["ev"]
+        for size in sizes:
+            walk(0, size, 1.0, 1.0, [])
+
+    def ticket(c):
+        boosted = 1.0 + (c["dec"] - 1.0) * (1.0 + boost)
+        return {"legs": c["legs"], "win_prob": c["p"], "decimal": c["dec"],
+                "boosted_american": decimal_to_american(boosted), "ev_boosted": c["ev"]}
+
+    if best_value is None:
+        out["why"] = "no combination of these legs meets the terms"
+        return out
+    out["value"] = ticket(best_value)
+    out["likeliest"] = ticket(best_likely) if best_likely is not None else None
+    if best_likely is None:
+        out["why"] = "no qualifying ticket is worth its stake at this boost"
+    return out
