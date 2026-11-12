@@ -1175,6 +1175,72 @@ async function betsChecks(browser, base) {
   await p.close();
 }
 
+// --------------------------------------------------------------- hot context
+// Who's Hot rows say how long a player is on the floor and who he plays next
+// (2026-11-12). Both come from fields the fixture's sport does not carry, so
+// they are set on the fixture's own top three rows in a copy -- `usage` and a
+// per-game `min` on the first, and three games on the slate: one an hour
+// away, one an hour gone, one with no start instant at all.
+async function hotContextChecks(browser, base) {
+  const p = await newPage(browser);
+  const problems = collectProblems(p, base);
+  let teams = [];
+  await p.route("**/data.json*", async (route) => {
+    const data = JSON.parse(fs.readFileSync(path.join(WEB, "data.json"), "utf8"));
+    const sport = Object.keys(data.sports)[0];
+    const rows = data.sports[sport].categories[0].players;
+    teams = rows.slice(0, 4).map((r) => r.team_abbr);
+    rows[0].usage = { minutes: 26.6, per36: 44.1, prev_minutes: 33.3, prev_games: 3 };
+    rows[0].series.forEach((x, i) => { x.min = 20 + i; });
+    // The breakdown lines live on per-game (rate) boards, which is what every
+    // NBA board is; the fixture's first board is a count, so the same player's
+    // rows on the other boards carry the usage too.
+    data.sports[sport].categories.forEach((c) => c.players.forEach((r) => {
+      if (r.entity === rows[0].entity) r.usage = rows[0].usage;
+    }));
+    rows[1].usage = { minutes: 31.0, per36: 22.5, prev_minutes: null, prev_games: 1 };
+    const game = (away, home, start, startUtc) => ({ id: away + home, sport: sport, away: { abbr: away },
+      home: { abbr: home }, start: start, start_utc: startUtc });
+    data.insights.games = [
+      game("OPP", rows[0].team_abbr, "8:00 PM ET", new Date(Date.now() + 3600e3).toISOString()),
+      game(rows[1].team_abbr, "GONE", "7:00 PM ET", new Date(Date.now() - 3600e3).toISOString()),
+      game(rows[2].team_abbr, "UND", "9:00 PM ET", null),
+    ];
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForSelector("#app .player-row");
+  const subs = await p.$$eval("#app .player-row", (n) => n.slice(0, 4).map((x) => {
+    const sub = x.querySelector(".row-sub");
+    return sub ? Array.from(sub.children).map((c) => c.textContent).join(" | ") : "";
+  }));
+  const distinct = new Set(teams.slice(0, 3)).size === 3;
+  ok("hot: the fixture's top three rows are on three different clubs (the checks below need it)", distinct, teams.join(","));
+  ok("hot: a row shows minutes, what they were before, and the stat per 36",
+     /26\.6 min \(was 33\.3\) · 44\.1 per 36/.test(subs[0]), subs[0]);
+  ok("  and who he plays next, home or away, with the time",
+     /Next: vs OPP · 8:00 PM ET/.test(subs[0]), subs[0]);
+  ok("hot: one earlier game is not a baseline: minutes with no 'was'",
+     /31\.0 min · 22\.5 per 36/.test(subs[1]) && !/was/.test(subs[1]), subs[1]);
+  ok("  and a game that has started is not his next game", !/Next:/.test(subs[1]), subs[1]);
+  ok("hot: a game with no start instant is still named (away side: '@')",
+     /Next: @ UND · 9:00 PM ET/.test(subs[2]), subs[2]);
+  ok("hot: a row with neither says nothing, and nothing unreadable is printed",
+     (teams[3] === teams[0] || teams[3] === teams[2] || subs[3] === "") &&
+     !/NaN|undefined|null/.test(subs.join(" ")), subs[3]);
+  await p.click('#app .player-row[data-rank="1"]');
+  await p.waitForSelector(".identity-row");
+  const ident = await p.$eval(".identity-sub", (x) => x.textContent);
+  ok("hot: the player page names the next game too", /Next: vs OPP · 8:00 PM ET/.test(ident), ident);
+  const detail = await p.$eval(".pcat-list", (x) => x.textContent.replace(/\s+/g, " "));
+  ok("  and carries his minutes, the earlier minutes and the per-36 rate",
+     /Minutes per [A-Za-z]+ ?26\.6/.test(detail) && /Minutes, 3 [a-z]+ before ?33\.3/.test(detail) &&
+     /Per 36 minutes ?44\.1/.test(detail), detail.slice(0, 400));
+  ok("  with the minutes of each game under its bar", /20m/.test(detail) && /21m/.test(detail), detail.slice(0, 400));
+  ok("hot context: no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
+  await p.close();
+}
+
 // -------------------------------------------------------------------- router
 async function routerChecks(browser, base) {
 
@@ -1654,6 +1720,7 @@ const GROUPS = [
   ["game-only-league", gameOnlyLeagueChecks],
   ["router", routerChecks],
   ["bets", betsChecks],
+  ["hot context", hotContextChecks],
   ["safe-area", safeAreaChecks],
   ["standalone", standaloneChecks],
 ];

@@ -544,6 +544,11 @@ SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summ
 # missed game of slack for the least-scheduled club at 117 requests a run.
 LEADERBOARD_WINDOW_GAMES = 5
 LEADERBOARD_LOOKBACK_DAYS = 16
+# Earlier games needed before "his minutes before this window" is stated. Two
+# is a convention, not a measurement: it only says one game is not a baseline.
+# In the 16 days to 2026-11-10, 236 of 445 players have two or more games
+# outside their last five.
+MIN_PRIOR_GAMES = 2
 
 
 def parse_stat_line(keys, stats):
@@ -656,7 +661,29 @@ def aggregate_category(by_player, cat_cfg, default_window):
     A field missing from an appearance RAISES. Every played row in the
     captured feed carries every field, so a gap means ESPN changed the box
     score, and averaging around it would publish a wrong number that looks
-    like a cold night."""
+    like a cold night.
+
+    MINUTES RIDE ALONG (2026-11-12), as `usage` on the record and `min` on
+    each series entry. A per-game average hides the thing that moves it most:
+    how long the man is on the floor. Published projection practice is
+    per-minute production times projected minutes, with minutes the input
+    that matters most, and a recent average read as a forecast is the error
+    that practice exists to avoid. So each row says:
+
+      minutes        his minutes a game over the same window
+      per36          the board's stat per 36 minutes over it (total stat over
+                     total minutes, never an average of per-game rates, which
+                     a 3-minute cameo would dominate)
+      prev_minutes   his minutes a game in the EARLIER games of the lookback,
+                     the ones just outside the window -- so a role that grew
+                     or shrank is visible as two numbers. None unless there
+                     are at least MIN_PRIOR_GAMES of them: one game is not a
+                     baseline.
+      prev_games     how many earlier games that is
+
+    No threshold decides what counts as a "role change". The two numbers are
+    shown and the reader judges; a cut-off would be a constant nobody
+    measured."""
     fields = cat_cfg["fields"]
     window_games = cat_cfg.get("window_games", default_window)
     min_games = cat_cfg.get("min_games", 1)
@@ -678,6 +705,20 @@ def aggregate_category(by_player, cat_cfg, default_window):
         if total <= 0:
             continue
         latest = window[-1]
+        short = [a for a in window if "minutes" not in a["stats"]]
+        if short:
+            raise ValueError("NBA box score for {} on {} has no minutes".format(
+                short[0]["name"], short[0]["date"]))
+        mins = [a["stats"]["minutes"] for a in window]
+        prior = [a["stats"]["minutes"] for a in appearances[:-window_games]
+                 if "minutes" in a["stats"]]
+        usage = {
+            "minutes": round(sum(mins) / len(mins), 1),
+            "per36": round(36.0 * total / sum(mins), 1) if sum(mins) > 0 else None,
+            "prev_minutes": (round(sum(prior) / len(prior), 1)
+                             if len(prior) >= MIN_PRIOR_GAMES else None),
+            "prev_games": len(prior),
+        }
         records.append({
             "entity": latest["name"],
             "entity_id": player_id,
@@ -690,7 +731,9 @@ def aggregate_category(by_player, cat_cfg, default_window):
             "tiebreak": None,
             "games_window": len(window),
             "last_game_date": latest["date"],
-            "series": [{"date": a["date"], "value": v} for a, v in zip(window, per_match)],
+            "series": [{"date": a["date"], "value": v, "min": a["stats"]["minutes"]}
+                       for a, v in zip(window, per_match)],
+            "usage": usage,
         })
     return records
 

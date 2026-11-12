@@ -312,6 +312,11 @@ body {
    the list, so a trailing rule would draw a line to nowhere. */
 .board li:not(:last-child) .player-row { border-bottom: 1px solid var(--hairline); }
 .row-top { display: flex; align-items: center; gap: 10px; }
+/* Minutes and the next opponent, under the name (app.js usageText, nextGameText).
+   Indented to the name's left edge: the rank column is 22px plus the 10px gap. */
+.row-sub { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 4px 0 0 32px; text-align: left;
+  font: 500 11px var(--font-body); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.identity-next { display: block; margin-top: 3px; color: rgba(255, 255, 255, 0.6); }
 .row-rank { font: 500 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--text-tertiary); width: 22px; flex: none; }
 .row-name { font: 600 15px var(--font-body); color: var(--text); letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .heat-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--heat); box-shadow: 0 0 6px rgba(255, 120, 40, 0.75); }

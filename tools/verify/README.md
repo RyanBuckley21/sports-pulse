@@ -801,7 +801,8 @@ enforced a second time elsewhere, which the docstring records.
 python3 -m tools.verify.test_nba_leaderboards # from the repo root
 ```
 
-**`test_nba_leaderboards`** (added 2026-11-11, 49 checks) pins NBA's Who's Hot
+**`test_nba_leaderboards`** (added 2026-11-11; 58 checks since 2026-11-12, when
+nine pin the minutes context on each row, sabotaged six ways) pins NBA's Who's Hot
 boards: `fetchers.nba.fetch` and the box-score reading under it. Every failure
 it guards still renders ten names with plausible numbers:
 
@@ -824,6 +825,15 @@ and trimmed to the fields read. Three edges were never observed and are made
 by editing one field of a real row in a copy (preseason, a postponed shell, a
 blank stat). Sabotage-checked 16 ways, each failing 1 to 12 checks; the table,
 including one cut that is guarded twice, is in the suite's docstring.
+
+**Who's Hot context (2026-11-12, 11 browser checks, group `hot context`).**
+The fixture's sport carries neither minutes nor a slate for its leaders, so
+both are set on its own top rows in a copy. Pinned: a row shows minutes, the
+earlier minutes and the per-36 rate; with one earlier game there is no "was";
+the next game is named home ("vs") or away ("@") with its time; a game that
+has started is not next; a game with no start instant still is; the player
+page repeats the next game and lists the minutes lines, with each game's
+minutes under its bar. Sabotaged six ways in `app.js`, each failing 1 to 3.
 
 ## What it cannot cover
 

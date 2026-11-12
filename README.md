@@ -268,7 +268,10 @@ ESPN's box score for every regular-season game in the 16 days up to the last
 day the league played (about 117 requests a run, 8 seconds), so the boards
 stay whole over the All-Star break and say how old they are. Playoff games
 are not counted yet. `fetchers.nba.fetch`, pinned by `test_nba_leaderboards`
-on 117 real box scores.
+on 117 real box scores. Since 2026-11-12 each row also shows his **minutes** a
+game, what they were in the games just before, and the stat **per 36
+minutes**, and every Who's Hot row (any sport) names the player's **next
+game** from the slate: opponent, home or away, and when.
 
 **NBA picks are accurate and unproven.** On the held-out 2025-26 season the
 NBA lean named a side in 43% of games and was right 77.9% of the time, against

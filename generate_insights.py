@@ -1091,6 +1091,10 @@ def _build_games_section(entities, text_map):
             "away": ent.get("away"),
             "home": ent.get("home"),
             "start": ent.get("start"),
+            # The start as an instant (slate_clock.utc_iso). Who's Hot reads it
+            # to say who a player faces next and to stop saying it once the
+            # game has started; None from a builder or a frozen store without one.
+            "start_utc": ent.get("start_utc"),
             "venue": ent.get("venue"),
             "probables": ent.get("probables"),
             "pulse": ent.get("pulse"),
