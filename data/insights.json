@@ -13,7 +13,7 @@
   "anthony davis|wsh": {
     "entity": "Anthony Davis",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-11",
+    "last_game_date": "2026-11-12",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -43,6 +43,17 @@
     "team": "HOU",
     "template_version": "v2"
   },
+  "cade cunningham|det": {
+    "entity": "Cade Cunningham",
+    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+    "last_game_date": "2026-11-12",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DET",
+    "template_version": "v2"
+  },
   "caleb williams|chi": {
     "entity": "Caleb Williams",
     "generated_at": "2026-11-09T20:31:06.810662+00:00",
@@ -52,6 +63,17 @@
     "summary": null,
     "takeaways": [],
     "team": "CHI",
+    "template_version": "v2"
+  },
+  "ceedee lamb|dal": {
+    "entity": "CeeDee Lamb",
+    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+    "last_game_date": "2026-11-08",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DAL",
     "template_version": "v2"
   },
   "christian mccaffrey|sf": {
@@ -98,17 +120,6 @@
     "team": "MIA",
     "template_version": "v2"
   },
-  "day'ron sharpe|bkn": {
-    "entity": "Day'Ron Sharpe",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-11",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "BKN",
-    "template_version": "v2"
-  },
   "donovan clingan|por": {
     "entity": "Donovan Clingan",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -153,17 +164,6 @@
     "team": "MIA",
     "template_version": "v2"
   },
-  "isaiah likely|nyg": {
-    "entity": "Isaiah Likely",
-    "generated_at": "2026-11-10T17:33:12.737133+00:00",
-    "last_game_date": "2026-11-08",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "NYG",
-    "template_version": "v2"
-  },
   "ja'marr chase|cin": {
     "entity": "Ja'Marr Chase",
     "generated_at": "2026-11-09T20:31:06.810662+00:00",
@@ -189,7 +189,7 @@
   "jamal shead|tor": {
     "entity": "Jamal Shead",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-11",
+    "last_game_date": "2026-11-12",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -263,17 +263,6 @@
     "team": "GB",
     "template_version": "v2"
   },
-  "josh giddey|chi": {
-    "entity": "Josh Giddey",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-11",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "CHI",
-    "template_version": "v2"
-  },
   "karl-anthony towns|ny": {
     "entity": "Karl-Anthony Towns",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -318,17 +307,6 @@
     "team": "LAL",
     "template_version": "v2"
   },
-  "malik nabers|nyg": {
-    "entity": "Malik Nabers",
-    "generated_at": "2026-10-19T16:51:34.511836+00:00",
-    "last_game_date": "2026-11-08",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "NYG",
-    "template_version": "v2"
-  },
   "matisse thybulle|lal": {
     "entity": "Matisse Thybulle",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -338,6 +316,17 @@
     "summary": null,
     "takeaways": [],
     "team": "LAL",
+    "template_version": "v2"
+  },
+  "mo bamba|utah": {
+    "entity": "Mo Bamba",
+    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+    "last_game_date": "2026-11-11",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "UTAH",
     "template_version": "v2"
   },
   "myles turner|mil": {
@@ -384,17 +373,6 @@
     "team": "LA",
     "template_version": "v2"
   },
-  "rudy gobert|min": {
-    "entity": "Rudy Gobert",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-08",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "MIN",
-    "template_version": "v2"
-  },
   "shai gilgeous-alexander|okc": {
     "entity": "Shai Gilgeous-Alexander",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -417,6 +395,17 @@
     "team": "CIN",
     "template_version": "v2"
   },
+  "tony pollard|ten": {
+    "entity": "Tony Pollard",
+    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+    "last_game_date": "2026-11-01",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "TEN",
+    "template_version": "v2"
+  },
   "trevor lawrence|jax": {
     "entity": "Trevor Lawrence",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -437,6 +426,17 @@
     "summary": null,
     "takeaways": [],
     "team": "SA",
+    "template_version": "v2"
+  },
+  "vj edgecombe|phi": {
+    "entity": "VJ Edgecombe",
+    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+    "last_game_date": "2026-11-12",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "PHI",
     "template_version": "v2"
   }
 }
