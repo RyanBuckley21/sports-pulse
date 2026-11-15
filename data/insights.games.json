@@ -1,735 +1,5 @@
 {
   "cfb": {
-    "401856857": {
-      "away": {
-        "abbr": "ASU",
-        "color": "#FFC627",
-        "name": "Arizona State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 24,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UCF",
-        "color": "#8C8C8C",
-        "name": "UCF"
-      },
-      "odds": {
-        "away_ml": 145,
-        "away_ml_open": 120,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UCF -3.5",
-        "home_ml": -175,
-        "home_ml_open": -142,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -3.5,
-        "spread_close": -3.5,
-        "spread_open": -2.5,
-        "total": 46.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UCF Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.10"
-        },
-        {
-          "label": "UCF Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.09"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "FBC Mortgage Stadium",
-      "win_prob": null
-    },
-    "401856858": {
-      "away": {
-        "abbr": "BAY",
-        "color": "#6BAD94",
-        "name": "Baylor"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 21,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "BYU",
-        "color": "#3B77DE",
-        "name": "BYU"
-      },
-      "odds": {
-        "away_ml": 250,
-        "away_ml_open": 245,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "BYU -8.5",
-        "home_ml": -310,
-        "home_ml_open": -305,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -8.5,
-        "spread_close": -8.5,
-        "spread_open": -7.5,
-        "total": 50.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "BYU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.16"
-        },
-        {
-          "label": "BYU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.06"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "LaVell Edwards Stadium",
-      "win_prob": null
-    },
-    "401856859": {
-      "away": {
-        "abbr": "CIN",
-        "color": "#8C8C8C",
-        "name": "Cincinnati"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 24,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "ISU",
-        "color": "#DE3A55",
-        "name": "Iowa State"
-      },
-      "odds": {
-        "away_ml": 110,
-        "away_ml_open": -105,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "ISU -2.5",
-        "home_ml": -130,
-        "home_ml_open": -115,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -2.5,
-        "spread_close": -2.5,
-        "spread_open": -1.5,
-        "total": 57.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "CIN Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.16"
-        },
-        {
-          "label": "ISU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.16"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Jack Trice Stadium",
-      "win_prob": null
-    },
-    "401856861": {
-      "away": {
-        "abbr": "KU",
-        "color": "#3581E4",
-        "name": "Kansas"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 11,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "WVU",
-        "color": "#F2BA27",
-        "name": "West Virginia"
-      },
-      "odds": {
-        "away_ml": 105,
-        "away_ml_open": 114,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "WVU -1.5",
-        "home_ml": -125,
-        "home_ml_open": -135,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -1.5,
-        "spread_close": -1.5,
-        "spread_open": -2.5,
-        "total": 68.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "WVU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.17"
-        },
-        {
-          "label": "WVU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.24"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 5:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Milan Puskar Stadium",
-      "win_prob": null
-    },
-    "401856862": {
-      "away": {
-        "abbr": "KSU",
-        "color": "#865EBB",
-        "name": "Kansas State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 14,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "TCU",
-        "color": "#905ABE",
-        "name": "TCU"
-      },
-      "odds": {
-        "away_ml": 400,
-        "away_ml_open": 275,
-        "captured_at": "2026-11-14T18:50:43Z",
-        "details": "TCU -14",
-        "home_ml": -535,
-        "home_ml_open": -345,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -14.0,
-        "spread_close": -14.0,
-        "spread_open": -9.5,
-        "total": 44.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "KSU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.10"
-        },
-        {
-          "label": "KSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.17"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 2:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Amon G. Carter Stadium",
-      "win_prob": null
-    },
-    "401856863": {
-      "away": {
-        "abbr": "TTU",
-        "color": "#E73250",
-        "name": "Texas Tech"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 5,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "OKST",
-        "color": "#F76F21",
-        "name": "Oklahoma State"
-      },
-      "odds": {
-        "away_ml": 142,
-        "away_ml_open": -625,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "OKST -3.5",
-        "home_ml": -170,
-        "home_ml_open": 455,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -3.5,
-        "spread_close": -3.5,
-        "spread_open": 15.5,
-        "total": 73.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "OKST Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.21"
-        },
-        {
-          "label": "OKST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.11"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 9:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Boone Pickens Stadium",
-      "win_prob": null
-    },
-    "401856864": {
-      "away": {
-        "abbr": "UTAH",
-        "color": "#E53333",
-        "name": "Utah"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 11,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "ARIZ",
-        "color": "#E92F5E",
-        "name": "Arizona"
-      },
-      "odds": {
-        "away_ml": -112,
-        "away_ml_open": -118,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UTAH -1.5",
-        "home_ml": -108,
-        "home_ml_open": -102,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 1.5,
-        "spread_close": 1.5,
-        "spread_open": 1.5,
-        "total": 55.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ARIZ Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.19"
-        },
-        {
-          "label": "ARIZ Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.06"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Arizona Stadium",
-      "win_prob": null
-    },
-    "401856882": {
-      "away": {
-        "abbr": "SC",
-        "color": "#D04955",
-        "name": "South Carolina"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 46,
-          "side": "SC"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "ARK",
-        "color": "#C85064",
-        "name": "Arkansas"
-      },
-      "odds": {
-        "away_ml": -325,
-        "away_ml_open": -340,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "SC -7.5",
-        "home_ml": 260,
-        "home_ml_open": 270,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 7.5,
-        "spread_close": 7.5,
-        "spread_open": 8.5,
-        "total": 51.5
-      },
-      "odds_first_seen": {
-        "away_ml": -310,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 250,
-        "side": "SC"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "SC Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.21"
-        },
-        {
-          "label": "ARK Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.14"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 46,
-        "side": "SC"
-      },
-      "start": "Sat Nov 14 \u00b7 7:45 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Razorback Stadium",
-      "win_prob": null
-    },
-    "401856883": {
-      "away": {
-        "abbr": "MIZ",
-        "color": "#F1B82D",
-        "name": "Missouri"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 46,
-          "side": "UGA"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UGA",
-        "color": "#DC3C5C",
-        "name": "Georgia"
-      },
-      "odds": {
-        "away_ml": 550,
-        "away_ml_open": 360,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UGA -16.5",
-        "home_ml": -800,
-        "home_ml_open": -470,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -16.5,
-        "spread_close": -16.5,
-        "spread_open": -12.5,
-        "total": 48.5
-      },
-      "odds_first_seen": {
-        "away_ml": 500,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -700,
-        "side": "UGA"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UGA Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.23"
-        },
-        {
-          "label": "MIZ Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.06"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 46,
-        "side": "UGA"
-      },
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Sanford Stadium",
-      "win_prob": null
-    },
-    "401856884": {
-      "away": {
-        "abbr": "FLA",
-        "color": "#3B5BDE",
-        "name": "Florida"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 27,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UK",
-        "color": "#3C6FDC",
-        "name": "Kentucky"
-      },
-      "odds": {
-        "away_ml": 130,
-        "away_ml_open": 100,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UK -3",
-        "home_ml": -155,
-        "home_ml_open": -120,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -3.0,
-        "spread_close": -3.0,
-        "spread_open": -1.5,
-        "total": 52.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UK Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.18"
-        },
-        {
-          "label": "FLA Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.10"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 6:15 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Kroger Field",
-      "win_prob": null
-    },
-    "401856885": {
-      "away": {
-        "abbr": "TEX",
-        "color": "#E58433",
-        "name": "Texas"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 30,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "LSU",
-        "color": "#865CBD",
-        "name": "LSU"
-      },
-      "odds": {
-        "away_ml": 170,
-        "away_ml_open": -155,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "LSU -4.5",
-        "home_ml": -205,
-        "home_ml_open": 130,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -4.5,
-        "spread_close": -4.5,
-        "spread_open": 3.0,
-        "total": 46.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "LSU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.21"
-        },
-        {
-          "label": "LSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.01"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Tiger Stadium (LA)",
-      "win_prob": null
-    },
-    "401856886": {
-      "away": {
-        "abbr": "AUB",
-        "color": "#6688B3",
-        "name": "Auburn"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 22,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MSST",
-        "color": "#B56374",
-        "name": "Mississippi State"
-      },
-      "odds": {
-        "away_ml": -142,
-        "away_ml_open": -148,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "AUB -2.5",
-        "home_ml": 120,
-        "home_ml_open": 124,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 2.5,
-        "spread_close": 2.5,
-        "spread_open": 3.5,
-        "total": 51.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "AUB Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.13"
-        },
-        {
-          "label": "MSST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Davis Wade Stadium",
-      "win_prob": null
-    },
     "401856887": {
       "away": {
         "abbr": "MISS",
@@ -751,18 +21,18 @@
         "name": "Oklahoma"
       },
       "odds": {
-        "away_ml": -108,
+        "away_ml": 114,
         "away_ml_open": 154,
-        "captured_at": "2026-11-13T21:35:31Z",
-        "details": "OU -1.5",
-        "home_ml": -112,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "OU -2.5",
+        "home_ml": -135,
         "home_ml_open": -185,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": -1.5,
-        "spread_close": -1.5,
+        "spread": -2.5,
+        "spread_close": -2.5,
         "spread_open": -4.0,
-        "total": 49.5
+        "total": 48.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -779,2755 +49,14 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
-      "start": "Sat Nov 14 \u00b7 4:15 PM ET",
+      "start": "Sun Nov 15 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
       "venue": "Memorial Stadium (Norman, OK)",
-      "win_prob": null
-    },
-    "401856888": {
-      "away": {
-        "abbr": "TENN",
-        "color": "#F88E21",
-        "name": "Tennessee"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 69,
-          "side": "TENN"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "TA&M",
-        "color": "#C65353",
-        "name": "Texas A&M"
-      },
-      "odds": {
-        "away_ml": -115,
-        "away_ml_open": 280,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "TENN -1.5",
-        "home_ml": -105,
-        "home_ml_open": -355,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 1.5,
-        "spread_close": 1.5,
-        "spread_open": -9.5,
-        "total": 44.5
-      },
-      "odds_first_seen": {
-        "away_ml": -135,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 114,
-        "side": "TENN"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "TENN Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.15"
-        },
-        {
-          "label": "TA&M Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.06"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 69,
-        "side": "TENN"
-      },
-      "start": "Sat Nov 14 \u00b7 3:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Kyle Field",
-      "win_prob": null
-    },
-    "401856889": {
-      "away": {
-        "abbr": "ALA",
-        "color": "#CA4E64",
-        "name": "Alabama"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 93,
-          "side": "ALA"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "VAN",
-        "color": "#8C8C8C",
-        "name": "Vanderbilt"
-      },
-      "odds": {
-        "away_ml": -700,
-        "away_ml_open": -1350,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "ALA -14",
-        "home_ml": 500,
-        "home_ml_open": 800,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 14.0,
-        "spread_close": 14.0,
-        "spread_open": 19.5,
-        "total": 48.5
-      },
-      "odds_first_seen": {
-        "away_ml": -850,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 575,
-        "side": "ALA"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ALA Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.23"
-        },
-        {
-          "label": "VAN Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.13"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 93,
-        "side": "ALA"
-      },
-      "start": "Sat Nov 14 \u00b7 12:45 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "FirstBank Stadium",
-      "win_prob": null
-    },
-    "401858294": {
-      "away": {
-        "abbr": "BC",
-        "color": "#C05968",
-        "name": "Boston College"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 83,
-          "side": "ND"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "ND",
-        "color": "#6688B3",
-        "name": "Notre Dame"
-      },
-      "odds": {
-        "away_ml": 1800,
-        "away_ml_open": 3000,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "ND -29.5",
-        "home_ml": -5000,
-        "home_ml_open": -10000,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -29.5,
-        "spread_close": -29.5,
-        "spread_open": -31.5,
-        "total": 51.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ND Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.27"
-        },
-        {
-          "label": "BC Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.08"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Notre Dame Stadium",
-      "win_prob": null
-    },
-    "401858295": {
-      "away": {
-        "abbr": "CAL",
-        "color": "#5C84BC",
-        "name": "California"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 58,
-          "side": "UVA"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UVA",
-        "color": "#7480A4",
-        "name": "Virginia"
-      },
-      "odds": {
-        "away_ml": 360,
-        "away_ml_open": 380,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UVA -11.5",
-        "home_ml": -470,
-        "home_ml_open": -500,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -11.5,
-        "spread_close": -11.5,
-        "spread_open": -12.5,
-        "total": 46.5
-      },
-      "odds_first_seen": {
-        "away_ml": 320,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -410,
-        "side": "UVA"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UVA Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.07"
-        },
-        {
-          "label": "CAL Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.18"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 58,
-        "side": "UVA"
-      },
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Scott Stadium",
-      "win_prob": null
-    },
-    "401858296": {
-      "away": {
-        "abbr": "DUKE",
-        "color": "#3D92DB",
-        "name": "Duke"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 18,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MIA",
-        "color": "#F37525",
-        "name": "Miami"
-      },
-      "odds": {
-        "away_ml": 440,
-        "away_ml_open": 950,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "MIA -14",
-        "home_ml": -600,
-        "home_ml_open": -1650,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -14.0,
-        "spread_close": -14.0,
-        "spread_open": -20.5,
-        "total": 55.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "MIA Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.26"
-        },
-        {
-          "label": "MIA Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.09"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Hard Rock Stadium",
-      "win_prob": null
-    },
-    "401858297": {
-      "away": {
-        "abbr": "GT",
-        "color": "#B3A369",
-        "name": "Georgia Tech"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 10,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "CLEM",
-        "color": "#F57B24",
-        "name": "Clemson"
-      },
-      "odds": {
-        "away_ml": 490,
-        "away_ml_open": 425,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "CLEM -15.5",
-        "home_ml": -675,
-        "home_ml_open": -575,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -15.5,
-        "spread_close": -15.5,
-        "spread_open": -13.5,
-        "total": 47.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "GT Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.10"
-        },
-        {
-          "label": "GT Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.19"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Memorial Stadium (Clemson, SC)",
-      "win_prob": null
-    },
-    "401858298": {
-      "away": {
-        "abbr": "LOU",
-        "color": "#E8304D",
-        "name": "Louisville"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 53,
-          "side": "LOU"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UNC",
-        "color": "#7BAFD4",
-        "name": "North Carolina"
-      },
-      "odds": {
-        "away_ml": -175,
-        "away_ml_open": -135,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "LOU -3.5",
-        "home_ml": 145,
-        "home_ml_open": 114,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 3.5,
-        "spread_close": 3.5,
-        "spread_open": 2.5,
-        "total": 57.5
-      },
-      "odds_first_seen": {
-        "away_ml": -170,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 142,
-        "side": "LOU"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "LOU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.22"
-        },
-        {
-          "label": "UNC Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.08"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 53,
-        "side": "LOU"
-      },
-      "start": "Sat Nov 14 \u00b7 7:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Kenan Stadium",
-      "win_prob": null
-    },
-    "401858299": {
-      "away": {
-        "abbr": "STAN",
-        "color": "#C85151",
-        "name": "Stanford"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 53,
-          "side": "VT"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "VT",
-        "color": "#BF597B",
-        "name": "Virginia Tech"
-      },
-      "odds": {
-        "away_ml": 575,
-        "away_ml_open": 600,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "VT -17.5",
-        "home_ml": -850,
-        "home_ml_open": -900,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -17.5,
-        "spread_close": -17.5,
-        "spread_open": -16.5,
-        "total": 57.5
-      },
-      "odds_first_seen": {
-        "away_ml": 500,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -700,
-        "side": "VT"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "VT Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.15"
-        },
-        {
-          "label": "STAN Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.25"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 53,
-        "side": "VT"
-      },
-      "start": "Sat Nov 14 \u00b7 7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Lane Stadium",
-      "win_prob": null
-    },
-    "401858300": {
-      "away": {
-        "abbr": "SYR",
-        "color": "#F57C23",
-        "name": "Syracuse"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 14,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "NCSU",
-        "color": "#E92F2F",
-        "name": "NC State"
-      },
-      "odds": {
-        "away_ml": -142,
-        "away_ml_open": -118,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "SYR -3",
-        "home_ml": 120,
-        "home_ml_open": -102,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 3.0,
-        "spread_close": 3.0,
-        "spread_open": 1.5,
-        "total": 54.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "NCSU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.09"
-        },
-        {
-          "label": "NCSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.18"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Carter-Finley Stadium",
-      "win_prob": null
-    },
-    "401858301": {
-      "away": {
-        "abbr": "WAKE",
-        "color": "#CEB888",
-        "name": "Wake Forest"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 67,
-          "side": "WAKE"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "SMU",
-        "color": "#EC2C2C",
-        "name": "SMU"
-      },
-      "odds": {
-        "away_ml": 110,
-        "away_ml_open": -162,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "SMU -2.5",
-        "home_ml": -130,
-        "home_ml_open": 136,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -2.5,
-        "spread_close": -2.5,
-        "spread_open": 3.5,
-        "total": 60.5
-      },
-      "odds_first_seen": {
-        "away_ml": -115,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -105,
-        "side": "WAKE"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "WAKE Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.25"
-        },
-        {
-          "label": "SMU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.14"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 67,
-        "side": "WAKE"
-      },
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Gerald J. Ford Stadium",
-      "win_prob": null
-    },
-    "401858518": {
-      "away": {
-        "abbr": "USC",
-        "color": "#DA3E3E",
-        "name": "USC"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 21,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "IU",
-        "color": "#DA3E3E",
-        "name": "Indiana"
-      },
-      "odds": {
-        "away_ml": 270,
-        "away_ml_open": 320,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "IU -9.5",
-        "home_ml": -340,
-        "home_ml_open": -410,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -9.5,
-        "spread_close": -9.5,
-        "spread_open": -10.5,
-        "total": 51.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "USC Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.25"
-        },
-        {
-          "label": "USC Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.11"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Memorial Stadium (Bloomington, IN)",
-      "win_prob": null
-    },
-    "401858519": {
-      "away": {
-        "abbr": "PUR",
-        "color": "#CEB888",
-        "name": "Purdue"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 4,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "IOWA",
-        "color": "#8C8C8C",
-        "name": "Iowa"
-      },
-      "odds": {
-        "away_ml": 650,
-        "away_ml_open": 455,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "IOWA -17.5",
-        "home_ml": -1000,
-        "home_ml_open": -625,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -17.5,
-        "spread_close": -17.5,
-        "spread_open": -16.5,
-        "total": 47.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "PUR Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "PUR Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.20"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Kinnick Stadium",
-      "win_prob": null
-    },
-    "401858520": {
-      "away": {
-        "abbr": "WIS",
-        "color": "#DC3C3C",
-        "name": "Wisconsin"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 64,
-          "side": "WIS"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MD",
-        "color": "#E0394B",
-        "name": "Maryland"
-      },
-      "odds": {
-        "away_ml": -325,
-        "away_ml_open": -270,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "WIS -8.5",
-        "home_ml": 260,
-        "home_ml_open": 220,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 8.5,
-        "spread_close": 8.5,
-        "spread_open": 7.5,
-        "total": 40.5
-      },
-      "odds_first_seen": {
-        "away_ml": -325,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 260,
-        "side": "WIS"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "WIS Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.11"
-        },
-        {
-          "label": "MD Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.14"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 64,
-        "side": "WIS"
-      },
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "SECU Stadium",
-      "win_prob": null
-    },
-    "401858521": {
-      "away": {
-        "abbr": "WASH",
-        "color": "#874ACE",
-        "name": "Washington"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 40,
-          "side": "WASH"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MSU",
-        "color": "#71A89A",
-        "name": "Michigan State"
-      },
-      "odds": {
-        "away_ml": -135,
-        "away_ml_open": -155,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "WASH -2.5",
-        "home_ml": 114,
-        "home_ml_open": 130,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 2.5,
-        "spread_close": 2.5,
-        "spread_open": 3.5,
-        "total": 44.5
-      },
-      "odds_first_seen": {
-        "away_ml": -170,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 142,
-        "side": "WASH"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "WASH Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.11"
-        },
-        {
-          "label": "MSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.11"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 40,
-        "side": "WASH"
-      },
-      "start": "Sat Nov 14 \u00b7 4:15 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Spartan Stadium",
-      "win_prob": null
-    },
-    "401858522": {
-      "away": {
-        "abbr": "NU",
-        "color": "#8D62B6",
-        "name": "Northwestern"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 8,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "OSU",
-        "color": "#DC3C5C",
-        "name": "Ohio State"
-      },
-      "odds": {
-        "away_ml": 440,
-        "away_ml_open": 295,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "OSU -14",
-        "home_ml": -600,
-        "home_ml_open": -375,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -14.0,
-        "spread_close": -14.0,
-        "spread_open": -9.5,
-        "total": 45.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "NU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.21"
-        },
-        {
-          "label": "NU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.06"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Ohio Stadium",
-      "win_prob": null
-    },
-    "401858523": {
-      "away": {
-        "abbr": "MICH",
-        "color": "#548EC4",
-        "name": "Michigan"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 19,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "ORE",
-        "color": "#4ACF83",
-        "name": "Oregon"
-      },
-      "odds": {
-        "away_ml": 310,
-        "away_ml_open": 425,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "ORE -10",
-        "home_ml": -395,
-        "home_ml_open": -575,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -10.0,
-        "spread_close": -10.0,
-        "spread_open": -13.5,
-        "total": 39.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ORE Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.13"
-        },
-        {
-          "label": "ORE Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.01"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Autzen Stadium",
-      "win_prob": null
-    },
-    "401858524": {
-      "away": {
-        "abbr": "MINN",
-        "color": "#D24763",
-        "name": "Minnesota"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 35,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "PSU",
-        "color": "#5686C2",
-        "name": "Penn State"
-      },
-      "odds": {
-        "away_ml": 380,
-        "away_ml_open": 220,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "PSU -12.5",
-        "home_ml": -500,
-        "home_ml_open": -270,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -12.5,
-        "spread_close": -12.5,
-        "spread_open": -7.0,
-        "total": 42.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "PSU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "PSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.07"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Beaver Stadium",
-      "win_prob": null
-    },
-    "401858525": {
-      "away": {
-        "abbr": "NEB",
-        "color": "#EA2E2E",
-        "name": "Nebraska"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 69,
-          "side": "NEB"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "RUTG",
-        "color": "#E13753",
-        "name": "Rutgers"
-      },
-      "odds": {
-        "away_ml": -700,
-        "away_ml_open": -535,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "NEB -15.5",
-        "home_ml": 500,
-        "home_ml_open": 400,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 15.5,
-        "spread_close": 15.5,
-        "spread_open": 12.5,
-        "total": 51.5
-      },
-      "odds_first_seen": {
-        "away_ml": -550,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 410,
-        "side": "NEB"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "NEB Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.16"
-        },
-        {
-          "label": "RUTG Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.24"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 69,
-        "side": "NEB"
-      },
-      "start": "Sat Nov 14 \u00b7 12:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "SHI Stadium",
-      "win_prob": null
-    },
-    "401860914": {
-      "away": {
-        "abbr": "ORST",
-        "color": "#EB652E",
-        "name": "Oregon State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 36,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "BOIS",
-        "color": "#3C6FDC",
-        "name": "Boise State"
-      },
-      "odds": {
-        "away_ml": 500,
-        "away_ml_open": 150,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "BOIS -16.5",
-        "home_ml": -700,
-        "home_ml_open": -180,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -16.5,
-        "spread_close": -16.5,
-        "spread_open": -4.5,
-        "total": 64.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "BOIS Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.29"
-        },
-        {
-          "label": "BOIS Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 6:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Albertsons Stadium",
-      "win_prob": null
-    },
-    "401860915": {
-      "away": {
-        "abbr": "USU",
-        "color": "#6C8CAC",
-        "name": "Utah State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 37,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "SDSU",
-        "color": "#CE4A5E",
-        "name": "San Diego State"
-      },
-      "odds": {
-        "away_ml": -148,
-        "away_ml_open": -130,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "USU -3",
-        "home_ml": 124,
-        "home_ml_open": 110,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 3.0,
-        "spread_close": 3.0,
-        "spread_open": 2.5,
-        "total": 43.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "USU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.05"
-        },
-        {
-          "label": "SDSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 9:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Snapdragon Stadium",
-      "win_prob": null
-    },
-    "401860916": {
-      "away": {
-        "abbr": "FRES",
-        "color": "#DC3D57",
-        "name": "Fresno State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 10,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "TXST",
-        "color": "#B46567",
-        "name": "Texas State"
-      },
-      "odds": {
-        "away_ml": 295,
-        "away_ml_open": 240,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "TXST -10",
-        "home_ml": -375,
-        "home_ml_open": -298,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -10.0,
-        "spread_close": -10.0,
-        "spread_open": -7.0,
-        "total": 60.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "TXST Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.20"
-        },
-        {
-          "label": "TXST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 4:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Bobcat Stadium (TX)",
-      "win_prob": null
-    },
-    "401860917": {
-      "away": {
-        "abbr": "CSU",
-        "color": "#70A97F",
-        "name": "Colorado State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 22,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "WSU",
-        "color": "#D44461",
-        "name": "Washington State"
-      },
-      "odds": {
-        "away_ml": 260,
-        "away_ml_open": 170,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "WSU -8.5",
-        "home_ml": -325,
-        "home_ml_open": -205,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -8.5,
-        "spread_close": -8.5,
-        "spread_open": -6.5,
-        "total": 64.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "CSU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.18"
-        },
-        {
-          "label": "CSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.29"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 10:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Gesa Field",
-      "win_prob": null
-    },
-    "401861967": {
-      "away": {
-        "abbr": "JMU",
-        "color": "#9044D4",
-        "name": "James Madison"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 46,
-          "side": "JMU"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "CONN",
-        "color": "#5C79BC",
-        "name": "UConn"
-      },
-      "odds": {
-        "away_ml": -198,
-        "away_ml_open": -118,
-        "captured_at": "2026-11-14T16:27:15Z",
-        "details": "JMU -4.5",
-        "home_ml": 164,
-        "home_ml_open": -102,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 4.5,
-        "spread_close": 4.5,
-        "spread_open": 1.5,
-        "total": 56.5
-      },
-      "odds_first_seen": {
-        "away_ml": -192,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 160,
-        "side": "JMU"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "JMU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.17"
-        },
-        {
-          "label": "CONN Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.14"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 46,
-        "side": "JMU"
-      },
-      "start": "Sat Nov 14 \u00b7 12:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Pratt & Whitney Stadium",
-      "win_prob": null
-    },
-    "401862825": {
-      "away": {
-        "abbr": "ECU",
-        "color": "#8B5EBA",
-        "name": "East Carolina"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 61,
-          "side": "ECU"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "CLT",
-        "color": "#53C69F",
-        "name": "Charlotte"
-      },
-      "odds": {
-        "away_ml": -410,
-        "away_ml_open": -600,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "ECU -10.5",
-        "home_ml": 320,
-        "home_ml_open": 440,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 10.5,
-        "spread_close": 10.5,
-        "spread_open": 13.5,
-        "total": 45.5
-      },
-      "odds_first_seen": {
-        "away_ml": -470,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 360,
-        "side": "ECU"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ECU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.04"
-        },
-        {
-          "label": "CLT Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.16"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 61,
-        "side": "ECU"
-      },
-      "start": "Sat Nov 14 \u00b7 1:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Jerry Richardson Stadium",
-      "win_prob": null
-    },
-    "401862826": {
-      "away": {
-        "abbr": "FAU",
-        "color": "#4D8CCC",
-        "name": "Florida Atlantic"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 38,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "TLSA",
-        "color": "#3F76D9",
-        "name": "Tulsa"
-      },
-      "odds": {
-        "away_ml": 195,
-        "away_ml_open": 170,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "TLSA -6.5",
-        "home_ml": -238,
-        "home_ml_open": -205,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -6.5,
-        "spread_close": -6.5,
-        "spread_open": -5.5,
-        "total": 73.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "FAU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.16"
-        },
-        {
-          "label": "FAU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.24"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Chapman Stadium",
-      "win_prob": null
-    },
-    "401862827": {
-      "away": {
-        "abbr": "UNT",
-        "color": "#44D587",
-        "name": "North Texas"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 41,
-          "side": "UNT"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UTSA",
-        "color": "#6688B3",
-        "name": "UTSA"
-      },
-      "odds": {
-        "away_ml": -130,
-        "away_ml_open": -112,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UNT -2.5",
-        "home_ml": 110,
-        "home_ml_open": -108,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 2.5,
-        "spread_close": 2.5,
-        "spread_open": 1.5,
-        "total": 76.5
-      },
-      "odds_first_seen": {
-        "away_ml": -125,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 105,
-        "side": "UNT"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UNT Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.24"
-        },
-        {
-          "label": "UTSA Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.15"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 41,
-        "side": "UNT"
-      },
-      "start": "Sat Nov 14 \u00b7 9:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Alamodome",
-      "win_prob": null
-    },
-    "401862828": {
-      "away": {
-        "abbr": "TULN",
-        "color": "#4CCCA4",
-        "name": "Tulane"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 17,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "RICE",
-        "color": "#507AC9",
-        "name": "Rice"
-      },
-      "odds": {
-        "away_ml": 150,
-        "away_ml_open": -112,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "RICE -4",
-        "home_ml": -180,
-        "home_ml_open": -108,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -4.0,
-        "spread_close": -4.0,
-        "spread_open": 1.5,
-        "total": 48.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "TULN Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.06"
-        },
-        {
-          "label": "RICE Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.17"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 2:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Rice Stadium",
-      "win_prob": null
-    },
-    "401862829": {
-      "away": {
-        "abbr": "UAB",
-        "color": "#69B085",
-        "name": "UAB"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 15,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "TEM",
-        "color": "#CA4E63",
-        "name": "Temple"
-      },
-      "odds": {
-        "away_ml": 114,
-        "away_ml_open": 105,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "TEM -2.5",
-        "home_ml": -135,
-        "home_ml_open": -125,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -2.5,
-        "spread_close": -2.5,
-        "spread_open": -2.5,
-        "total": 48.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "TEM Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.13"
-        },
-        {
-          "label": "TEM Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.18"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 1:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Lincoln Financial Field",
-      "win_prob": null
-    },
-    "401864536": {
-      "away": {
-        "abbr": "NEV",
-        "color": "#5C84BC",
-        "name": "Nevada"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 40,
-          "side": "NEV"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "NIU",
-        "color": "#DE3A55",
-        "name": "Northern Illinois"
-      },
-      "odds": {
-        "away_ml": -238,
-        "away_ml_open": -425,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "NEV -6.5",
-        "home_ml": 195,
-        "home_ml_open": 330,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 6.5,
-        "spread_close": 6.5,
-        "spread_open": 10.5,
-        "total": 48.5
-      },
-      "odds_first_seen": {
-        "away_ml": -270,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 220,
-        "side": "NEV"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "NEV Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.06"
-        },
-        {
-          "label": "NIU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.22"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 40,
-        "side": "NEV"
-      },
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Huskie Stadium",
-      "win_prob": null
-    },
-    "401864537": {
-      "away": {
-        "abbr": "North Dakota State",
-        "color": null,
-        "name": "North Dakota State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 51,
-          "side": "North Dakota State"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "HAW",
-        "color": "#58C19F",
-        "name": "Hawai'i"
-      },
-      "odds": {
-        "away_ml": -270,
-        "away_ml_open": -395,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "NDSU -7",
-        "home_ml": 220,
-        "home_ml_open": 310,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 7.0,
-        "spread_close": 7.0,
-        "spread_open": 9.5,
-        "total": 39.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "North Dakota State Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.08"
-        },
-        {
-          "label": "HAW Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.20"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 51,
-        "side": "North Dakota State"
-      },
-      "start": "Sat Nov 14 \u00b7 11:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Clarence T.C. Ching Athletics Complex",
-      "win_prob": null
-    },
-    "401864538": {
-      "away": {
-        "abbr": "SJSU",
-        "color": "#3B90DD",
-        "name": "San Jos\u00e9 State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 17,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "AF",
-        "color": "#3F76D9",
-        "name": "Air Force"
-      },
-      "odds": {
-        "away_ml": 425,
-        "away_ml_open": 310,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "AF -14",
-        "home_ml": -575,
-        "home_ml_open": -395,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -14.0,
-        "spread_close": -14.0,
-        "spread_open": -10.5,
-        "total": 48.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "AF Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.15"
-        },
-        {
-          "label": "AF Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.13"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Falcon Stadium",
-      "win_prob": null
-    },
-    "401864539": {
-      "away": {
-        "abbr": "UNLV",
-        "color": "#E43553",
-        "name": "UNLV"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 46,
-          "side": "UNM"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UNM",
-        "color": "#DC3C5C",
-        "name": "New Mexico"
-      },
-      "odds": {
-        "away_ml": 625,
-        "away_ml_open": 470,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "UNM -17.5",
-        "home_ml": -950,
-        "home_ml_open": -650,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -17.5,
-        "spread_close": -17.5,
-        "spread_open": -13.5,
-        "total": 46.5
-      },
-      "odds_first_seen": {
-        "away_ml": 440,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -600,
-        "side": "UNM"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "UNLV Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.10"
-        },
-        {
-          "label": "UNLV Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 46,
-        "side": "UNM"
-      },
-      "start": "Sat Nov 14 \u00b7 7:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "University Stadium (NM)",
-      "win_prob": null
-    },
-    "401864540": {
-      "away": {
-        "abbr": "WYO",
-        "color": "#A38376",
-        "name": "Wyoming"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 69,
-          "side": "WYO"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "UTEP",
-        "color": "#F88E21",
-        "name": "UTEP"
-      },
-      "odds": {
-        "away_ml": -285,
-        "away_ml_open": -360,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "WYO -7",
-        "home_ml": 230,
-        "home_ml_open": 285,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 7.0,
-        "spread_close": 7.0,
-        "spread_open": 10.0,
-        "total": 40.5
-      },
-      "odds_first_seen": {
-        "away_ml": -305,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 245,
-        "side": "WYO"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "WYO Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.11"
-        },
-        {
-          "label": "UTEP Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.23"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 69,
-        "side": "WYO"
-      },
-      "start": "Sat Nov 14 \u00b7 10:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Sun Bowl",
-      "win_prob": null
-    },
-    "401869928": {
-      "away": {
-        "abbr": "APP",
-        "color": "#8C8C8C",
-        "name": "App State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 16,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MRSH",
-        "color": "#37E175",
-        "name": "Marshall"
-      },
-      "odds": {
-        "away_ml": -120,
-        "away_ml_open": -135,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "APP -1.5",
-        "home_ml": 100,
-        "home_ml_open": 114,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 1.5,
-        "spread_close": 1.5,
-        "spread_open": 2.5,
-        "total": 54.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "MRSH Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.07"
-        },
-        {
-          "label": "MRSH Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.19"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 6:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Joan C. Edwards Stadium",
-      "win_prob": null
-    },
-    "401869937": {
-      "away": {
-        "abbr": "ARST",
-        "color": "#E43557",
-        "name": "Arkansas State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 16,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "CCU",
-        "color": "#49CDCF",
-        "name": "Coastal Carolina"
-      },
-      "odds": {
-        "away_ml": -105,
-        "away_ml_open": -102,
-        "captured_at": "2026-11-14T17:31:17Z",
-        "details": "CCU -1.5",
-        "home_ml": -115,
-        "home_ml_open": -118,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -1.5,
-        "spread_close": -1.5,
-        "spread_open": -1.5,
-        "total": 53.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "ARST Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.12"
-        },
-        {
-          "label": "ARST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.18"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 1:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Brooks Stadium (SC)",
-      "win_prob": null
-    },
-    "401869952": {
-      "away": {
-        "abbr": "GASO",
-        "color": "#5C84BC",
-        "name": "Georgia Southern"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 27,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "GAST",
-        "color": "#3A73DE",
-        "name": "Georgia State"
-      },
-      "odds": {
-        "away_ml": -225,
-        "away_ml_open": -205,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "GASO -6",
-        "home_ml": 185,
-        "home_ml_open": 170,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 6.0,
-        "spread_close": 6.0,
-        "spread_open": 5.5,
-        "total": 55.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "GASO Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.15"
-        },
-        {
-          "label": "GAST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.13"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Center Parc Stadium",
-      "win_prob": null
-    },
-    "401870752": {
-      "away": {
-        "abbr": "JXST",
-        "color": "#E92F2F",
-        "name": "Jacksonville State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 65,
-          "side": "JXST"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "WKU",
-        "color": "#E03859",
-        "name": "Western Kentucky"
-      },
-      "odds": {
-        "away_ml": -298,
-        "away_ml_open": -205,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "JXST -7.5",
-        "home_ml": 240,
-        "home_ml_open": 170,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": 7.5,
-        "spread_close": 7.5,
-        "spread_open": 6.0,
-        "total": 53.5
-      },
-      "odds_first_seen": {
-        "away_ml": -285,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 230,
-        "side": "JXST"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "JXST Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "WKU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.21"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 65,
-        "side": "JXST"
-      },
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Houchens Industries-L.T. Smith Stadium",
-      "win_prob": null
-    },
-    "401870769": {
-      "away": {
-        "abbr": "KENN",
-        "color": "#FDBB30",
-        "name": "Kennesaw State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 54,
-          "side": "KENN"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "SHSU",
-        "color": "#F56424",
-        "name": "Sam Houston"
-      },
-      "odds": {
-        "away_ml": -310,
-        "away_ml_open": -305,
-        "captured_at": "2026-11-14T18:50:43Z",
-        "details": "KENN -8.5",
-        "home_ml": 250,
-        "home_ml_open": 245,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 8.5,
-        "spread_close": 8.5,
-        "spread_open": 7.5,
-        "total": 44.5
-      },
-      "odds_first_seen": {
-        "away_ml": -290,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": 235,
-        "side": "KENN"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "KENN Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.07"
-        },
-        {
-          "label": "SHSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.16"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 54,
-        "side": "KENN"
-      },
-      "start": "Sat Nov 14 \u00b7 2:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Elliott T. Bowers Stadium",
-      "win_prob": null
-    },
-    "401870796": {
-      "away": {
-        "abbr": "NMSU",
-        "color": "#CF4A82",
-        "name": "New Mexico State"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 4,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "MOST",
-        "color": "#CA4F5B",
-        "name": "Missouri State"
-      },
-      "odds": {
-        "away_ml": 100,
-        "away_ml_open": -105,
-        "captured_at": "2026-11-14T18:50:43Z",
-        "details": "MOST -1.5",
-        "home_ml": -120,
-        "home_ml_open": -115,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -1.5,
-        "spread_close": -1.5,
-        "spread_open": -1.5,
-        "total": 49.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "MOST Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.04"
-        },
-        {
-          "label": "MOST Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.22"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Plaster Sports Complex",
-      "win_prob": null
-    },
-    "401871060": {
-      "away": {
-        "abbr": "FIU",
-        "color": "#6385B6",
-        "name": "Florida International"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 3,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "DEL",
-        "color": "#3C90DC",
-        "name": "Delaware"
-      },
-      "odds": {
-        "away_ml": 154,
-        "away_ml_open": 170,
-        "captured_at": "2026-11-14T18:50:43Z",
-        "details": "DEL -3.5",
-        "home_ml": -185,
-        "home_ml_open": -218,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.5,
-        "spread_close": -3.5,
-        "spread_open": -6.5,
-        "total": 54.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "DEL Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.08"
-        },
-        {
-          "label": "DEL Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.16"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Delaware Stadium",
-      "win_prob": null
-    },
-    "401871061": {
-      "away": {
-        "abbr": "MTSU",
-        "color": "#379CE1",
-        "name": "Middle Tennessee"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 82,
-          "side": "LIB"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "LIB",
-        "color": "#5E83BA",
-        "name": "Liberty"
-      },
-      "odds": {
-        "away_ml": 1100,
-        "away_ml_open": 1100,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "LIB -21",
-        "home_ml": -2100,
-        "home_ml_open": -2100,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -21.0,
-        "spread_close": -21.0,
-        "spread_open": -20.5,
-        "total": 53.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "LIB Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.22"
-        },
-        {
-          "label": "MTSU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.19"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 3:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Williams Stadium (VA)",
-      "win_prob": null
-    },
-    "401871099": {
-      "away": {
-        "abbr": "USM",
-        "color": "#FFC72C",
-        "name": "Southern Miss"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 88,
-          "side": "LT"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "LT",
-        "color": "#4377D5",
-        "name": "Louisiana Tech"
-      },
-      "odds": {
-        "away_ml": 625,
-        "away_ml_open": 850,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "LT -17.5",
-        "home_ml": -950,
-        "home_ml_open": -1450,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -17.5,
-        "spread_close": -17.5,
-        "spread_open": -18.5,
-        "total": 56.5
-      },
-      "odds_first_seen": {
-        "away_ml": 625,
-        "captured_at": "2026-11-10T19:08:38.841854+00:00",
-        "home_ml": -950,
-        "side": "LT"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "LT Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.12"
-        },
-        {
-          "label": "USM Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.18"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 88,
-        "side": "LT"
-      },
-      "start": "Sat Nov 14 \u00b7 5:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Joe Aillet Stadium",
-      "win_prob": null
-    },
-    "401871100": {
-      "away": {
-        "abbr": "TROY",
-        "color": "#BB5E6A",
-        "name": "Troy"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 18,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-08T16:32:42.151087+00:00",
-      "home": {
-        "abbr": "USA",
-        "color": "#507AC9",
-        "name": "South Alabama"
-      },
-      "odds": {
-        "away_ml": 130,
-        "away_ml_open": 102,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "USA -3",
-        "home_ml": -155,
-        "home_ml_open": -122,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -3.0,
-        "spread_close": -3.0,
-        "spread_open": -2.5,
-        "total": 55.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "USA Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.15"
-        },
-        {
-          "label": "USA Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.23"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": null,
-      "start": "Sat Nov 14 \u00b7 7:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Hancock Whitney Stadium",
       "win_prob": null
     }
   },
@@ -4384,40 +913,227 @@
     }
   },
   "nba": {
-    "401909980": {
+    "401909985": {
       "away": {
-        "abbr": "DEN",
-        "color": "#6885B1",
-        "name": "DEN"
+        "abbr": "IND",
+        "color": "#6688B3",
+        "name": "IND"
       },
       "betting_note": null,
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 73,
-          "side": "DEN",
+          "score": 63,
+          "side": "No clear lean",
           "tier": "season_margin"
         }
       },
-      "generated_at": "2026-11-14T16:26:35.294280+00:00",
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
       "home": {
-        "abbr": "NO",
-        "color": "#6488B5",
-        "name": "NO"
+        "abbr": "PHI",
+        "color": "#577BC2",
+        "name": "PHI"
       },
       "odds": {
-        "away_ml": -670,
-        "away_ml_open": -556,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "DEN -12.5",
-        "home_ml": 483,
-        "home_ml_open": 417,
+        "away_ml": 247,
+        "away_ml_open": 208,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "PHI -7.5",
+        "home_ml": -304,
+        "home_ml_open": -253,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": 12.5,
-        "spread_close": 12.5,
-        "spread_open": 10.5,
-        "total": 235.5
+        "spread": -7.5,
+        "spread_close": -7.5,
+        "spread_open": -6.5,
+        "total": 224.5
+      },
+      "odds_first_seen": null,
+      "probables": null,
+      "pulse": null,
+      "signals": [
+        {
+          "label": "Points margin / game",
+          "tone": "pos",
+          "value": "PHI +1.8 \u00b7 IND -2.1"
+        }
+      ],
+      "slate_date": "2026-11-15",
+      "standout": null,
+      "start": "1:00 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Xfinity Mobile Arena",
+      "win_prob": null
+    },
+    "401909986": {
+      "away": {
+        "abbr": "LAL",
+        "color": "#8D5EBA",
+        "name": "LAL"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "moneyline": {
+          "flags": [],
+          "score": 82,
+          "side": "LAL",
+          "tier": "season_margin"
+        }
+      },
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
+      "home": {
+        "abbr": "PHX",
+        "color": "#6D55C4",
+        "name": "PHX"
+      },
+      "odds": {
+        "away_ml": -154,
+        "away_ml_open": -147,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "LAL -3.5",
+        "home_ml": 130,
+        "home_ml_open": 124,
+        "moneyline_off": false,
+        "provider": "Draft Kings",
+        "spread": 3.5,
+        "spread_close": 3.5,
+        "spread_open": 2.5,
+        "total": 226.5
+      },
+      "odds_first_seen": {
+        "away_ml": -154,
+        "captured_at": "2026-11-15T16:51:58.580175+00:00",
+        "home_ml": 130,
+        "side": "LAL"
+      },
+      "probables": null,
+      "pulse": null,
+      "signals": [
+        {
+          "label": "Points margin / game",
+          "tone": "neg",
+          "value": "PHX -4.4 \u00b7 LAL +7.9"
+        }
+      ],
+      "slate_date": "2026-11-15",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 82,
+        "side": "LAL"
+      },
+      "start": "4:00 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Mortgage Matchup Center",
+      "win_prob": null
+    },
+    "401909987": {
+      "away": {
+        "abbr": "CHA",
+        "color": "#3AC3DF",
+        "name": "CHA"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "moneyline": {
+          "flags": [],
+          "score": 75,
+          "side": "LAC",
+          "tier": "season_margin"
+        }
+      },
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
+      "home": {
+        "abbr": "LAC",
+        "color": "#6C73AC",
+        "name": "LAC"
+      },
+      "odds": {
+        "away_ml": -108,
+        "away_ml_open": 107,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "CHA -1.5",
+        "home_ml": -110,
+        "home_ml_open": -126,
+        "moneyline_off": false,
+        "provider": "Draft Kings",
+        "spread": 1.5,
+        "spread_close": 1.5,
+        "spread_open": -2.5,
+        "total": 214.5
+      },
+      "odds_first_seen": {
+        "away_ml": -108,
+        "captured_at": "2026-11-15T16:51:58.580175+00:00",
+        "home_ml": -110,
+        "side": "LAC"
+      },
+      "probables": null,
+      "pulse": null,
+      "signals": [
+        {
+          "label": "Points margin / game",
+          "tone": "pos",
+          "value": "LAC -5.3 \u00b7 CHA -11.0"
+        }
+      ],
+      "slate_date": "2026-11-15",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 75,
+        "side": "LAC"
+      },
+      "start": "4:30 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Intuit Dome",
+      "win_prob": null
+    },
+    "401909988": {
+      "away": {
+        "abbr": "SA",
+        "color": "#8C8C8C",
+        "name": "SA"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "moneyline": {
+          "flags": [],
+          "score": 99,
+          "side": "SA",
+          "tier": "season_margin"
+        }
+      },
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
+      "home": {
+        "abbr": "UTAH",
+        "color": "#9441D7",
+        "name": "UTAH"
+      },
+      "odds": {
+        "away_ml": -1340,
+        "away_ml_open": -1640,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "SA -15.5",
+        "home_ml": 810,
+        "home_ml_open": 920,
+        "moneyline_off": false,
+        "provider": "Draft Kings",
+        "spread": 15.5,
+        "spread_close": 15.5,
+        "spread_open": 17.5,
+        "total": 225.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -4426,20 +1142,20 @@
         {
           "label": "Points margin / game",
           "tone": "neg",
-          "value": "NO -9.2 \u00b7 DEN +1.2"
+          "value": "UTAH -11.2 \u00b7 SA +13.2"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
-      "start": "7:00 PM ET",
+      "start": "5:00 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
-      "venue": "Smoothie King Center",
+      "venue": "Delta Center",
       "win_prob": null
     },
-    "401909981": {
+    "401909989": {
       "away": {
         "abbr": "DAL",
         "color": "#3797E1",
@@ -4449,30 +1165,30 @@
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 29,
-          "side": "No clear lean",
+          "score": 92,
+          "side": "BOS",
           "tier": "season_margin"
         }
       },
-      "generated_at": "2026-11-14T16:26:35.294280+00:00",
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
       "home": {
-        "abbr": "CLE",
-        "color": "#D54380",
-        "name": "CLE"
+        "abbr": "BOS",
+        "color": "#44D493",
+        "name": "BOS"
       },
       "odds": {
-        "away_ml": -204,
-        "away_ml_open": 118,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "DAL -4.5",
-        "home_ml": 170,
-        "home_ml_open": -140,
+        "away_ml": 530,
+        "away_ml_open": 450,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "BOS -13.5",
+        "home_ml": -750,
+        "home_ml_open": -610,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": 4.5,
-        "spread_close": 4.5,
-        "spread_open": -3.5,
-        "total": 227.5
+        "spread": -13.5,
+        "spread_close": -13.5,
+        "spread_open": -12.5,
+        "total": 219.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -4481,59 +1197,114 @@
         {
           "label": "Points margin / game",
           "tone": "pos",
-          "value": "CLE +1.0 \u00b7 DAL +1.0"
+          "value": "BOS +11.2 \u00b7 DAL +0.2"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
-      "start": "7:30 PM ET",
+      "start": "6:00 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
-      "venue": "Rocket Arena",
+      "venue": "TD Garden",
       "win_prob": null
     },
-    "401909982": {
+    "401909990": {
       "away": {
-        "abbr": "DET",
+        "abbr": "NY",
         "color": "#577BC2",
-        "name": "DET"
+        "name": "NY"
       },
       "betting_note": null,
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 74,
-          "side": "DET",
+          "score": 25,
+          "side": "No clear lean",
           "tier": "season_margin"
         }
       },
-      "generated_at": "2026-11-14T16:26:35.294280+00:00",
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
       "home": {
-        "abbr": "MIA",
-        "color": "#DA3E6D",
-        "name": "MIA"
+        "abbr": "TOR",
+        "color": "#E23661",
+        "name": "TOR"
       },
       "odds": {
-        "away_ml": -173,
-        "away_ml_open": -186,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "DET -3.5",
-        "home_ml": 146,
-        "home_ml_open": 156,
+        "away_ml": -191,
+        "away_ml_open": -158,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "NY -4.5",
+        "home_ml": 160,
+        "home_ml_open": 133,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": 3.5,
-        "spread_close": 3.5,
-        "spread_open": 5.5,
-        "total": 229.5
+        "spread": 4.5,
+        "spread_close": 4.5,
+        "spread_open": 3.5,
+        "total": 217.5
+      },
+      "odds_first_seen": null,
+      "probables": null,
+      "pulse": null,
+      "signals": [
+        {
+          "label": "Points margin / game",
+          "tone": "neg",
+          "value": "TOR +1.4 \u00b7 NY +6.1"
+        }
+      ],
+      "slate_date": "2026-11-15",
+      "standout": null,
+      "start": "6:00 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Scotiabank Arena",
+      "win_prob": null
+    },
+    "401909991": {
+      "away": {
+        "abbr": "HOU",
+        "color": "#E13753",
+        "name": "HOU"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "moneyline": {
+          "flags": [],
+          "score": 89,
+          "side": "HOU",
+          "tier": "season_margin"
+        }
+      },
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
+      "home": {
+        "abbr": "WSH",
+        "color": "#E23651",
+        "name": "WSH"
+      },
+      "odds": {
+        "away_ml": -359,
+        "away_ml_open": -356,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "HOU -8.5",
+        "home_ml": 286,
+        "home_ml_open": 284,
+        "moneyline_off": false,
+        "provider": "Draft Kings",
+        "spread": 8.5,
+        "spread_close": 8.5,
+        "spread_open": 8.5,
+        "total": 223.5
       },
       "odds_first_seen": {
-        "away_ml": -191,
-        "captured_at": "2026-11-14T16:26:35.294280+00:00",
-        "home_ml": 160,
-        "side": "DET"
+        "away_ml": -359,
+        "captured_at": "2026-11-15T16:51:58.580175+00:00",
+        "home_ml": 286,
+        "side": "HOU"
       },
       "probables": null,
       "pulse": null,
@@ -4541,144 +1312,155 @@
         {
           "label": "Points margin / game",
           "tone": "neg",
-          "value": "MIA -2.9 \u00b7 DET +7.7"
+          "value": "WSH -5.8 \u00b7 HOU +8.8"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
         "market": "Moneyline",
-        "score": 74,
-        "side": "DET"
+        "score": 89,
+        "side": "HOU"
       },
-      "start": "8:00 PM ET",
+      "start": "7:00 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
-      "venue": "Kaseya Center",
+      "venue": "Capital One Arena",
       "win_prob": null
     },
-    "401909983": {
+    "401909992": {
       "away": {
-        "abbr": "BKN",
-        "color": "#8C8C8C",
-        "name": "BKN"
+        "abbr": "ATL",
+        "color": "#DE3A55",
+        "name": "ATL"
       },
       "betting_note": null,
       "betting_signals": {
         "moneyline": {
           "flags": [],
-          "score": 95,
-          "side": "MEM",
+          "score": 91,
+          "side": "ATL",
           "tier": "season_margin"
         }
       },
-      "generated_at": "2026-11-14T16:26:35.294280+00:00",
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
       "home": {
-        "abbr": "MEM",
-        "color": "#6B81AE",
-        "name": "MEM"
+        "abbr": "MIL",
+        "color": "#55C37F",
+        "name": "MIL"
       },
       "odds": {
-        "away_ml": 103,
-        "away_ml_open": 163,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "MEM -1.5",
-        "home_ml": -122,
-        "home_ml_open": -195,
+        "away_ml": -324,
+        "away_ml_open": -268,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "ATL -8.5",
+        "home_ml": 261,
+        "home_ml_open": 220,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": -1.5,
-        "spread_close": -1.5,
-        "spread_open": -5.5,
-        "total": 227.5
-      },
-      "odds_first_seen": {
-        "away_ml": 140,
-        "captured_at": "2026-11-14T16:26:35.294280+00:00",
-        "home_ml": -167,
-        "side": "MEM"
-      },
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "Points margin / game",
-          "tone": "pos",
-          "value": "MEM +8.1 \u00b7 BKN -5.1"
-        }
-      ],
-      "slate_date": "2026-11-14",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 95,
-        "side": "MEM"
-      },
-      "start": "8:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "FedExForum",
-      "win_prob": null
-    },
-    "401909984": {
-      "away": {
-        "abbr": "CHI",
-        "color": "#E03963",
-        "name": "CHI"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 100,
-          "side": "MIN",
-          "tier": "season_margin"
-        }
-      },
-      "generated_at": "2026-11-14T16:26:35.294280+00:00",
-      "home": {
-        "abbr": "MIN",
-        "color": "#5990BF",
-        "name": "MIN"
-      },
-      "odds": {
-        "away_ml": 690,
-        "away_ml_open": 580,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "MIN -15.5",
-        "home_ml": -1080,
-        "home_ml_open": -840,
-        "moneyline_off": false,
-        "provider": "Draft Kings",
-        "spread": -15.5,
-        "spread_close": -15.5,
-        "spread_open": -14.5,
+        "spread": 8.5,
+        "spread_close": 8.5,
+        "spread_open": 6.5,
         "total": 234.5
       },
-      "odds_first_seen": null,
+      "odds_first_seen": {
+        "away_ml": -324,
+        "captured_at": "2026-11-15T16:51:58.580175+00:00",
+        "home_ml": 261,
+        "side": "ATL"
+      },
       "probables": null,
       "pulse": null,
       "signals": [
         {
           "label": "Points margin / game",
-          "tone": "pos",
-          "value": "MIN +13.4 \u00b7 CHI -13.4"
+          "tone": "neg",
+          "value": "MIL -14.1 \u00b7 ATL +1.3"
         }
       ],
-      "slate_date": "2026-11-14",
-      "standout": null,
+      "slate_date": "2026-11-15",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 91,
+        "side": "ATL"
+      },
       "start": "8:00 PM ET",
       "status": "Preview",
       "story": null,
       "summary": null,
       "template_version": "v3",
-      "venue": "Target Center",
+      "venue": "Fiserv Forum",
+      "win_prob": null
+    },
+    "401909993": {
+      "away": {
+        "abbr": "OKC",
+        "color": "#33A4E6",
+        "name": "OKC"
+      },
+      "betting_note": null,
+      "betting_signals": {
+        "moneyline": {
+          "flags": [],
+          "score": 93,
+          "side": "OKC",
+          "tier": "season_margin"
+        }
+      },
+      "generated_at": "2026-11-15T16:51:58.580175+00:00",
+      "home": {
+        "abbr": "SAC",
+        "color": "#8F64B5",
+        "name": "SAC"
+      },
+      "odds": {
+        "away_ml": -468,
+        "away_ml_open": -430,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "OKC -10.5",
+        "home_ml": 361,
+        "home_ml_open": 336,
+        "moneyline_off": false,
+        "provider": "Draft Kings",
+        "spread": 10.5,
+        "spread_close": 10.5,
+        "spread_open": 10.5,
+        "total": 223.5
+      },
+      "odds_first_seen": {
+        "away_ml": -468,
+        "captured_at": "2026-11-15T16:51:58.580175+00:00",
+        "home_ml": 361,
+        "side": "OKC"
+      },
+      "probables": null,
+      "pulse": null,
+      "signals": [
+        {
+          "label": "Points margin / game",
+          "tone": "neg",
+          "value": "SAC -12.8 \u00b7 OKC +3.8"
+        }
+      ],
+      "slate_date": "2026-11-15",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 93,
+        "side": "OKC"
+      },
+      "start": "9:00 PM ET",
+      "status": "Preview",
+      "story": null,
+      "summary": null,
+      "template_version": "v3",
+      "venue": "Golden 1 Center",
       "win_prob": null
     }
   },
@@ -4704,16 +1486,16 @@
         "name": "NYJ"
       },
       "odds": {
-        "away_ml": -395,
+        "away_ml": -500,
         "away_ml_open": -340,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "BUF -7.5",
-        "home_ml": 310,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "BUF -8.5",
+        "home_ml": 380,
         "home_ml_open": 270,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": 7.5,
-        "spread_close": 7.5,
+        "spread": 8.5,
+        "spread_close": 8.5,
         "spread_open": 7.0,
         "total": 50.5
       },
@@ -4744,7 +1526,7 @@
           "value": "+0.03"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4795,16 +1577,16 @@
         "name": "NO"
       },
       "odds": {
-        "away_ml": 114,
+        "away_ml": -105,
         "away_ml_open": 105,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "NO -2.5",
-        "home_ml": -135,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "NO -1.5",
+        "home_ml": -115,
         "home_ml_open": -125,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": -2.5,
-        "spread_close": -2.5,
+        "spread": -1.5,
+        "spread_close": -1.5,
         "spread_open": -1.5,
         "total": 48.5
       },
@@ -4830,7 +1612,7 @@
           "value": "+0.06"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4875,18 +1657,18 @@
         "name": "CLE"
       },
       "odds": {
-        "away_ml": -225,
+        "away_ml": -198,
         "away_ml_open": -218,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "HOU -4.5",
-        "home_ml": 185,
+        "home_ml": 164,
         "home_ml_open": 180,
         "moneyline_off": false,
         "provider": "Draft Kings",
         "spread": 4.5,
         "spread_close": 4.5,
         "spread_open": 4.5,
-        "total": 40.5
+        "total": 41.5
       },
       "odds_first_seen": {
         "away_ml": -225,
@@ -4915,7 +1697,7 @@
           "value": "+0.00"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4966,18 +1748,18 @@
         "name": "TEN"
       },
       "odds": {
-        "away_ml": -750,
+        "away_ml": -675,
         "away_ml_open": -135,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "JAX -10.5",
-        "home_ml": 525,
+        "home_ml": 490,
         "home_ml_open": 114,
         "moneyline_off": false,
         "provider": "Draft Kings",
         "spread": 10.5,
         "spread_close": 10.5,
         "spread_open": 2.5,
-        "total": 46.5
+        "total": 45.5
       },
       "odds_first_seen": {
         "away_ml": -600,
@@ -5006,7 +1788,7 @@
           "value": "+0.06"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5057,11 +1839,11 @@
         "name": "ATL"
       },
       "odds": {
-        "away_ml": -166,
+        "away_ml": -175,
         "away_ml_open": -225,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "KC -3",
-        "home_ml": 140,
+        "home_ml": 145,
         "home_ml_open": 185,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5097,7 +1879,7 @@
           "value": "+0.00"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5148,11 +1930,11 @@
         "name": "BAL"
       },
       "odds": {
-        "away_ml": 180,
+        "away_ml": 185,
         "away_ml_open": 120,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "BAL -4.5",
-        "home_ml": -218,
+        "home_ml": -225,
         "home_ml_open": -142,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5188,7 +1970,7 @@
           "value": "+0.06"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5239,18 +2021,18 @@
         "name": "ARI"
       },
       "odds": {
-        "away_ml": -500,
+        "away_ml": -485,
         "away_ml_open": -535,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "LAR -9.5",
-        "home_ml": 380,
+        "home_ml": 370,
         "home_ml_open": 400,
         "moneyline_off": false,
         "provider": "Draft Kings",
         "spread": 9.5,
         "spread_close": 9.5,
         "spread_open": 10.5,
-        "total": 39.5
+        "total": 38.5
       },
       "odds_first_seen": null,
       "probables": {
@@ -5274,7 +2056,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 4:05 PM ET",
       "status": "Preview",
@@ -5319,11 +2101,11 @@
         "name": "IND"
       },
       "odds": {
-        "away_ml": 180,
+        "away_ml": 185,
         "away_ml_open": 235,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "IND -4.5",
-        "home_ml": -218,
+        "home_ml": -225,
         "home_ml_open": -290,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5354,7 +2136,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -5399,11 +2181,11 @@
         "name": "GB"
       },
       "odds": {
-        "away_ml": 124,
+        "away_ml": 120,
         "away_ml_open": 185,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "GB -2.5",
-        "home_ml": -148,
+        "home_ml": -142,
         "home_ml_open": -225,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5439,7 +2221,7 @@
           "value": "-0.07"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5525,7 +2307,7 @@
           "value": "+0.07"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 9:30 AM ET",
       "status": "Preview",
@@ -5570,11 +2352,11 @@
         "name": "CIN"
       },
       "odds": {
-        "away_ml": 154,
+        "away_ml": 160,
         "away_ml_open": 160,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "CIN -3.5",
-        "home_ml": -185,
+        "home_ml": -192,
         "home_ml_open": -192,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5605,7 +2387,7 @@
           "value": "+0.01"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 8:20 PM ET",
       "status": "Preview",
@@ -5650,11 +2432,11 @@
         "name": "LV"
       },
       "odds": {
-        "away_ml": -305,
+        "away_ml": -290,
         "away_ml_open": -340,
-        "captured_at": "2026-11-14T20:03:37Z",
+        "captured_at": "2026-11-15T16:51:59Z",
         "details": "SEA -6.5",
-        "home_ml": 245,
+        "home_ml": 235,
         "home_ml_open": 270,
         "moneyline_off": false,
         "provider": "Draft Kings",
@@ -5685,7 +2467,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 4:05 PM ET",
       "status": "Preview",
@@ -5730,16 +2512,16 @@
         "name": "DAL"
       },
       "odds": {
-        "away_ml": -205,
+        "away_ml": -218,
         "away_ml_open": 100,
-        "captured_at": "2026-11-14T20:03:37Z",
-        "details": "SF -3.5",
-        "home_ml": 170,
+        "captured_at": "2026-11-15T16:51:59Z",
+        "details": "SF -4.5",
+        "home_ml": 180,
         "home_ml_open": -120,
         "moneyline_off": false,
         "provider": "Draft Kings",
-        "spread": 3.5,
-        "spread_close": 3.5,
+        "spread": 4.5,
+        "spread_close": 4.5,
         "spread_open": -1.5,
         "total": 55.5
       },
@@ -5765,7 +2547,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-14",
+      "slate_date": "2026-11-15",
       "standout": null,
       "start": "Sun Nov 15 \u00b7 4:25 PM ET",
       "status": "Preview",

@@ -1,4 +1,15 @@
 {
+  "anthony black|orl": {
+    "entity": "Anthony Black",
+    "generated_at": "2026-11-15T16:51:58.580175+00:00",
+    "last_game_date": "2026-11-13",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "ORL",
+    "template_version": "v2"
+  },
   "anthony davis|wsh": {
     "entity": "Anthony Davis",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -30,17 +41,6 @@
     "summary": null,
     "takeaways": [],
     "team": "HOU",
-    "template_version": "v2"
-  },
-  "cade cunningham|det": {
-    "entity": "Cade Cunningham",
-    "generated_at": "2026-11-13T17:34:17.538543+00:00",
-    "last_game_date": "2026-11-12",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DET",
     "template_version": "v2"
   },
   "caleb williams|chi": {
@@ -101,7 +101,7 @@
   "davion mitchell|mia": {
     "entity": "Davion Mitchell",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-14",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -112,7 +112,7 @@
   "day'ron sharpe|bkn": {
     "entity": "Day'Ron Sharpe",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-11",
+    "last_game_date": "2026-11-14",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -131,17 +131,6 @@
     "team": "ORL",
     "template_version": "v2"
   },
-  "donovan clingan|por": {
-    "entity": "Donovan Clingan",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-13",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "POR",
-    "template_version": "v2"
-  },
   "drake maye|ne": {
     "entity": "Drake Maye",
     "generated_at": "2026-10-23T14:44:59.859935+00:00",
@@ -151,17 +140,6 @@
     "summary": null,
     "takeaways": [],
     "team": "NE",
-    "template_version": "v2"
-  },
-  "duncan robinson|det": {
-    "entity": "Duncan Robinson",
-    "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-12",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DET",
     "template_version": "v2"
   },
   "dyson daniels|atl": {
@@ -189,7 +167,7 @@
   "giannis antetokounmpo|mia": {
     "entity": "Giannis Antetokounmpo",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-14",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -288,7 +266,7 @@
   "josh giddey|chi": {
     "entity": "Josh Giddey",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-14",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -305,6 +283,28 @@
     "summary": null,
     "takeaways": [],
     "team": "NY",
+    "template_version": "v2"
+  },
+  "kevin huerter|det": {
+    "entity": "Kevin Huerter",
+    "generated_at": "2026-11-15T16:51:58.580175+00:00",
+    "last_game_date": "2026-11-14",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DET",
+    "template_version": "v2"
+  },
+  "klay thompson|mia": {
+    "entity": "Klay Thompson",
+    "generated_at": "2026-11-15T16:51:58.580175+00:00",
+    "last_game_date": "2026-11-14",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "MIA",
     "template_version": "v2"
   },
   "lauri markkanen|utah": {
@@ -354,7 +354,7 @@
   "nikola jokic|den": {
     "entity": "Nikola Jokic",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-11",
+    "last_game_date": "2026-11-14",
     "matchup_note": null,
     "story": null,
     "summary": null,
