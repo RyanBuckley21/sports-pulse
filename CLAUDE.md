@@ -54,7 +54,7 @@ python3 -m tools.verify.test_opponent_adjust     # CFB opponent-adjusted form (p
 python3 -m tools.tokens.test_colorkit
 
 # Browser suite (Playwright; Chromium is preinstalled in the cloud container)
-python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "277 passed, 0 failed" or more
+python3 -m tools.verify.make_fixture && node tools/verify/run.js      # expect "300 passed, 0 failed" or more
 
 # Pipeline (hits live APIs and REWRITES COMMITTED data/ files, so restore afterwards)
 python3 generate_stats.py && git checkout -- data/
@@ -852,6 +852,30 @@ Open on it:
   and price. It becomes worth merging only with a FREE prop-line source. One
   untested candidate: ESPN's core API may expose prop bets per event; the build
   sandbox cannot reach ESPN, so it would have to be probed from Actions.
+
+**Every tab says when its data was built (2026-11-16, `web/freshness.js`).**
+Owner: "I need a last update time stamp on all relevant pages so I know I'm
+playing with stale data." Who's Hot (header and player page) and Games, Bets,
+Players and Teams (under the title) show one stamp from one rule:
+"Updated 9:05 AM ET · 1 hr ago" when the data was built on today's Eastern
+date; **amber "Not updated today · last Fri 4:35 PM ET"** once it is from an
+earlier Eastern day; red at two days or more.
+
+- **The rule is the slate day, not an age.** On 2026-11-14 GitHub held all four
+  morning updates until 11:26 AM ET; Friday 4:35 PM data was only 19 hours old
+  at 11 AM Saturday, so the old 24-hour rule called it fresh while the Bets tab
+  had silently dropped Friday night's started NBA games.
+- **Ticks by itself** every 30 seconds, so a tab left open goes amber at
+  midnight Eastern without a reload. Data re-fetches on a tab switch after
+  10 minutes, as before.
+- A new local script: it is in `index.html` (after `sport-state.js`) and in the
+  deploy's copy list and cache-bust loop.
+- Pinned by the browser suite's `freshness` group (23 checks; sabotaged 8 ways).
+
+Open on it: **the stamp tells you the data is stale; it does not fix it.** A
+trigger independent of GitHub's scheduler (a free outside cron calling
+`workflow_dispatch`, which needs a token stored with that service) is the fix
+and is the owner's call.
 
 **The Bets tab opens on its NFL filter** when the board has NFL leans, and on
 All otherwise (2026-11-11, owner's request; `bets.js` `DEFAULT_SPORT`). The

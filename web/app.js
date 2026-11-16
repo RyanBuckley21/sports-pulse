@@ -88,23 +88,8 @@
     return Number(p.met) + "/" + Number(p.window);
   }
 
-  function relativeTime(iso) {
-    var diffMs = Date.now() - new Date(iso).getTime();
-    var mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return mins + " min ago";
-    var hours = Math.floor(mins / 60);
-    if (hours < 24) return hours + (hours === 1 ? " hour ago" : " hours ago");
-    var days = Math.floor(hours / 24);
-    return days + (days === 1 ? " day ago" : " days ago");
-  }
-
-  function freshnessClass(iso) {
-    var hoursOld = (Date.now() - new Date(iso).getTime()) / 36e5;
-    if (hoursOld >= 48) return "stale-old";
-    if (hoursOld >= 24) return "stale-1";
-    return "";
-  }
+  // relativeTime() and freshnessClass() lived here until 2026-11-16. The
+  // stamp's rule moved to freshness.js so every tab shares it.
 
   // ---------------- data access helpers ----------------
 
@@ -205,20 +190,31 @@
     }
     html += "</div>";
     appEl.innerHTML = html;
+    paintStamps();
     updateScrollFade();
   }
 
+  // The "Updated" stamp, in the header and on a player's page. Both are
+  // painted by freshness.js (the one rule every tab shares) from the payload's
+  // generated_at; the header's dot takes the same colour as its text.
+  function paintStamps() {
+    var at = state.data && state.data.generated_at;
+    var els = appEl.querySelectorAll("[data-stamp-src]");
+    for (var i = 0; i < els.length; i++) SP.freshness.paint(els[i], at);
+    var dot = document.getElementById("liveDot");
+    if (dot) dot.className = "live-dot " + SP.freshness.info(at).cls;
+  }
+
   function renderHeader() {
-    var generatedAt = state.data.generated_at;
-    var cls = freshnessClass(generatedAt);
     return (
       '<header class="app-header">' +
       '<div class="app-icon"><img src="assets/icon-180.png" alt="Who\'s Hot app icon"></div>' +
       "<div>" +
       '<div class="app-title">Who\'s Hot</div>' +
       '<div class="app-status">' +
-      '<span class="live-dot ' + cls + '" id="liveDot"></span>' +
-      '<span class="status-text ' + cls + '" id="statusText">Updated ' + esc(relativeTime(generatedAt)) + "</span>" +
+      // Filled by paintStamps() after render: see freshness.js for the rule.
+      '<span class="live-dot" id="liveDot"></span>' +
+      '<span class="status-text" id="statusText" data-stamp-src data-stamp-base="status-text"></span>' +
       "</div>" +
       "</div>" +
       // The "Insights →" link that used to sit here is gone: Insights is a tab
@@ -461,6 +457,9 @@
       // naming one in the breadcrumb would promise a view it does not render.
       '<span class="crumb">' + esc(ctx.sportLabel) + "</span>" +
       "</div>" +
+      // The same stamp as the list header, which this page does not show: a
+      // player's numbers are only as current as the last update.
+      '<p class="data-stamp detail-stamp" data-stamp-src data-stamp-base="data-stamp detail-stamp"></p>' +
       '<div class="identity-row">' +
       teamChip +
       "<div><div class=\"identity-name\">" + esc(player.entity) + '</div><div class="identity-sub">' + posLine + "</div></div>" +
@@ -985,23 +984,18 @@
   );
   window.addEventListener("resize", updateScrollFade);
 
-  // Keep the relative "Updated X ago" text and freshness color live without
-  // a full re-render (avoids disrupting scroll position / open detail view).
+  // Keep the stamp and the dot live without a full re-render (avoids
+  // disrupting scroll position / an open detail view). freshness.js re-judges
+  // every painted stamp on its own timer; this only keeps the dot in step.
   //
   // Created once, never cleared. Under the navigation shell this script is
   // loaded exactly once and #app is never removed, so there is no second
   // interval to leak -- `mounted` just stops it doing work while another
-  // section is on screen. Returning to this view re-renders anyway, which
-  // recomputes the timestamp from scratch.
+  // section is on screen.
   setInterval(function () {
     if (!mounted || !state.data) return;
     var dot = document.getElementById("liveDot");
-    var text = document.getElementById("statusText");
-    if (!dot || !text) return;
-    var cls = freshnessClass(state.data.generated_at);
-    dot.className = "live-dot " + cls;
-    text.className = "status-text " + cls;
-    text.textContent = "Updated " + relativeTime(state.data.generated_at);
+    if (dot) dot.className = "live-dot " + SP.freshness.info(state.data.generated_at).cls;
   }, 30000);
 
   function loadData() {

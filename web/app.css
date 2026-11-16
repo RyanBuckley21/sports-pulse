@@ -149,6 +149,21 @@ body {
 }
 .status-text.stale-1 { color: var(--warning); }
 .status-text.stale-old { color: var(--critical); }
+/* A stale stamp WRAPS instead of truncating: on a phone the ellipsis fell
+   exactly on the time ("last Sat 11:23 AM..."), the one part it exists for. */
+.status-text.stale-1, .status-text.stale-old { white-space: normal; line-height: 1.25; font-weight: 600; }
+.app-status:has(.status-text.stale-1), .app-status:has(.status-text.stale-old) { align-items: flex-start; overflow: visible; }
+.app-status:has(.status-text.stale-1) .live-dot, .app-status:has(.status-text.stale-old) .live-dot { margin-top: 4px; }
+/* The same stamp on pages without the Who's Hot header: under each insights
+   tab's title, and on a player's page (freshness.js). Amber once the data is
+   from an earlier Eastern day, red at two. Stays on one line on a phone. */
+.data-stamp {
+  margin: 2px 0 10px; font: 500 12px/1.3 var(--font-body); color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.data-stamp.stale-1 { color: var(--warning); font-weight: 600; }
+.data-stamp.stale-old { color: var(--critical); font-weight: 600; }
+.detail-stamp { margin: 0 0 8px; }
 /* ---------- sport picker ---------- */
 /* Was a two-up grid of full-width pills on its own row below the header. It
    became an icon in the header row instead: the control has one bit of state,

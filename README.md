@@ -25,6 +25,10 @@ commits its own state back to the repo.
 | **Teams** (`#/teams`) | Team Pulse profiles built from the same slate. | `insights.teams` |
 
 A league picker in the header scopes every tab to one sport (`web/sport-state.js`).
+Every tab says when its data was built: "Updated 9:05 AM ET · 1 hr ago", turning
+**amber ("Not updated today · last Fri 4:35 PM ET") once the data is from an
+earlier Eastern day** and red at two days, so a late or missed update is visible
+instead of silently showing yesterday's slate (`web/freshness.js`).
 `#/components` is a hidden card gallery that renders `web/insights/mock-insights.json`.
 
 ## Sports
@@ -242,7 +246,7 @@ nfl_odds_backtest.py     NFL picks vs the closing line, and at the owner's price
 tools/devig_calibration.py  how well a no-vig price predicts NFL results, by price band
 cfb_opponent_backtest.py CFB: opponent-adjusted form vs raw, walk-forward (run via cfb-backtest.yml)
 mlb_estimate_calibration.py  implied_total vs actual runs
-web/                     index.html shell, app.js (Who's Hot), insights/ (Games/Bets/Players/Teams)
+web/                     index.html shell, app.js (Who's Hot), insights/ (Games/Bets/Players/Teams), freshness.js (the update stamp)
 tools/verify/            test suites + real-data fixtures
 tools/tokens/            design-token source of truth, contrast audit, preview renderer
 scripts/                 fetch_logos.py, gen_cfb_teams.py
