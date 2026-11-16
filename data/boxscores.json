@@ -2,7 +2,7 @@
   "cfb": {
     "cfbd_usage": {
       "2026-10": 8,
-      "2026-11": 4
+      "2026-11": 6
     },
     "games_teams": {
       "2026": {
@@ -1316,6 +1316,528 @@
           "401872617": {
             "Northern Iowa": 0.0,
             "South Dakota State": 0.0
+          }
+        },
+        "11": {
+          "401856857": {
+            "Arizona State": 0.0,
+            "UCF": 1.0
+          },
+          "401856858": {
+            "BYU": 0.0,
+            "Baylor": 1.0
+          },
+          "401856859": {
+            "Cincinnati": 2.0,
+            "Iowa State": 1.0
+          },
+          "401856860": {
+            "Colorado": 1.0,
+            "Houston": 2.0
+          },
+          "401856861": {
+            "Kansas": 1.0,
+            "West Virginia": 1.0
+          },
+          "401856862": {
+            "Kansas State": 2.0,
+            "TCU": 0.0
+          },
+          "401856863": {
+            "Oklahoma State": 2.0,
+            "Texas Tech": 1.0
+          },
+          "401856864": {
+            "Arizona": 1.0,
+            "Utah": 3.0
+          },
+          "401856882": {
+            "Arkansas": 0.0,
+            "South Carolina": 4.0
+          },
+          "401856883": {
+            "Georgia": 1.0,
+            "Missouri": 1.0
+          },
+          "401856884": {
+            "Florida": 0.0,
+            "Kentucky": 1.0
+          },
+          "401856885": {
+            "LSU": 3.0,
+            "Texas": 3.0
+          },
+          "401856886": {
+            "Auburn": 1.0,
+            "Mississippi State": 4.0
+          },
+          "401856887": {
+            "Oklahoma": 0.0,
+            "Ole Miss": 0.0
+          },
+          "401856888": {
+            "Tennessee": 0.0,
+            "Texas A&M": 2.0
+          },
+          "401856889": {
+            "Alabama": 2.0,
+            "Vanderbilt": 0.0
+          },
+          "401858293": {
+            "Florida State": 1.0,
+            "Pittsburgh": 1.0
+          },
+          "401858294": {
+            "Boston College": 2.0,
+            "Notre Dame": 2.0
+          },
+          "401858295": {
+            "California": 3.0,
+            "Virginia": 0.0
+          },
+          "401858296": {
+            "Duke": 1.0,
+            "Miami": 0.0
+          },
+          "401858297": {
+            "Clemson": 1.0,
+            "Georgia Tech": 2.0
+          },
+          "401858298": {
+            "Louisville": 0.0,
+            "North Carolina": 2.0
+          },
+          "401858299": {
+            "Stanford": 0.0,
+            "Virginia Tech": 3.0
+          },
+          "401858300": {
+            "NC State": 2.0,
+            "Syracuse": 0.0
+          },
+          "401858301": {
+            "SMU": 3.0,
+            "Wake Forest": 1.0
+          },
+          "401858518": {
+            "Indiana": 1.0,
+            "USC": 3.0
+          },
+          "401858519": {
+            "Iowa": 0.0,
+            "Purdue": 1.0
+          },
+          "401858520": {
+            "Maryland": 1.0,
+            "Wisconsin": 3.0
+          },
+          "401858521": {
+            "Michigan State": 2.0,
+            "Washington": 1.0
+          },
+          "401858522": {
+            "Northwestern": 1.0,
+            "Ohio State": 3.0
+          },
+          "401858523": {
+            "Michigan": 2.0,
+            "Oregon": 0.0
+          },
+          "401858524": {
+            "Minnesota": 1.0,
+            "Penn State": 0.0
+          },
+          "401858525": {
+            "Nebraska": 0.0,
+            "Rutgers": 2.0
+          },
+          "401858526": {
+            "Illinois": 3.0,
+            "UCLA": 1.0
+          },
+          "401860914": {
+            "Boise State": 1.0,
+            "Oregon State": 1.0
+          },
+          "401860915": {
+            "San Diego State": 1.0,
+            "Utah State": 0.0
+          },
+          "401860916": {
+            "Fresno State": 2.0,
+            "Texas State": 1.0
+          },
+          "401860917": {
+            "Colorado State": 2.0,
+            "Washington State": 0.0
+          },
+          "401861967": {
+            "James Madison": 1.0,
+            "UConn": 0.0
+          },
+          "401862824": {
+            "Memphis": 0.0,
+            "South Florida": 1.0
+          },
+          "401862825": {
+            "Charlotte": 2.0,
+            "East Carolina": 4.0
+          },
+          "401862826": {
+            "Florida Atlantic": 1.0,
+            "Tulsa": 3.0
+          },
+          "401862827": {
+            "North Texas": 2.0,
+            "UTSA": 1.0
+          },
+          "401862828": {
+            "Rice": 1.0,
+            "Tulane": 2.0
+          },
+          "401862829": {
+            "Temple": 1.0,
+            "UAB": 1.0
+          },
+          "401864536": {
+            "Nevada": 1.0,
+            "Northern Illinois": 3.0
+          },
+          "401864537": {
+            "Hawai'i": 2.0,
+            "North Dakota State": 0.0
+          },
+          "401864538": {
+            "Air Force": 1.0,
+            "San Jos\u00e9 State": 0.0
+          },
+          "401864539": {
+            "New Mexico": 1.0,
+            "UNLV": 2.0
+          },
+          "401864540": {
+            "UTEP": 2.0,
+            "Wyoming": 3.0
+          },
+          "401866458": {
+            "Akron": 0.0,
+            "Western Michigan": 0.0
+          },
+          "401866459": {
+            "Bowling Green": 0.0,
+            "Kent State": 2.0
+          },
+          "401866460": {
+            "Miami (OH)": 1.0,
+            "Ohio": 2.0
+          },
+          "401866461": {
+            "Ball State": 0.0,
+            "Buffalo": 0.0
+          },
+          "401866462": {
+            "Central Michigan": 1.0,
+            "Sacramento State": 1.0
+          },
+          "401866463": {
+            "Massachusetts": 1.0,
+            "Toledo": 0.0
+          },
+          "401866687": {
+            "Maine": 1.0,
+            "UAlbany": 1.0
+          },
+          "401866688": {
+            "Bryant": 0.0,
+            "Sacred Heart": 1.0
+          },
+          "401866689": {
+            "Rhode Island": 2.0,
+            "Towson": 0.0
+          },
+          "401866690": {
+            "Hampton": 2.0,
+            "North Carolina A&T": 4.0
+          },
+          "401866691": {
+            "New Hampshire": 0.0,
+            "Stony Brook": 0.0
+          },
+          "401866692": {
+            "Campbell": 0.0,
+            "Elon": 0.0
+          },
+          "401866693": {
+            "Merrimack": 1.0,
+            "Monmouth": 1.0
+          },
+          "401867811": {
+            "Brown": 0.0,
+            "Columbia": 1.0
+          },
+          "401867833": {
+            "Cornell": 0.0,
+            "Dartmouth": 0.0
+          },
+          "401867843": {
+            "Harvard": 1.0,
+            "Pennsylvania": 1.0
+          },
+          "401867853": {
+            "Illinois State": 1.0,
+            "Youngstown State": 1.0
+          },
+          "401867863": {
+            "Indiana State": 1.0,
+            "Murray State": 0.0
+          },
+          "401867888": {
+            "Northern Iowa": 1.0,
+            "South Dakota": 1.0
+          },
+          "401867893": {
+            "South Dakota State": 0.0,
+            "Southern Illinois": 0.0
+          },
+          "401867905": {
+            "Central Connecticut": 2.0,
+            "Long Island University": 0.0
+          },
+          "401867923": {
+            "Robert Morris": 1.0,
+            "Stonehill": 0.0
+          },
+          "401867934": {
+            "New Haven": 1.0,
+            "Wagner": 3.0
+          },
+          "401867958": {
+            "Delaware State": 1.0,
+            "Howard": 2.0
+          },
+          "401867970": {
+            "Morgan State": 2.0,
+            "Norfolk State": 6.0
+          },
+          "401867981": {
+            "North Carolina Central": 1.0,
+            "South Carolina State": 1.0
+          },
+          "401867997": {
+            "Bucknell": 2.0,
+            "William & Mary": 0.0
+          },
+          "401868006": {
+            "Colgate": 1.0,
+            "Lafayette": 3.0
+          },
+          "401868014": {
+            "Fordham": 1.0,
+            "Georgetown": 1.0
+          },
+          "401868027": {
+            "Holy Cross": 0.0,
+            "Villanova": 4.0
+          },
+          "401868036": {
+            "Lehigh": 0.0,
+            "Richmond": 0.0
+          },
+          "401868058": {
+            "Abilene Christian": 1.0,
+            "Austin Peay": 1.0
+          },
+          "401868091": {
+            "Eastern Washington": 0.0,
+            "Utah Tech": 2.0
+          },
+          "401868099": {
+            "Idaho": 3.0,
+            "UC Davis": 0.0
+          },
+          "401868109": {
+            "Idaho State": 1.0,
+            "Montana": 2.0
+          },
+          "401868122": {
+            "Montana State": 0.0,
+            "Northern Colorado": 0.0
+          },
+          "401868127": {
+            "Northern Arizona": 2.0,
+            "Weber State": 0.0
+          },
+          "401868138": {
+            "Central Arkansas": 2.0,
+            "Eastern Kentucky": 1.0
+          },
+          "401868157": {
+            "Portland State": 2.0,
+            "Southern Utah": 1.0
+          },
+          "401868177": {
+            "Charleston Southern": 4.0,
+            "Southeast Missouri State": 1.0
+          },
+          "401868185": {
+            "Eastern Illinois": 2.0,
+            "Tennessee State": 0.0
+          },
+          "401868192": {
+            "Gardner-Webb": 5.0,
+            "Western Illinois": 0.0
+          },
+          "401868202": {
+            "Lindenwood": 1.0,
+            "UT Martin": 0.0
+          },
+          "401868217": {
+            "Butler": 0.0,
+            "Marist": 2.0
+          },
+          "401868225": {
+            "Davidson": 2.0,
+            "Dayton": 0.0
+          },
+          "401868233": {
+            "North Alabama": 3.0,
+            "West Georgia": 2.0
+          },
+          "401868239": {
+            "Tarleton State": 2.0,
+            "West Florida": 2.0
+          },
+          "401868260": {
+            "Drake": 4.0,
+            "St. Thomas (MN)": 1.0
+          },
+          "401868272": {
+            "Morehead State": 2.0,
+            "Presbyterian": 2.0
+          },
+          "401868286": {
+            "Stetson": 0.0,
+            "Valparaiso": 1.0
+          },
+          "401868293": {
+            "Stephen F. Austin": 2.0,
+            "UT Rio Grande Valley": 2.0
+          },
+          "401868303": {
+            "Alabama A&M": 0.0,
+            "Texas Southern": 1.0
+          },
+          "401868322": {
+            "McNeese": 2.0,
+            "SE Louisiana": 3.0
+          },
+          "401868332": {
+            "Alabama State": 1.0,
+            "Jackson State": 3.0
+          },
+          "401868344": {
+            "Chattanooga": 1.0,
+            "Furman": 3.0
+          },
+          "401868351": {
+            "East Tennessee State": 1.0,
+            "Wofford": 3.0
+          },
+          "401868364": {
+            "Alcorn State": 2.0,
+            "Southern": 0.0
+          },
+          "401868385": {
+            "Mercer": 2.0,
+            "Tennessee Tech": 1.0
+          },
+          "401868389": {
+            "Samford": 1.0,
+            "Western Carolina": 0.0
+          },
+          "401868395": {
+            "The Citadel": 3.0,
+            "VMI": 1.0
+          },
+          "401868940": {
+            "Arkansas-Pine Bluff": 0.0,
+            "Prairie View A&M": 0.0
+          },
+          "401868946": {
+            "Bethune-Cookman": 1.0,
+            "Grambling": 2.0
+          },
+          "401868951": {
+            "Florida A&M": 3.0,
+            "Mississippi Valley State": 1.0
+          },
+          "401869135": {
+            "Houston Christian": 1.0,
+            "Northwestern State": 1.0
+          },
+          "401869146": {
+            "East Texas A&M": 1.0,
+            "Lamar": 2.0
+          },
+          "401869148": {
+            "Incarnate Word": 2.0,
+            "Nicholls": 4.0
+          },
+          "401869155": {
+            "Duquesne": 0.0,
+            "Mercyhurst": 0.0
+          },
+          "401869928": {
+            "App State": 3.0,
+            "Marshall": 2.0
+          },
+          "401869937": {
+            "Arkansas State": 5.0,
+            "Coastal Carolina": 2.0
+          },
+          "401869952": {
+            "Georgia Southern": 3.0,
+            "Georgia State": 0.0
+          },
+          "401869969": {
+            "Louisiana": 0.0,
+            "UL Monroe": 3.0
+          },
+          "401870752": {
+            "Jacksonville State": 3.0,
+            "Western Kentucky": 3.0
+          },
+          "401870769": {
+            "Kennesaw State": 0.0,
+            "Sam Houston": 1.0
+          },
+          "401870796": {
+            "Missouri State": 1.0,
+            "New Mexico State": 3.0
+          },
+          "401870842": {
+            "Princeton": 2.0,
+            "Yale": 0.0
+          },
+          "401871060": {
+            "Delaware": 1.0,
+            "Florida International": 2.0
+          },
+          "401871061": {
+            "Liberty": 1.0,
+            "Middle Tennessee": 1.0
+          },
+          "401871099": {
+            "Louisiana Tech": 2.0,
+            "Southern Miss": 5.0
+          },
+          "401871100": {
+            "South Alabama": 0.0,
+            "Troy": 0.0
+          },
+          "401915931": {
+            "Chicago State": 1.0,
+            "Virginia Lynchburg": 3.0
           }
         },
         "2": {
@@ -6253,6 +6775,678 @@
             "Troy": [
               -0.22,
               0.18
+            ]
+          }
+        },
+        "11": {
+          "401856857": {
+            "Arizona State": [
+              0.15,
+              -0.07
+            ],
+            "UCF": [
+              -0.07,
+              0.15
+            ]
+          },
+          "401856858": {
+            "BYU": [
+              0.14,
+              0.0
+            ],
+            "Baylor": [
+              0.0,
+              0.14
+            ]
+          },
+          "401856859": {
+            "Cincinnati": [
+              -0.01,
+              0.31
+            ],
+            "Iowa State": [
+              0.31,
+              -0.01
+            ]
+          },
+          "401856860": {
+            "Colorado": [
+              0.35,
+              0.2
+            ],
+            "Houston": [
+              0.2,
+              0.35
+            ]
+          },
+          "401856861": {
+            "Kansas": [
+              0.24,
+              -0.17
+            ],
+            "West Virginia": [
+              -0.17,
+              0.24
+            ]
+          },
+          "401856862": {
+            "Kansas State": [
+              0.06,
+              0.13
+            ],
+            "TCU": [
+              0.13,
+              0.06
+            ]
+          },
+          "401856863": {
+            "Oklahoma State": [
+              -0.1,
+              0.22
+            ],
+            "Texas Tech": [
+              0.22,
+              -0.1
+            ]
+          },
+          "401856864": {
+            "Arizona": [
+              0.23,
+              0.3
+            ],
+            "Utah": [
+              0.3,
+              0.23
+            ]
+          },
+          "401856882": {
+            "Arkansas": [
+              0.13,
+              -0.2
+            ],
+            "South Carolina": [
+              -0.2,
+              0.13
+            ]
+          },
+          "401856883": {
+            "Georgia": [
+              0.47,
+              0.08
+            ],
+            "Missouri": [
+              0.08,
+              0.47
+            ]
+          },
+          "401856884": {
+            "Florida": [
+              0.1,
+              -0.13
+            ],
+            "Kentucky": [
+              -0.13,
+              0.1
+            ]
+          },
+          "401856885": {
+            "LSU": [
+              0.24,
+              -0.1
+            ],
+            "Texas": [
+              -0.1,
+              0.24
+            ]
+          },
+          "401856886": {
+            "Auburn": [
+              0.11,
+              -0.27
+            ],
+            "Mississippi State": [
+              -0.27,
+              0.11
+            ]
+          },
+          "401856887": {
+            "Oklahoma": [
+              0.16,
+              -0.07
+            ],
+            "Ole Miss": [
+              -0.07,
+              0.16
+            ]
+          },
+          "401856888": {
+            "Tennessee": [
+              0.08,
+              -0.4
+            ],
+            "Texas A&M": [
+              -0.4,
+              0.08
+            ]
+          },
+          "401856889": {
+            "Alabama": [
+              -0.08,
+              -0.27
+            ],
+            "Vanderbilt": [
+              -0.27,
+              -0.08
+            ]
+          },
+          "401858293": {
+            "Florida State": [
+              -0.1,
+              -0.22
+            ],
+            "Pittsburgh": [
+              -0.22,
+              -0.1
+            ]
+          },
+          "401858294": {
+            "Boston College": [
+              -0.48,
+              0.3
+            ],
+            "Notre Dame": [
+              0.3,
+              -0.48
+            ]
+          },
+          "401858295": {
+            "California": [
+              -0.1,
+              0.21
+            ],
+            "Virginia": [
+              0.21,
+              -0.1
+            ]
+          },
+          "401858296": {
+            "Duke": [
+              0.16,
+              0.41
+            ],
+            "Miami": [
+              0.41,
+              0.16
+            ]
+          },
+          "401858297": {
+            "Clemson": [
+              -0.3,
+              0.09
+            ],
+            "Georgia Tech": [
+              0.09,
+              -0.3
+            ]
+          },
+          "401858298": {
+            "Louisville": [
+              0.11,
+              0.01
+            ],
+            "North Carolina": [
+              0.01,
+              0.11
+            ]
+          },
+          "401858299": {
+            "Stanford": [
+              0.17,
+              -0.08
+            ],
+            "Virginia Tech": [
+              -0.08,
+              0.17
+            ]
+          },
+          "401858300": {
+            "NC State": [
+              0.13,
+              0.21
+            ],
+            "Syracuse": [
+              0.21,
+              0.13
+            ]
+          },
+          "401858301": {
+            "SMU": [
+              -0.27,
+              0.44
+            ],
+            "Wake Forest": [
+              0.44,
+              -0.27
+            ]
+          },
+          "401858518": {
+            "Indiana": [
+              0.23,
+              -0.01
+            ],
+            "USC": [
+              -0.01,
+              0.23
+            ]
+          },
+          "401858519": {
+            "Iowa": [
+              0.3,
+              0.07
+            ],
+            "Purdue": [
+              0.07,
+              0.3
+            ]
+          },
+          "401858520": {
+            "Maryland": [
+              0.06,
+              -0.25
+            ],
+            "Wisconsin": [
+              -0.25,
+              0.06
+            ]
+          },
+          "401858521": {
+            "Michigan State": [
+              0.0,
+              0.19
+            ],
+            "Washington": [
+              0.19,
+              0.0
+            ]
+          },
+          "401858522": {
+            "Northwestern": [
+              0.06,
+              0.29
+            ],
+            "Ohio State": [
+              0.29,
+              0.06
+            ]
+          },
+          "401858523": {
+            "Michigan": [
+              -0.24,
+              0.24
+            ],
+            "Oregon": [
+              0.24,
+              -0.24
+            ]
+          },
+          "401858524": {
+            "Minnesota": [
+              -0.07,
+              0.33
+            ],
+            "Penn State": [
+              0.33,
+              -0.07
+            ]
+          },
+          "401858525": {
+            "Nebraska": [
+              0.2,
+              -0.38
+            ],
+            "Rutgers": [
+              -0.38,
+              0.2
+            ]
+          },
+          "401858526": {
+            "Illinois": [
+              -0.13,
+              0.0
+            ],
+            "UCLA": [
+              0.0,
+              -0.13
+            ]
+          },
+          "401860914": {
+            "Boise State": [
+              0.4,
+              0.45
+            ],
+            "Oregon State": [
+              0.45,
+              0.4
+            ]
+          },
+          "401860915": {
+            "San Diego State": [
+              0.14,
+              -0.18
+            ],
+            "Utah State": [
+              -0.18,
+              0.14
+            ]
+          },
+          "401860916": {
+            "Fresno State": [
+              0.13,
+              0.45
+            ],
+            "Texas State": [
+              0.45,
+              0.13
+            ]
+          },
+          "401860917": {
+            "Colorado State": [
+              -0.21,
+              0.68
+            ],
+            "Washington State": [
+              0.68,
+              -0.21
+            ]
+          },
+          "401861967": {
+            "James Madison": [
+              0.17,
+              0.36
+            ],
+            "UConn": [
+              0.36,
+              0.17
+            ]
+          },
+          "401862824": {
+            "Memphis": [
+              0.43,
+              0.13
+            ],
+            "South Florida": [
+              0.13,
+              0.43
+            ]
+          },
+          "401862825": {
+            "Charlotte": [
+              -0.33,
+              -0.18
+            ],
+            "East Carolina": [
+              -0.18,
+              -0.33
+            ]
+          },
+          "401862826": {
+            "Florida Atlantic": [
+              -0.19,
+              0.04
+            ],
+            "Tulsa": [
+              0.04,
+              -0.19
+            ]
+          },
+          "401862827": {
+            "North Texas": [
+              -0.26,
+              0.1
+            ],
+            "UTSA": [
+              0.1,
+              -0.26
+            ]
+          },
+          "401862828": {
+            "Rice": [
+              -0.06,
+              0.15
+            ],
+            "Tulane": [
+              0.15,
+              -0.06
+            ]
+          },
+          "401862829": {
+            "Temple": [
+              -0.24,
+              0.24
+            ],
+            "UAB": [
+              0.24,
+              -0.24
+            ]
+          },
+          "401864536": {
+            "Nevada": [
+              0.15,
+              -0.33
+            ],
+            "Northern Illinois": [
+              -0.33,
+              0.15
+            ]
+          },
+          "401864537": {
+            "Hawai'i": [
+              -0.33,
+              0.02
+            ],
+            "North Dakota State": [
+              0.02,
+              -0.33
+            ]
+          },
+          "401864538": {
+            "Air Force": [
+              0.13,
+              -0.2
+            ],
+            "San Jos\u00e9 State": [
+              -0.2,
+              0.13
+            ]
+          },
+          "401864539": {
+            "New Mexico": [
+              0.0,
+              -0.06
+            ],
+            "UNLV": [
+              -0.06,
+              0.0
+            ]
+          },
+          "401864540": {
+            "UTEP": [
+              -0.09,
+              0.08
+            ],
+            "Wyoming": [
+              0.08,
+              -0.09
+            ]
+          },
+          "401866458": {
+            "Akron": [
+              0.04,
+              0.31
+            ],
+            "Western Michigan": [
+              0.31,
+              0.04
+            ]
+          },
+          "401866459": {
+            "Bowling Green": [
+              0.2,
+              0.07
+            ],
+            "Kent State": [
+              0.07,
+              0.2
+            ]
+          },
+          "401866460": {
+            "Miami (OH)": [
+              0.12,
+              0.04
+            ],
+            "Ohio": [
+              0.04,
+              0.12
+            ]
+          },
+          "401866461": {
+            "Ball State": [
+              -0.12,
+              0.07
+            ],
+            "Buffalo": [
+              0.07,
+              -0.12
+            ]
+          },
+          "401866462": {
+            "Central Michigan": [
+              0.19,
+              -0.09
+            ],
+            "Sacramento State": [
+              -0.09,
+              0.19
+            ]
+          },
+          "401866463": {
+            "Massachusetts": [
+              -0.36,
+              0.17
+            ],
+            "Toledo": [
+              0.17,
+              -0.36
+            ]
+          },
+          "401869928": {
+            "App State": [
+              -0.07,
+              -0.2
+            ],
+            "Marshall": [
+              -0.2,
+              -0.07
+            ]
+          },
+          "401869937": {
+            "Arkansas State": [
+              -0.24,
+              0.09
+            ],
+            "Coastal Carolina": [
+              0.09,
+              -0.24
+            ]
+          },
+          "401869952": {
+            "Georgia Southern": [
+              0.29,
+              -0.02
+            ],
+            "Georgia State": [
+              -0.02,
+              0.29
+            ]
+          },
+          "401869969": {
+            "Louisiana": [
+              0.44,
+              -0.03
+            ],
+            "UL Monroe": [
+              -0.03,
+              0.44
+            ]
+          },
+          "401870752": {
+            "Jacksonville State": [
+              -0.42,
+              0.0
+            ],
+            "Western Kentucky": [
+              0.0,
+              -0.42
+            ]
+          },
+          "401870769": {
+            "Kennesaw State": [
+              0.03,
+              -0.19
+            ],
+            "Sam Houston": [
+              -0.19,
+              0.03
+            ]
+          },
+          "401870796": {
+            "Missouri State": [
+              -0.11,
+              -0.16
+            ],
+            "New Mexico State": [
+              -0.16,
+              -0.11
+            ]
+          },
+          "401871060": {
+            "Delaware": [
+              0.31,
+              0.08
+            ],
+            "Florida International": [
+              0.08,
+              0.31
+            ]
+          },
+          "401871061": {
+            "Liberty": [
+              0.15,
+              0.15
+            ],
+            "Middle Tennessee": [
+              0.15,
+              0.15
+            ]
+          },
+          "401871099": {
+            "Louisiana Tech": [
+              0.22,
+              -0.22
+            ],
+            "Southern Miss": [
+              -0.22,
+              0.22
+            ]
+          },
+          "401871100": {
+            "South Alabama": [
+              0.22,
+              -0.08
+            ],
+            "Troy": [
+              -0.08,
+              0.22
             ]
           }
         },
