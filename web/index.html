@@ -41,6 +41,9 @@
     <div class="wrap">
       <h1 class="insights-h1" id="insightsTitle"></h1>
       <p class="insights-note" id="insightsNote"></p>
+      <!-- When the data on this tab was built, painted by insights.js through
+           freshness.js. Hidden until a view with live data has rendered. -->
+      <p class="data-stamp" id="insightsStamp" data-stamp-base="data-stamp" hidden></p>
       <div id="insightsRoot"><p class="empty-state">Loading&hellip;</p></div>
     </div>
   </div>
@@ -52,6 +55,7 @@
      read, so it loads first; and both view modules must have registered on
      window.SP.views before shell.js starts routing. -->
 <script src="sport-state.js"></script>
+<script src="freshness.js"></script>
 <script src="app.js"></script>
 <script src="insights/bets.js"></script>
 <script src="insights/insights.js"></script>

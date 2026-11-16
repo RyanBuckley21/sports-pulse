@@ -1044,6 +1044,14 @@
     // Load sport-level presentation config once, before rendering any card.
     UI = (data.insights && data.insights.ui) || {};
     AI_ENABLED = data.aiInsightsEnabled !== false;
+    // The "Updated" stamp under the tab's title (freshness.js). Only the live
+    // views get one: the components gallery reads a committed mock, whose
+    // timestamp would describe nothing.
+    var stamp = document.getElementById("insightsStamp");
+    if (stamp && SP.freshness) {
+      if (view === "components") stamp.hidden = true;
+      else SP.freshness.paint(stamp, data.generated_at);
+    }
     if (view === "players") renderPlayers(data, root);
     else if (view === "games") renderGames(data, root);
     else if (view === "teams") renderTeams(data, root);

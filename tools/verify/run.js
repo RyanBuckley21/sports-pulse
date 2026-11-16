@@ -1249,6 +1249,105 @@ async function hotContextChecks(browser, base) {
   await p.close();
 }
 
+// ----------------------------------------------------------------- freshness
+// Every tab says when its data was built, and turns amber/red once that is an
+// earlier Eastern day (freshness.js; owner, 2026-11-16: "I need a last update
+// time stamp on all relevant pages so I know I'm playing with stale data").
+// The fixture's generated_at is the moment it was built, so it reads fresh; a
+// copy exactly two days older is served for the stale half (generated_at is the
+// one field edited) -- two, the red threshold itself, so a looser threshold fails.
+async function freshnessChecks(browser, base) {
+  const stampOf = async (pg) => pg.$eval("#insightsStamp", (x) => ({ t: x.textContent, c: x.className, h: x.hidden }));
+  const tabs = ["#/games", "#/bets", "#/players", "#/teams"];
+
+  const p = await newPage(browser);
+  const problems = collectProblems(p, base);
+  await p.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await p.waitForSelector("#statusText");
+  const head = await p.$eval("#statusText", (x) => ({ t: x.textContent, c: x.className }));
+  ok("fresh: Who's Hot says when, in Eastern time, and how long ago",
+     /^Updated \d{1,2}:\d\d [AP]M( ET)? · (just now|\d+ min ago)$/.test(head.t) && head.c === "status-text", JSON.stringify(head));
+  for (const t of tabs) {
+    await goRoute(p, t);
+    await p.waitForTimeout(150);
+    const st = await stampOf(p);
+    ok("fresh: " + t + " carries the same stamp under its title",
+       !st.h && st.t === head.t.replace(/just now|\d+ min ago/, (m) => m) && /^Updated /.test(st.t) && st.c === "data-stamp", JSON.stringify(st));
+  }
+  await goRoute(p, "#/components");
+  await p.waitForTimeout(150);
+  ok("  the mock-data gallery has none (its timestamp would describe nothing)", (await stampOf(p)).h === true);
+
+  // THE RULE, on chosen instants (Eastern: EST from 11-01, EDT in July).
+  const rule = await p.evaluate(() => {
+    const at = (g, n) => { const s = SP.freshness.info(g, new Date(n)); return s.text + " [" + s.cls + "]"; };
+    return [
+      at("2026-11-16T14:05:00Z", "2026-11-16T15:09:00Z"),
+      at("2026-11-16T04:59:00Z", "2026-11-16T05:01:00Z"),
+      at("2026-11-14T16:23:00Z", "2026-11-14T16:30:00Z"),
+      at("2026-11-13T21:35:00Z", "2026-11-14T16:22:00Z"),
+      at("2026-11-13T21:35:00Z", "2026-11-16T15:09:00Z"),
+      at("2026-11-14T16:23:00Z", "2026-11-16T15:09:00Z"),
+      at("2026-07-01T16:00:00Z", "2026-07-01T17:00:00Z"),
+      at("garbage", "2026-11-16T15:09:00Z"),
+      at(null, "2026-11-16T15:09:00Z"),
+    ];
+  });
+  const NB = " ";
+  ok("rule: built 9:05 AM, read at 10:09 AM the same day -- plain, with both",
+     rule[0] === "Updated 9:05" + NB + "AM" + NB + "ET · 1 hr ago []", rule[0]);
+  ok("rule: built 11:59 PM, read two minutes later -- already yesterday's slate (amber)",
+     rule[1] === "Not updated today · last" + NB + "Sun" + NB + "11:59" + NB + "PM" + NB + "ET [stale-1]", rule[1]);
+  ok("rule: Saturday 11:23 AM, minutes old -- fresh", /^Updated 11:23/.test(rule[2]) && /\[\]$/.test(rule[2]), rule[2]);
+  ok("rule: THE CASE THAT STARTED THIS -- Friday 4:35 PM read Saturday 11:22 AM, only 19 hours old, is flagged",
+     rule[3] === "Not updated today · last" + NB + "Fri" + NB + "4:35" + NB + "PM" + NB + "ET [stale-1]", rule[3]);
+  ok("rule: two Eastern days behind is red (Saturday read Monday), and so is three",
+     /\[stale-old\]$/.test(rule[5]) && /\[stale-old\]$/.test(rule[4]), rule[5] + " | " + rule[4]);
+  ok("rule: summer time is Eastern daylight time (16:00Z is noon)", /^Updated 12:00 PM ET/.test(rule[6]), rule[6]);
+  ok("rule: an unreadable or missing stamp says so, amber, and invents no age",
+     rule[7] === "Update time unknown [stale-1]" && rule[8] === rule[7], rule.slice(7).join(" | "));
+
+  // LEFT OPEN: the stamp re-judges itself against the clock, no reload.
+  await goRoute(p, "#/");
+  await p.waitForSelector("#statusText");
+  await p.evaluate(() => SP.freshness.tick(new Date(Date.now() + 3 * 864e5)));
+  const later = await p.$eval("#statusText", (x) => ({ t: x.textContent, c: x.className }));
+  ok("a page left open turns red by itself when the clock moves on (the 30-second timer's path)",
+     /^Not updated today · last/.test(later.t) && /stale-old/.test(later.c), JSON.stringify(later));
+  ok("freshness (fresh half): no console errors or 4xx", problems.length === 0, problems.join("; ") || "clean");
+  await p.close();
+
+  // STALE: the same site, data three days old.
+  const q = await newPage(browser);
+  const qProblems = collectProblems(q, base);
+  await q.route("**/data.json*", async (route) => {
+    const data = JSON.parse(fs.readFileSync(path.join(WEB, "data.json"), "utf8"));
+    data.generated_at = new Date(Date.now() - 2 * 864e5).toISOString();
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await q.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+  await q.waitForSelector("#statusText");
+  const sh = await q.$eval("#statusText", (x) => ({ t: x.textContent, c: x.className }));
+  const dot = await q.$eval("#liveDot", (x) => x.className);
+  ok("stale: Who's Hot says it was not updated today, in red, dot included",
+     /^Not updated today · last \w{3} \d{1,2}:\d\d [AP]M/.test(sh.t) && /stale-old/.test(sh.c) && /stale-old/.test(dot),
+     JSON.stringify(sh) + " " + dot);
+  const wraps = await q.$eval("#statusText", (x) => getComputedStyle(x).whiteSpace);
+  ok("  and wraps rather than cutting the time off", wraps === "normal", wraps);
+  await q.click('#app .player-row[data-rank="1"]');
+  await q.waitForSelector(".identity-row");
+  const ds = await q.$eval(".detail-stamp", (x) => ({ t: x.textContent, c: x.className })).catch(() => ({ t: "(none)", c: "" }));
+  ok("stale: a player's page carries it too", ds.t === sh.t && /stale-old/.test(ds.c), JSON.stringify(ds));
+  for (const t of tabs) {
+    await goRoute(q, t);
+    await q.waitForTimeout(150);
+    const st = await stampOf(q);
+    ok("stale: " + t + " says so in red", !st.h && st.t === sh.t && /stale-old/.test(st.c), JSON.stringify(st));
+  }
+  ok("freshness (stale half): no console errors or 4xx", qProblems.length === 0, qProblems.join("; ") || "clean");
+  await q.close();
+}
+
 // -------------------------------------------------------------------- router
 async function routerChecks(browser, base) {
 
@@ -1729,6 +1828,7 @@ const GROUPS = [
   ["router", routerChecks],
   ["bets", betsChecks],
   ["hot context", hotContextChecks],
+  ["freshness", freshnessChecks],
   ["safe-area", safeAreaChecks],
   ["standalone", standaloneChecks],
 ];

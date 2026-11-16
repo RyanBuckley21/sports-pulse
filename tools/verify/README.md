@@ -850,6 +850,20 @@ resolver is checked on three real decided NBA games through `nba_grading`.
 Sabotaged 14 ways, each failing 1 to 3 checks; the table is in the docstring.
 Two browser checks pin the one-sentence record on the Bets tab.
 
+**The update stamp (2026-11-16, 23 browser checks, group `freshness`).** Every
+tab says when its data was built (`web/freshness.js`). Fresh fixture: Who's
+Hot and all four insights tabs carry the same "Updated ... ET · ..." stamp, the
+mock gallery none. The rule on chosen instants: same-day plain; 11:59 PM read
+two minutes later amber; Friday 4:35 PM read Saturday 11:22 AM (the
+2026-11-14 case, 19 hours old) amber; two days red; July in EDT; an unreadable
+stamp says so. A page left open re-judges itself on the timer's path. A copy
+of the data exactly two days old (generated_at the one field edited) shows red
+on the header, its dot, a player's page and all four tabs, and the header
+wraps rather than cutting the time off. Sabotaged 8 ways: a 24-hour age for the
+Eastern day 2 fail, UTC for Eastern 5, tabs unstamped 8, no player-page stamp
+1, the timer inert 1, red only at three days 7, the header truncating 1, the
+gallery stamped 1.
+
 ## What it cannot cover
 
 `navigator.standalone` is Safari-only and iOS standalone semantics cannot be
