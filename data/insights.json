@@ -1,4 +1,15 @@
 {
+  "anthony black|orl": {
+    "entity": "Anthony Black",
+    "generated_at": "2026-11-17T18:59:28.090926+00:00",
+    "last_game_date": "2026-11-16",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "ORL",
+    "template_version": "v2"
+  },
   "bhayshul tuten|jax": {
     "entity": "Bhayshul Tuten",
     "generated_at": "2026-11-16T20:05:19.727658+00:00",
@@ -43,6 +54,17 @@
     "team": "HOU",
     "template_version": "v2"
   },
+  "cade cunningham|det": {
+    "entity": "Cade Cunningham",
+    "generated_at": "2026-11-17T18:59:28.090926+00:00",
+    "last_game_date": "2026-11-14",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DET",
+    "template_version": "v2"
+  },
   "caleb williams|chi": {
     "entity": "Caleb Williams",
     "generated_at": "2026-11-09T20:31:06.810662+00:00",
@@ -63,6 +85,17 @@
     "summary": null,
     "takeaways": [],
     "team": "DAL",
+    "template_version": "v2"
+  },
+  "christian braun|den": {
+    "entity": "Christian Braun",
+    "generated_at": "2026-11-17T18:59:28.090926+00:00",
+    "last_game_date": "2026-11-16",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DEN",
     "template_version": "v2"
   },
   "christian mccaffrey|sf": {
@@ -101,7 +134,7 @@
   "davion mitchell|mia": {
     "entity": "Davion Mitchell",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-14",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -112,7 +145,7 @@
   "desmond bane|orl": {
     "entity": "Desmond Bane",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -123,7 +156,7 @@
   "donovan clingan|por": {
     "entity": "Donovan Clingan",
     "generated_at": "2026-11-15T20:31:26.942798+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -145,7 +178,7 @@
   "franz wagner|orl": {
     "entity": "Franz Wagner",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-13",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -167,7 +200,7 @@
   "giannis antetokounmpo|mia": {
     "entity": "Giannis Antetokounmpo",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-14",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -255,7 +288,7 @@
   "josh giddey|chi": {
     "entity": "Josh Giddey",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-14",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -283,28 +316,6 @@
     "summary": null,
     "takeaways": [],
     "team": "DET",
-    "template_version": "v2"
-  },
-  "klay thompson|mia": {
-    "entity": "Klay Thompson",
-    "generated_at": "2026-11-15T16:51:58.580175+00:00",
-    "last_game_date": "2026-11-14",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "MIA",
-    "template_version": "v2"
-  },
-  "lamelo ball|min": {
-    "entity": "LaMelo Ball",
-    "generated_at": "2026-11-16T20:05:19.727658+00:00",
-    "last_game_date": "2026-11-14",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "MIN",
     "template_version": "v2"
   },
   "lauri markkanen|utah": {
@@ -340,21 +351,10 @@
     "team": "LAL",
     "template_version": "v2"
   },
-  "mo bamba|utah": {
-    "entity": "Mo Bamba",
-    "generated_at": "2026-11-13T17:34:17.538543+00:00",
-    "last_game_date": "2026-11-15",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "UTAH",
-    "template_version": "v2"
-  },
   "nikola jokic|den": {
     "entity": "Nikola Jokic",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-14",
+    "last_game_date": "2026-11-16",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -428,15 +428,15 @@
     "team": "SA",
     "template_version": "v2"
   },
-  "vj edgecombe|phi": {
-    "entity": "VJ Edgecombe",
-    "generated_at": "2026-11-13T17:34:17.538543+00:00",
+  "walker kessler|lal": {
+    "entity": "Walker Kessler",
+    "generated_at": "2026-11-17T18:59:28.090926+00:00",
     "last_game_date": "2026-11-15",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "PHI",
+    "team": "LAL",
     "template_version": "v2"
   }
 }
