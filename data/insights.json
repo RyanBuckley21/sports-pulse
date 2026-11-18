@@ -10,6 +10,17 @@
     "team": "ORL",
     "template_version": "v2"
   },
+  "ausar thompson|det": {
+    "entity": "Ausar Thompson",
+    "generated_at": "2026-11-18T18:43:34.315836+00:00",
+    "last_game_date": "2026-11-17",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DET",
+    "template_version": "v2"
+  },
   "bhayshul tuten|jax": {
     "entity": "Bhayshul Tuten",
     "generated_at": "2026-11-16T20:05:19.727658+00:00",
@@ -54,17 +65,6 @@
     "team": "HOU",
     "template_version": "v2"
   },
-  "cade cunningham|det": {
-    "entity": "Cade Cunningham",
-    "generated_at": "2026-11-17T18:59:28.090926+00:00",
-    "last_game_date": "2026-11-14",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DET",
-    "template_version": "v2"
-  },
   "caleb williams|chi": {
     "entity": "Caleb Williams",
     "generated_at": "2026-11-09T20:31:06.810662+00:00",
@@ -87,17 +87,6 @@
     "team": "DAL",
     "template_version": "v2"
   },
-  "christian braun|den": {
-    "entity": "Christian Braun",
-    "generated_at": "2026-11-17T18:59:28.090926+00:00",
-    "last_game_date": "2026-11-16",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DEN",
-    "template_version": "v2"
-  },
   "christian mccaffrey|sf": {
     "entity": "Christian McCaffrey",
     "generated_at": "2026-11-02T20:04:17.153837+00:00",
@@ -107,6 +96,17 @@
     "summary": null,
     "takeaways": [],
     "team": "SF",
+    "template_version": "v2"
+  },
+  "collin murray-boyles|tor": {
+    "entity": "Collin Murray-Boyles",
+    "generated_at": "2026-11-18T18:43:34.315836+00:00",
+    "last_game_date": "2026-11-17",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "TOR",
     "template_version": "v2"
   },
   "d'andre swift|chi": {
@@ -156,7 +156,7 @@
   "donovan clingan|por": {
     "entity": "Donovan Clingan",
     "generated_at": "2026-11-15T20:31:26.942798+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -299,7 +299,7 @@
   "karl-anthony towns|ny": {
     "entity": "Karl-Anthony Towns",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -310,7 +310,7 @@
   "kevin huerter|det": {
     "entity": "Kevin Huerter",
     "generated_at": "2026-11-15T16:51:58.580175+00:00",
-    "last_game_date": "2026-11-14",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -332,7 +332,7 @@
   "luka doncic|lal": {
     "entity": "Luka Doncic",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -343,7 +343,7 @@
   "matisse thybulle|lal": {
     "entity": "Matisse Thybulle",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -406,6 +406,17 @@
     "team": "TEN",
     "template_version": "v2"
   },
+  "trae young|wsh": {
+    "entity": "Trae Young",
+    "generated_at": "2026-11-18T18:43:34.315836+00:00",
+    "last_game_date": "2026-11-16",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "WSH",
+    "template_version": "v2"
+  },
   "trevor lawrence|jax": {
     "entity": "Trevor Lawrence",
     "generated_at": "2026-10-26T16:39:49.752137+00:00",
@@ -420,23 +431,12 @@
   "victor wembanyama|sa": {
     "entity": "Victor Wembanyama",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-17",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "SA",
-    "template_version": "v2"
-  },
-  "walker kessler|lal": {
-    "entity": "Walker Kessler",
-    "generated_at": "2026-11-17T18:59:28.090926+00:00",
-    "last_game_date": "2026-11-15",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "LAL",
     "template_version": "v2"
   }
 }
