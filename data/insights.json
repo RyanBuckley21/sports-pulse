@@ -1,19 +1,19 @@
 {
-  "anthony black|orl": {
-    "entity": "Anthony Black",
-    "generated_at": "2026-11-17T18:59:28.090926+00:00",
-    "last_game_date": "2026-11-16",
+  "alex sarr|wsh": {
+    "entity": "Alex Sarr",
+    "generated_at": "2026-11-19T18:54:36.160810+00:00",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "ORL",
+    "team": "WSH",
     "template_version": "v2"
   },
   "ausar thompson|det": {
     "entity": "Ausar Thompson",
     "generated_at": "2026-11-18T18:43:34.315836+00:00",
-    "last_game_date": "2026-11-17",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -87,6 +87,17 @@
     "team": "DAL",
     "template_version": "v2"
   },
+  "christian braun|den": {
+    "entity": "Christian Braun",
+    "generated_at": "2026-11-19T18:54:36.160810+00:00",
+    "last_game_date": "2026-11-18",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DEN",
+    "template_version": "v2"
+  },
   "christian mccaffrey|sf": {
     "entity": "Christian McCaffrey",
     "generated_at": "2026-11-02T20:04:17.153837+00:00",
@@ -101,7 +112,7 @@
   "collin murray-boyles|tor": {
     "entity": "Collin Murray-Boyles",
     "generated_at": "2026-11-18T18:43:34.315836+00:00",
-    "last_game_date": "2026-11-17",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -134,7 +145,7 @@
   "davion mitchell|mia": {
     "entity": "Davion Mitchell",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -145,7 +156,7 @@
   "desmond bane|orl": {
     "entity": "Desmond Bane",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -167,7 +178,7 @@
   "dyson daniels|atl": {
     "entity": "Dyson Daniels",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -178,7 +189,7 @@
   "franz wagner|orl": {
     "entity": "Franz Wagner",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -200,7 +211,7 @@
   "giannis antetokounmpo|mia": {
     "entity": "Giannis Antetokounmpo",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -211,7 +222,7 @@
   "isaiah hartenstein|okc": {
     "entity": "Isaiah Hartenstein",
     "generated_at": "2026-11-16T20:05:19.727658+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -288,7 +299,7 @@
   "josh giddey|chi": {
     "entity": "Josh Giddey",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -307,32 +318,21 @@
     "team": "NY",
     "template_version": "v2"
   },
-  "kevin huerter|det": {
-    "entity": "Kevin Huerter",
-    "generated_at": "2026-11-15T16:51:58.580175+00:00",
-    "last_game_date": "2026-11-17",
+  "klay thompson|mia": {
+    "entity": "Klay Thompson",
+    "generated_at": "2026-11-19T18:54:36.160810+00:00",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "DET",
-    "template_version": "v2"
-  },
-  "lauri markkanen|utah": {
-    "entity": "Lauri Markkanen",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-06",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "UTAH",
+    "team": "MIA",
     "template_version": "v2"
   },
   "luka doncic|lal": {
     "entity": "Luka Doncic",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-17",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -343,23 +343,12 @@
   "matisse thybulle|lal": {
     "entity": "Matisse Thybulle",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-17",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
     "team": "LAL",
-    "template_version": "v2"
-  },
-  "nikola jokic|den": {
-    "entity": "Nikola Jokic",
-    "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-16",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DEN",
     "template_version": "v2"
   },
   "puka nacua|la": {
@@ -373,10 +362,21 @@
     "team": "LA",
     "template_version": "v2"
   },
+  "quentin grimes|lal": {
+    "entity": "Quentin Grimes",
+    "generated_at": "2026-11-19T18:54:36.160810+00:00",
+    "last_game_date": "2026-11-18",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "LAL",
+    "template_version": "v2"
+  },
   "shai gilgeous-alexander|okc": {
     "entity": "Shai Gilgeous-Alexander",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-15",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -409,7 +409,7 @@
   "trae young|wsh": {
     "entity": "Trae Young",
     "generated_at": "2026-11-18T18:43:34.315836+00:00",
-    "last_game_date": "2026-11-16",
+    "last_game_date": "2026-11-18",
     "matchup_note": null,
     "story": null,
     "summary": null,
