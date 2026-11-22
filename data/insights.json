@@ -10,6 +10,17 @@
     "team": "WSH",
     "template_version": "v2"
   },
+  "andrew nembhard|ind": {
+    "entity": "Andrew Nembhard",
+    "generated_at": "2026-11-22T17:40:42.109968+00:00",
+    "last_game_date": "2026-11-20",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "IND",
+    "template_version": "v2"
+  },
   "ausar thompson|det": {
     "entity": "Ausar Thompson",
     "generated_at": "2026-11-18T18:43:34.315836+00:00",
@@ -63,6 +74,17 @@
     "summary": null,
     "takeaways": [],
     "team": "HOU",
+    "template_version": "v2"
+  },
+  "cade cunningham|det": {
+    "entity": "Cade Cunningham",
+    "generated_at": "2026-11-22T17:40:42.109968+00:00",
+    "last_game_date": "2026-11-20",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DET",
     "template_version": "v2"
   },
   "caleb williams|chi": {
@@ -153,15 +175,15 @@
     "team": "ORL",
     "template_version": "v2"
   },
-  "donovan clingan|por": {
-    "entity": "Donovan Clingan",
-    "generated_at": "2026-11-15T20:31:26.942798+00:00",
-    "last_game_date": "2026-11-19",
+  "domantas sabonis|sac": {
+    "entity": "Domantas Sabonis",
+    "generated_at": "2026-11-22T17:40:42.109968+00:00",
+    "last_game_date": "2026-11-21",
     "matchup_note": null,
     "story": null,
     "summary": null,
     "takeaways": [],
-    "team": "POR",
+    "team": "SAC",
     "template_version": "v2"
   },
   "dyson daniels|atl": {
@@ -206,17 +228,6 @@
     "summary": null,
     "takeaways": [],
     "team": "MIA",
-    "template_version": "v2"
-  },
-  "isaiah hartenstein|okc": {
-    "entity": "Isaiah Hartenstein",
-    "generated_at": "2026-11-16T20:05:19.727658+00:00",
-    "last_game_date": "2026-11-20",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "OKC",
     "template_version": "v2"
   },
   "ja'marr chase|cin": {
@@ -329,17 +340,6 @@
     "team": "LAL",
     "template_version": "v2"
   },
-  "moussa diabate|cha": {
-    "entity": "Moussa Diabate",
-    "generated_at": "2026-11-21T17:11:44.438398+00:00",
-    "last_game_date": "2026-11-20",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "CHA",
-    "template_version": "v2"
-  },
   "nikola jokic|den": {
     "entity": "Nikola Jokic",
     "generated_at": "2026-11-21T17:11:44.438398+00:00",
@@ -431,7 +431,7 @@
   "victor wembanyama|sa": {
     "entity": "Victor Wembanyama",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
-    "last_game_date": "2026-11-19",
+    "last_game_date": "2026-11-21",
     "matchup_note": null,
     "story": null,
     "summary": null,
