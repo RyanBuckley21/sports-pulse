@@ -2,7 +2,7 @@
   "ausar thompson|det": {
     "entity": "Ausar Thompson",
     "generated_at": "2026-11-18T18:43:34.315836+00:00",
-    "last_game_date": "2026-11-22",
+    "last_game_date": "2026-11-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -54,6 +54,17 @@
     "team": "DET",
     "template_version": "v2"
   },
+  "caleb martin|dal": {
+    "entity": "Caleb Martin",
+    "generated_at": "2026-11-25T19:49:12.323636+00:00",
+    "last_game_date": "2026-11-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "DAL",
+    "template_version": "v2"
+  },
   "ceedee lamb|dal": {
     "entity": "CeeDee Lamb",
     "generated_at": "2026-11-13T17:34:17.538543+00:00",
@@ -63,17 +74,6 @@
     "summary": null,
     "takeaways": [],
     "team": "DAL",
-    "template_version": "v2"
-  },
-  "christian braun|den": {
-    "entity": "Christian Braun",
-    "generated_at": "2026-11-23T21:56:19.111600+00:00",
-    "last_game_date": "2026-11-22",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "DEN",
     "template_version": "v2"
   },
   "christian mccaffrey|sf": {
@@ -120,21 +120,10 @@
     "team": "DAL",
     "template_version": "v2"
   },
-  "davion mitchell|mia": {
-    "entity": "Davion Mitchell",
-    "generated_at": "2026-11-24T02:32:17.694921+00:00",
-    "last_game_date": "2026-11-22",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "MIA",
-    "template_version": "v2"
-  },
   "desmond bane|orl": {
     "entity": "Desmond Bane",
     "generated_at": "2026-11-14T16:26:35.294280+00:00",
-    "last_game_date": "2026-11-22",
+    "last_game_date": "2026-11-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -252,6 +241,17 @@
     "team": "SEA",
     "template_version": "v2"
   },
+  "jayson tatum|bos": {
+    "entity": "Jayson Tatum",
+    "generated_at": "2026-11-25T19:49:12.323636+00:00",
+    "last_game_date": "2026-11-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "BOS",
+    "template_version": "v2"
+  },
   "joan beringer|min": {
     "entity": "Joan Beringer",
     "generated_at": "2026-11-24T20:32:03.205216+00:00",
@@ -296,17 +296,6 @@
     "team": "NY",
     "template_version": "v2"
   },
-  "klay thompson|mia": {
-    "entity": "Klay Thompson",
-    "generated_at": "2026-11-24T20:32:03.205216+00:00",
-    "last_game_date": "2026-11-22",
-    "matchup_note": null,
-    "story": null,
-    "summary": null,
-    "takeaways": [],
-    "team": "MIA",
-    "template_version": "v2"
-  },
   "luka doncic|lal": {
     "entity": "Luka Doncic",
     "generated_at": "2026-11-12T16:50:15.278691+00:00",
@@ -343,7 +332,7 @@
   "nikola jokic|den": {
     "entity": "Nikola Jokic",
     "generated_at": "2026-11-21T17:11:44.438398+00:00",
-    "last_game_date": "2026-11-22",
+    "last_game_date": "2026-11-24",
     "matchup_note": null,
     "story": null,
     "summary": null,
@@ -426,6 +415,17 @@
     "summary": null,
     "takeaways": [],
     "team": "TEN",
+    "template_version": "v2"
+  },
+  "trae young|wsh": {
+    "entity": "Trae Young",
+    "generated_at": "2026-11-25T19:49:12.323636+00:00",
+    "last_game_date": "2026-11-24",
+    "matchup_note": null,
+    "story": null,
+    "summary": null,
+    "takeaways": [],
+    "team": "WSH",
     "template_version": "v2"
   },
   "victor wembanyama|sa": {
