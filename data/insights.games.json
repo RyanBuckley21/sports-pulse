@@ -23,16 +23,16 @@
       "odds": {
         "away_ml": -455,
         "away_ml_open": -148,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "TEX -11.5",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "TEX -10.5",
         "home_ml": 350,
         "home_ml_open": 124,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 11.5,
-        "spread_close": 11.5,
+        "provider": "Draft Kings",
+        "spread": 10.5,
+        "spread_close": 10.5,
         "spread_open": 2.5,
-        "total": 40.5
+        "total": 41.5
       },
       "odds_first_seen": {
         "away_ml": -425,
@@ -54,7 +54,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -91,16 +91,16 @@
         "name": "Alabama"
       },
       "odds": {
-        "away_ml": 525,
+        "away_ml": 500,
         "away_ml_open": 320,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "ALA -15.5",
-        "home_ml": -750,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "ALA -14.5",
+        "home_ml": -700,
         "home_ml_open": -410,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -15.5,
-        "spread_close": -15.5,
+        "provider": "Draft Kings",
+        "spread": -14.5,
+        "spread_close": -14.5,
         "spread_open": -10.0,
         "total": 49.5
       },
@@ -124,7 +124,7 @@
           "value": "+0.06"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -163,12 +163,12 @@
       "odds": {
         "away_ml": -625,
         "away_ml_open": -625,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "LSU -14.5",
         "home_ml": 455,
         "home_ml_open": 455,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 14.5,
         "spread_close": 14.5,
         "spread_open": 13.5,
@@ -194,7 +194,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -233,16 +233,16 @@
       "odds": {
         "away_ml": -238,
         "away_ml_open": -218,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "FLA -6.5",
         "home_ml": 195,
         "home_ml_open": 180,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 6.5,
         "spread_close": 6.5,
         "spread_open": 4.5,
-        "total": 53.5
+        "total": 54.5
       },
       "odds_first_seen": {
         "away_ml": -225,
@@ -264,7 +264,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -303,12 +303,12 @@
       "odds": {
         "away_ml": 2200,
         "away_ml_open": 4000,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "UGA -35.5",
         "home_ml": -8000,
         "home_ml_open": -50000,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -35.5,
         "spread_close": -35.5,
         "spread_open": -35.5,
@@ -329,7 +329,7 @@
           "value": "+0.18"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -362,12 +362,12 @@
       "odds": {
         "away_ml": -142,
         "away_ml_open": -102,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "LOU -3",
         "home_ml": 120,
         "home_ml_open": -118,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 3.0,
         "spread_close": 3.0,
         "spread_open": -1.5,
@@ -393,7 +393,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -443,7 +443,12 @@
         "spread_open": -14.5,
         "total": 56.5
       },
-      "odds_first_seen": null,
+      "odds_first_seen": {
+        "away_ml": 675,
+        "captured_at": "2026-11-27T19:23:27.897944+00:00",
+        "home_ml": -1050,
+        "side": "MISS"
+      },
       "probables": null,
       "pulse": null,
       "signals": [
@@ -458,8 +463,14 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-11-26",
-      "standout": null,
+      "slate_date": "2026-11-27",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 41,
+        "side": "MISS"
+      },
       "start": "Fri Nov 27 \u00b7 12:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -489,18 +500,18 @@
         "name": "Missouri"
       },
       "odds": {
-        "away_ml": 102,
+        "away_ml": 105,
         "away_ml_open": -102,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "MIZ -2.5",
-        "home_ml": -122,
+        "home_ml": -125,
         "home_ml_open": -118,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": -1.5,
-        "total": 41.5
+        "total": 42.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -517,7 +528,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 4:15 PM ET",
       "status": "Preview",
@@ -548,18 +559,18 @@
         "name": "Clemson"
       },
       "odds": {
-        "away_ml": -230,
+        "away_ml": -238,
         "away_ml_open": 130,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "SC -6",
-        "home_ml": 190,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "SC -6.5",
+        "home_ml": 195,
         "home_ml_open": -155,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 6.0,
-        "spread_close": 6.0,
+        "provider": "Draft Kings",
+        "spread": 6.5,
+        "spread_close": 6.5,
         "spread_open": -3.0,
-        "total": 41.5
+        "total": 42.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -576,7 +587,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -609,16 +620,16 @@
       "odds": {
         "away_ml": -550,
         "away_ml_open": -155,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "TENN -13.5",
         "home_ml": 410,
         "home_ml_open": 130,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 13.5,
         "spread_close": 13.5,
         "spread_open": 3.0,
-        "total": 42.5
+        "total": 43.5
       },
       "odds_first_seen": {
         "away_ml": -440,
@@ -640,7 +651,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -677,16 +688,16 @@
         "name": "Arizona"
       },
       "odds": {
-        "away_ml": 250,
+        "away_ml": 260,
         "away_ml_open": 180,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "ARIZ -7.5",
-        "home_ml": -310,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "ARIZ -8.5",
+        "home_ml": -325,
         "home_ml_open": -218,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -7.5,
-        "spread_close": -7.5,
+        "provider": "Draft Kings",
+        "spread": -8.5,
+        "spread_close": -8.5,
         "spread_open": -4.5,
         "total": 53.5
       },
@@ -710,7 +721,7 @@
           "value": "+0.07"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -747,16 +758,16 @@
         "name": "Houston"
       },
       "odds": {
-        "away_ml": 164,
+        "away_ml": 150,
         "away_ml_open": 154,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "HOU -4.5",
-        "home_ml": -198,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "HOU -3.5",
+        "home_ml": -180,
         "home_ml_open": -185,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -4.5,
-        "spread_close": -4.5,
+        "provider": "Draft Kings",
+        "spread": -3.5,
+        "spread_close": -3.5,
         "spread_open": -4.5,
         "total": 55.5
       },
@@ -775,7 +786,7 @@
           "value": "+0.16"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 9:30 PM ET",
       "status": "Preview",
@@ -806,18 +817,18 @@
         "name": "Colorado"
       },
       "odds": {
-        "away_ml": 110,
+        "away_ml": 105,
         "away_ml_open": -105,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "COLO -2.5",
-        "home_ml": -130,
+        "home_ml": -125,
         "home_ml_open": -115,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": -1.5,
-        "total": 49.5
+        "total": 48.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -834,7 +845,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 2:00 PM ET",
       "status": "Preview",
@@ -867,16 +878,16 @@
       "odds": {
         "away_ml": 500,
         "away_ml_open": 380,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "BYU -15.5",
         "home_ml": -700,
         "home_ml_open": -500,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -15.5,
         "spread_close": -15.5,
         "spread_open": -12.5,
-        "total": 56.5
+        "total": 55.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -893,7 +904,7 @@
           "value": "+0.16"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -926,14 +937,14 @@
       "odds": {
         "away_ml": 190,
         "away_ml_open": 185,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "OKST -6.5",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "OKST -6",
         "home_ml": -230,
         "home_ml_open": -225,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -6.5,
-        "spread_close": -6.5,
+        "provider": "Draft Kings",
+        "spread": -6.0,
+        "spread_close": -6.0,
         "spread_open": -6.5,
         "total": 64.5
       },
@@ -952,7 +963,7 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 6:15 PM ET",
       "status": "Preview",
@@ -983,16 +994,16 @@
         "name": "Iowa State"
       },
       "odds": {
-        "away_ml": 154,
+        "away_ml": 160,
         "away_ml_open": 154,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "ISU -3.5",
-        "home_ml": -185,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "ISU -4",
+        "home_ml": -192,
         "home_ml_open": -185,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.5,
-        "spread_close": -3.5,
+        "provider": "Draft Kings",
+        "spread": -4.0,
+        "spread_close": -4.0,
         "spread_open": -5.5,
         "total": 53.5
       },
@@ -1011,7 +1022,7 @@
           "value": "+0.16"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 2:00 PM ET",
       "status": "Preview",
@@ -1019,65 +1030,6 @@
       "summary": null,
       "template_version": "v3",
       "venue": "Jack Trice Stadium",
-      "win_prob": null
-    },
-    "401856879": {
-      "away": {
-        "abbr": "TCU",
-        "color": "#905ABE",
-        "name": "TCU"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 34,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-22T17:40:42.109968+00:00",
-      "home": {
-        "abbr": "TTU",
-        "color": "#E73250",
-        "name": "Texas Tech"
-      },
-      "odds": {
-        "away_ml": 455,
-        "away_ml_open": 575,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "TTU -14",
-        "home_ml": -625,
-        "home_ml_open": -850,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -14.0,
-        "spread_close": -14.0,
-        "spread_open": -16.5,
-        "total": 46.5
-      },
-      "odds_first_seen": null,
-      "probables": null,
-      "pulse": null,
-      "signals": [
-        {
-          "label": "TTU Off PPA/play, opp-adj",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "TTU Def PPA/play allowed, opp-adj",
-          "tone": "neg",
-          "value": "+0.03"
-        }
-      ],
-      "slate_date": "2026-11-26",
-      "standout": null,
-      "start": "Thu Nov 26 \u00b7 8:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Jones AT&T Stadium",
       "win_prob": null
     },
     "401856880": {
@@ -1103,16 +1055,16 @@
       "odds": {
         "away_ml": 1300,
         "away_ml_open": 800,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "UTAH -26.5",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "UTAH -25.5",
         "home_ml": -2800,
         "home_ml_open": -1350,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -26.5,
-        "spread_close": -26.5,
+        "provider": "Draft Kings",
+        "spread": -25.5,
+        "spread_close": -25.5,
         "spread_open": -20.5,
-        "total": 66.5
+        "total": 65.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -1129,7 +1081,7 @@
           "value": "+0.23"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 9:00 PM ET",
       "status": "Preview",
@@ -1162,14 +1114,14 @@
       "odds": {
         "away_ml": 1300,
         "away_ml_open": 1500,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "MIA -24.5",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "MIA -25.5",
         "home_ml": -2800,
         "home_ml_open": -3600,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -24.5,
-        "spread_close": -24.5,
+        "provider": "Draft Kings",
+        "spread": -25.5,
+        "spread_close": -25.5,
         "spread_open": -26.5,
         "total": 53.5
       },
@@ -1188,7 +1140,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -1221,12 +1173,12 @@
       "odds": {
         "away_ml": 470,
         "away_ml_open": 280,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "WAKE -14.5",
         "home_ml": -650,
         "home_ml_open": -355,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -14.5,
         "spread_close": -14.5,
         "spread_open": -10.5,
@@ -1252,7 +1204,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1291,16 +1243,16 @@
       "odds": {
         "away_ml": 185,
         "away_ml_open": -118,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "UNC -6",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "UNC -5.5",
         "home_ml": -225,
         "home_ml_open": -102,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -6.0,
-        "spread_close": -6.0,
+        "provider": "Draft Kings",
+        "spread": -5.5,
+        "spread_close": -5.5,
         "spread_open": 1.5,
-        "total": 54.5
+        "total": 53.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -1317,7 +1269,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -1350,12 +1302,12 @@
       "odds": {
         "away_ml": -2800,
         "away_ml_open": -1350,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ND -25.5",
         "home_ml": 1300,
         "home_ml_open": 800,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 25.5,
         "spread_close": 25.5,
         "spread_open": 21.0,
@@ -1376,7 +1328,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -1409,12 +1361,12 @@
       "odds": {
         "away_ml": -355,
         "away_ml_open": 235,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "PITT -9.5",
         "home_ml": 280,
         "home_ml_open": -290,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 9.5,
         "spread_close": 9.5,
         "spread_open": -7.5,
@@ -1440,7 +1392,7 @@
           "value": "+0.19"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1479,16 +1431,16 @@
       "odds": {
         "away_ml": -285,
         "away_ml_open": -340,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "SMU -7",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "SMU -7.5",
         "home_ml": 230,
         "home_ml_open": 270,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 7.0,
-        "spread_close": 7.0,
+        "provider": "Draft Kings",
+        "spread": 7.5,
+        "spread_close": 7.5,
         "spread_open": 10.0,
-        "total": 61.5
+        "total": 60.5
       },
       "odds_first_seen": {
         "away_ml": -298,
@@ -1510,7 +1462,7 @@
           "value": "+0.23"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1549,12 +1501,12 @@
       "odds": {
         "away_ml": 130,
         "away_ml_open": 105,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "VT -3",
         "home_ml": -155,
         "home_ml_open": -125,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -1.5,
@@ -1575,7 +1527,7 @@
           "value": "+0.16"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -1634,7 +1586,7 @@
           "value": "+0.02"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -1667,12 +1619,12 @@
       "odds": {
         "away_ml": 120,
         "away_ml_open": -170,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "NU -2.5",
         "home_ml": -142,
         "home_ml_open": 142,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": 3.5,
@@ -1698,7 +1650,7 @@
           "value": "+0.18"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1737,12 +1689,12 @@
       "odds": {
         "away_ml": 1100,
         "away_ml_open": 750,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "IU -23.5",
         "home_ml": -2100,
         "home_ml_open": -1200,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -23.5,
         "spread_close": -23.5,
         "spread_open": -22.5,
@@ -1763,7 +1715,7 @@
           "value": "+0.22"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 7:00 PM ET",
       "status": "Preview",
@@ -1794,16 +1746,16 @@
         "name": "Maryland"
       },
       "odds": {
-        "away_ml": -278,
+        "away_ml": -290,
         "away_ml_open": -290,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "PSU -7",
-        "home_ml": 225,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "PSU -7.5",
+        "home_ml": 235,
         "home_ml_open": 235,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 7.0,
-        "spread_close": 7.0,
+        "provider": "Draft Kings",
+        "spread": 7.5,
+        "spread_close": 7.5,
         "spread_open": 7.5,
         "total": 48.5
       },
@@ -1827,7 +1779,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1866,14 +1818,14 @@
       "odds": {
         "away_ml": 330,
         "away_ml_open": 400,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "OSU -10",
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "OSU -10.5",
         "home_ml": -425,
         "home_ml_open": -535,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -10.0,
-        "spread_close": -10.0,
+        "provider": "Draft Kings",
+        "spread": -10.5,
+        "spread_close": -10.5,
         "spread_open": -14.0,
         "total": 37.5
       },
@@ -1897,7 +1849,7 @@
           "value": "+0.02"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -1936,16 +1888,16 @@
       "odds": {
         "away_ml": 455,
         "away_ml_open": 455,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ORE -13.5",
         "home_ml": -625,
         "home_ml_open": -625,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -13.5,
         "spread_close": -13.5,
         "spread_open": -15.5,
-        "total": 50.5
+        "total": 51.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -1962,7 +1914,7 @@
           "value": "+0.08"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 7:30 PM ET",
       "status": "Preview",
@@ -1993,16 +1945,16 @@
         "name": "Rutgers"
       },
       "odds": {
-        "away_ml": -148,
+        "away_ml": -142,
         "away_ml_open": -142,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "MSU -3",
-        "home_ml": 124,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "MSU -2.5",
+        "home_ml": 120,
         "home_ml_open": 120,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 3.0,
-        "spread_close": 3.0,
+        "provider": "Draft Kings",
+        "spread": 2.5,
+        "spread_close": 2.5,
         "spread_open": 3.5,
         "total": 46.5
       },
@@ -2021,7 +1973,7 @@
           "value": "+0.22"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 4:15 PM ET",
       "status": "Preview",
@@ -2052,18 +2004,18 @@
         "name": "UCLA"
       },
       "odds": {
-        "away_ml": -250,
+        "away_ml": -205,
         "away_ml_open": -425,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "USC -6.5",
-        "home_ml": 205,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "USC -4.5",
+        "home_ml": 170,
         "home_ml_open": 330,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 6.5,
-        "spread_close": 6.5,
+        "provider": "Draft Kings",
+        "spread": 4.5,
+        "spread_close": 4.5,
         "spread_open": 11.5,
-        "total": 45.5
+        "total": 46.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -2080,7 +2032,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -2111,16 +2063,16 @@
         "name": "Wisconsin"
       },
       "odds": {
-        "away_ml": 260,
+        "away_ml": 270,
         "away_ml_open": 180,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "WIS -8.5",
-        "home_ml": -325,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "WIS -9.5",
+        "home_ml": -340,
         "home_ml_open": -218,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -8.5,
-        "spread_close": -8.5,
+        "provider": "Draft Kings",
+        "spread": -9.5,
+        "spread_close": -9.5,
         "spread_open": -6.0,
         "total": 37.5
       },
@@ -2144,7 +2096,7 @@
           "value": "+0.09"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2183,12 +2135,12 @@
       "odds": {
         "away_ml": -1800,
         "away_ml_open": -1800,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "BOIS -21",
         "home_ml": 1000,
         "home_ml_open": 1000,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 21.0,
         "spread_close": 21.0,
         "spread_open": 21.0,
@@ -2209,7 +2161,7 @@
           "value": "+0.34"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 6:00 PM ET",
       "status": "Preview",
@@ -2242,12 +2194,12 @@
       "odds": {
         "away_ml": 130,
         "away_ml_open": -108,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "FRES -3",
         "home_ml": -155,
         "home_ml_open": -112,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -1.5,
@@ -2268,7 +2220,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 10:00 PM ET",
       "status": "Preview",
@@ -2299,16 +2251,16 @@
         "name": "Utah State"
       },
       "odds": {
-        "away_ml": -270,
+        "away_ml": -305,
         "away_ml_open": -285,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "TXST -7",
-        "home_ml": 220,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "TXST -7.5",
+        "home_ml": 245,
         "home_ml_open": 230,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 7.0,
-        "spread_close": 7.0,
+        "provider": "Draft Kings",
+        "spread": 7.5,
+        "spread_close": 7.5,
         "spread_open": 7.5,
         "total": 52.5
       },
@@ -2327,7 +2279,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 9:30 PM ET",
       "status": "Preview",
@@ -2358,14 +2310,14 @@
         "name": "Washington State"
       },
       "odds": {
-        "away_ml": 120,
+        "away_ml": 124,
         "away_ml_open": -148,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "WSU -2.5",
-        "home_ml": -142,
+        "home_ml": -148,
         "home_ml_open": 124,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": 3.0,
@@ -2386,7 +2338,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 6:30 PM ET",
       "status": "Preview",
@@ -2417,18 +2369,18 @@
         "name": "Wyoming"
       },
       "odds": {
-        "away_ml": -155,
+        "away_ml": -170,
         "away_ml_open": -130,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "CONN -3",
-        "home_ml": 130,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "CONN -3.5",
+        "home_ml": 142,
         "home_ml_open": 120,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 3.0,
-        "spread_close": 3.0,
+        "provider": "Draft Kings",
+        "spread": 3.5,
+        "spread_close": 3.5,
         "spread_open": 2.5,
-        "total": 45.5
+        "total": 44.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -2445,7 +2397,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -2478,16 +2430,16 @@
       "odds": {
         "away_ml": -102,
         "away_ml_open": 110,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ECU -1.5",
         "home_ml": -118,
         "home_ml_open": -130,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -1.5,
         "spread_close": -1.5,
         "spread_open": -2.5,
-        "total": 57.5
+        "total": 58.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -2504,7 +2456,7 @@
           "value": "+0.20"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -2535,16 +2487,16 @@
         "name": "Memphis"
       },
       "odds": {
-        "away_ml": 650,
+        "away_ml": 700,
         "away_ml_open": 575,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "MEM -18.5",
-        "home_ml": -1000,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "MEM -19.5",
+        "home_ml": -1100,
         "home_ml_open": -850,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -18.5,
-        "spread_close": -18.5,
+        "provider": "Draft Kings",
+        "spread": -19.5,
+        "spread_close": -19.5,
         "spread_open": -17.5,
         "total": 66.5
       },
@@ -2568,14 +2520,8 @@
           "value": "+0.19"
         }
       ],
-      "slate_date": "2026-11-26",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 71,
-        "side": "MEM"
-      },
+      "slate_date": "2026-11-27",
+      "standout": null,
       "start": "Fri Nov 27 \u00b7 3:30 PM ET",
       "status": "Preview",
       "story": null,
@@ -2607,16 +2553,16 @@
       "odds": {
         "away_ml": 195,
         "away_ml_open": 245,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "USF -6.5",
         "home_ml": -238,
         "home_ml_open": -305,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -6.5,
         "spread_close": -6.5,
         "spread_open": -8.5,
-        "total": 43.5
+        "total": 44.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -2633,7 +2579,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -2692,7 +2638,7 @@
           "value": "+0.09"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -2723,14 +2669,14 @@
         "name": "Rice"
       },
       "odds": {
-        "away_ml": -205,
+        "away_ml": -198,
         "away_ml_open": -298,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ARMY -5.5",
-        "home_ml": 170,
+        "home_ml": 164,
         "home_ml_open": 240,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 5.5,
         "spread_close": 5.5,
         "spread_open": 7.5,
@@ -2756,7 +2702,7 @@
           "value": "+0.20"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2793,18 +2739,18 @@
         "name": "Charlotte"
       },
       "odds": {
-        "away_ml": -850,
+        "away_ml": -800,
         "away_ml_open": -900,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "NAVY -16.5",
-        "home_ml": 575,
+        "home_ml": 550,
         "home_ml_open": 600,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 16.5,
         "spread_close": 16.5,
         "spread_open": 16.5,
-        "total": 53.5
+        "total": 54.5
       },
       "odds_first_seen": {
         "away_ml": -800,
@@ -2826,7 +2772,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -2863,16 +2809,16 @@
         "name": "North Texas"
       },
       "odds": {
-        "away_ml": 130,
+        "away_ml": 120,
         "away_ml_open": 150,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "UNT -3",
-        "home_ml": -155,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "UNT -2.5",
+        "home_ml": -142,
         "home_ml_open": -180,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.0,
-        "spread_close": -3.0,
+        "provider": "Draft Kings",
+        "spread": -2.5,
+        "spread_close": -2.5,
         "spread_open": -4.5,
         "total": 45.5
       },
@@ -2891,7 +2837,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 4:00 PM ET",
       "status": "Preview",
@@ -2922,16 +2868,16 @@
         "name": "New Mexico"
       },
       "odds": {
-        "away_ml": 210,
+        "away_ml": 225,
         "away_ml_open": 195,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "UNM -6.5",
-        "home_ml": -258,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "UNM -7",
+        "home_ml": -278,
         "home_ml_open": -238,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -6.5,
-        "spread_close": -6.5,
+        "provider": "Draft Kings",
+        "spread": -7.0,
+        "spread_close": -7.0,
         "spread_open": -7.0,
         "total": 42.5
       },
@@ -2950,7 +2896,7 @@
           "value": "+0.07"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 4:30 PM ET",
       "status": "Preview",
@@ -2983,12 +2929,12 @@
       "odds": {
         "away_ml": 425,
         "away_ml_open": 455,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "HAW -13.5",
         "home_ml": -575,
         "home_ml_open": -625,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -13.5,
         "spread_close": -13.5,
         "spread_open": -14.5,
@@ -3009,7 +2955,7 @@
           "value": "+0.18"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 11:00 PM ET",
       "status": "Preview",
@@ -3042,12 +2988,12 @@
       "odds": {
         "away_ml": 185,
         "away_ml_open": 154,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "UNLV -5.5",
         "home_ml": -225,
         "home_ml_open": -185,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -5.5,
         "spread_close": -5.5,
         "spread_open": -4.5,
@@ -3068,7 +3014,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 9:00 PM ET",
       "status": "Preview",
@@ -3099,18 +3045,18 @@
         "name": "San Jos\u00e9 State"
       },
       "odds": {
-        "away_ml": -345,
+        "away_ml": -375,
         "away_ml_open": -550,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "NDSU -8.5",
-        "home_ml": 275,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "NDSU -9.5",
+        "home_ml": 295,
         "home_ml_open": 410,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 8.5,
-        "spread_close": 8.5,
+        "provider": "Draft Kings",
+        "spread": 9.5,
+        "spread_close": 9.5,
         "spread_open": 11.5,
-        "total": 39.5
+        "total": 41.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -3127,7 +3073,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3166,12 +3112,12 @@
       "odds": {
         "away_ml": 160,
         "away_ml_open": 154,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "NIU -4.5",
         "home_ml": -192,
         "home_ml_open": -185,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -4.5,
         "spread_close": -4.5,
         "spread_open": -4.5,
@@ -3192,7 +3138,7 @@
           "value": "+0.23"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -3256,7 +3202,7 @@
           "value": "+0.24"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3326,7 +3272,7 @@
           "value": "+0.13"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3363,16 +3309,16 @@
         "name": "Ball State"
       },
       "odds": {
-        "away_ml": -192,
+        "away_ml": -180,
         "away_ml_open": -205,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "CMU -4",
-        "home_ml": 160,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "CMU -3.5",
+        "home_ml": 150,
         "home_ml_open": 170,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 4.0,
-        "spread_close": 4.0,
+        "provider": "Draft Kings",
+        "spread": 3.5,
+        "spread_close": 3.5,
         "spread_open": 6.5,
         "total": 50.5
       },
@@ -3391,7 +3337,7 @@
           "value": "+0.24"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -3422,18 +3368,18 @@
         "name": "Bowling Green"
       },
       "odds": {
-        "away_ml": 136,
+        "away_ml": 130,
         "away_ml_open": -102,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "BGSU -3",
-        "home_ml": -162,
+        "home_ml": -155,
         "home_ml_open": -118,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -1.5,
-        "total": 42.5
+        "total": 41.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -3450,7 +3396,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -3481,16 +3427,16 @@
         "name": "South Alabama"
       },
       "odds": {
-        "away_ml": 140,
+        "away_ml": 130,
         "away_ml_open": 105,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "USA -3.5",
-        "home_ml": -166,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "USA -3",
+        "home_ml": -155,
         "home_ml_open": -125,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.5,
-        "spread_close": -3.5,
+        "provider": "Draft Kings",
+        "spread": -3.0,
+        "spread_close": -3.0,
         "spread_open": -2.5,
         "total": 56.5
       },
@@ -3509,7 +3455,7 @@
           "value": "+0.23"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -3542,12 +3488,12 @@
       "odds": {
         "away_ml": 154,
         "away_ml_open": 140,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ARST -3.5",
         "home_ml": -185,
         "home_ml_open": -166,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.5,
         "spread_close": -3.5,
         "spread_open": -3.5,
@@ -3568,7 +3514,7 @@
           "value": "+0.19"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -3599,14 +3545,14 @@
         "name": "James Madison"
       },
       "odds": {
-        "away_ml": 575,
+        "away_ml": 625,
         "away_ml_open": 500,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "JMU -17.5",
-        "home_ml": -850,
+        "home_ml": -950,
         "home_ml_open": -700,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -17.5,
         "spread_close": -17.5,
         "spread_open": -13.5,
@@ -3632,7 +3578,7 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3671,12 +3617,12 @@
       "odds": {
         "away_ml": 114,
         "away_ml_open": -105,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "GASO -2.5",
         "home_ml": -135,
         "home_ml_open": -115,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": -1.5,
@@ -3697,7 +3643,7 @@
           "value": "+0.06"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 12:00 PM ET",
       "status": "Preview",
@@ -3728,16 +3674,16 @@
         "name": "Georgia State"
       },
       "odds": {
-        "away_ml": -205,
+        "away_ml": -198,
         "away_ml_open": -142,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "UL -5.5",
-        "home_ml": 170,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "UL -4.5",
+        "home_ml": 164,
         "home_ml_open": 120,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 5.5,
-        "spread_close": 5.5,
+        "provider": "Draft Kings",
+        "spread": 4.5,
+        "spread_close": 4.5,
         "spread_open": 3.0,
         "total": 55.5
       },
@@ -3761,7 +3707,7 @@
           "value": "+0.14"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3800,16 +3746,16 @@
       "odds": {
         "away_ml": -170,
         "away_ml_open": -118,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "KENN -3.5",
         "home_ml": 142,
         "home_ml_open": -102,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 3.5,
         "spread_close": 3.5,
         "spread_open": 1.5,
-        "total": 54.5
+        "total": 53.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -3826,7 +3772,7 @@
           "value": "+0.17"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -3859,16 +3805,16 @@
       "odds": {
         "away_ml": 120,
         "away_ml_open": -105,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "DEL -2.5",
         "home_ml": -142,
         "home_ml_open": -115,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -2.5,
         "spread_close": -2.5,
         "spread_open": -1.5,
-        "total": 58.5
+        "total": 57.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -3885,7 +3831,7 @@
           "value": "+0.17"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 3:30 PM ET",
       "status": "Preview",
@@ -3916,16 +3862,16 @@
         "name": "Missouri State"
       },
       "odds": {
-        "away_ml": -950,
+        "away_ml": -1000,
         "away_ml_open": -575,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "LIB -17.5",
-        "home_ml": 625,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "LIB -18.5",
+        "home_ml": 650,
         "home_ml_open": 425,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 17.5,
-        "spread_close": 17.5,
+        "provider": "Draft Kings",
+        "spread": 18.5,
+        "spread_close": 18.5,
         "spread_open": 14.5,
         "total": 52.5
       },
@@ -3949,7 +3895,7 @@
           "value": "+0.20"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -3988,16 +3934,16 @@
       "odds": {
         "away_ml": 350,
         "away_ml_open": 310,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "FIU -11.5",
         "home_ml": -455,
         "home_ml_open": -395,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -11.5,
         "spread_close": -11.5,
         "spread_open": -10.5,
-        "total": 41.5
+        "total": 40.5
       },
       "odds_first_seen": {
         "away_ml": 370,
@@ -4019,7 +3965,7 @@
           "value": "+0.15"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -4056,14 +4002,14 @@
         "name": "Middle Tennessee"
       },
       "odds": {
-        "away_ml": 136,
+        "away_ml": 140,
         "away_ml_open": 145,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "MTSU -3",
-        "home_ml": -162,
+        "home_ml": -166,
         "home_ml_open": -175,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -3.5,
@@ -4084,7 +4030,7 @@
           "value": "+0.17"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 2:00 PM ET",
       "status": "Preview",
@@ -4115,14 +4061,14 @@
         "name": "UL Monroe"
       },
       "odds": {
-        "away_ml": -205,
+        "away_ml": -218,
         "away_ml_open": -175,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "MRSH -5.5",
-        "home_ml": 170,
+        "home_ml": 180,
         "home_ml_open": 145,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 5.5,
         "spread_close": 5.5,
         "spread_open": 4.0,
@@ -4143,7 +4089,7 @@
           "value": "+0.21"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -4176,12 +4122,12 @@
       "odds": {
         "away_ml": 190,
         "away_ml_open": 150,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "ODU -6",
         "home_ml": -230,
         "home_ml_open": -180,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -6.0,
         "spread_close": -6.0,
         "spread_open": -4.5,
@@ -4202,7 +4148,7 @@
           "value": "+0.19"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sat Nov 28 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -5088,18 +5034,18 @@
         "name": "NY"
       },
       "odds": {
-        "away_ml": 142,
+        "away_ml": 130,
         "away_ml_open": 164,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "NY -3.5",
-        "home_ml": -169,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "NY -2.5",
+        "home_ml": -155,
         "home_ml_open": -198,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.5,
-        "spread_close": -3.5,
+        "provider": "Draft Kings",
+        "spread": -2.5,
+        "spread_close": -2.5,
         "spread_open": 5.5,
-        "total": 223.5
+        "total": 222.5
       },
       "odds_first_seen": {
         "away_ml": 142,
@@ -5116,7 +5062,7 @@
           "value": "NY +6.4 \u00b7 MIA +0.8"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5154,18 +5100,18 @@
         "name": "DET"
       },
       "odds": {
-        "away_ml": 320,
+        "away_ml": 351,
         "away_ml_open": 420,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:29Z",
         "details": "DET -9.5",
-        "home_ml": -407,
+        "home_ml": -452,
         "home_ml_open": -561,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -9.5,
         "spread_close": -9.5,
         "spread_open": -11.5,
-        "total": 218.5
+        "total": 219.5
       },
       "odds_first_seen": {
         "away_ml": 371,
@@ -5182,7 +5128,7 @@
           "value": "DET +5.6 \u00b7 MIL -11.2"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5220,18 +5166,18 @@
         "name": "IND"
       },
       "odds": {
-        "away_ml": -155,
+        "away_ml": -170,
         "away_ml_open": -185,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "PHI -1.5",
-        "home_ml": 130,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "PHI -3.5",
+        "home_ml": 142,
         "home_ml_open": 155,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 1.5,
-        "spread_close": 1.5,
+        "provider": "Draft Kings",
+        "spread": 3.5,
+        "spread_close": 3.5,
         "spread_open": 4.5,
-        "total": 232.5
+        "total": 230.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5243,7 +5189,7 @@
           "value": "IND -3.3 \u00b7 PHI +2.1"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "7:30 PM ET",
       "status": "Preview",
@@ -5275,16 +5221,16 @@
         "name": "TOR"
       },
       "odds": {
-        "away_ml": 268,
+        "away_ml": 298,
         "away_ml_open": 268,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "TOR -7.5",
-        "home_ml": -333,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "TOR -9.5",
+        "home_ml": -375,
         "home_ml_open": -333,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -7.5,
-        "spread_close": -7.5,
+        "provider": "Draft Kings",
+        "spread": -9.5,
+        "spread_close": -9.5,
         "spread_open": -7.5,
         "total": 220.5
       },
@@ -5303,7 +5249,7 @@
           "value": "TOR -0.1 \u00b7 BKN -8.1"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5341,18 +5287,18 @@
         "name": "BOS"
       },
       "odds": {
-        "away_ml": 341,
+        "away_ml": 298,
         "away_ml_open": 288,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "BOS -9.5",
-        "home_ml": -438,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "BOS -8.5",
+        "home_ml": -375,
         "home_ml_open": -361,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -9.5,
-        "spread_close": -9.5,
+        "provider": "Draft Kings",
+        "spread": -8.5,
+        "spread_close": -8.5,
         "spread_open": -9.5,
-        "total": 222.5
+        "total": 223.5
       },
       "odds_first_seen": {
         "away_ml": 312,
@@ -5369,7 +5315,7 @@
           "value": "BOS +9.4 \u00b7 ATL +3.1"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5407,18 +5353,18 @@
         "name": "MIN"
       },
       "odds": {
-        "away_ml": 136,
+        "away_ml": 130,
         "away_ml_open": 117,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:29Z",
         "details": "MIN -3.5",
-        "home_ml": -162,
+        "home_ml": -155,
         "home_ml_open": -139,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.5,
         "spread_close": -3.5,
         "spread_open": -2.5,
-        "total": 220.5
+        "total": 219.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5430,7 +5376,7 @@
           "value": "MIN +10.4 \u00b7 MEM +9.4"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "8:30 PM ET",
       "status": "Preview",
@@ -5462,18 +5408,18 @@
         "name": "PHX"
       },
       "odds": {
-        "away_ml": 114,
+        "away_ml": 124,
         "away_ml_open": 120,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "PHX -1.5",
-        "home_ml": -135,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "PHX -3.5",
+        "home_ml": -148,
         "home_ml_open": -142,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -1.5,
-        "spread_close": -1.5,
+        "provider": "Draft Kings",
+        "spread": -3.5,
+        "spread_close": -3.5,
         "spread_open": -3.5,
-        "total": 227.5
+        "total": 226.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5485,7 +5431,7 @@
           "value": "PHX -1.2 \u00b7 DAL +1.0"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "9:00 PM ET",
       "status": "Preview",
@@ -5517,18 +5463,18 @@
         "name": "SA"
       },
       "odds": {
-        "away_ml": 165,
+        "away_ml": 196,
         "away_ml_open": 230,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "SA -5.5",
-        "home_ml": -197,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "SA -6.5",
+        "home_ml": -237,
         "home_ml_open": -285,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -5.5,
-        "spread_close": -5.5,
+        "provider": "Draft Kings",
+        "spread": -6.5,
+        "spread_close": -6.5,
         "spread_open": 7.5,
-        "total": 224.5
+        "total": 226.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5540,7 +5486,7 @@
           "value": "SA +11.3 \u00b7 LAL +6.7"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "9:30 PM ET",
       "status": "Preview",
@@ -5574,16 +5520,16 @@
       "odds": {
         "away_ml": -438,
         "away_ml_open": -336,
-        "captured_at": "2026-11-26T23:58:46Z",
+        "captured_at": "2026-11-27T19:23:29Z",
         "details": "DEN -9.5",
         "home_ml": 341,
         "home_ml_open": 270,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 9.5,
         "spread_close": 9.5,
         "spread_open": 9.5,
-        "total": 228.5
+        "total": 232.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5595,7 +5541,7 @@
           "value": "UTAH -7.5 \u00b7 DEN +0.5"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "9:30 PM ET",
       "status": "Preview",
@@ -5627,18 +5573,18 @@
         "name": "LAC"
       },
       "odds": {
-        "away_ml": 136,
+        "away_ml": 114,
         "away_ml_open": 124,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "LAC -3.5",
-        "home_ml": -162,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "LAC -2.5",
+        "home_ml": -135,
         "home_ml_open": -147,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.5,
-        "spread_close": -3.5,
+        "provider": "Draft Kings",
+        "spread": -2.5,
+        "spread_close": -2.5,
         "spread_open": -2.5,
-        "total": 231.5
+        "total": 230.5
       },
       "odds_first_seen": null,
       "probables": null,
@@ -5650,7 +5596,7 @@
           "value": "LAC -7.5 \u00b7 NO -8.0"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "9:30 PM ET",
       "status": "Preview",
@@ -5682,18 +5628,18 @@
         "name": "POR"
       },
       "odds": {
-        "away_ml": 276,
+        "away_ml": 241,
         "away_ml_open": 262,
-        "captured_at": "2026-11-26T23:58:46Z",
-        "details": "POR -8.5",
-        "home_ml": -344,
+        "captured_at": "2026-11-27T19:23:29Z",
+        "details": "POR -7.5",
+        "home_ml": -297,
         "home_ml_open": -325,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -8.5,
-        "spread_close": -8.5,
+        "provider": "Draft Kings",
+        "spread": -7.5,
+        "spread_close": -7.5,
         "spread_open": -9.5,
-        "total": 220.5
+        "total": 218.5
       },
       "odds_first_seen": {
         "away_ml": 262,
@@ -5710,7 +5656,7 @@
           "value": "POR +6.4 \u00b7 GS +0.3"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -5749,14 +5695,14 @@
         "name": "MIN"
       },
       "odds": {
-        "away_ml": 252,
+        "away_ml": 260,
         "away_ml_open": 180,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "MIN -7",
-        "home_ml": -310,
+        "home_ml": -321,
         "home_ml_open": -218,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -7.0,
         "spread_close": -7.0,
         "spread_open": -4.5,
@@ -5784,7 +5730,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -5831,12 +5777,12 @@
       "odds": {
         "away_ml": 267,
         "away_ml_open": -102,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "HOU -6.5",
-        "home_ml": -333,
+        "home_ml": -332,
         "home_ml_open": -118,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -6.5,
         "spread_close": -6.5,
         "spread_open": -1.5,
@@ -5864,7 +5810,7 @@
           "value": "+0.05"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -5909,14 +5855,14 @@
         "name": "TB"
       },
       "odds": {
-        "away_ml": 132,
+        "away_ml": 134,
         "away_ml_open": 160,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "TB -3",
-        "home_ml": -157,
+        "home_ml": -159,
         "home_ml_open": -192,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -3.5,
@@ -5944,7 +5890,7 @@
           "value": "+0.03"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Mon Nov 30 \u00b7 8:15 PM ET",
       "status": "Preview",
@@ -5968,97 +5914,6 @@
         "home": 0.545
       }
     },
-    "2026_12_CHI_DET": {
-      "away": {
-        "abbr": "CHI",
-        "color": "#6F84A9",
-        "name": "CHI"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 52,
-          "side": "DET"
-        }
-      },
-      "generated_at": "2026-11-24T20:32:03.205216+00:00",
-      "home": {
-        "abbr": "DET",
-        "color": "#36A6E3",
-        "name": "DET"
-      },
-      "odds": {
-        "away_ml": -120,
-        "away_ml_open": 114,
-        "captured_at": "2026-11-25T23:46:06Z",
-        "details": "CHI -1.5",
-        "home_ml": 101,
-        "home_ml_open": -135,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 1.5,
-        "spread_close": 1.5,
-        "spread_open": -2.5,
-        "total": 55.5
-      },
-      "odds_first_seen": {
-        "away_ml": -142,
-        "captured_at": "2026-11-24T20:32:03.205216+00:00",
-        "home_ml": 120,
-        "side": "DET"
-      },
-      "probables": {
-        "away": {
-          "name": "Caleb Williams"
-        },
-        "home": {
-          "name": "Jared Goff"
-        }
-      },
-      "pulse": null,
-      "signals": [
-        {
-          "label": "DET Off EPA/play",
-          "tone": "pos",
-          "value": "+0.13"
-        },
-        {
-          "label": "DET Def EPA/play allowed",
-          "tone": "neg",
-          "value": "+0.04"
-        }
-      ],
-      "slate_date": "2026-11-26",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 52,
-        "side": "DET"
-      },
-      "start": "Thu Nov 26 \u00b7 1:00 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Ford Field",
-      "win_prob": {
-        "away": 0.3993,
-        "features": {
-          "deff": 0.0736,
-          "margin": 0.2999999999999998,
-          "neutral": false,
-          "off": 0.10740000000000001,
-          "prior": null,
-          "qb": 0,
-          "rest": 0.0,
-          "to": 0.6000000000000001
-        },
-        "fitted_at": "2026-11-24",
-        "home": 0.6007
-      }
-    },
     "2026_12_DEN_PIT": {
       "away": {
         "abbr": "DEN",
@@ -6080,14 +5935,14 @@
         "name": "PIT"
       },
       "odds": {
-        "away_ml": -257,
+        "away_ml": -239,
         "away_ml_open": -118,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "DEN -4.5",
-        "home_ml": 211,
+        "home_ml": 198,
         "home_ml_open": -102,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 4.5,
         "spread_close": 4.5,
         "spread_open": 1.5,
@@ -6115,7 +5970,7 @@
           "value": "+0.01"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Fri Nov 27 \u00b7 3:00 PM ET",
       "status": "Preview",
@@ -6139,86 +5994,6 @@
         "home": 0.5389
       }
     },
-    "2026_12_KC_BUF": {
-      "away": {
-        "abbr": "KC",
-        "color": "#E23651",
-        "name": "KC"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 4,
-          "side": "No clear lean"
-        }
-      },
-      "generated_at": "2026-11-24T20:32:03.205216+00:00",
-      "home": {
-        "abbr": "BUF",
-        "color": "#4178D7",
-        "name": "BUF"
-      },
-      "odds": {
-        "away_ml": 130,
-        "away_ml_open": 114,
-        "captured_at": "2026-11-26T20:46:28Z",
-        "details": "BUF -3",
-        "home_ml": -154,
-        "home_ml_open": -135,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -3.0,
-        "spread_close": -3.0,
-        "spread_open": -2.5,
-        "total": 45.5
-      },
-      "odds_first_seen": null,
-      "probables": {
-        "away": {
-          "name": "Patrick Mahomes"
-        },
-        "home": {
-          "name": "Josh Allen"
-        }
-      },
-      "pulse": null,
-      "signals": [
-        {
-          "label": "BUF Off EPA/play",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "BUF Def EPA/play allowed",
-          "tone": "neg",
-          "value": "-0.03"
-        }
-      ],
-      "slate_date": "2026-11-26",
-      "standout": null,
-      "start": "Thu Nov 26 \u00b7 8:20 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "Highmark Stadium",
-      "win_prob": {
-        "away": 0.437,
-        "features": {
-          "deff": 0.048499999999999995,
-          "margin": -0.3000000000000007,
-          "neutral": false,
-          "off": 0.005899999999999989,
-          "prior": null,
-          "qb": 0,
-          "rest": 0.0,
-          "to": -0.7
-        },
-        "fitted_at": "2026-11-24",
-        "home": 0.563
-      }
-    },
     "2026_12_LV_CLE": {
       "away": {
         "abbr": "LV",
@@ -6240,18 +6015,18 @@
         "name": "CLE"
       },
       "odds": {
-        "away_ml": 201,
+        "away_ml": 197,
         "away_ml_open": 110,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "CLE -4.5",
-        "home_ml": -244,
+        "home_ml": -238,
         "home_ml_open": -130,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -4.5,
         "spread_close": -4.5,
         "spread_open": -2.5,
-        "total": 40.5
+        "total": 39.5
       },
       "odds_first_seen": null,
       "probables": {
@@ -6275,7 +6050,7 @@
           "value": "+0.10"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 8:20 PM ET",
       "status": "Preview",
@@ -6320,14 +6095,14 @@
         "name": "LAC"
       },
       "odds": {
-        "away_ml": -137,
+        "away_ml": -136,
         "away_ml_open": 114,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "NE -2.5",
-        "home_ml": 116,
+        "home_ml": 115,
         "home_ml_open": -135,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 2.5,
         "spread_close": 2.5,
         "spread_open": -2.5,
@@ -6355,7 +6130,7 @@
           "value": "+0.07"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 4:05 PM ET",
       "status": "Preview",
@@ -6400,18 +6175,18 @@
         "name": "CIN"
       },
       "odds": {
-        "away_ml": 423,
+        "away_ml": 446,
         "away_ml_open": 235,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "CIN -10",
-        "home_ml": -562,
+        "home_ml": -599,
         "home_ml_open": -290,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -10.0,
         "spread_close": -10.0,
         "spread_open": -6.5,
-        "total": 49.5
+        "total": 48.5
       },
       "odds_first_seen": {
         "away_ml": 448,
@@ -6440,7 +6215,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -6491,14 +6266,14 @@
         "name": "IND"
       },
       "odds": {
-        "away_ml": -287,
+        "away_ml": -288,
         "away_ml_open": 114,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "NYG -6",
         "home_ml": 236,
         "home_ml_open": -135,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 6.0,
         "spread_close": 6.0,
         "spread_open": -2.5,
@@ -6531,7 +6306,7 @@
           "value": "+0.04"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -6582,16 +6357,16 @@
         "name": "MIA"
       },
       "odds": {
-        "away_ml": -241,
+        "away_ml": -249,
         "away_ml_open": 105,
-        "captured_at": "2026-11-26T20:46:28Z",
-        "details": "NYJ -4.5",
-        "home_ml": 200,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "NYJ -5.5",
+        "home_ml": 205,
         "home_ml_open": -125,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": 4.5,
-        "spread_close": 4.5,
+        "provider": "Draft Kings",
+        "spread": 5.5,
+        "spread_close": 5.5,
         "spread_open": -1.5,
         "total": 39.5
       },
@@ -6617,7 +6392,7 @@
           "value": "+0.07"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 1:00 PM ET",
       "status": "Preview",
@@ -6641,97 +6416,6 @@
         "home": 0.4948
       }
     },
-    "2026_12_PHI_DAL": {
-      "away": {
-        "abbr": "PHI",
-        "color": "#52BCC7",
-        "name": "PHI"
-      },
-      "betting_note": null,
-      "betting_signals": {
-        "moneyline": {
-          "flags": [],
-          "score": 77,
-          "side": "DAL"
-        }
-      },
-      "generated_at": "2026-11-24T20:32:03.205216+00:00",
-      "home": {
-        "abbr": "DAL",
-        "color": "#5C84BC",
-        "name": "DAL"
-      },
-      "odds": {
-        "away_ml": 362,
-        "away_ml_open": 100,
-        "captured_at": "2026-11-26T20:46:28Z",
-        "details": "DAL -8.5",
-        "home_ml": -467,
-        "home_ml_open": -120,
-        "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -8.5,
-        "spread_close": -8.5,
-        "spread_open": -1.5,
-        "total": 49.5
-      },
-      "odds_first_seen": {
-        "away_ml": 363,
-        "captured_at": "2026-11-24T20:32:03.205216+00:00",
-        "home_ml": -469,
-        "side": "DAL"
-      },
-      "probables": {
-        "away": {
-          "name": "Joe Milton III"
-        },
-        "home": {
-          "name": "Dak Prescott"
-        }
-      },
-      "pulse": null,
-      "signals": [
-        {
-          "label": "DAL Off EPA/play",
-          "tone": "pos",
-          "value": "+0.14"
-        },
-        {
-          "label": "DAL Def EPA/play allowed",
-          "tone": "neg",
-          "value": "+0.12"
-        }
-      ],
-      "slate_date": "2026-11-26",
-      "standout": {
-        "bet_type": "moneyline",
-        "flags": [],
-        "market": "Moneyline",
-        "score": 77,
-        "side": "DAL"
-      },
-      "start": "Thu Nov 26 \u00b7 4:30 PM ET",
-      "status": "Preview",
-      "story": null,
-      "summary": null,
-      "template_version": "v3",
-      "venue": "AT&T Stadium",
-      "win_prob": {
-        "away": 0.293,
-        "features": {
-          "deff": 0.07239999999999999,
-          "margin": 9.273,
-          "neutral": false,
-          "off": 0.2474,
-          "prior": null,
-          "qb": 0,
-          "rest": 0.0,
-          "to": 0.31820000000000004
-        },
-        "fitted_at": "2026-11-24",
-        "home": 0.707
-      }
-    },
     "2026_12_SEA_SF": {
       "away": {
         "abbr": "SEA",
@@ -6753,14 +6437,14 @@
         "name": "SF"
       },
       "odds": {
-        "away_ml": 130,
+        "away_ml": 128,
         "away_ml_open": -108,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "SF -3",
-        "home_ml": -154,
+        "home_ml": -152,
         "home_ml_open": -112,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": -3.0,
         "spread_close": -3.0,
         "spread_open": -1.5,
@@ -6793,7 +6477,7 @@
           "value": "-0.00"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": {
         "bet_type": "moneyline",
         "flags": [],
@@ -6844,20 +6528,25 @@
         "name": "JAX"
       },
       "odds": {
-        "away_ml": 780,
+        "away_ml": 660,
         "away_ml_open": 210,
-        "captured_at": "2026-11-26T20:46:28Z",
-        "details": "JAX -14.5",
-        "home_ml": -1260,
+        "captured_at": "2026-11-27T19:23:28Z",
+        "details": "JAX -14",
+        "home_ml": -1000,
         "home_ml_open": -258,
         "moneyline_off": false,
-        "provider": "DraftKings",
-        "spread": -14.5,
-        "spread_close": -14.5,
+        "provider": "Draft Kings",
+        "spread": -14.0,
+        "spread_close": -14.0,
         "spread_open": -5.5,
-        "total": 49.5
+        "total": 48.5
       },
-      "odds_first_seen": null,
+      "odds_first_seen": {
+        "away_ml": 660,
+        "captured_at": "2026-11-27T19:23:27.897944+00:00",
+        "home_ml": -1000,
+        "side": "JAX"
+      },
       "probables": {
         "away": {
           "name": "Cam Ward"
@@ -6879,8 +6568,14 @@
           "value": "+0.12"
         }
       ],
-      "slate_date": "2026-11-26",
-      "standout": null,
+      "slate_date": "2026-11-27",
+      "standout": {
+        "bet_type": "moneyline",
+        "flags": [],
+        "market": "Moneyline",
+        "score": 77,
+        "side": "JAX"
+      },
       "start": "Sun Nov 29 \u00b7 1:00 PM ET",
       "status": "Preview",
       "story": null,
@@ -6924,14 +6619,14 @@
         "name": "ARI"
       },
       "odds": {
-        "away_ml": -352,
+        "away_ml": -348,
         "away_ml_open": -218,
-        "captured_at": "2026-11-26T20:46:28Z",
+        "captured_at": "2026-11-27T19:23:28Z",
         "details": "WSH -6.5",
-        "home_ml": 282,
+        "home_ml": 280,
         "home_ml_open": 180,
         "moneyline_off": false,
-        "provider": "DraftKings",
+        "provider": "Draft Kings",
         "spread": 6.5,
         "spread_close": 6.5,
         "spread_open": 4.5,
@@ -6959,7 +6654,7 @@
           "value": "+0.11"
         }
       ],
-      "slate_date": "2026-11-26",
+      "slate_date": "2026-11-27",
       "standout": null,
       "start": "Sun Nov 29 \u00b7 4:25 PM ET",
       "status": "Preview",
